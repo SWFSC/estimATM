@@ -800,7 +800,7 @@ In some areas, dense backscatter was observed deeper than the upper mixed layer 
 
 \newpage
 
-(ref:tx-biom-dens) Log-transformed biomass density + 1 ($(t\,\mathrm{nmi}^{-2})$) by transect versus latitude (easternmost portion of each transect) and strata (shaded regions; outline indicates stratum number) used to estimate biomass and abundance for each species in the core region surveyed by _`r survey.vessel`_. Data labels (blue numbers) correspond to transects with positive biomass ($\log_{e}(t+1)$ > 0). Transect spacing (nmi; point color), and subpopulation breaks for Northern Anchovy and Pacific Sardine (red dashed lines and text) are indicated.  
+(ref:tx-biom-dens) Log-transformed biomass density + 1 ($t\,\mathrm{nmi}^{-2}$) by transect versus latitude (easternmost portion of each transect) and strata (shaded regions; outline indicates stratum number) used to estimate biomass and abundance for each species in the core region surveyed by _`r survey.vessel`_. Data labels (blue numbers) correspond to transects with positive biomass ($\log_{e}(t+1)$ > 0). Transect spacing (nmi; point color), and subpopulation breaks for Northern Anchovy and Pacific Sardine (red dashed lines and text) are indicated.  
 
 ```{r tx-biom-dens,fig.cap='(ref:tx-biom-dens)',out.width='7in',fig.pos='H'}
 include_graphics(here("Figs/fig_biomass_density_transect_lat.png"))

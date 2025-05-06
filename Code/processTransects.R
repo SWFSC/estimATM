@@ -483,18 +483,18 @@ if (get.bathy) {
 }
 
 # Extract bathymetry
-transects$Depth <- get.depth(noaa.bathy, transects$Longitude, transects$Latitude, locator = F, distance = T)$depth
+transects$Depth <- round(get.depth(noaa.bathy, transects$Longitude, transects$Latitude, locator = F, distance = T)$depth)
 
 if (nrow(ctds) > 0) {
-  ctds$Depth     <- get.depth(noaa.bathy, ctds$Longitude, ctds$Latitude, locator = F, distance = T)$depth
+  ctds$Depth <- round(get.depth(noaa.bathy, ctds$Longitude, ctds$Latitude, locator = F, distance = T)$depth)
 }
 
 if (nrow(uctds) > 0) {
-  uctds$Depth     <- get.depth(noaa.bathy, uctds$Longitude, uctds$Latitude, locator = F, distance = T)$depth
+  uctds$Depth <- round(get.depth(noaa.bathy, uctds$Longitude, uctds$Latitude, locator = F, distance = T)$depth)
 }
 
 if (nrow(pairovets) > 0) {
-  pairovets$Depth     <- get.depth(noaa.bathy, pairovets$Longitude, pairovets$Latitude, locator = F, distance = T)$depth
+  pairovets$Depth <- round(get.depth(noaa.bathy, pairovets$Longitude, pairovets$Latitude, locator = F, distance = T)$depth)
 }
 
 # Extract bathymetry info

@@ -17,6 +17,7 @@ write_csv(wpts, here("Output/waypoints/all_waypoints.csv"))
 transects <- wpts %>% 
   filter(!str_detect(name, "^CTD")) %>%
   filter(!str_detect(name, "^UCTD")) %>%
+  filter(!str_detect(name, "^eDNA")) %>%
   filter(!str_detect(name, "Pairovet")) %>% 
   mutate(
     type = case_when(
@@ -194,6 +195,22 @@ uctds <- wpts %>%
            TRUE ~ "Other")),
          Region = fct_reorder(Region, loc),
          Type = "UCTD") %>% 
+  rename(Latitude = lat, Longitude = lon) %>% 
+  arrange(station) 
+
+# extract eDNA stations
+eDNA <- wpts %>% 
+  filter(str_detect(name, "^eDNA")) %>% 
+  mutate(station = name,
+         loc = cut(lat, region.vec, labels = FALSE),
+         Region = as.factor(case_when(
+           loc == 1 ~ "S. CA Bight",
+           loc == 2 ~ "Central CA",
+           loc == 3 ~ "WA/OR",
+           loc == 4 ~ "Vancouver Is.",
+           TRUE ~ "Other")),
+         Region = fct_reorder(Region, loc),
+         Type = "eDNA") %>% 
   rename(Latitude = lat, Longitude = lon) %>% 
   arrange(station) 
 
@@ -493,6 +510,10 @@ if (nrow(uctds) > 0) {
   uctds$Depth <- round(get.depth(noaa.bathy, uctds$Longitude, uctds$Latitude, locator = F, distance = T)$depth)
 }
 
+if (nrow(eDNA) > 0) {
+  eDNA$Depth <- round(get.depth(noaa.bathy, eDNA$Longitude, eDNA$Latitude, locator = F, distance = T)$depth)
+}
+
 if (nrow(pairovets) > 0) {
   pairovets$Depth <- round(get.depth(noaa.bathy, pairovets$Longitude, pairovets$Latitude, locator = F, distance = T)$depth)
 }
@@ -617,6 +638,18 @@ if (nrow(uctds) > 0) {
   }  
 }
 
+if (nrow(eDNA) > 0) {
+  # format UCTD stations for export
+  eDNA.export <- eDNA %>% 
+    select(Name = name, Latitude, Longitude, Region, Depth)
+  
+  # export to csv
+  # Write UCTD waypoints
+  if (nrow(eDNA.export) > 0) {
+    write_csv(eDNA.export,  here("Output/tables_updated/waypoints_eDNA.csv"))  
+  }  
+}
+
 if (nrow(pairovets) > 0) {
   # format Pairovet stations for export
   pairovet.export <- pairovets %>% 
@@ -630,8 +663,9 @@ if (nrow(pairovets) > 0) {
 }
 
 # Convert stations to sf
-ctds.sf     <- st_as_sf(ctds, coords = c("Longitude","Latitude"), crs = crs.geog)
+ctds.sf      <- st_as_sf(ctds, coords = c("Longitude","Latitude"), crs = crs.geog)
 uctds.sf     <- st_as_sf(uctds, coords = c("Longitude","Latitude"), crs = crs.geog)
+eDNA.sf      <- st_as_sf(eDNA, coords = c("Longitude","Latitude"), crs = crs.geog)
 pairovets.sf <- st_as_sf(pairovets, coords = c("Longitude","Latitude"), crs = crs.geog)
 
 # Create the map with all transects --------------------------------------------
@@ -656,7 +690,15 @@ if (nrow(ctds.sf) > 0) {
 
 if (nrow(uctds.sf) > 0) {
   survey.map <- survey.map +
-    geom_sf(data = uctds.sf, shape = 21, size = 1, fill = "orange") +
+    geom_sf(data = uctds.sf, shape = 24, size = 1.5, fill = "orange") +
+    coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+             xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
+             ylim = c(map.bounds["ymin"], map.bounds["ymax"]))  
+}
+
+if (nrow(eDNA.sf) > 0) {
+  survey.map <- survey.map +
+    geom_sf(data = eDNA.sf, shape = 21, size = 1, fill = "green") +
     coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
              xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
              ylim = c(map.bounds["ymin"], map.bounds["ymax"]))  
@@ -675,7 +717,7 @@ ggsave(survey.map, filename = here("Figs/fig_survey_map.png"),
        height = map.height, width = map.width)
 
 # Save results for use with checkTransects.Rmd
-save(transects, tx.labels, wpts, uctds, wpt.export, pairovets,
+save(transects, tx.labels, wpts, ctds, uctds, eDNA, wpt.export, pairovets,
      file = (here("Output/process_transects_output.Rdata")))
 
 # Create the map with all transects --------------------------------------------
@@ -686,7 +728,9 @@ survey.map.leg = base.map +
           aes(linetype = Type), colour = "grey50", show.legend = "line") +
   geom_sf(data = filter(transects.sf, Type %in% c("Adaptive", "Compulsory"), !is.na(Leg)),
           aes(linetype = Type, colour = factor(Leg)), show.legend = "line") +
-  geom_sf(data = uctds.sf, shape = 21, size = 1, fill = "orange") +
+  geom_sf(data = ctds.sf, shape = 21, size = 1, fill = "blue") +
+  geom_sf(data = uctds.sf, shape = 24, size = 1.5, fill = "orange") +
+  geom_sf(data = eDNA.sf, shape = 21, size = 1, fill = "green") +
   scale_linetype_manual(name = "Type", values = wpt.linetypes) +
   scale_colour_discrete("Leg") +
   coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
@@ -707,7 +751,8 @@ survey.map.region = base.map +
                                                   "Carranza","Offshore", "Saildrone")),
           aes(linetype = Type, colour = factor(Region)), show.legend = "line") +
   geom_sf(data = ctds.sf,  shape = 21, size = 1, fill = "blue") +
-  geom_sf(data = uctds.sf, shape = 21, size = 1, fill = "orange") +
+  geom_sf(data = uctds.sf, shape = 24, size = 1.5, fill = "orange") +
+  geom_sf(data = eDNA.sf, shape = 21, size = 1, fill = "green") +
   scale_linetype_manual(name = "Type", values = wpt.linetypes) +
   scale_colour_discrete("Leg") +
   coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
@@ -724,6 +769,7 @@ if (update.routes) {
   updated.route <- transects %>% 
     bind_rows(ctds) %>%
     bind_rows(uctds) %>% 
+    bind_rows(eDNA) %>% 
     bind_rows(pairovets) %>% 
     mutate(
       Transect = case_when(
@@ -833,6 +879,16 @@ if (update.routes) {
   
   if (nrow(uctd.sub) > 0) {
     write_csv(uctd.sub, here("Output/waypoints_updated/uctd_wpts.csv"),
+              col_names = FALSE)
+  }
+  
+  # Write eDNA waypoints to CSV file
+  eDNA.sub <- updated.route %>%
+    filter(Type == "eDNA") %>%
+    select(id = name, Latitude, Longitude)
+  
+  if (nrow(eDNA.sub) > 0) {
+    write_csv(eDNA.sub, here("Output/waypoints_updated/eDNA_wpts.csv"),
               col_names = FALSE)
   }
   

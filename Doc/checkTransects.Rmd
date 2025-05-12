@@ -43,7 +43,7 @@ theme_set(theme_bw())
 copy.gpx           <- F # Copy GPX file from AST server
 process.transects  <- T # Usually T; Process GPX file using processTransects.R
 update.routes      <- T # Re-write route files after processing
-get.bathy          <- T # Get NOAA bathymetry (used to extract bathymetry)
+get.bathy          <- F # Get NOAA bathymetry (used to extract bathymetry)
 extract.bathy      <- T # Extract bathymetry profile along each transect
 
 # Create output directories, in case they don't exist from makeTransects.Rmd
@@ -211,6 +211,10 @@ uctds.sf <- uctds %>%
   as_tibble() %>% 
   st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
 
+eDNA.sf <- eDNA %>% 
+  as_tibble() %>% 
+  st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
+
 pairovets.sf <- pairovets %>% 
   as_tibble() %>% 
   st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
@@ -356,7 +360,7 @@ if (leaflet.checkTransects.simple) {
       overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs", 
                         "State Waters", "Exclusive Economic Zones", 
                         "Bathymetry Contours", "Planned Transects", 
-                        "CTD Stations","UCTD Stations"),
+                        "CTD Stations","UCTD Stations", "eDNA Stations"),
       options = layersControlOptions(collapsed = FALSE)) %>%  
     # hideGroup(c("CTD Stations","UCTD Stations", "State Waters", "MPAs")) %>% 
     fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
@@ -490,7 +494,8 @@ if (leaflet.checkTransects.simple) {
                         "Bathymetry Contours",
                         "Planned Transects (Compulsory)", "Planned Transects (Adaptive)",
                         "Planned Transects (Nearshore)", "Planned Transects (Offshore)",
-                        "Planned Transects (Transits)", "CTD Stations","UCTD Stations"),
+                        "Planned Transects (Transits)", 
+                        "CTD Stations","UCTD Stations", "eDNA Stations"),
       options = layersControlOptions(collapsed = FALSE)) %>%  
     # hideGroup(c("CTD Stations","UCTD Stations", "State Waters", "MPAs")) %>% 
     fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
@@ -519,6 +524,17 @@ if (nrow(uctds.sf) > 0) {
                      group = "UCTD Stations")   
 }
 
+if (nrow(eDNA.sf) > 0) {
+  i.map <- i.map %>% 
+    # Add eDNA stations
+    addCircleMarkers(data = eDNA.sf,
+                     radius = 3, color = "#000000", stroke = TRUE, weight = 2,
+                     fillOpacity = 1, fillColor =  "green",
+                     label = ~htmlEscape(name),
+                     popup = ~name,
+                     group = "eDNA Stations")   
+}
+
 if (nrow(pairovets.sf) > 0) {
   i.map <- i.map %>% 
     # Add Pairovet stations
@@ -536,7 +552,7 @@ i.map
 
 ## Static map  
 
-Orange points represent UCTD stations.
+Orange points represent UCTD stations. Blue points represent CTD stations. Green stations represent surface eDNA stations.
 
 ```{r map-survey-plan-all}
 include_graphics(here("Figs/fig_survey_map.png"))
@@ -652,6 +668,23 @@ if (nrow(uctds) > 0) {
     datatable(rownames = FALSE)  
 } else {
   print("No UCTD stations planned.")
+}
+```
+
+## eDNA Stations
+
+```{r eDNA-wpts-table}
+if (nrow(eDNA) > 0) {
+  eDNA %>% 
+    select(Station = station, Region, Depth) %>% 
+    arrange(Station) %>%
+    # mutate(
+    #   Long = as.data.frame(st_coordinates(.))$X,
+    #   Lat = as.data.frame(st_coordinates(.))$Y) %>% 
+    # st_set_geometry(NULL) %>% 
+    datatable(rownames = FALSE)  
+} else {
+  print("No eDNA stations planned.")
 }
 ```
 
@@ -827,7 +860,8 @@ survey.plan <- base.map +
   scale_linetype_manual("Type", 
                         values = wpt.linetypes) +
   geom_sf(data = ctds.sf, shape = 21, size = 1, fill = "blue") +
-  geom_sf(data = uctds.sf, shape = 21, size = 1, fill = "orange") +
+  geom_sf(data = uctds.sf, shape = 24, size = 1.5, fill = "orange") +
+  geom_sf(data = eDNA.sf, shape = 21, size = 1, fill = "green") +
   geom_sf(data = pairovets.sf, aes(fill = type), shape = 21, size = 1) +
   coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
            xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 

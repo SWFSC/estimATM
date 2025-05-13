@@ -9,7 +9,8 @@ route <- read_GPX(here("Data/Nav", gpx.file))
 # Create data frame of waypoints
 wpts <- route$waypoints %>% 
   project_sf(crs = crs.geog) %>% 
-  select(lon = X, lat = Y, name)
+  select(lon = X, lat = Y, name) %>% 
+  mutate(lon = round(lon, 6), lat = round(lat, 6))
 
 write_csv(wpts, here("Output/waypoints/all_waypoints.csv"))
 

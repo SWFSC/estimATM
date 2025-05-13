@@ -825,7 +825,7 @@ bathy_5m_df <- bathy_5m_points %>%
 write_csv(bathy_5m_df, here("Data/GIS/bathy_5m_final.csv"))
 ```
 
-```{r map-survey-plan,fig.cap='(ref:map-survey-plan)'}
+```{r map-survey-plan}
 # Rename locations
 transects <- transects %>% 
   mutate(loc = case_when(

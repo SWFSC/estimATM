@@ -172,10 +172,11 @@ ctds <- wpts %>%
   mutate(station = name,
          loc = cut(lat, region.vec, labels = FALSE),
          Region = as.factor(case_when(
-           loc == 1 ~ "S. CA Bight",
-           loc == 2 ~ "Central CA",
-           loc == 3 ~ "WA/OR",
-           loc == 4 ~ "Vancouver Is.",
+           loc == 1 ~ "Mexico",
+           loc == 2 ~ "S. CA Bight",
+           loc == 3 ~ "Central CA",
+           loc == 4 ~ "WA/OR",
+           loc == 5 ~ "Vancouver Is.",
            TRUE ~ "Other")),
          Region = fct_reorder(Region, loc),
          Type = "CTD") %>% 
@@ -188,10 +189,11 @@ uctds <- wpts %>%
   mutate(station = name,
          loc = cut(lat, region.vec, labels = FALSE),
          Region = as.factor(case_when(
-           loc == 1 ~ "S. CA Bight",
-           loc == 2 ~ "Central CA",
-           loc == 3 ~ "WA/OR",
-           loc == 4 ~ "Vancouver Is.",
+           loc == 1 ~ "Mexico",
+           loc == 2 ~ "S. CA Bight",
+           loc == 3 ~ "Central CA",
+           loc == 4 ~ "WA/OR",
+           loc == 5 ~ "Vancouver Is.",
            TRUE ~ "Other")),
          Region = fct_reorder(Region, loc),
          Type = "UCTD") %>% 
@@ -204,10 +206,11 @@ eDNA <- wpts %>%
   mutate(station = name,
          loc = cut(lat, region.vec, labels = FALSE),
          Region = as.factor(case_when(
-           loc == 1 ~ "S. CA Bight",
-           loc == 2 ~ "Central CA",
-           loc == 3 ~ "WA/OR",
-           loc == 4 ~ "Vancouver Is.",
+           loc == 1 ~ "Mexico",
+           loc == 2 ~ "S. CA Bight",
+           loc == 3 ~ "Central CA",
+           loc == 4 ~ "WA/OR",
+           loc == 5 ~ "Vancouver Is.",
            TRUE ~ "Other")),
          Region = fct_reorder(Region, loc),
          Type = "eDNA") %>% 
@@ -220,10 +223,11 @@ pairovets <- wpts %>%
   mutate(station = name,
          loc = cut(lat, region.vec, labels = FALSE),
          Region = as.factor(case_when(
-           loc == 1 ~ "S. CA Bight",
-           loc == 2 ~ "Central CA",
-           loc == 3 ~ "WA/OR",
-           loc == 4 ~ "Vancouver Is.",
+           loc == 1 ~ "Mexico",
+           loc == 2 ~ "S. CA Bight",
+           loc == 3 ~ "Central CA",
+           loc == 4 ~ "WA/OR",
+           loc == 5 ~ "Vancouver Is.",
            TRUE ~ "Other")),
          Region = fct_reorder(Region, loc),
          Type   = "Pairovet") %>% 

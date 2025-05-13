@@ -901,7 +901,7 @@ if (update.routes) {
     filter(transect.name == i, Type == "Pairovet") %>%
     select(id = name, Latitude, Longitude)
   
-  if (nrow(uctd.sub) > 0) {
+  if (nrow(pairovet.sub) > 0) {
     write_csv(uctd.sub, here("Output/waypoints_updated/pairovet_wpts.csv"),
               col_names = FALSE)
   }

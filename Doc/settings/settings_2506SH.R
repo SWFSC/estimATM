@@ -13,7 +13,7 @@ combine.regions   <- F # Combine nearshore/offshore plots with those from the co
 ### Transect spacing (nautical miles)
 tx.spacing.fsv  <- 15 # For Lasker 
 tx.spacing.sd   <- 15 # For Saildrone
-tx.spacing.ns   <- 5 # For nearshore sampling
+tx.spacing.ns   <- 6 # For nearshore sampling
 tx.spacing.os   <- 40 # Nearshore transect spacing, in nmi; set NA if calculating programatically
 
 # Mainland buffer distance for FSV and Saildrone transects
@@ -28,7 +28,7 @@ uctd.spacing   <- 15
 
 ### Transect removal and renumbering
 rm.n.transects     <- 46 # Number of transects to remove from the start (if near Mexico); if none, use zero
-rm.n.transects.ns  <- 137  # Number of transects to remove from the start (if near Mexico); if none, use zero
+rm.n.transects.ns  <- 115  # Number of transects to remove from the start (if near Mexico); if none, use zero
 rm.n.transects.sd  <- 69 # Number of transects to remove from the start (if near Mexico); if none, use zero
 rm.i.transects     <- NA # Remove specific transects from plan; else NA (for 2007RL: c(paste(90:117, "Nearshore")))
 renumber.transects <- FALSE # Renumber transects to start at zero if transect are removed
@@ -37,7 +37,7 @@ renumber.transects <- FALSE # Renumber transects to start at zero if transect ar
 rm.location <- NA # c("south")
 
 # Randomize
-do.random <- TRUE
+do.random <- FALSE
 save.csv  <- TRUE
 show.maps <- TRUE
 

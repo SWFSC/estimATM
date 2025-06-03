@@ -337,7 +337,7 @@ route.fsv <- route.fsv %>%
                                     by_element = TRUE))))/1852) %>% 
   mutate(distance_to_next = c(distance_to_next[2:n()],0),
          distance_cum = cumsum(distance_to_next),
-         time_to_next = distance_to_next / survey.speed / daylength,
+         time_to_next = distance_to_next / survey.speed / (daylength - mean(day.trawl.waste) - mean(day.ctd.waste)),
          time_cum     = cumsum(time_to_next) + transit.duration,
          on_off       = 1,
          leg          = cut(time_cum, leg.breaks.gpx, 
@@ -455,15 +455,6 @@ if (nrow(route.sd) > 0) {
 #       TRUE ~ "other")) %>% 
 #   select(Transect, Waypoint, Type, daylength, long, lat, X, Y, on_off, speed, mode, 
 #          distance_to_next, distance_cum, time_to_next, time_cum, leg, Region) 
-
-# Plot the route
-route.plot.fsv <- base.map + 
-  geom_path(data = route.fsv, aes(X, Y, colour = factor(leg))) +
-  scale_colour_discrete("Leg") 
-
-# Save the route plot
-ggsave(route.plot.fsv, filename = here("Figs/fig_route_plan.png"),
-       height = map.height, width = map.width)  
 
 # Write route plan to CSV
 write_csv(select(route.fsv, -X, -Y), 
@@ -745,9 +736,15 @@ survey.map.leg = base.map +
           aes(linetype = Type), colour = "grey50", show.legend = "line") +
   geom_sf(data = filter(transects.sf, Type %in% c("Adaptive", "Compulsory"), !is.na(Leg)),
           aes(linetype = Type, colour = factor(Leg)), show.legend = "line") +
-  geom_sf(data = ctds.sf, shape = 21, size = 1, fill = "blue") +
-  geom_sf(data = uctds.sf, shape = 24, size = 1.5, fill = "orange") +
-  geom_sf(data = eDNA.sf, shape = 21, size = 1, fill = "green") +
+  # Plot acoustic transect labels N of Cape Flattery
+  geom_shadowtext(data = filter(tx.labels, Type %in% c("Adaptive","Compulsory","Franklin","Carranza")),
+                  aes(X, Y, label = transect.name,
+                      angle = brg),
+                  size = 1.25, fontface = 'bold.italic',
+                  colour = "black", bg.colour = "white") +
+  # geom_sf(data = ctds.sf, shape = 21, size = 1, fill = "blue") +
+  # geom_sf(data = uctds.sf, shape = 24, size = 1.5, fill = "orange") +
+  # geom_sf(data = eDNA.sf, shape = 21, size = 1, fill = "green") +
   scale_linetype_manual(name = "Type", values = wpt.linetypes) +
   scale_colour_discrete("Leg") +
   coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
@@ -778,6 +775,21 @@ survey.map.region = base.map +
 
 # Save the map
 ggsave(survey.map.region, filename = here("Figs/fig_survey_map_region.png"), 
+       height = map.height, width = map.width)  
+
+# Plot the survey route
+route.plot.fsv <- base.map + 
+  geom_path(data = route.fsv, aes(X, Y, colour = factor(leg))) +
+  # Plot acoustic transect labels N of Cape Flattery
+  geom_shadowtext(data = filter(tx.labels, Type %in% c("Adaptive","Compulsory","Franklin","Carranza")),
+                  aes(X, Y, label = transect.name,
+                      angle = brg),
+                  size = 1.25, fontface = 'bold.italic',
+                  colour = "black", bg.colour = "white") +
+  scale_colour_discrete("Leg") 
+
+# Save the route plot
+ggsave(route.plot.fsv, filename = here("Figs/fig_route_plan.png"),
        height = map.height, width = map.width)  
 
 # Update route files

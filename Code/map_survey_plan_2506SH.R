@@ -63,12 +63,12 @@ if (nrow(filter(transects, Type == "Nearshore", Transect %in% lbc.transects))>0)
     geom_sf(data = filter(transects, Type == "Nearshore", Transect %in% lbc.transects),
             aes(colour = Type, linetype = Type),
             show.legend = "line") +
-    # # Plot acoustic transect labels N of Cape Flattery
-    # geom_shadowtext(data = tx.labels,
-    #                 aes(X, Y, label = transect.name,
-    #                     angle = brg, colour = Type),
-    #                 size = 2, fontface = 'bold.italic',
-    #                 bg.colour = "white") +
+    # Plot acoustic transect labels N of Cape Flattery
+    geom_shadowtext(data = tx.labels,
+                    aes(X, Y, label = transect.name,
+                        angle = brg, colour = Type),
+                    size = 2, fontface = 'bold.italic',
+                    bg.colour = "white") +
     scale_colour_manual("Type",
                         values = wpt.colors) +
     scale_linetype_manual("Type",
@@ -106,12 +106,12 @@ if (nrow(filter(transects, Type == "Nearshore", Transect %in% lm.transects))>0) 
     geom_sf(data = filter(transects, Type == "Nearshore", Transect %in% lm.transects),
             aes(colour = Type, linetype = Type),
             show.legend = "line") +
-    # # Plot acoustic transect labels N of Cape Flattery
-    # geom_shadowtext(data = tx.labels,
-    #                 aes(X, Y, label = transect.name,
-    #                     angle = brg, colour = Type),
-    #                 size = 2, fontface = 'bold.italic',
-    #                 bg.colour = "white") +
+    # Plot acoustic transect labels N of Cape Flattery
+    geom_shadowtext(data = tx.labels,
+                    aes(X, Y, label = transect.name,
+                        angle = brg, colour = Type),
+                    size = 2, fontface = 'bold.italic',
+                    bg.colour = "white") +
     scale_colour_manual("Type",
                         values = wpt.colors) +
     scale_linetype_manual("Type",

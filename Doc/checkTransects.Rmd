@@ -560,7 +560,9 @@ include_graphics(here("Figs/fig_survey_map.png"))
 
 ## Static map - By leg  
 
-Leg progress was calculated based on the total number of days at sea (`r as.numeric(total.das)` DAS), leg durations of `r glue::glue_collapse(leg.days-leg.waste, sep = ", ", last = ", and ")` DAS after subtracting days lost to transits and other causes (`r glue::glue_collapse(leg.waste, sep = ",", last = " and ")` DAS, respectively), and the cumulative distance traveled along and between transects.
+Leg progress was calculated based on the total number of days at sea (`r as.numeric(total.das)` DAS), leg durations of `r glue::glue_collapse(leg.days-leg.waste, sep = ", ", last = ", and ")` DAS after subtracting days lost to transits (`r glue::glue_collapse(leg.waste, sep = ",", last = " and ")` DAS, respectively), daytime trawling (`r mean(day.trawl.waste)` h/day), daytime CTD casts (`r mean(day.ctd.waste)` h/day), and the cumulative distance traveled along and between transects.
+
+<!-- [Original legend text] Leg progress was calculated based on the total number of days at sea (`r as.numeric(total.das)` DAS), leg durations of `r glue::glue_collapse(leg.days-leg.waste, sep = ", ", last = ", and ")` DAS after subtracting days lost to transits and other causes (`r glue::glue_collapse(leg.waste, sep = ",", last = " and ")` DAS, respectively), and the cumulative distance traveled along and between transects. -->
 
 ```{r map-survey-plan-all-leg}
 include_graphics(here("Figs/fig_survey_map_leg.png"))

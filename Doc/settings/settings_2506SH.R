@@ -47,8 +47,8 @@ gpx.dir          <- here("Data/Nav")
 gpx.file         <- "rosepoint_waypoints_2506SH.gpx" #"IWCPS-planning.gpx"
 
 # Define transit and survey speed (kn) for estimating progress
-survey.speed     <- 9.5
-transit.speed    <- 10
+survey.speed     <- 9
+transit.speed    <- 9
 survey.direction <- "Northward" # Southward or Northward; to compute day lengths
 
 # Beginning transit length (d)
@@ -57,6 +57,11 @@ transit.duration <- ceiling(transit.distance/transit.speed/24)
 
 # Leg waste (d) due to transit, late departures, and early arrivals
 leg.waste <- c(0, 2, 2, 2, 2)
+
+# Time required for daytime trawling and CTD casts
+day.trawl.duration <- 2.5 # duration of daytime trawls (h)
+day.trawl.waste <- c(0.5, 2.3, 2.3, 2.3, 2.3)*day.trawl.duration
+day.ctd.waste <- c(0, 2, 2, 2, 2)
 
 # Remove transects to adjust survey progress
 transects.rm <- NA # Numbered transects to remove
@@ -204,7 +209,7 @@ crs.proj <- 3310 # California Albers Equal Area
 map.height <- 10
 # Map height for specific regions; used in makeTransects, checkTransects
 map.height.region <- c(central = 12, mexico = 7, north = 7, south = 10)
-map.label.size <- c(central = 1, mexico = 2, north = 2, south = 2)
+map.label.size <- c(central = 1.5, mexico = 4, north = 2, south = 4)
 
 # Leaflet tile options; set both to T if caching
 useCachedTile  <- F # Use cached tiles

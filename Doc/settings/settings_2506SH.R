@@ -13,7 +13,7 @@ combine.regions   <- F # Combine nearshore/offshore plots with those from the co
 ### Transect spacing (nautical miles)
 tx.spacing.fsv  <- 15 # For Lasker 
 tx.spacing.sd   <- 15 # For Saildrone
-tx.spacing.ns   <- 6 # For nearshore sampling
+tx.spacing.ns   <- 7 # For nearshore sampling
 tx.spacing.os   <- 40 # Nearshore transect spacing, in nmi; set NA if calculating programatically
 
 # Mainland buffer distance for FSV and Saildrone transects
@@ -28,7 +28,7 @@ uctd.spacing   <- 15
 
 ### Transect removal and renumbering
 rm.n.transects     <- 46 # Number of transects to remove from the start (if near Mexico); if none, use zero
-rm.n.transects.ns  <- 115  # Number of transects to remove from the start (if near Mexico); if none, use zero
+rm.n.transects.ns  <- 99  # Number of transects to remove from the start (if near Mexico); if none, use zero
 rm.n.transects.sd  <- 69 # Number of transects to remove from the start (if near Mexico); if none, use zero
 rm.i.transects     <- NA # Remove specific transects from plan; else NA (for 2007RL: c(paste(90:117, "Nearshore")))
 renumber.transects <- FALSE # Renumber transects to start at zero if transect are removed
@@ -140,14 +140,17 @@ survey.long          <- c(-130,-113)
 # Survey plan info --------------------------------------------------------
 wpt.filename         <- "waypoints_2506SH.csv"
 wpt.types            <- c(Adaptive = "Adaptive", Carranza = "Carranza",
-                          Compulsory = "Compulsory", Nearshore = "Nearshore",
-                          Offshore = "Offshore", Saildrone = "Saildrone")
+                          Compulsory = "Compulsory", Franklin = "Franklin",
+                          Nearshore = "Nearshore", Offshore = "Offshore", 
+                          Saildrone = "Saildrone")
 wpt.colors           <- c(Adaptive = "#FF0000", Carranza = "green",
-                          Compulsory = "#000000", Nearshore = "#FF33F5", 
-                          Offshore = "#FFA500", Saildrone = "#00FFFF") 
+                          Compulsory = "#000000", Franklin = "blue",
+                          Nearshore = "#FF33F5", Offshore = "#FFA500", 
+                          Saildrone = "#00FFFF") 
 wpt.linetypes        <- c(Adaptive = "dashed", Carranza = "solid",
-                          Compulsory = "solid", Nearshore = "solid", 
-                          Offshore = "dashed", Saildrone = "dashed")
+                          Compulsory = "solid", Franklin = "solid", 
+                          Nearshore = "solid", Offshore = "dashed", 
+                          Saildrone = "dashed")
 
 # # Saildrone info -----------------------------------------------
 # # Select Saildrone numbers

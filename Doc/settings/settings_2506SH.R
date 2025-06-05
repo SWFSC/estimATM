@@ -28,7 +28,7 @@ uctd.spacing   <- 15
 
 ### Transect removal and renumbering
 rm.n.transects     <- 46 # Number of transects to remove from the start (if near Mexico); if none, use zero
-rm.n.transects.ns  <- 99  # Number of transects to remove from the start (if near Mexico); if none, use zero
+rm.n.transects.ns  <- 99 # Number of transects to remove from the start (if near Mexico); if none, use zero
 rm.n.transects.sd  <- 69 # Number of transects to remove from the start (if near Mexico); if none, use zero
 rm.i.transects     <- NA # Remove specific transects from plan; else NA (for 2007RL: c(paste(90:117, "Nearshore")))
 renumber.transects <- FALSE # Renumber transects to start at zero if transect are removed
@@ -52,7 +52,7 @@ transit.speed    <- 9
 survey.direction <- "Northward" # Southward or Northward; to compute day lengths
 
 # Beginning transit length (d)
-transit.distance <- 0 # begining in san diego 2024
+transit.distance <- 0 # beginning in San Diego 2025
 transit.duration <- ceiling(transit.distance/transit.speed/24)
 
 # Leg waste (d) due to transit, late departures, and early arrivals
@@ -60,8 +60,8 @@ leg.waste <- c(0, 2, 2, 2, 2)
 
 # Time required for daytime trawling and CTD casts
 day.trawl.duration <- 2.5 # duration of daytime trawls (h)
-day.trawl.waste <- c(0.5, 2.3, 2.3, 2.3, 2.3)*day.trawl.duration
-day.ctd.waste <- c(0, 2, 2, 2, 2)
+day.trawl.waste    <- c(0.5, 2.3, 2.3, 2.3, 2.3)*day.trawl.duration
+day.ctd.waste      <- c(0, 2, 2, 2, 2)
 
 # Remove transects to adjust survey progress
 transects.rm <- NA # Numbered transects to remove
@@ -120,7 +120,7 @@ leg.breaks <- as.numeric(lubridate::ymd(c("2025-06-27", "2025-07-16",
 
 # Define ERDDAP data variables for primary NOAA vessel
 erddap.url           <- "http://coastwatch.pfeg.noaa.gov/erddap/tabledap/fsuNoaaShip"
-erddap.vessel        <- "WTEDnrt"    # Lasker == WTEG; Shimada == WTED; add "nrt" if during survey
+erddap.vessel        <- "WTEDnrt"    # Lasker == WTEG; Shimada == WTED; add "nrt" if survey in progress
 erddap.survey.start  <- "2025-06-01" # Start of survey for ERDDAP vessel data query
 erddap.survey.end    <- "2025-10-01" # End of survey for ERDDAP vessel data query
 erddap.vars          <- c("time,latitude,longitude,seaTemperature,platformSpeed,windDirection,windSpeed,flag")
@@ -581,7 +581,7 @@ cufes.date.format      <- "mdy" # mdy (1907RL and later) or ymd (earlier surveys
 cufes.vessels          <- c("RL")
 
 # Trawl data
-trawl.source           <- "SQL"    # "SQL" or "Access"
+trawl.source           <- "CLAMS"  # "SQL" or "Access" or "CLAMS"
 trawl.dsn              <- "TRAWL"  # DSN for Trawl database on SQL server
 trawl.dir.access       <- file.path(survey.dir, "DATA/BIOLOGICAL/HAUL")
 trawl.db.access        <- "TrawlDataEntry2506SH.accdb"

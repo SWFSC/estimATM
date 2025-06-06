@@ -11,6 +11,7 @@ if (trawl.source == "SQL") {
                           Server = "161.55.235.187", 
                           Database = "Trawl", 
                           Trusted_Connection = "True")
+  
 } else if (trawl.source == "Access") {
   # Copy trawl Access database
   haul.db <- fs::dir_ls(file.path(survey.dir[survey.vessel.primary],
@@ -23,23 +24,58 @@ if (trawl.source == "SQL") {
   trawl.con  <- DBI::dbConnect(odbc::odbc(), 
                           Driver = "Microsoft Access Driver (*.mdb, *.accdb)", 
                           DBQ = file.path(here::here("Data/Trawl"), trawl.db.access))
+  
+} else if (trawl.source == "CLAMS") {
+  # Configure ODBC connection to CLAMS database
+  trawl.con <- dbConnect(odbc::odbc(), 
+                         .connection_string = paste0("Driver={Oracle in instantclient_23_8}",
+                                                     ";DBQ=", clams.dbq,
+                                                     ";DSN=", clams.dsn,
+                                                     ";UID=", clams.uid,
+                                                     ";PWD=", clams.pw),
+                         timeout = 10)
 }
+
 # Import trawl database tables
-catch.all	     <- dplyr::tbl(trawl.con,"Catch") %>% dplyr::collect()
-haul.all       <- dplyr::tbl(trawl.con,"Haul") %>% dplyr::collect()
-lengths.all    <- dplyr::tbl(trawl.con,"Specimen") %>% dplyr::collect()
-if (DBI::dbExistsTable(trawl.con, "LengthFrequency"))
-  lengthFreq.all <- dplyr::tbl(trawl.con,"LengthFrequency") %>% dplyr::collect()
-spp.codes      <- dplyr::tbl(trawl.con,"SpeciesCodes") %>% dplyr::collect()
+if (trawl.source %in% c("SQL","Access")) {
+  catch.all	     <- dplyr::tbl(trawl.con,"Catch") %>% dplyr::collect()
+  haul.all       <- dplyr::tbl(trawl.con,"Haul")  %>% dplyr::collect()
+  lengths.all    <- dplyr::tbl(trawl.con,"Specimen") %>% dplyr::collect()
+  if (DBI::dbExistsTable(trawl.con, "LengthFrequency"))
+    lengthFreq.all <- dplyr::tbl(trawl.con,"LengthFrequency") %>% dplyr::collect()
+  spp.codes      <- dplyr::tbl(trawl.con,"SpeciesCodes") %>% dplyr::collect()
+  
+  # Save imported database data to .Rdata file
+  if (exists("lengthFreq.all")) {
+    save(catch.all, haul.all, lengths.all, spp.codes, lengthFreq.all, 
+         file = here::here("Data/Trawl/trawl_data_raw.Rdata"))
+  } else {
+    save(catch.all, haul.all, lengths.all, spp.codes,  
+         file = here::here("Data/Trawl/trawl_data_raw.Rdata"))
+  }
+  
+} else if (trawl.source == "CLAMS") {
+  # dbListTables(trawl.con)
+  catch.data   <- dplyr::tbl(trawl.con, "CATCH_SUMMARY") %>% dplyr::collect()
+  events       <- dplyr::tbl(trawl.con, "EVENTS") %>% dplyr::collect()
+  event.data   <- dplyr::tbl(trawl.con, "EVENT_DATA") %>% dplyr::collect()
+  event.params <- dplyr::tbl(trawl.con, "EVENT_PARAMETERS") %>% dplyr::collect() 
+  event.stream <- dplyr::tbl(trawl.con, "EVENT_STREAM_DATA") %>% dplyr::collect() 
+  gear.accy    <- dplyr::tbl(trawl.con, "GEAR_ACCESSORY") %>% dplyr::collect()
+  measurements <- dplyr::tbl(trawl.con, "MEASUREMENTS") %>% dplyr::collect()
+  samples      <- dplyr::tbl(trawl.con, "SAMPLES") %>% dplyr::collect()
+  ships        <- dplyr::tbl(trawl.con, "SHIPS") %>% dplyr::collect()
+  specimens    <- dplyr::tbl(trawl.con, "SPECIMEN") %>% dplyr::collect()
+  spp.codes    <- dplyr::tbl(trawl.con, "SPECIES_DATA") %>% dplyr::collect()
+  surveys      <- dplyr::tbl(trawl.con, "SURVEYS") %>% dplyr::collect()
+  
+  save(catch.data, events, event.data, event.params, event.stream,
+       gear.accy, measurements, samples, ships, specimens, spp.codes, surveys, 
+       file = here::here("Data/Trawl/trawl_data_raw.Rdata"))
+  
+}
 
 # Close database channel
 DBI::dbDisconnect(trawl.con)
 
-# Save imported database data to .Rdata file
-if (exists("lengthFreq.all")) {
-  save(catch.all, haul.all, lengths.all, spp.codes, lengthFreq.all, 
-       file = here::here("Data/Trawl/trawl_data_raw.Rdata"))
-} else {
-  save(catch.all, haul.all, lengths.all, spp.codes,  
-       file = here::here("Data/Trawl/trawl_data_raw.Rdata"))
-}
+

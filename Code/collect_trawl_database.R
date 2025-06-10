@@ -59,18 +59,21 @@ if (trawl.source %in% c("SQL","Access")) {
   catch.data   <- dplyr::tbl(trawl.con, "CATCH_SUMMARY") %>% dplyr::collect()
   events       <- dplyr::tbl(trawl.con, "EVENTS") %>% dplyr::collect()
   event.data   <- dplyr::tbl(trawl.con, "EVENT_DATA") %>% dplyr::collect()
-  event.params <- dplyr::tbl(trawl.con, "EVENT_PARAMETERS") %>% dplyr::collect() 
-  event.stream <- dplyr::tbl(trawl.con, "EVENT_STREAM_DATA") %>% dplyr::collect() 
+  event.params <- dplyr::tbl(trawl.con, "EVENT_PARAMETERS") %>% dplyr::collect()
+  event.perf   <- dplyr::tbl(trawl.con, "EVENT_PERFORMANCE") %>% dplyr::collect()
+  event.stream <- dplyr::tbl(trawl.con, "EVENT_STREAM_DATA") %>% dplyr::collect() # Slow
   gear.accy    <- dplyr::tbl(trawl.con, "GEAR_ACCESSORY") %>% dplyr::collect()
+  itis.codes   <- dplyr::tbl(trawl.con, "SPECIES_DATA") %>% dplyr::collect()
   measurements <- dplyr::tbl(trawl.con, "MEASUREMENTS") %>% dplyr::collect()
   samples      <- dplyr::tbl(trawl.con, "SAMPLES") %>% dplyr::collect()
   ships        <- dplyr::tbl(trawl.con, "SHIPS") %>% dplyr::collect()
+  spp.codes    <- dplyr::tbl(trawl.con, "SPECIES") %>% dplyr::collect()  
   specimens    <- dplyr::tbl(trawl.con, "SPECIMEN") %>% dplyr::collect()
-  spp.codes    <- dplyr::tbl(trawl.con, "SPECIES_DATA") %>% dplyr::collect()
   surveys      <- dplyr::tbl(trawl.con, "SURVEYS") %>% dplyr::collect()
-  
-  save(catch.data, events, event.data, event.params, event.stream,
-       gear.accy, measurements, samples, ships, specimens, spp.codes, surveys, 
+
+  # Save tables
+  save(catch.data, events, event.data, event.params, event.perf, event.stream, gear.accy, 
+       itis.codes, measurements, samples, ships, specimens, spp.codes, surveys, 
        file = here::here("Data/Trawl/trawl_data_raw.Rdata"))
   
 }

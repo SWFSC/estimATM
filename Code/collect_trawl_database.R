@@ -61,7 +61,7 @@ if (trawl.source %in% c("SQL","Access")) {
   event.data   <- dplyr::tbl(trawl.con, "EVENT_DATA") %>% dplyr::collect()
   event.params <- dplyr::tbl(trawl.con, "EVENT_PARAMETERS") %>% dplyr::collect()
   event.perf   <- dplyr::tbl(trawl.con, "EVENT_PERFORMANCE") %>% dplyr::collect()
-  event.stream <- dplyr::tbl(trawl.con, "EVENT_STREAM_DATA") %>% dplyr::collect() # Slow
+  # event.stream <- dplyr::tbl(trawl.con, "EVENT_STREAM_DATA") %>% dplyr::collect() # Shouldn't need
   gear.accy    <- dplyr::tbl(trawl.con, "GEAR_ACCESSORY") %>% dplyr::collect()
   itis.codes   <- dplyr::tbl(trawl.con, "SPECIES_DATA") %>% dplyr::collect()
   measurements <- dplyr::tbl(trawl.con, "MEASUREMENTS") %>% dplyr::collect()

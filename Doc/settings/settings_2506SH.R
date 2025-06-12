@@ -260,23 +260,23 @@ cps.spp            <- c("Clupea pallasii","Engraulis mordax","Sardinops sagax",
                         "Scomber japonicus","Trachurus symmetricus", 
                         "Etrumeus acuminatus")
 
-# # CUFES -------------------------------------------------------
-# cufes.start        <- "2023-07-03" # Start of survey for CUFES filtering
-# cufes.end          <- "2023-09-30" # End of survey for CUFES filtering
-# # For legend objects
-# cufes.date.range   <- c(start = ymd_hms("2023-07-01 19:30:00 UTC"), 
-#                         stop  = now())
-# cufes.breaks       <- c(0, 0.1, 1, 10, 25, 50, 250, 500, 10000) 
-# cufes.labels       <- c("<0.1", "0.1-1", "1-10", "10-25", "25-50", 
-#                         "50-250", "250-500", ">500")
-# cufes.sizes        <- c(0.5, 1, 2, 3, 4, 5, 6, 7)
-# cufes.plot.spp     <- c("AnchovyEggs","JackMackerelEggs","SardineEggs")
-# cufes.colors       <- c("AnchovyEggs"      = anchovy.color, 
-#                         "JackMackerelEggs" = jack.mack.color, 
-#                         "SardineEggs"      = sardine.color)
-# cufes.spp.labels   <- c("AnchovyEggs"      = "Anchovy",
-#                         "JackMackerelEggs" = "J. mackerel",
-#                         "SardineEggs"      = "Sardine")
+# CUFES -------------------------------------------------------
+cufes.start        <- NA # Start of survey for CUFES filtering
+cufes.end          <- NA # End of survey for CUFES filtering
+# For legend objects
+cufes.date.range   <- c(start = ymd_hms("2023-07-01 19:30:00 UTC"),
+                        stop  = now())
+cufes.breaks       <- c(0, 0.1, 1, 10, 25, 50, 250, 500, 10000)
+cufes.labels       <- c("<0.1", "0.1-1", "1-10", "10-25", "25-50",
+                        "50-250", "250-500", ">500")
+cufes.sizes        <- c(0.5, 1, 2, 3, 4, 5, 6, 7)
+cufes.plot.spp     <- c("AnchovyEggs","JackMackerelEggs","SardineEggs")
+cufes.colors       <- c("AnchovyEggs"      = anchovy.color,
+                        "JackMackerelEggs" = jack.mack.color,
+                        "SardineEggs"      = sardine.color)
+cufes.spp.labels   <- c("AnchovyEggs"      = "Anchovy",
+                        "JackMackerelEggs" = "J. mackerel",
+                        "SardineEggs"      = "Sardine")
 
 # Trawl -----------------------------------------------------------------------
 # For legend objects

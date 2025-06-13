@@ -70,25 +70,31 @@ if (trawl.source == "Access") {
            stopLongDecimal,equilibriumTime,haulBackTime) 
   
 } else if (trawl.source == "CLAMS"){
+  
+  # Load trawl data
+  # load(here("Data/Trawl/trawl_data_raw.Rdata"))
+  
   # Rename all the table columns - Will hopefully make subsequent processing more intuitive --------
-  
-  
   # Extract ITIS codes from SPECIES_DATA
   itis.codes <- itis.codes %>% 
     pivot_wider(names_from = SPECIES_PARAMETER, values_from = PARAMETER_VALUE)%>%
     select(species_code = SPECIES_CODE, species = ITIS_Code) # species is SWFSC species code
   
+  # Format SWFSC species codes table
+  spp.codes <- spp.codes %>% 
+    rename(species_code = SPECIES_CODE, 
+           scientificName = SCIENTIFIC_NAME, commonName = COMMON_NAME)
+  
+  # Format ships table
   ships <- ships %>% 
     rename(ship = VESSEL_CODE, ship.name = NAME, ship.desc = DESCRIPTION)
   
-  # Format events and event.data df
-  events <- events %>% 
-    rename(cruise = SURVEY, haul = EVENT_ID, gearType = GEAR, notes = COMMENTS) %>% 
-    left_join(select(ships, SHIP, ship)) 
-  
+  # Format events and event.data table
+  ## Start with event.data table
   event.data <- event.data %>% 
-    pivot_wider(names_from = EVENT_PARAMETER, values_from = PARAMETER_VALUE) %>%
-    rename(collection = Collection, operator = Operator, fishingMode = FishingMode,
+    pivot_wider(names_from = EVENT_PARAMETER, values_from = PARAMETER_VALUE) %>% 
+    rename(cruise = SURVEY, haul = EVENT_ID, gearType = Gear, 
+           collection = Collection, operator = Operator, fishingMode = FishingMode,
            state = State, country = Country, 
            netInWaterTime = NetInWater, equilibriumTime = EQ, wireOutLengthMeters = WireOut,
            downswellToe = DownswellTow, arcedTow = ArcedTow,
@@ -96,34 +102,95 @@ if (trawl.source == "Access") {
            haulBackTime = Haulback, netOnDeckTime = NetOnDeck) %>% 
     mutate(countryState = paste(country, state))
   
-  event.stream <- event.stream %>% 
-    pivot_wider(names_from = MEASUREMENT_TYPE, values_from = MEASUREMENT_VALUE) %>% 
-    rename(surfaceTempC = SurfaceTemp, 
-           windDirection = WindDirection, windSpeedKnots = WindSpeed,
-           # salinityPPM = TBD, aveBottomDepthMeters = TBD, 
-           # shipSpeedOverGround = SOG, shipSpeedThroughWater = TBD,
-           # startLatDecimal = Latitude, startLongDecimal = Longitude,
-           # stopLatDecimal = Latitude, stopLongDecimal = Longitude,
-           # doorSpreadMetersEQ = DoorSpread, doorSpreadMeters10 = DoorSpread, 
-           # doorSpreadMeters20 = DoorSpread, doorSpreadMetersHB = DoorSpread,
-           # footRopeDepthEQ = Footrope , footRopeDepth10 = Footrope , 
-           # footRopeDepth20 = Footrope , footRopeDepthHB = Footrope
-           )
+  ## Join with event.data to create final events
+  events <- events %>% 
+    rename(cruise = SURVEY, haul = EVENT_ID, gearType = GEAR, notes = COMMENTS) %>% 
+    left_join(select(ships, SHIP, ship)) %>% 
+    left_join(event.data) %>% 
+    select(cruise, ship, haul, collection, everything())
   
+  # Format gear accessory table
   gear.accy <- gear.accy %>% 
     pivot_wider(names_from = GEAR_ACCESSORY, values_from = GEAR_ACCESSORY_OPTION) %>% 
     left_join(select(ships, SHIP, ship)) %>% 
     rename(cruise = SURVEY, haul = EVENT_ID, isTDRonHeadrope = HeadropeTDR, isTDRonFootrope = FootropeTDR)
   
+  # Format measurements table
   measurements <- measurements %>% 
     left_join(select(ships, SHIP, ship)) %>% 
     pivot_wider(names_from = "MEASUREMENT_TYPE", values_from = "MEASUREMENT_VALUE") %>%
     rename(cruise = SURVEY, haul = EVENT_ID,
-           individual_ID = alpha_barcode, standardLength_mm = standard_length_mm, forkLength_mm = fork_length_mm,
+           individual_ID = alpha_barcode, weightg = weight_g,
+           standardLength_mm = standard_length_mm, forkLength_mm = fork_length_mm,
            DNAtrayNumber = dna_tray_number, DNAvialNumber = dna_vial_number, isGonadSaved = ovary_taken,
            # isAlive = fish_condition, adiposeCondition = adipose_condition, 
-           hasTag = head_taken)
+           visualMaturity = maturity, hasTag = head_taken)
   
+  # Format samples table
+  samples <- samples %>%
+    left_join(select(ships, SHIP, ship)) %>%
+    rename(cruise = SURVEY, haul = EVENT_ID, 
+           species_code = SPECIES_CODE, datetime = TIME_STAMP, notes = COMMENTS) %>% 
+    # Separate these steps from the "renaming" portion of the code?
+    left_join(select(events, cruise, ship, haul, collection)) %>% # Add collection
+    left_join(itis.codes) %>% 
+    left_join(spp.codes) %>% 
+    select(cruise, ship, haul, collection, everything())
+  
+  specimens <- specimens %>% 
+    left_join(select(ships, SHIP, ship)) %>%
+    rename(cruise = SURVEY, haul = EVENT_ID, datetime = TIME_STAMP, notes = COMMENTS) %>% 
+    left_join(select(events, cruise, ship, haul, collection)) %>% # Add collection
+    select(cruise, ship, haul, collection, everything()) %>% 
+    mutate(isRandomSample=case_when(SAMPLING_METHOD=="random" ~ "Y",
+                                    SAMPLING_METHOD=="non_random" ~ "N"))
+  
+  measurements <- measurements # %>% 
+    # dna_finclip_number is missing from database currently
+    # mutate(hasDNAfinClip = case_when(dna_finclip_number == "None" ~ "N", !is.na(dna_finclip_number) ~ "Y"),
+    #        individual_ID = case_when(!is.na(dna_finclip_number) ~ dna_finclip_number, .default=individual_ID),
+    #        individual_ID = replace(individual_ID, individual_ID == "None", NA)) %>% 
+  
+  specimens <- specimens %>% 
+    left_join(measurements) %>% 
+    left_join(select(samples, ship, cruise, haul, SAMPLE_ID, species_code, species)) 
+    
+  # Code specimen number
+  lengths.all <- specimens %>%
+    group_by(haul, SAMPLE_ID) %>%
+    arrange(haul, SAMPLE_ID, SPECIMEN_ID)%>%
+    mutate(specimenNumber      = seq(1,length(SAMPLE_ID), 1),
+           otolithNumber       = specimenNumber,
+           selectionReason     = NA_character_, flaggedData = NA_character_,
+           visMaturityAssessor = case_when(!is.na(visualMaturity) ~ SCIENTIST),
+           isGonadSaved        = recode(isGonadSaved, "Yes" = "Y", "No" = "N"),
+           sex                 = case_when(is.na(sex) ~ "unknown", .default = sex),
+           sex                 = recode(sex, "Female" = "female", "Male" = "male", "Unknown" = "unknown"),
+           visualMaturity      = case_when(is.na(visualMaturity) ~ "notOpened", .default=visualMaturity),
+           visualMaturity      = recode(visualMaturity, "Immature" = "immature", "Intermediate" = "intermediate",
+                                   "Active" = "active", "Hydrated" = "hydrated", "Not Opened" = "notOpened"),
+           # isAlive             = recode(isAlive, "Yes" = "Y", "No" = "N"),
+           hasTag              = recode(hasTag, "Yes" = "Y", "No" = "N"),
+           IDmethod            = "visualObservation",
+           netSampleType       = "codend") %>%
+    ungroup(SAMPLE_ID) %>%
+    select(cruise, ship, haul, collection, species, specimenNumber, standardLength_mm, forkLength_mm, 
+           sex, visualMaturity, visMaturityAssessor, isGonadSaved, weightg,
+           otolithNumber, individual_ID, isRandomSample, selectionReason,
+           DNAtrayNumber, DNAvialNumber, 
+           # isAlive, adiposeCondition, hasDNAfinClip, 
+           hasTag, IDmethod, notes, flaggedData) %>%
+    mutate_at(vars(haul, collection, species, standardLength_mm, forkLength_mm,
+                   weightg, DNAtrayNumber, DNAvialNumber), as.numeric)
+  
+  # RESUME HERE
+    
+  
+  
+
+  # Is this the end of the renaming portion of the code? Begin building tables?
+  
+  # Build SWFSC tables -------------------------------------------
   specimens <- specimens %>% 
     select(-c(WORKSTATION_ID, TIME_STAMP)) %>%
     rename(notes = "COMMENTS") %>%
@@ -131,47 +198,14 @@ if (trawl.source == "Access") {
       SAMPLING_METHOD == "random" ~ "Y",
       SAMPLING_METHOD == "non_random" ~ "N"))
   
-  # RESUME HERE
-  
   
   # Build haul table ----------------------------------------------
   haul.all <- events %>% 
     left_join(event.data) %>% 
-    rename(cruise = SURVEY, haul = EVENT_ID, collection = Collection, 
-           operator = Operator, fishingMode = FishingMode,
-           gearType = GEAR, netInWaterTime = NetInWater, equilibriumTime = EQ,
-           haulBackTime = Haulback, netOnDeckTime = NetOnDeck, wireOutLengthMeters = WireOut,
-           # startLatDecimal = TBD, startLongDecimal = TBD,
-           # stopLatDecimal = TBD, stopLongDecimal = TBD,
-           # surfaceTempC = AvgSurfaceTemp,
-           # salinityPPM = TBD, aveBottomDepthMeters = TBD,
-           # isTDRonHeadrope = HeadropeTDR, isTDRonFootrope = FootropeTDR,
-           # windDirection = WindDirection, windSpeedKnots = WindSpeed,
-           downswellTow = DownswellTow, arcedTow = ArcedTow,
-           trawlPerformance = PERFORMANCE_CODE,
-           seaCondition = SeaCondition, 
-           cloudCondition = Clouds,
-           # shipSpeedThroughWater = TBD, shipSpeedOverGround = TBD
-           ) %>% 
     mutate(orderOcc = haul, flaggedData = NA_character_)
   
   # Format event.stream data
   ## Work in progress
-
-  
-  # Build catch table
-  ## samples table is the precursor to the catch table
-  ## need this to get species collected
-  samples <- samples %>% 
-    rename(ship_id = SHIP) %>%
-    left_join(select(ships, ship_id = SHIP, ship = VESSEL_CODE)) %>%
-    rename(cruise = SURVEY, haul = EVENT_ID) %>%
-    left_join(select(haul.all, cruise, ship_id, ship, haul, collection)) %>% # Add collection
-    left_join(itis.codes) %>% 
-    left_join(spp.codes) %>% 
-    rename(species = ITIS_Code, scientificName = SCIENTIFIC_NAME, commonName = COMMON_NAME)
-  
-  # str(samples)
   
   # Create specimens table
   specimens <- specimens %>% 
@@ -299,7 +333,20 @@ if (trawl.source == "Access") {
   
   # https://docs.google.com/spreadsheets/d/1a2Qe6STQWJbz5mqPAcpNBdEVMY-HcoIFwTF3dLM7Zjg/edit?gid=1810649095#gid=1810649095
   
-  
+  # Probably don't need; use averages in other tables
+  # event.stream <- event.stream %>% 
+  #   pivot_wider(names_from = MEASUREMENT_TYPE, values_from = MEASUREMENT_VALUE) %>% 
+  #   rename(surfaceTempC = SurfaceTemp, 
+  #          windDirection = WindDirection, windSpeedKnots = WindSpeed,
+  #          # salinityPPM = TBD, aveBottomDepthMeters = TBD, 
+  #          # shipSpeedOverGround = SOG, shipSpeedThroughWater = TBD,
+  #          # startLatDecimal = Latitude, startLongDecimal = Longitude,
+  #          # stopLatDecimal = Latitude, stopLongDecimal = Longitude,
+  #          # doorSpreadMetersEQ = DoorSpread, doorSpreadMeters10 = DoorSpread, 
+  #          # doorSpreadMeters20 = DoorSpread, doorSpreadMetersHB = DoorSpread,
+  #          # footRopeDepthEQ = Footrope , footRopeDepth10 = Footrope , 
+  #          # footRopeDepth20 = Footrope , footRopeDepthHB = Footrope
+  #          )
 }
 
 # Classify hauls by season (spring or summer)

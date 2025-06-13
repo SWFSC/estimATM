@@ -100,7 +100,12 @@ if (trawl.source == "Access") {
            downswellToe = DownswellTow, arcedTow = ArcedTow,
            seaCondition = SeaCondition, cloudCondition = Clouds,
            haulBackTime = Haulback, netOnDeckTime = NetOnDeck) %>% 
-    mutate(countryState = paste(country, state))
+    mutate(countryState = paste(country, state)) %>% 
+    # Convert times to POSIXct
+    mutate_at(vars(
+      netInWaterTime, equilibriumTime, haulBackTime, netOnDeckTime,
+      EQ10Min, EQ20Min), 
+      mdy_hms)
   
   ## Join with event.data to create final events
   events <- events %>% 
@@ -109,11 +114,28 @@ if (trawl.source == "Access") {
     left_join(event.data) %>% 
     select(cruise, ship, haul, collection, everything())
   
+  # Format catch data
+  catch.data <- catch.data %>% 
+    rename(cruise = SURVEY, haul = EVENT_ID, species_code = SPECIES_CODE) %>%
+    left_join(select(ships, SHIP, ship)) %>% 
+    left_join(select(events, cruise, ship, haul, collection)) %>% # Add collection
+    left_join(itis.codes) %>% 
+    left_join(spp.codes) %>% 
+    select(cruise, ship, haul, collection, everything())
+    
   # Format gear accessory table
   gear.accy <- gear.accy %>% 
     pivot_wider(names_from = GEAR_ACCESSORY, values_from = GEAR_ACCESSORY_OPTION) %>% 
     left_join(select(ships, SHIP, ship)) %>% 
     rename(cruise = SURVEY, haul = EVENT_ID, isTDRonHeadrope = HeadropeTDR, isTDRonFootrope = FootropeTDR)
+  
+  # Create missing variable if missing
+  if (!"dna_finclip_number" %in% names(measurements)) 
+    measurements$dna_finclip_number <- NA_character_
+  if (!"fish_condition" %in% names(measurements)) 
+    measurements$fish_condition <- NA_character_
+  if (!"adipose_condition" %in% names(measurements)) 
+    measurements$adipose_condition <- NA_character_
   
   # Format measurements table
   measurements <- measurements %>% 
@@ -123,8 +145,14 @@ if (trawl.source == "Access") {
            individual_ID = alpha_barcode, weightg = weight_g,
            standardLength_mm = standard_length_mm, forkLength_mm = fork_length_mm,
            DNAtrayNumber = dna_tray_number, DNAvialNumber = dna_vial_number, isGonadSaved = ovary_taken,
-           # isAlive = fish_condition, adiposeCondition = adipose_condition, 
-           visualMaturity = maturity, hasTag = head_taken)
+           isAlive = fish_condition, adiposeCondition = adipose_condition,
+           visualMaturity = maturity, hasTag = head_taken) %>% 
+    mutate(hasDNAfinClip = case_when(dna_finclip_number == "None" ~ "N", 
+                                     !is.na(dna_finclip_number) ~ "Y",
+                                     TRUE ~ NA_character_),
+           individual_ID = case_when(!is.na(dna_finclip_number) ~ dna_finclip_number, 
+                                     .default=individual_ID),
+           individual_ID = replace(individual_ID, individual_ID == "None", NA)) 
   
   # Format samples table
   samples <- samples %>%
@@ -143,22 +171,11 @@ if (trawl.source == "Access") {
     left_join(select(events, cruise, ship, haul, collection)) %>% # Add collection
     select(cruise, ship, haul, collection, everything()) %>% 
     mutate(isRandomSample=case_when(SAMPLING_METHOD=="random" ~ "Y",
-                                    SAMPLING_METHOD=="non_random" ~ "N"))
-  
-  measurements <- measurements # %>% 
-    # dna_finclip_number is missing from database currently
-    # mutate(hasDNAfinClip = case_when(dna_finclip_number == "None" ~ "N", !is.na(dna_finclip_number) ~ "Y"),
-    #        individual_ID = case_when(!is.na(dna_finclip_number) ~ dna_finclip_number, .default=individual_ID),
-    #        individual_ID = replace(individual_ID, individual_ID == "None", NA)) %>% 
-  
-  specimens <- specimens %>% 
+                                    SAMPLING_METHOD=="non_random" ~ "N")) %>% 
     left_join(measurements) %>% 
-    left_join(select(samples, ship, cruise, haul, SAMPLE_ID, species_code, species)) 
-    
-  # Code specimen number
-  lengths.all <- specimens %>%
+    left_join(select(samples, ship, cruise, haul, SAMPLE_ID, species_code, species)) %>%
     group_by(haul, SAMPLE_ID) %>%
-    arrange(haul, SAMPLE_ID, SPECIMEN_ID)%>%
+    arrange(haul, SAMPLE_ID, SPECIMEN_ID) %>%
     mutate(specimenNumber      = seq(1,length(SAMPLE_ID), 1),
            otolithNumber       = specimenNumber,
            selectionReason     = NA_character_, flaggedData = NA_character_,
@@ -169,167 +186,67 @@ if (trawl.source == "Access") {
            visualMaturity      = case_when(is.na(visualMaturity) ~ "notOpened", .default=visualMaturity),
            visualMaturity      = recode(visualMaturity, "Immature" = "immature", "Intermediate" = "intermediate",
                                    "Active" = "active", "Hydrated" = "hydrated", "Not Opened" = "notOpened"),
-           # isAlive             = recode(isAlive, "Yes" = "Y", "No" = "N"),
+           isAlive             = recode(isAlive, "Yes" = "Y", "No" = "N"),
            hasTag              = recode(hasTag, "Yes" = "Y", "No" = "N"),
            IDmethod            = "visualObservation",
            netSampleType       = "codend") %>%
     ungroup(SAMPLE_ID) %>%
+    mutate_at(vars(haul, collection, species, standardLength_mm, forkLength_mm,
+                   weightg, DNAtrayNumber, DNAvialNumber), as.numeric) %>% 
     select(cruise, ship, haul, collection, species, specimenNumber, standardLength_mm, forkLength_mm, 
            sex, visualMaturity, visMaturityAssessor, isGonadSaved, weightg,
            otolithNumber, individual_ID, isRandomSample, selectionReason,
            DNAtrayNumber, DNAvialNumber, 
-           # isAlive, adiposeCondition, hasDNAfinClip, 
-           hasTag, IDmethod, notes, flaggedData) %>%
-    mutate_at(vars(haul, collection, species, standardLength_mm, forkLength_mm,
-                   weightg, DNAtrayNumber, DNAvialNumber), as.numeric)
+           isAlive, adiposeCondition, hasDNAfinClip,
+           hasTag, IDmethod, notes, flaggedData) 
   
-  # RESUME HERE
-    
-  
-  
-
-  # Is this the end of the renaming portion of the code? Begin building tables?
-  
-  # Build SWFSC tables -------------------------------------------
-  specimens <- specimens %>% 
-    select(-c(WORKSTATION_ID, TIME_STAMP)) %>%
-    rename(notes = "COMMENTS") %>%
-    mutate(isRandomSample = case_when(
-      SAMPLING_METHOD == "random" ~ "Y",
-      SAMPLING_METHOD == "non_random" ~ "N"))
-  
-  
-  # Build haul table ----------------------------------------------
-  haul.all <- events %>% 
-    left_join(event.data) %>% 
-    mutate(orderOcc = haul, flaggedData = NA_character_)
-  
-  # Format event.stream data
-  ## Work in progress
-  
-  # Create specimens table
-  specimens <- specimens %>% 
-    # select(-c(WORKSTATION_ID, TIME_STAMP)) %>%
-    # rename(notes = "COMMENTS") %>%
-    # mutate(isRandomSample = case_when(
-    #   SAMPLING_METHOD == "random" ~ "Y",
-    #   SAMPLING_METHOD == "non_random" ~ "N")) %>% 
-    left_join(select(samples, ship, cruise, haul, SAMPLE_ID)) %>% # What does this do?
-    left_join(select(haul.all, cruise, ship_id, ship, haul, collection)) # Add collection
-  
-  # str(specimens2)
-  
-  # Create measurements
-  ## This table provides any measurements for a specimen 
-  ## Currently lacking DNA fin clip and individual info, also isAlive and adiposeCondition
-  measurements <- measurements %>%
-    left_join(ships) %>% 
-    # select(-DEVICE_ID) %>%
-    # rename(ship_id = SHIP, ship = VESSEL_CODE, cruise = SURVEY, haul = EVENT_ID) %>% 
-    pivot_wider(names_from = "MEASUREMENT_TYPE", values_from = "MEASUREMENT_VALUE") %>%
-    rename(individual_ID = alpha_barcode, standardLength_mm = standard_length_mm, forkLength_mm = fork_length_mm,
-           DNAtrayNumber = dna_tray_number, DNAvialNumber = dna_vial_number, isGonadSaved = ovary_taken,
-           # isAlive = fish_condition, adiposeCondition = adipose_condition, 
-           hasTag = head_taken) # %>%
-    # mutate(hasDNAfinClip = case_when(dna_finclip_number == "None" ~ "N",
-    #                                  !is.na(dna_finclip_number) ~ "Y"),
-    #        individual_ID = case_when(!is.na(dna_finclip_number) ~ dna_finclip_number,
-    #                                  TRUE ~ individual_ID),
-    #        individual_ID = replace(individual_ID, individual_ID == "None", NA))  
-  
-  specimens <- specimens %>%
-    left_join(ships) %>% # Add ship info
-    left_join(measurements) %>% # Add specimen measurements
-    left_join(spp.codes) # Add ITIS code
-  
-  #### Code specimen number 
-  specimens <- specimens %>%
-    group_by(EVENT_ID, SAMPLE_ID) %>%
-    arrange(EVENT_ID, SAMPLE_ID, SPECIMEN_ID)%>%
-    mutate(specimenNumber = seq(1, length(SAMPLE_ID), 1),
-           otolithNumber = specimenNumber)
-  
-  # creating final data set 
-  specimens <- specimens %>%
-    rename(species = ITIS_Code, weightg = weight_g, visualMaturity = maturity) %>%
-    mutate(selectionReason = NA, flaggedData = NA) %>%
-    mutate(
-      visMaturityAssessor = case_when(
-        !is.na(visualMaturity) ~ SCIENTIST),
-      isGonadSaved = recode(isGonadSaved, "Yes" = "Y", "No" = "N"),
-      sex = case_when(
-        is.na(sex) ~ "unknown", TRUE ~ sex),
-      sex = recode(sex, "Female" = "female", "Male" = "male", "Unknown" = "unknown"),
-      visualMaturity = case_when(
-        is.na(visualMaturity) ~ "notOpened", TRUE ~ visualMaturity),
-      visualMaturity = recode(visualMaturity, "Immature" = "immature", "Intermediate" = "intermediate",
-                              "Active" = "active", "Hydrated" = "hydrated", "Not Opened" = "notOpened"),
-      # isAlive  = recode(isAlive, "Yes" = "Y", "No" = "N"),
-      hasTag   = recode(hasTag, "Yes" = "Y","No" = "N"),
-      IDmethod ="visualObservation",
-      netSampleType = "codend") %>%
-    ungroup(SAMPLE_ID, EVENT_ID) %>%
-    select(cruise, ship, haul, collection, species, specimenNumber, standardLength_mm, forkLength_mm, weightg,
-           sex, visualMaturity, visMaturityAssessor, isGonadSaved, otolithNumber, individual_ID, isRandomSample, selectionReason,
-           DNAtrayNumber, DNAvialNumber, 
-           # isAlive, adiposeCondition, hasDNAfinClip, 
-           hasTag, IDmethod, notes) %>%
-    mutate_at(vars(haul, collection, species, standardLength_mm, forkLength_mm,
-                   weightg, DNAtrayNumber, DNAvialNumber), as.numeric)
-  
-  ## Building catch table ########
-  # We created samples table in the specimen section above
-  # The samples table will provide all species caught
-  
-  # Getting present only fish from samples table 
-  present.catch <- samples %>%
-    filter(SAMPLE_TYPE == "Present")
-  
-  # Need to get common and scientific name for checks 
-  spp.codes     <- spp.codes %>%  select(-PARENT_TAXON)
-  present.catch <- left_join(present.catch, spp.codes) %>%
+  # Build catch table
+  ## Get presence-only samples
+  catch.present <- samples %>%
+    filter(SAMPLE_TYPE=="Present") %>% 
     mutate(presenceOnly = "Y")
   
-  # The catch summary table will get us individuals we have basket weights for
-  catch_sum <- catch.data %>%
-    mutate(presenceOnly = "N")
+  ## Get all other catch samples
+  catch.summ <- catch.data %>%
+    mutate(presenceOnly = "N") 
   
-  catch_sum <-left_join(catch_sum, itis.codes) # get ITIS_code 
+  ## Combine catch and presence-only
+  catch.all <- catch.summ %>% 
+    bind_rows(catch.present) %>%
+    arrange(haul) 
   
-  catch_sum_present <- catch_sum %>% 
-    bind_rows(present.catch) %>%
-    arrange(EVENT_ID) %>% 
-    left_join(ships) %>% # get ship code
-    left_join(select(haul.all, cruise, ship_id, ship, haul, collection)) # get collection number
-
-  # need to get suSampleWt of random individuals measured 
+  # need to get subSampleWt of random individuals measured 
   sp_subsampleWt_count <- specimens %>%
-    group_by(cruise, ship, haul, species) %>%
+    group_by(cruise, ship, haul, species)%>%
     filter(isRandomSample == "Y")%>%
-    summarise(subSampleWtkg  = sum(weightg)/1000,
+    summarise(subSampleWtkg = sum(weightg, na.rm = TRUE)/1000, # Check the na.rm
               subSampleCount = length(weightg))
   
-  catch <- catch_sum_present %>%
-    rename(species = ITIS_Code, notes = COMMENTS)%>%
-    add_column(selectionReason = NA, flaggedData = NA) %>%
-    mutate(netSampleType = "codend")%>%
+  # Create final tables -------------------------------------------
+  ## Final haul table 
+  haul.all <- events %>% 
+    mutate(orderOcc = haul, flaggedData = NA_character_)
+  
+  ## Final catch table 
+  catch.all <- catch.all %>%
+    mutate(selectionReason = NA_character_, 
+           flaggedData = NA_character_,
+           netSampleType="codend") %>%
     mutate_at(vars(haul, collection, species), as.numeric) %>% 
     left_join(sp_subsampleWt_count) %>%
     mutate(countcheck = SAMPLED_NUMBER == subSampleCount,
-           remainingSubSampleWtkg = round(WEIGHT_IN_HAUL - SAMPLED_WEIGHT, 3))
-  
-  catch_final <- catch %>%
-    mutate(hasLF = case_when(species %in% c(161729,161828,172412,168586,164792,161746,551209,
-                                            161974,161975,161976,161977,161979,161980,161989) ~ "Y",
-                             TRUE ~ "N"), # only will have lengths for CPS and salmon 
+           remainingSubSampleWtkg = round(WEIGHT_IN_HAUL - SAMPLED_WEIGHT, 3)) %>% 
+    mutate(flaggedData = NA_character_,
+           hasLF = case_when(species %in% c(161729, 161828, 172412, 168586, 164792, 161746, 551209,
+                                            161974, 161975, 161976, 161977, 161979, 161980, 161989) ~ "Y",
+                             .default="N"), # Only will have lengths for CPS and salmon 
            isWtEstimated = "N") %>%
     select(cruise, ship, haul, collection, netSampleType, species,
            subSampleCount, subSampleWtkg, remainingSubSampleWtkg,
-           hasLF, isWtEstimated, presenceOnly, flaggedData, notes) %>% View()
+           hasLF, isWtEstimated, presenceOnly, flaggedData, notes)
   
-  # unique(catch$countcheck) #checking count columns, want only TRUE and NA
-  
-  # RESUME HERE
+  ## Final specimen table 
+  lengths.all <- specimens
   
   # https://docs.google.com/spreadsheets/d/1a2Qe6STQWJbz5mqPAcpNBdEVMY-HcoIFwTF3dLM7Zjg/edit?gid=1810649095#gid=1810649095
   

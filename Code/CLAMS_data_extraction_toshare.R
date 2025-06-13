@@ -2,56 +2,56 @@ library(RODBC)
 library(tidyverse)
 
 # connecting to whole database 
-clams_db <- odbcConnect("", uid="", pw="", believeNRows=FALSE) #done
+clams_db <- odbcConnect("",uid="",pw="",believeNRows=FALSE)
 
 # meta data tables needed by all #####
 # bring in ship code 
-ship <- sqlQuery(clams_db, 'SELECT * FROM SHIPS') %>% #done
-  select(SHIP, VESSEL_CODE)
+ship <- sqlQuery(clams_db, 'SELECT * FROM SHIPS') %>%
+  select(SHIP,VESSEL_CODE)
 # need to get our itis code 
-itis_code <- sqlQuery(clams_db, 'SELECT * FROM SPECIES_DATA')%>% # done
+itis_code <- sqlQuery(clams_db, 'SELECT * FROM SPECIES_DATA')%>%
   pivot_wider(names_from = SPECIES_PARAMETER, values_from = PARAMETER_VALUE)%>%
-  select(SPECIES_CODE, ITIS_Code)
+  select(SPECIES_CODE,ITIS_Code)
 
 ## building haul table WORK IN PROGRESS #####
 # bring in survey data 
-events <- sqlQuery(clams_db, 'SELECT * FROM EVENTS') # done
+events <- sqlQuery(clams_db, 'SELECT * FROM EVENTS')
 
 # get vessel code in events 
-events <- left_join(events, ship) #done in one step in my code
+events <- left_join(events,ship)
 
-event.data <- sqlQuery(clams_db, 'SELECT * FROM EVENT_DATA') %>%
+event_data <- sqlQuery(clams_db, 'SELECT * FROM EVENT_DATA') %>%
   select(-PARTITION) %>%   # don't need partition weight 
-  pivot_wider(names_from=EVENT_PARAMETER, values_from=PARAMETER_VALUE) #done
+  pivot_wider(names_from=EVENT_PARAMETER,values_from=PARAMETER_VALUE)
 
-# haul.all in my code
-haul.all <- left_join(events, event.data) %>%
+events_event_data <- left_join(events,event_data) %>%
   rename(collection=Collection,operator=Operator,fishingMode=FishingMode,
          gearType=GEAR,netInWaterTime=NetInWater,equilibriumTime=EQ,
          haulBackTime=Haulback,netOnDeckTime=NetOnDeck,
-         downswellTow=DownswellTow) # done
+         downswellTow=DownswellTow)
 
 ### WORK IN PROGRESS PART 
-event.stream <- sqlQuery(clams_db, 'SELECT * FROM EVENT_STREAM_DATA') #return to this
+event_stream_data <- sqlQuery(clams_db, 'SELECT * FROM EVENT_STREAM_DATA')
   
 
-# renaming columns for end #done
+# renaming columns for end
 # need to make order occ = haul #
 # rename("cruise"="SURVEY","ship"="SHIP","haul"="EVENT_ID")
 # mutate(orderOcc = haul)
 
+
 ### building specimen table #####
-# specimen table comes first, then merge with measurements table 
 # need to get collection number for event 
-events.catch <- haul.all %>% #done; using haul.all in my code
+events.catch <- events_event_data %>%
   select(SURVEY,SHIP,VESSEL_CODE,EVENT_ID,collection)
 
 # samples table is the first entry for species caught and entered into Catch form
 # need this to get species_code 
-samples <- sqlQuery(clams_db, 'SELECT * FROM SAMPLES') #done
-samples <- left_join(samples,events.catch) # done; events.catch can be found in building specimen table section
-samples <- left_join(samples,itis_code)
+samples <- sqlQuery(clams_db, 'SELECT * FROM SAMPLES')
+samples <- left_join(samples, events.catch) # events.catch can be found in building specimen table section
+samples <- left_join(samples, itis_code)
 
+# specimen table comes first, then merge with measurements table 
 # need to get itis code for later 
 samples.catch <- samples %>%
   select(SHIP,SURVEY,EVENT_ID,SAMPLE_ID,SPECIES_CODE,ITIS_Code)
@@ -61,20 +61,20 @@ specimen_original <- sqlQuery(clams_db, 'SELECT * FROM SPECIMEN')%>%
   select(-c(WORKSTATION_ID,TIME_STAMP))%>%
   rename(notes="COMMENTS")%>%
   mutate(isRandomSample=case_when(SAMPLING_METHOD=="random" ~ "Y",
-                                  SAMPLING_METHOD=="non_random" ~ "N")) # done
+                                  SAMPLING_METHOD=="non_random" ~ "N"))
+specimen_original <- left_join(specimen_original,events.catch) # Add collection
 
-specimen_original <- left_join(specimen_original,events.catch) # done
-
-# this table provides any measurements for a specimen 
+# this table provides any measurments for a specimen 
 measurements<- sqlQuery(clams_db, 'SELECT * FROM MEASUREMENTS')%>%
   select(-DEVICE_ID)%>%
   pivot_wider(names_from = "MEASUREMENT_TYPE",values_from = "MEASUREMENT_VALUE")%>%
   rename(individual_ID=alpha_barcode,standardLength_mm=standard_length_mm,forkLength_mm=fork_length_mm,
          DNAtrayNumber=dna_tray_number, DNAvialNumber=dna_vial_number,isGonadSaved=ovary_taken,
-    isAlive=fish_condition,adiposeCondition=adipose_condition,hasTag=head_taken)%>%
+    isAlive=fish_condition,adiposeCondition=adipose_condition,hasTag=head_taken)%>% # done
+  # dna_finclip_number not in test version of CLAMS - KLS
   mutate(hasDNAfinClip = case_when(dna_finclip_number=="None"~"N",!is.na(dna_finclip_number)~"Y"),
          individual_ID = case_when(!is.na(dna_finclip_number)~dna_finclip_number,.default=individual_ID),
-         individual_ID = replace(individual_ID, individual_ID == "None", NA))
+         individual_ID = replace(individual_ID, individual_ID == "None", NA)) 
 
 specimen <- left_join(specimen_original,measurements) 
 specimen <- left_join(specimen,samples.catch)
@@ -88,7 +88,8 @@ group_by(EVENT_ID,SAMPLE_ID) %>%
 
 # creating final dataset 
 specimen_final <- specimen %>%
-  rename(cruise=SURVEY,haul=EVENT_ID,ship=VESSEL_CODE,species=ITIS_Code,visualMaturity=maturity,weightg=weight_g)%>%
+  rename(cruise=SURVEY,haul=EVENT_ID,ship=VESSEL_CODE,species=ITIS_Code,
+         visualMaturity=maturity,weightg=weight_g)%>%
   add_column(selectionReason=NA,flaggedData=NA) %>%
   mutate(visMaturityAssessor = case_when(!is.na(visualMaturity)~SCIENTIST),
          isGonadSaved = recode(isGonadSaved, "Yes"="Y","No"="N"),
@@ -109,7 +110,6 @@ specimen_final <- specimen %>%
   mutate_at(vars(haul,collection,species,standardLength_mm,forkLength_mm,
                  weightg,DNAtrayNumber,DNAvialNumber),as.numeric)
 
-# RESUME HERE
 
 ## building catch table ########
 # we created samples table in the specimen section above
@@ -134,7 +134,7 @@ catch_sum_present <- bind_rows(catch_sum,present.catch) %>%
 catch_sum_present <- left_join(catch_sum_present,ship) # get ship code
 catch_sum_present <- left_join(catch_sum_present,events.catch) # get collection number
 
-# need to get suSampleWt of random individuals measured 
+# need to get subSampleWt of random individuals measured 
 sp_subsampleWt_count <- specimen_final %>%
   group_by(cruise,ship,haul,species)%>%
   filter(isRandomSample=="Y")%>%

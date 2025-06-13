@@ -77,17 +77,28 @@ if (trawl.source == "Access") {
   # Rename all the table columns - Will hopefully make subsequent processing more intuitive --------
   # Extract ITIS codes from SPECIES_DATA
   itis.codes <- itis.codes %>% 
-    pivot_wider(names_from = SPECIES_PARAMETER, values_from = PARAMETER_VALUE)%>%
-    select(species_code = SPECIES_CODE, species = ITIS_Code) # species is SWFSC species code
+    pivot_wider(names_from = SPECIES_PARAMETER, values_from = PARAMETER_VALUE) %>%
+    select(species_code = SPECIES_CODE, species = ITIS_Code) %>% 
+    mutate(species = as.numeric(species))
   
   # Format SWFSC species codes table
   spp.codes <- spp.codes %>% 
     rename(species_code = SPECIES_CODE, 
-           scientificName = SCIENTIFIC_NAME, commonName = COMMON_NAME)
+           scientificName = SCIENTIFIC_NAME, commonName = COMMON_NAME) %>% 
+    left_join(itis.codes) %>% 
+    filter(!is.na(species))
   
   # Format ships table
   ships <- ships %>% 
     rename(ship = VESSEL_CODE, ship.name = NAME, ship.desc = DESCRIPTION)
+  
+  # Format event performance table
+  event.perf <- event.perf %>% 
+    rename(PERFORMANCE_DESC = DESCRIPTION) %>% 
+    mutate(trawlPerformance = case_when(
+      PERFORMANCE_CODE == 0 ~ "Good",
+      str_detect(PERFORMANCE_DESC, "Abort*") ~ "Aborted",
+      TRUE ~ PERFORMANCE_DESC))
   
   # Format events and event.data table
   ## Start with event.data table
@@ -110,9 +121,15 @@ if (trawl.source == "Access") {
   ## Join with event.data to create final events
   events <- events %>% 
     rename(cruise = SURVEY, haul = EVENT_ID, gearType = GEAR, notes = COMMENTS) %>% 
-    left_join(select(ships, SHIP, ship)) %>% 
+    left_join(select(ships, SHIP, ship)) %>%
+    left_join(event.perf) %>% 
     left_join(event.data) %>% 
-    select(cruise, ship, haul, collection, everything())
+    select(cruise, ship, haul, collection, everything()) 
+  
+  if (!"startLatDecimal" %in% names(events))
+    events <- events %>%
+    mutate(startLatDecimal = NA, startLongDecimal = NA,
+           stopLatDecimal = NA, stopLongDecimal = NA)
   
   # Format catch data
   catch.data <- catch.data %>% 
@@ -120,9 +137,9 @@ if (trawl.source == "Access") {
     left_join(select(ships, SHIP, ship)) %>% 
     left_join(select(events, cruise, ship, haul, collection)) %>% # Add collection
     left_join(itis.codes) %>% 
-    left_join(spp.codes) %>% 
+    # left_join(spp.codes) %>% 
     select(cruise, ship, haul, collection, everything())
-    
+  
   # Format gear accessory table
   gear.accy <- gear.accy %>% 
     pivot_wider(names_from = GEAR_ACCESSORY, values_from = GEAR_ACCESSORY_OPTION) %>% 
@@ -147,6 +164,7 @@ if (trawl.source == "Access") {
            DNAtrayNumber = dna_tray_number, DNAvialNumber = dna_vial_number, isGonadSaved = ovary_taken,
            isAlive = fish_condition, adiposeCondition = adipose_condition,
            visualMaturity = maturity, hasTag = head_taken) %>% 
+    mutate(totalLength_mm = NA, mantleLength_mm = NA) %>% 
     mutate(hasDNAfinClip = case_when(dna_finclip_number == "None" ~ "N", 
                                      !is.na(dna_finclip_number) ~ "Y",
                                      TRUE ~ NA_character_),
@@ -162,7 +180,7 @@ if (trawl.source == "Access") {
     # Separate these steps from the "renaming" portion of the code?
     left_join(select(events, cruise, ship, haul, collection)) %>% # Add collection
     left_join(itis.codes) %>% 
-    left_join(spp.codes) %>% 
+    # left_join(spp.codes) %>% 
     select(cruise, ship, haul, collection, everything())
   
   specimens <- specimens %>% 
@@ -185,7 +203,7 @@ if (trawl.source == "Access") {
            sex                 = recode(sex, "Female" = "female", "Male" = "male", "Unknown" = "unknown"),
            visualMaturity      = case_when(is.na(visualMaturity) ~ "notOpened", .default=visualMaturity),
            visualMaturity      = recode(visualMaturity, "Immature" = "immature", "Intermediate" = "intermediate",
-                                   "Active" = "active", "Hydrated" = "hydrated", "Not Opened" = "notOpened"),
+                                        "Active" = "active", "Hydrated" = "hydrated", "Not Opened" = "notOpened"),
            isAlive             = recode(isAlive, "Yes" = "Y", "No" = "N"),
            hasTag              = recode(hasTag, "Yes" = "Y", "No" = "N"),
            IDmethod            = "visualObservation",
@@ -193,7 +211,8 @@ if (trawl.source == "Access") {
     ungroup(SAMPLE_ID) %>%
     mutate_at(vars(haul, collection, species, standardLength_mm, forkLength_mm,
                    weightg, DNAtrayNumber, DNAvialNumber), as.numeric) %>% 
-    select(cruise, ship, haul, collection, species, specimenNumber, standardLength_mm, forkLength_mm, 
+    select(cruise, ship, haul, collection, species, specimenNumber, 
+           standardLength_mm, forkLength_mm, totalLength_mm, mantleLength_mm,
            sex, visualMaturity, visMaturityAssessor, isGonadSaved, weightg,
            otolithNumber, individual_ID, isRandomSample, selectionReason,
            DNAtrayNumber, DNAvialNumber, 
@@ -225,7 +244,11 @@ if (trawl.source == "Access") {
   # Create final tables -------------------------------------------
   ## Final haul table 
   haul.all <- events %>% 
-    mutate(orderOcc = haul, flaggedData = NA_character_)
+    mutate_at(vars(haul, collection), as.numeric) %>%
+    mutate(orderOcc = haul, flaggedData = NA_character_) %>% 
+    mutate(deploymentTime = difftime(equilibriumTime, netInWaterTime, units = "mins"),
+           recoveryTime   = difftime(netOnDeckTime, haulBackTime, units = "mins"),
+           evolutionTime  = difftime(netOnDeckTime, netInWaterTime, units = "mins"))
   
   ## Final catch table 
   catch.all <- catch.all %>%
@@ -246,7 +269,7 @@ if (trawl.source == "Access") {
            hasLF, isWtEstimated, presenceOnly, flaggedData, notes)
   
   ## Final specimen table 
-  lengths.all <- specimens
+  lengths.all <- specimens %>% ungroup()
   
   # https://docs.google.com/spreadsheets/d/1a2Qe6STQWJbz5mqPAcpNBdEVMY-HcoIFwTF3dLM7Zjg/edit?gid=1810649095#gid=1810649095
   

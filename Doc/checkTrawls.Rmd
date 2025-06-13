@@ -63,7 +63,7 @@ dir_create(here(c("Figs", "Output")))
 
 ```{r user-settings}
 # User-specified settings
-get.db     <- F # Extract data from trawl database (F for testing)
+get.db     <- T # Extract data from trawl database (F for testing)
 get.nav    <- F # Download NOAA Ship nav data
 get.nav.sh <- F # Download NOAA Ship nav data
 nav.source <- "ERDDAP" # Navigation data source: ERDDAP or SCS

@@ -104,14 +104,18 @@ if (trawl.source == "Access") {
   ## Start with event.data table
   event.data <- event.data %>% 
     pivot_wider(names_from = EVENT_PARAMETER, values_from = PARAMETER_VALUE) %>% 
-    rename(cruise = SURVEY, haul = EVENT_ID, gearType = Gear, 
+    rename(cruise = SURVEY, haul = EVENT_ID, 
+           # gearType = Gear,
            collection = Collection, operator = Operator, fishingMode = FishingMode,
-           state = State, country = Country, 
-           netInWaterTime = NetInWater, equilibriumTime = EQ, wireOutLengthMeters = WireOut,
-           downswellToe = DownswellTow, arcedTow = ArcedTow,
-           seaCondition = SeaCondition, cloudCondition = Clouds,
+           # state = State, country = Country, 
+           netInWaterTime = NetInWater, equilibriumTime = EQ, 
+           # wireOutLengthMeters = WireOut,
+           downswellToe = DownswellTow, 
+           # arcedTow = ArcedTow,
+           # seaCondition = SeaCondition, 
+           # cloudCondition = Clouds,
            haulBackTime = Haulback, netOnDeckTime = NetOnDeck) %>% 
-    mutate(countryState = paste(country, state)) %>% 
+    # mutate(countryState = paste(country, state)) %>% 
     # Convert times to POSIXct
     mutate_at(vars(
       netInWaterTime, equilibriumTime, haulBackTime, netOnDeckTime,

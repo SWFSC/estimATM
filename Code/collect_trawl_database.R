@@ -72,7 +72,7 @@ if (trawl.source %in% c("SQL","Access")) {
   surveys      <- dplyr::tbl(trawl.con, "SURVEYS") %>% dplyr::collect()
 
   # Save tables
-  save(catch.data, events, event.data, event.params, event.perf, event.stream, gear.accy, 
+  save(catch.data, events, event.data, event.params, event.perf, gear.accy, 
        itis.codes, measurements, samples, ships, specimens, spp.codes, surveys, 
        file = here::here("Data/Trawl/trawl_data_raw.Rdata"))
   

@@ -64,9 +64,10 @@ dir_create(here(c("Figs", "Output")))
 ```{r user-settings}
 # User-specified settings
 get.db     <- T # Extract data from trawl database (F for testing)
-get.nav    <- T # Download NOAA Ship nav data
+get.nav    <- F # Download NOAA Ship nav data
 get.nav.sh <- F # Download NOAA Ship nav data
 nav.source <- "ERDDAP" # Navigation data source: ERDDAP or SCS
+clams.info <- source(here::here("Code/clams_conn_test.R"))
 ```
 
 ```{r get-nav}
@@ -111,7 +112,7 @@ haul.bad <- haul.all %>%
 # Get only hauls from current survey
 haul <- filter(haul.all, cruise %in% cruise.name) %>% 
   filter(!collection %in% haul.bad$collection) %>% 
-  mutate(duration = difftime(haulBackTime, equilibriumTime, units = "mins"), # Calculate duration
+  mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
          cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) # Assign cluster
 
 # Find midpoint of each haul as the mean lat/lon
@@ -402,6 +403,7 @@ lengths.all <- lengths.all %>%
 
 # Convert lengths to total length for TS estimates ---------------------------
 lengths.all  <- lengths.all %>%
+  # ungroup() %>% 
   mutate(
     totalLength_mm = case_when(
       scientificName == "Clupea pallasii" ~ 
@@ -419,8 +421,10 @@ lengths.all  <- lengths.all %>%
       scientificName == "Merluccius productus" ~ forkLength_mm, # There is no FL to TL conversion yet
       scientificName == "Doryteuthis opalescens" ~  as.numeric(mantleLength_mm),
       TRUE ~ totalLength_mm)) %>% 
-  mutate(totalLength_mm = round(totalLength_mm),
+  mutate(totalLength_mm  = round(totalLength_mm),
          mantleLength_mm = round(mantleLength_mm)) 
+
+# lengths.all$totalLength_mm <- totalLength_mm + 5 
 
 # Get max TL for plotting L/W models
 L.max <- lengths.all %>% 
@@ -428,10 +432,13 @@ L.max <- lengths.all %>%
   group_by(scientificName) %>% 
   summarise(max.TL = max(totalLength_mm, na.rm = TRUE))
 
-L.max.sq <- lengths.all %>% 
-  filter(scientificName == "Doryteuthis opalescens") %>% 
-  group_by(scientificName) %>% 
-  summarise(max.ML = max(mantleLength_mm, na.rm = TRUE))
+# Get max ML for squid, if present
+if ("Doryteuthis opalescens" %in% unique(lengths.all$scientificName)) {
+  L.max.sq <- lengths.all %>% 
+    filter(scientificName == "Doryteuthis opalescens") %>% 
+    group_by(scientificName) %>% 
+    summarise(max.ML = max(mantleLength_mm, na.rm = TRUE))  
+}
 
 # Data frame for storing results
 lw.df <- data.frame()
@@ -1462,6 +1469,7 @@ if (nrow(catch.comp.errors) > 0) {
   print("Hooray, no (obvious) errors!")
 }
 ```
+
 ### Catch weight summary
 #### All catch
 

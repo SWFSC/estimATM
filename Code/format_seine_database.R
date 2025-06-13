@@ -7,6 +7,7 @@
 if (seine.source == "SQL") {
   # Format set data
   sets.all <- sets.all %>% 
+    mutate(datetime = datetime_UTC) %>% 
     arrange(datetime) %>% 
     mutate(season = case_when(
       month(datetime) < 6 ~ "spring",

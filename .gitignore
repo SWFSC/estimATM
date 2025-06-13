@@ -26,7 +26,9 @@
 Thumbs.db
 Code/Archive
 Code/*.mat
+Code/clams_conn_test.R
 Code/habitatData/*.mat
+Code/habitatData/Generating_animated_gif.txt
 Data/*/*.Rdata
 Data/ADCP/*
 Data/Backscatter/*.csv
@@ -135,4 +137,3 @@ Simulation/*
 Tables/
 Tests/
 temp.Rdata
-Code/habitatData/Generating_animated_gif.txt

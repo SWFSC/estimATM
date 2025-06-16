@@ -64,6 +64,7 @@ nasc.plot.min    <- 0
 
 ```{r processing-controls}
 # Control script behavior (usually T)
+get.db             <- T # Import trawl database
 get.nav            <- T # Download NOAA Ship nav data
 get.nav.sd         <- F # Download Saildrone nav data from ERDDAP
 get.nav.sh         <- F # Download NOAA Ship nav data
@@ -72,9 +73,8 @@ save.figs          <- T # Save figures
 copy.files         <- T # Copy data files from data to estimATM directory
 overwrite.files    <- T # Overwrite existing files when copying (not CSV, see below)
 process.csv        <- T # Process acoustic backscatter files
-process.csv.krill  <- T # Process krill backscatter files
-process.csv.all    <- F # Process all CSV files (F = new files only)
-get.db             <- T # Import trawl database
+process.csv.krill  <- F # Process krill backscatter files
+process.csv.all    <- T # Process all CSV files (F = new files only)
 
 # Are we sampling? If no, F. Skips data processing steps.
 sampling.acoustics <- T 
@@ -232,6 +232,49 @@ if (sampling.trawl) {
     mutate(duration = difftime(haulBackTime, equilibriumTime, units = "mins"), # Calculate duration
            cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1,
            sample.type = "Trawl")  
+  
+  # Replace missing lat/long values for hauls (a CLAMS/SCS problem, usually)
+  # Match hauls headers to nav data
+  nav.match.haul.eq <- data.frame()
+  nav.match.haul.hb <- data.frame()
+  
+  nav.match.position <- select(nav, time, lat, long)
+  
+  for (i in seq_along(haul$equilibriumTime)) {
+    min.diff.eq       <- which.min(abs(difftime(haul$equilibriumTime[i], nav.match.position$time)))
+    nav.match.haul.eq <- bind_rows(nav.match.haul.eq, nav.match.position[min.diff.eq, ])
+  }
+  
+  for (i in seq_along(haul$haulBackTime)) {
+    min.diff.hb       <- which.min(abs(difftime(haul$haulBackTime[i], nav.match.position$time)))
+    nav.match.haul.hb <- bind_rows(nav.match.haul.hb, nav.match.position[min.diff.hb, ])
+  }
+  
+  # Combine header and nav data
+  haul <- haul %>% 
+    bind_cols(select(nav.match.haul.eq, startTimeEst = time, startLatEst = lat, startLongEst = long)) %>% 
+    bind_cols(select(nav.match.haul.hb, stopTimeEst = time, stopLatEst = lat, stopLongEst = long)) %>% 
+    mutate(startLag = difftime(startTimeEst, equilibriumTime ),
+           stopLag  = difftime(stopTimeEst, haulBackTime)) %>% 
+    mutate(
+      positionsEst = case_when(
+        is.na(startLatDecimal) ~ TRUE,
+        TRUE ~ FALSE)) %>%
+    mutate(
+      startLatDecimal = case_when(
+        is.na(startLatDecimal) ~ startLatEst,
+        TRUE ~ startLatDecimal),
+      stopLatDecimal = case_when(
+        is.na(stopLatDecimal) ~ stopLatEst,
+        TRUE ~ stopLatDecimal),
+      startLongDecimal = case_when(
+        is.na(startLongDecimal) ~ startLongEst,
+        TRUE ~ startLongDecimal),
+      stopLongDecimal = case_when(
+        is.na(stopLongDecimal) ~ stopLongEst,
+        TRUE ~ stopLongDecimal),
+    ) %>% 
+    arrange(equilibriumTime)
   
   # Find midpoint of each haul as the mean lat/long
   haul.mid <- haul %>% 

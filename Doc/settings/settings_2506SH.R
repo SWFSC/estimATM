@@ -380,7 +380,7 @@ if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D")) {
                             LBC = "//swc-storage4-s/AST4/SURVEYS/20240708_CARNAGE_SummerCPS",
                             LM  = "//swc-storage4-s/AST4/SURVEYS/20240703_LISA-MARIE_SummerCPS")
 } else {
-  survey.dir           <- c(SH  = "//swc-storage4-s/AST5/SURVEYS/20250603_SHIMADA_IWCPS",
+  survey.dir           <- c(SH  = "C:/SURVEY/2506SH",
                             LBC = "//swc-storage4-s/AST4/SURVEYS/20240708_CARNAGE_SummerCPS",
                             LM  = "//swc-storage4-s/AST4/SURVEYS/20240703_LISA-MARIE_SummerCPS")   
 }
@@ -581,12 +581,20 @@ cufes.date.format      <- "mdy" # mdy (1907RL and later) or ymd (earlier surveys
 cufes.vessels          <- c("RL")
 
 # Trawl data
-trawl.source           <- "CLAMS"  # "SQL" or "Access" or "CLAMS"
+trawl.source           <- "CLAMS-SQLite"  # "SQL" or "Access" or "CLAMS-Oracle" or "CLAMS-SQLite"
 trawl.dsn              <- "TRAWL"  # DSN for Trawl database on SQL server
-trawl.dir.access       <- file.path(survey.dir, "DATA/BIOLOGICAL/HAUL")
-trawl.db.access        <- "TrawlDataEntry2506SH.accdb"
+trawl.db.name          <- "TrawlDataEntry2506SH.db"
 trawl.performance      <- c("Aborted") # Character vector; trawl performance to exclude
 trawl.haul.exclude     <- NA # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)
+
+# Location of trawl database
+if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {
+  trawl.dir <- "DATA/BIOLOGICAL/HAUL"
+} else if (Sys.info()['nodename'] %in% c("RL4433188-CHL1")) {
+  trawl.dir <- ""
+} else {
+  trawl.dir <- "DATA/BIOLOGICAL/HAUL"
+}
 
 # CTD data
 ctd.dir                <- file.path(survey.dir[survey.vessel.primary],"DATA/CTD")

@@ -74,11 +74,11 @@ overwrite.files    <- T # Overwrite existing files when copying (not CSV, see be
 process.csv        <- T # Process acoustic backscatter files
 process.csv.krill  <- T # Process krill backscatter files
 process.csv.all    <- F # Process all CSV files (F = new files only)
-get.db             <- F # Import trawl database
+get.db             <- T # Import trawl database
 
 # Are we sampling? If no, F. Skips data processing steps.
-sampling.acoustics <- F 
-sampling.trawl     <- F 
+sampling.acoustics <- T 
+sampling.trawl     <- T 
 sampling.cufes     <- F 
 
 # Control script behavior (often F)
@@ -100,8 +100,8 @@ if (copy.files) {
   
   if (sampling.trawl) {
     # Copy trawl Access database
-    haul.db <- dir_ls(file.path(survey.dir[survey.vessel.primary], trawl.dir.access),
-                      regexp = trawl.db.access)
+    haul.db <- dir_ls(file.path(survey.dir[survey.vessel.primary], trawl.dir),
+                      regexp = trawl.db.name)
     file_copy(haul.db, here("Data/Trawl"), overwrite = overwrite.files)
     
   }

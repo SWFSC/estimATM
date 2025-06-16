@@ -623,13 +623,13 @@ trawl.db.access        <- "TrawlDataEntry2407RL.accdb"
 trawl.performance      <- c("Aborted") # Character vector; trawl performance to exclude
 trawl.haul.exclude     <- NA # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)
 
-# Location of trawl Access database
+# Location of trawl database
 if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {
-  trawl.dir.access <- "DATA/BIOLOGICAL/HAUL"
+  trawl.dir <- "DATA/BIOLOGICAL/HAUL"
 } else if (Sys.info()['nodename'] %in% c("RL4433188-CHL1")) {
-  trawl.dir.access <- ""
+  trawl.dir <- ""
 } else {
-  trawl.dir.access <- "DATA/BIOLOGICAL/HAUL"
+  trawl.dir <- "DATA/BIOLOGICAL/HAUL"
 }
 
 # CTD data

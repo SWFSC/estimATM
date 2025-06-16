@@ -628,11 +628,11 @@ trawl.haul.exclude     <- NA # Numeric vector; haul numbers to exclude (e.g., fo
 
 # Location of trawl Access database
 if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {
-  trawl.dir.access <- "DATA/BIOLOGICAL/HAUL"
+  trawl.dir <- "DATA/BIOLOGICAL/HAUL"
 } else if (Sys.info()['nodename'] %in% c("RL4433188-CHL1")) {
-  trawl.dir.access <- ""
+  trawl.dir <- ""
 } else {
-  trawl.dir.access <- "DATA/BIOLOGICAL/HAUL"
+  trawl.dir <- "DATA/BIOLOGICAL/HAUL"
 }
 
 # CTD data

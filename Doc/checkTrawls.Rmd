@@ -20,7 +20,7 @@ if (!require("pak")) install.packages("pak")
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,plotly,lubridate,mapview,kableExtra,leaflet,
                here,bookdown,odbc,DBI,knitr,DT,fs,sf,leafem,naniar,
-               cowplot)
+               cowplot,RSQLite)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
@@ -64,7 +64,7 @@ dir_create(here(c("Figs", "Output")))
 ```{r user-settings}
 # User-specified settings
 get.db     <- T # Extract data from trawl database (F for testing)
-get.nav    <- F # Download NOAA Ship nav data
+get.nav    <- T # Download NOAA Ship nav data
 get.nav.sh <- F # Download NOAA Ship nav data
 nav.source <- "ERDDAP" # Navigation data source: ERDDAP or SCS
 clams.info <- source(here::here("Code/clams_conn_test.R"))

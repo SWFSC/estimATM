@@ -121,14 +121,14 @@ if (get.db) {
   } else if (tdr.trawl.source == "Access") {
     # Copy trawl Access database
     haul.db <- dir_ls(file.path(survey.dir[survey.vessel.primary], "DATA/BIOLOGICAL/HAUL"),
-                      regexp = trawl.db.access)
+                      regexp = trawl.db.name)
     
     file_copy(haul.db, here("Data/Trawl"), overwrite = TRUE)
     
     # Configure ODBC connection to TRAWL database
     trawl.con  <- dbConnect(odbc(), 
                             Driver = "Microsoft Access Driver (*.mdb, *.accdb)", 
-                            DBQ = file.path(here("Data/Trawl"),trawl.db.access))
+                            DBQ = file.path(here("Data/Trawl"),trawl.db.name))
   }
   # Import trawl database tables
   haul.all       <- tbl(trawl.con,"Haul") %>% collect()

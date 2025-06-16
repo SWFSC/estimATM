@@ -10,8 +10,8 @@ theme_set(theme_bw())
 # User defined variables ----------------------------------------------
 trawl.source <- "Access" # Chante to "SQL" if you want to connect to the lab's SQL server
 # Update to the Access db location on your PC
-trawl.db.path   <- here::here("Data/Trawl") 
-trawl.db.access <- "TrawlDataEntry2207RL.accdb"
+trawl.db.path <- here::here("Data/Trawl") 
+trawl.db.name <- "TrawlDataEntry2207RL.accdb"
 
 # Import data from the database ----------------------------------------
 if (trawl.source == "SQL") {
@@ -25,7 +25,7 @@ if (trawl.source == "SQL") {
   # Configure ODBC connection to TRAWL database
   trawl.con  <- dbConnect(odbc(), 
                           Driver = "Microsoft Access Driver (*.mdb, *.accdb)", 
-                          DBQ = file.path(trawl.db.path, trawl.db.access))
+                          DBQ = file.path(trawl.db.path, trawl.db.name))
 }
 
 # Import trawl database tables

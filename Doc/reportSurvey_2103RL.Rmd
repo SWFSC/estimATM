@@ -116,7 +116,7 @@ if (copy.files) {
   
   # Copy trawl Access database
   haul.db <- dir_ls(file.path(survey.dir[survey.vessel.primary], "DATA/BIOLOGICAL/HAUL"),
-                    regexp = trawl.db.access)
+                    regexp = trawl.db.name)
   file_copy(haul.db, here("Data/Trawl"), overwrite = overwrite.files)
   
   # Copy CUFES files
@@ -867,7 +867,7 @@ if (get.db) {
   } else if (trawl.source == "Access") {
     trawl.con  <- dbConnect(odbc::odbc(), 
                             Driver = "Microsoft Access Driver (*.mdb, *.accdb)", 
-                            DBQ = file.path(here("Data/Trawl"), trawl.db.access))
+                            DBQ = file.path(here("Data/Trawl"), trawl.db.name))
   }
   
   # Import trawl database tables

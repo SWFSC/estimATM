@@ -337,7 +337,7 @@ cufes.date.format      <- "ymd" # mdy (1907RL only) or ymd (most other surveys)
 # Trawl data
 trawl.source           <- "SQL" # "SQL" or "Access"
 trawl.dsn              <- "TRAWL"  # DSN for Trawl database on SQL server
-trawl.dir.access       <- file.path(survey.dir,"DATA/BIOLOGICAL/HAUL")
+trawl.dir              <- file.path(survey.dir,"DATA/BIOLOGICAL/HAUL")
 trawl.db.access        <- "TrawlDataEntry1704RL.accdb"
 trawl.performance      <- c("Aborted", "Bad", "Poor") # Character vector; trawl performance to exclude
 trawl.haul.exclude     <- NA # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)

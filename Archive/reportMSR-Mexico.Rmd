@@ -81,7 +81,7 @@ if (trawl.source == "SQL") {
 } else if (trawl.source == "Access") {
   trawl.con  <- dbConnect(odbc(), 
                           Driver = "Microsoft Access Driver (*.mdb, *.accdb)", 
-                          DBQ = file.path(here("Data/Trawl"),trawl.db.access))
+                          DBQ = file.path(here("Data/Trawl"),trawl.db.name))
 }
 
 # Import trawl database tables

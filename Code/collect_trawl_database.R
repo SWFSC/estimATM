@@ -15,25 +15,28 @@ if (trawl.source == "SQL") {
 } else if (trawl.source == "Access") {
   # Copy trawl Access database
   haul.db <- fs::dir_ls(file.path(survey.dir[survey.vessel.primary],
-                              trawl.dir.access),
-                    regexp = trawl.db.access)
+                              trawl.dir),
+                    regexp = trawl.db.name)
   
   fs::file_copy(haul.db, here::here("Data/Trawl"), overwrite = TRUE)
   
   # Configure ODBC connection to TRAWL database
   trawl.con  <- DBI::dbConnect(odbc::odbc(), 
                           Driver = "Microsoft Access Driver (*.mdb, *.accdb)", 
-                          DBQ = file.path(here::here("Data/Trawl"), trawl.db.access))
+                          DBQ = file.path(here::here("Data/Trawl"), trawl.db.name))
   
-} else if (trawl.source == "CLAMS") {
-  # Configure ODBC connection to CLAMS database
-  trawl.con <- dbConnect(odbc::odbc(), 
+} else if (trawl.source == "CLAMS-Oracle") {
+  # Configure ODBC connection to CLAMS Oracle database
+  trawl.con <- DBI::dbConnect(odbc::odbc(), 
                          .connection_string = paste0("Driver={Oracle in instantclient_23_8}",
                                                      ";DBQ=", clams.dbq,
                                                      ";DSN=", clams.dsn,
                                                      ";UID=", clams.uid,
                                                      ";PWD=", clams.pw),
                          timeout = 10)
+} else if (trawl.source == "CLAMS-SQLite") {
+  # Configure ODBC connection to CLAMS SQLite database
+  trawl.con      <- DBI::dbConnect(SQLite(), dbname = here("Data/Trawl", trawl.db.name))
 }
 
 # Import trawl database tables
@@ -54,7 +57,7 @@ if (trawl.source %in% c("SQL","Access")) {
          file = here::here("Data/Trawl/trawl_data_raw.Rdata"))
   }
   
-} else if (trawl.source == "CLAMS") {
+} else if (trawl.source %in% c("CLAMS-Oracle", "CLAMS-SQLite")) {
   # dbListTables(trawl.con)
   catch.data   <- dplyr::tbl(trawl.con, "CATCH_SUMMARY") %>% dplyr::collect()
   events       <- dplyr::tbl(trawl.con, "EVENTS") %>% dplyr::collect()

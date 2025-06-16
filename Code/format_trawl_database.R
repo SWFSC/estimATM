@@ -69,10 +69,13 @@ if (trawl.source == "Access") {
            startLatDecimal,startLongDecimal,stopLatDecimal,
            stopLongDecimal,equilibriumTime,haulBackTime) 
   
-} else if (trawl.source == "CLAMS"){
+} else if (trawl.source %in% c("CLAMS-Oracle", "CLAMS-SQLite")){
   
   # Load trawl data
   # load(here("Data/Trawl/trawl_data_raw.Rdata"))
+  
+  # Integration key
+  # https://docs.google.com/spreadsheets/d/1a2Qe6STQWJbz5mqPAcpNBdEVMY-HcoIFwTF3dLM7Zjg/edit?gid=1810649095#gid=1810649095
   
   # Rename all the table columns - Will hopefully make subsequent processing more intuitive --------
   # Extract ITIS codes from SPECIES_DATA
@@ -104,23 +107,24 @@ if (trawl.source == "Access") {
   ## Start with event.data table
   event.data <- event.data %>% 
     pivot_wider(names_from = EVENT_PARAMETER, values_from = PARAMETER_VALUE) %>% 
+    filter(PARTITION == "MainTrawl") %>% 
     rename(cruise = SURVEY, haul = EVENT_ID, 
-           # gearType = Gear,
+           gearType = Gear,
            collection = Collection, operator = Operator, fishingMode = FishingMode,
-           # state = State, country = Country, 
+           state = State, country = Country,
            netInWaterTime = NetInWater, equilibriumTime = EQ, 
-           # wireOutLengthMeters = WireOut,
-           downswellToe = DownswellTow, 
-           # arcedTow = ArcedTow,
-           # seaCondition = SeaCondition, 
-           # cloudCondition = Clouds,
+           # wireOutLengthMeters = WireOut, # Comes from SCS; currently unavailable
+           downswellTow = DownswellTow, 
+           arcedTow = ArcedTow,
+           seaCondition = SeaCondition,
+           cloudCondition = Clouds,
            haulBackTime = Haulback, netOnDeckTime = NetOnDeck) %>% 
-    # mutate(countryState = paste(country, state)) %>% 
+    mutate(countryState = paste(country, state)) %>%
     # Convert times to POSIXct
     mutate_at(vars(
       netInWaterTime, equilibriumTime, haulBackTime, netOnDeckTime,
       EQ10Min, EQ20Min), 
-      mdy_hms)
+      mdy_hms) 
   
   ## Join with event.data to create final events
   events <- events %>% 
@@ -150,13 +154,13 @@ if (trawl.source == "Access") {
     left_join(select(ships, SHIP, ship)) %>% 
     rename(cruise = SURVEY, haul = EVENT_ID, isTDRonHeadrope = HeadropeTDR, isTDRonFootrope = FootropeTDR)
   
-  # Create missing variable if missing
-  if (!"dna_finclip_number" %in% names(measurements)) 
-    measurements$dna_finclip_number <- NA_character_
-  if (!"fish_condition" %in% names(measurements)) 
-    measurements$fish_condition <- NA_character_
-  if (!"adipose_condition" %in% names(measurements)) 
-    measurements$adipose_condition <- NA_character_
+  # # Create missing variable if missing
+  # if (!"dna_finclip_number" %in% names(measurements)) 
+  #   measurements$dna_finclip_number <- NA_character_
+  # if (!"fish_condition" %in% names(measurements)) 
+  #   measurements$fish_condition <- NA_character_
+  # if (!"adipose_condition" %in% names(measurements)) 
+  #   measurements$adipose_condition <- NA_character_
   
   # Format measurements table
   measurements <- measurements %>% 
@@ -174,7 +178,7 @@ if (trawl.source == "Access") {
                                      TRUE ~ NA_character_),
            individual_ID = case_when(!is.na(dna_finclip_number) ~ dna_finclip_number, 
                                      .default=individual_ID),
-           individual_ID = replace(individual_ID, individual_ID == "None", NA)) 
+           individual_ID = replace(individual_ID, individual_ID == "None", NA))
   
   # Format samples table
   samples <- samples %>%
@@ -274,23 +278,6 @@ if (trawl.source == "Access") {
   
   ## Final specimen table 
   lengths.all <- specimens %>% ungroup()
-  
-  # https://docs.google.com/spreadsheets/d/1a2Qe6STQWJbz5mqPAcpNBdEVMY-HcoIFwTF3dLM7Zjg/edit?gid=1810649095#gid=1810649095
-  
-  # Probably don't need; use averages in other tables
-  # event.stream <- event.stream %>% 
-  #   pivot_wider(names_from = MEASUREMENT_TYPE, values_from = MEASUREMENT_VALUE) %>% 
-  #   rename(surfaceTempC = SurfaceTemp, 
-  #          windDirection = WindDirection, windSpeedKnots = WindSpeed,
-  #          # salinityPPM = TBD, aveBottomDepthMeters = TBD, 
-  #          # shipSpeedOverGround = SOG, shipSpeedThroughWater = TBD,
-  #          # startLatDecimal = Latitude, startLongDecimal = Longitude,
-  #          # stopLatDecimal = Latitude, stopLongDecimal = Longitude,
-  #          # doorSpreadMetersEQ = DoorSpread, doorSpreadMeters10 = DoorSpread, 
-  #          # doorSpreadMeters20 = DoorSpread, doorSpreadMetersHB = DoorSpread,
-  #          # footRopeDepthEQ = Footrope , footRopeDepth10 = Footrope , 
-  #          # footRopeDepth20 = Footrope , footRopeDepthHB = Footrope
-  #          )
 }
 
 # Classify hauls by season (spring or summer)
@@ -305,3 +292,21 @@ catch.all <- catch.all %>%
   mutate(
     totalWeight = subSampleWtkg + remainingSubSampleWtkg,
     totalNum    = (subSampleCount/subSampleWtkg)*totalWeight)
+
+# Unused code -----------------------------
+
+# CLAMS
+# Probably don't need; use averages in other tables
+# event.stream <- event.stream %>% 
+#   pivot_wider(names_from = MEASUREMENT_TYPE, values_from = MEASUREMENT_VALUE) %>% 
+#   rename(surfaceTempC = SurfaceTemp, 
+#          windDirection = WindDirection, windSpeedKnots = WindSpeed,
+#          # salinityPPM = TBD, aveBottomDepthMeters = TBD, 
+#          # shipSpeedOverGround = SOG, shipSpeedThroughWater = TBD,
+#          # startLatDecimal = Latitude, startLongDecimal = Longitude,
+#          # stopLatDecimal = Latitude, stopLongDecimal = Longitude,
+#          # doorSpreadMetersEQ = DoorSpread, doorSpreadMeters10 = DoorSpread, 
+#          # doorSpreadMeters20 = DoorSpread, doorSpreadMetersHB = DoorSpread,
+#          # footRopeDepthEQ = Footrope , footRopeDepth10 = Footrope , 
+#          # footRopeDepth20 = Footrope , footRopeDepthHB = Footrope
+#          )

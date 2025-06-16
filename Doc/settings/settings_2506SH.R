@@ -114,8 +114,9 @@ daynight.filter        <- c("Day","Night")# A character string including "Day", 
 
 # Inport dates for classifying data by cruise leg (if desired) -----------------
 # Use start dates of each leg + end date of last leg
-leg.breaks <- as.numeric(lubridate::ymd(c("2025-06-27", "2025-07-16", 
-                                          "2025-08-04", "2025-08-24",
+leg.breaks <- as.numeric(lubridate::ymd(c("2025-06-11", "2025-06-27", 
+                                          "2025-07-16", "2025-08-04", 
+                                          "2025-08-24", "2025-09-13",
                                           "2025-10-01")))
 
 # Define ERDDAP data variables for primary NOAA vessel

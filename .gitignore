@@ -76,6 +76,7 @@ Data/Seine/*
 Data/TDR/*
 Data/TEST
 Data/Trawl/*.csv
+Data/Trawl/*.db
 Data/Trawl/*.rds
 Data/Trawl/Archive/*
 Data/TV80/*

@@ -14,15 +14,15 @@ if (seine.source == "SQL") {
 } else if (seine.source == "Access") {
   # Copy trawl Access database
   haul.db <- fs::dir_ls(file.path(survey.dir[survey.vessel.primary],
-                              trawl.dir.access),
-                    regexp = trawl.db.access)
+                              trawl.dir),
+                    regexp = trawl.db.name)
   
   fs::file_copy(haul.db, here::here("Data/Trawl"), overwrite = TRUE)
   
   # Configure ODBC connection to TRAWL database
   seine.con  <- DBI::dbConnect(odbc::odbc(), 
                           Driver = "Microsoft Access Driver (*.mdb, *.accdb)", 
-                          DBQ = file.path(here::here("Data/Trawl"), trawl.db.access))
+                          DBQ = file.path(here::here("Data/Seine"), seine.db.name))
 }
 # Import trawl database tables
 sets.all       <- dplyr::tbl(seine.con,"Nearshore_Set") %>% dplyr::collect()

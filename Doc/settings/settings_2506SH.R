@@ -433,6 +433,7 @@ nasc.max               <- NA
 # Else, FALSE (e.g., if sets were non-random or otherwise believed to be biased)
 use.seine.data  <- TRUE
 seine.source    <- "SQL"
+seine.db.name   <- "SeineDataEntry2506SH.accdb"
 seine.types     <- c("survey", "research", NA)
 
 # Survey vessels that collected purse seine data

@@ -18,10 +18,11 @@ if (get.nav) {
   nav <- moa.files %>% 
     map_df(read_csv, .id = "id") %>% 
     mutate(time  = mdy_hms(paste(Date, Time)),
-           lat         = purrr::pluck(., gps.lat.hdr),
-           long        = purrr::pluck(., gps.lon.hdr),
+           lat         = scs2dd(purrr::pluck(., gps.lat.hdr)),
+           long        = scs2dd(purrr::pluck(., gps.lon.hdr)),
            SST         = purrr::pluck(., sst.hdr),
            SOG         = purrr::pluck(., sog.hdr),
+           COG         = purrr::pluck(., cog.hdr),
            wind_dir    = purrr::pluck(., wind.dir.hdr),
            wind_speed  = purrr::pluck(., wind.speed.hdr),
            wind_brg = case_when(
@@ -41,6 +42,7 @@ if (get.nav) {
   
   # Filter nav data
   nav <- nav %>%
+    filter(!is.na(lat), !is.na(long)) %>% 
     filter(is.nan(SOG) == FALSE, SOG > 0, SOG < 15,
            between(lat, min(survey.lat), max(survey.lat)), 
            between(long, min(survey.long), max(survey.long)))

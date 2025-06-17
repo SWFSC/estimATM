@@ -120,11 +120,13 @@ if (trawl.source == "Access") {
            cloudCondition = Clouds,
            haulBackTime = Haulback, netOnDeckTime = NetOnDeck) %>% 
     mutate(countryState = paste(country, state)) %>%
-    # Convert times to POSIXct
-    mutate_at(vars(
-      netInWaterTime, equilibriumTime, haulBackTime, netOnDeckTime,
-      EQ10Min, EQ20Min), 
-      mdy_hms) 
+    # Convert times to POSIXct and PDT time zone
+    mutate(netInWaterTime  = mdy_hms(netInWaterTime,  tz = "America/Los_Angeles"),
+           equilibriumTime = mdy_hms(equilibriumTime, tz = "America/Los_Angeles"),
+           haulBackTime    = mdy_hms(haulBackTime,    tz = "America/Los_Angeles"),
+           netOnDeckTime   = mdy_hms(netOnDeckTime,   tz = "America/Los_Angeles"),
+           EQ10Min         = mdy_hms(EQ10Min,         tz = "America/Los_Angeles"),
+           EQ20Min         = mdy_hms(EQ20Min,         tz = "America/Los_Angeles"))
   
   ## Join with event.data to create final events
   events <- events %>% 
@@ -219,6 +221,7 @@ if (trawl.source == "Access") {
     ungroup(SAMPLE_ID) %>%
     mutate_at(vars(haul, collection, species, standardLength_mm, forkLength_mm,
                    weightg, DNAtrayNumber, DNAvialNumber), as.numeric) %>% 
+    mutate(weightg = weightg*1000) %>% # CLAMS specimen weights are in kg; convert to g 
     select(cruise, ship, haul, collection, species, specimenNumber, 
            standardLength_mm, forkLength_mm, totalLength_mm, mantleLength_mm,
            sex, visualMaturity, visMaturityAssessor, isGonadSaved, weightg,

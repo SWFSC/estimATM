@@ -572,8 +572,8 @@ scs.pattern            <- "MOA*.*xlsx" # regex for MOA files
 
 # SCS data info for extracting NAV data
 scs.nav.path           <- "C:/SURVEY/2506SH/DATA/SCS" # Local
-scs.nav.dir            <- "SAMOS"
-scs.nav.pattern        <- "SAMOS-OBS.*.elg"
+scs.nav.dir            <- "MOA"
+scs.nav.pattern        <- "MOA Continuous.ELG"
 scs.nav.recurse        <- TRUE
 
 # CUFES data
@@ -944,13 +944,14 @@ pairovet.button    <- "Pairovet IN"
 cb.flush.button    <- "Centerboard Flush"
 cb.int.button      <- "Centerboard Interm"
 cb.ext.button      <- "Centerboard Extended"
-gps.lat.hdr        <- "SAMOS-Lat-VALUE"
-gps.lon.hdr        <- "SAMOS-Lon-VALUE"
-gps.lat.moa        <- "GP170-Lat"
-gps.lon.moa        <- "GP170-Lon"
-sst.hdr            <- "SAMOS-TSGT-VALUE"
-sog.hdr            <- "SAMOS-SOG-VALUE"
-wind.dir.hdr       <- "SAMOS-TrueWind-Dir-VALUE"
-wind.speed.hdr     <- "SAMOS-TrueWind-Spd-VALUE"
+gps.lat.hdr        <- "SciGPS-Lat"
+gps.lon.hdr        <- "SciGPS-Lon"
+gps.lat.moa        <- "SciGPS-Lat"
+gps.lon.moa        <- "SciGPS-Lon"
+sst.hdr            <- "TSG45-InternalTemp-C"
+sog.hdr            <- "SciGPS-SOG"
+cog.hdr            <- "SciGPS-COG"
+wind.dir.hdr       <- "TrueWindDirection-StbdMast-DIRECTION"
+wind.speed.hdr     <- "TrueWindSpeed-StbdMast-kts-SPEED"
 order.occ.hdr      <- "Order Occ"
 notes.hdr          <- "Notes"

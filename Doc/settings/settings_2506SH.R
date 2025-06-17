@@ -144,19 +144,20 @@ survey.long          <- c(-130,-113)
 # erddap.flags.sh         <- c('"ZZZZ.Z.Z..Z.*"')
 
 # Survey plan info --------------------------------------------------------
-wpt.filename         <- "waypoints_2506SH.csv"
-wpt.types            <- c(Adaptive = "Adaptive", Carranza = "Carranza",
-                          Compulsory = "Compulsory", Franklin = "Franklin",
-                          Nearshore = "Nearshore", Offshore = "Offshore", 
-                          Saildrone = "Saildrone")
-wpt.colors           <- c(Adaptive = "#FF0000", Carranza = "green",
-                          Compulsory = "#000000", Franklin = "blue",
-                          Nearshore = "#FF33F5", Offshore = "#FFA500", 
-                          Saildrone = "#00FFFF") 
-wpt.linetypes        <- c(Adaptive = "dashed", Carranza = "solid",
-                          Compulsory = "solid", Franklin = "solid", 
-                          Nearshore = "solid", Offshore = "dashed", 
-                          Saildrone = "dashed")
+wpt.filename  <- "waypoints_2506SH.csv"
+wpt.types     <- c(Adaptive = "Adaptive", Carranza = "Carranza",
+                   Compulsory = "Compulsory", Franklin = "Franklin",
+                   Nearshore = "Nearshore", Offshore = "Offshore", 
+                   Saildrone = "Saildrone")
+wpt.regions   <- c("Central CA", "S. CA Bight", "WA/OR") # "Vancouver Is."          
+wpt.colors    <- c(Adaptive = "#FF0000", Carranza = "green",
+                   Compulsory = "#000000", Franklin = "blue",
+                   Nearshore = "#FF33F5", Offshore = "#FFA500", 
+                   Saildrone = "#00FFFF") 
+wpt.linetypes <- c(Adaptive = "dashed", Carranza = "solid",
+                   Compulsory = "solid", Franklin = "solid", 
+                   Nearshore = "solid", Offshore = "dashed", 
+                   Saildrone = "dashed")
 
 # # Saildrone info -----------------------------------------------
 # # Select Saildrone numbers

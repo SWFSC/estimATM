@@ -149,7 +149,7 @@ wpts <- read_csv(here("Data/Nav", wpt.filename))
 
 # Convert planned transects to sf; CRS = crs.geog
 wpts.sf <- wpts %>% 
-  filter(Type %in% wpt.types) %>% 
+  filter(Type %in% wpt.types, Region %in% wpt.regions) %>% 
   st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
   mutate(
     label = paste("Transect", Transect),
@@ -238,7 +238,7 @@ if (sampling.trawl) {
   nav.match.haul.eq <- data.frame()
   nav.match.haul.hb <- data.frame()
   
-  nav.match.position <- select(nav, time, lat, long)
+  nav.match.position <- select(nav, time, lat, long) %>% arrange(time)
   
   for (i in seq_along(haul$equilibriumTime)) {
     min.diff.eq       <- which.min(abs(difftime(haul$equilibriumTime[i], nav.match.position$time)))
@@ -253,8 +253,8 @@ if (sampling.trawl) {
   # Combine header and nav data
   haul <- haul %>% 
     bind_cols(select(nav.match.haul.eq, startTimeEst = time, startLatEst = lat, startLongEst = long)) %>% 
-    bind_cols(select(nav.match.haul.hb, stopTimeEst = time, stopLatEst = lat, stopLongEst = long)) %>% 
-    mutate(startLag = difftime(startTimeEst, equilibriumTime ),
+    bind_cols(select(nav.match.haul.hb, stopTimeEst  = time, stopLatEst  = lat, stopLongEst  = long)) %>% 
+    mutate(startLag = difftime(startTimeEst, equilibriumTime),
            stopLag  = difftime(stopTimeEst, haulBackTime)) %>% 
     mutate(
       positionsEst = case_when(
@@ -274,7 +274,7 @@ if (sampling.trawl) {
         is.na(stopLongDecimal) ~ stopLongEst,
         TRUE ~ stopLongDecimal),
     ) %>% 
-    arrange(equilibriumTime)
+    arrange(haul)
   
   # Find midpoint of each haul as the mean lat/long
   haul.mid <- haul %>% 

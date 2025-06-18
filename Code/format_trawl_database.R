@@ -162,7 +162,7 @@ if (trawl.source == "Access") {
     left_join(select(ships, SHIP, ship)) %>% 
     rename(cruise = SURVEY, haul = EVENT_ID, isTDRonHeadrope = HeadropeTDR, isTDRonFootrope = FootropeTDR) 
   
-  # # Create missing variable if missing
+  # Create missing variable if missing
   if (!"dna_finclip_number" %in% names(measurements))
     measurements$dna_finclip_number <- NA_character_
   if (!"fish_condition" %in% names(measurements))

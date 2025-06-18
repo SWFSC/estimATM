@@ -95,6 +95,10 @@ if (trawl.source == "Access") {
   ships <- ships %>% 
     rename(ship = VESSEL_CODE, ship.name = NAME, ship.desc = DESCRIPTION)
   
+  # Format surveys table
+  surveys <- surveys %>% 
+    filter(SURVEY == cruise.name)
+  
   # Format event performance table
   event.perf <- event.perf %>% 
     rename(PERFORMANCE_DESC = DESCRIPTION) %>% 
@@ -130,6 +134,7 @@ if (trawl.source == "Access") {
   
   ## Join with event.data to create final events
   events <- events %>% 
+    filter(SURVEY == cruise.name) %>% 
     rename(cruise = SURVEY, haul = EVENT_ID, gearType = GEAR, notes = COMMENTS) %>% 
     left_join(select(ships, SHIP, ship)) %>%
     left_join(event.perf) %>% 
@@ -152,20 +157,25 @@ if (trawl.source == "Access") {
   
   # Format gear accessory table
   gear.accy <- gear.accy %>% 
+    filter(SURVEY == cruise.name) %>% 
     pivot_wider(names_from = GEAR_ACCESSORY, values_from = GEAR_ACCESSORY_OPTION) %>% 
     left_join(select(ships, SHIP, ship)) %>% 
-    rename(cruise = SURVEY, haul = EVENT_ID, isTDRonHeadrope = HeadropeTDR, isTDRonFootrope = FootropeTDR)
+    rename(cruise = SURVEY, haul = EVENT_ID, isTDRonHeadrope = HeadropeTDR, isTDRonFootrope = FootropeTDR) 
   
   # # Create missing variable if missing
-  # if (!"dna_finclip_number" %in% names(measurements)) 
-  #   measurements$dna_finclip_number <- NA_character_
-  # if (!"fish_condition" %in% names(measurements)) 
-  #   measurements$fish_condition <- NA_character_
-  # if (!"adipose_condition" %in% names(measurements)) 
-  #   measurements$adipose_condition <- NA_character_
+  if (!"dna_finclip_number" %in% names(measurements))
+    measurements$dna_finclip_number <- NA_character_
+  if (!"fish_condition" %in% names(measurements))
+    measurements$fish_condition <- NA_character_
+  if (!"adipose_condition" %in% names(measurements))
+    measurements$adipose_condition <- NA_character_
+  if (!"head_taken" %in% names(measurements))
+    measurements$head_taken <- NA_character_
   
   # Format measurements table
   measurements <- measurements %>% 
+    filter(SURVEY == cruise.name) %>% 
+    select(-DEVICE_ID) %>%
     left_join(select(ships, SHIP, ship)) %>% 
     pivot_wider(names_from = "MEASUREMENT_TYPE", values_from = "MEASUREMENT_VALUE") %>%
     rename(cruise = SURVEY, haul = EVENT_ID,
@@ -174,16 +184,22 @@ if (trawl.source == "Access") {
            DNAtrayNumber = dna_tray_number, DNAvialNumber = dna_vial_number, isGonadSaved = ovary_taken,
            isAlive = fish_condition, adiposeCondition = adipose_condition,
            visualMaturity = maturity, hasTag = head_taken) %>% 
+    left_join(select(events, cruise, ship, haul, collection)) %>% # Add collection
     mutate(totalLength_mm = NA, mantleLength_mm = NA) %>% 
     mutate(hasDNAfinClip = case_when(dna_finclip_number == "None" ~ "N", 
                                      !is.na(dna_finclip_number) ~ "Y",
                                      TRUE ~ NA_character_),
            individual_ID = case_when(!is.na(dna_finclip_number) ~ dna_finclip_number, 
                                      .default=individual_ID),
-           individual_ID = replace(individual_ID, individual_ID == "None", NA))
+           individual_ID = replace(individual_ID, individual_ID == "None", NA)) %>% 
+    select(cruise, ship, haul, collection, everything())
+  
+  # RESUME HERE
   
   # Format samples table
+  ## First entry for species caught and entered into Catch form
   samples <- samples %>%
+    filter(SURVEY == cruise.name) %>% 
     left_join(select(ships, SHIP, ship)) %>%
     rename(cruise = SURVEY, haul = EVENT_ID, 
            species_code = SPECIES_CODE, datetime = TIME_STAMP, notes = COMMENTS) %>% 
@@ -194,6 +210,7 @@ if (trawl.source == "Access") {
     select(cruise, ship, haul, collection, everything())
   
   specimens <- specimens %>% 
+    filter(SURVEY == cruise.name) %>% 
     left_join(select(ships, SHIP, ship)) %>%
     rename(cruise = SURVEY, haul = EVENT_ID, datetime = TIME_STAMP, notes = COMMENTS) %>% 
     left_join(select(events, cruise, ship, haul, collection)) %>% # Add collection
@@ -205,7 +222,10 @@ if (trawl.source == "Access") {
     group_by(haul, SAMPLE_ID) %>%
     arrange(haul, SAMPLE_ID, SPECIMEN_ID) %>%
     mutate(specimenNumber      = seq(1,length(SAMPLE_ID), 1),
-           otolithNumber       = specimenNumber,
+           # Only want otolith number = specimen number for fish with an individual id
+           otolithNumber       = case_when(
+             !is.na(individual_ID) ~ specimenNumber,
+             is.na(individual_ID) ~ NA), 
            selectionReason     = NA_character_, flaggedData = NA_character_,
            visMaturityAssessor = case_when(!is.na(visualMaturity) ~ SCIENTIST),
            isGonadSaved        = recode(isGonadSaved, "Yes" = "Y", "No" = "N"),
@@ -247,7 +267,7 @@ if (trawl.source == "Access") {
   
   # need to get subSampleWt of random individuals measured 
   sp_subsampleWt_count <- specimens %>%
-    group_by(cruise, ship, haul, species)%>%
+    group_by(cruise, ship, haul, collection, species) %>%
     filter(isRandomSample == "Y")%>%
     summarise(subSampleWtkg = sum(weightg, na.rm = TRUE)/1000, # Check the na.rm
               subSampleCount = length(weightg))

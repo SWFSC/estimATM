@@ -243,7 +243,10 @@ if (sampling.trawl) {
     arrange(haul) %>% 
     mutate(duration = difftime(haulBackTime, equilibriumTime, units = "mins"), # Calculate duration
            cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1,
-           sample.type = "Trawl")  
+           sample.type = "Trawl")
+  
+  # Remove haul 15 for now, since it has data entry problems
+  haul <- haul[haul$haul != 15,]
   
   # Replace missing lat/long values for hauls (a CLAMS/SCS problem, usually)
   source(here("Code/nav_match_CLAMS.R"))

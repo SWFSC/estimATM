@@ -27,11 +27,11 @@ graphics.off()
 # Extract only CPS backscatter -------------------------------------------------
 atm::extract_cps_nasc(
   # Most used options ----------------------------------------------------------
-  path.in     = "C:\\SURVEY\\2407RL\\PROCESSED\\EV\\CSV", # CSV file source                                                                                                 e
+  path.in     = "C:\\SURVEY\\2506SH\\PROCESSED\\EV\\CSV", # CSV file source                                                                                                 e
   pattern.in  = "-Final 38 kHz CPS.csv", # CSV file regex
-  path.out    = "C:\\SURVEY\\2407RL\\PROCESSED\\EV\\CSV", # Processed file destination
+  path.out    = "C:\\SURVEY\\2506SH\\PROCESSED\\EV\\CSV", # Processed file destination
   suffix.out  = "_nasc_cps.csv",             # Suffix applied to processed CSV files
-  path.img    = "C:\\SURVEY\\2407RL\\PROCESSED\\EV\\Exported_Images", # Location of exported image files, or NULL
+  path.img    = "C:\\SURVEY\\2506SH\\PROCESSED\\EV\\Exported_Images", # Location of exported image files, or NULL
   pattern.img = "-38 Remove Passive Pings.png", # Exported image regex
   # Lesser used options --------------------------------------------------------
   expansion   = 2,     # Constant for expanding axes

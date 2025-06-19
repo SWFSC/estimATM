@@ -13,13 +13,13 @@ library(psych)    # For computing harmonic mean
 # User Settings -----------------------------------------------------------
 
 # Directory of CTD files to process
-dir.CTD <- 'C:\\SURVEY\\2407RL\\DATA\\UCTD\\Valeport\\TO_PROCESS\\'
+dir.CTD <- 'C:\\SURVEY\\2506SH\\DATA\\UCTD\\Valeport\\TO_PROCESS\\'
 
 # Template ECS file
-ECS.template <- 'C:\\SURVEY\\2407RL\\PROCESSED\\EV\\ECS\\_2407RL_Template.ecs'
+ECS.template <- 'C:\\SURVEY\\2506SH\\PROCESSED\\EV\\ECS\\_2506SH_Template.ecs'
 
 # ECS output directory
-dir.ECS <- 'C:\\SURVEY\\2407RL\\PROCESSED\\EV\\ECS\\'
+dir.ECS <- 'C:\\SURVEY\\2506SH\\PROCESSED\\EV\\ECS\\'
 
 # Minimum depth for determining start of downcast (in meters)
 minDepth <- 2

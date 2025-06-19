@@ -194,8 +194,6 @@ if (trawl.source == "Access") {
            individual_ID = replace(individual_ID, individual_ID == "None", NA)) %>% 
     select(cruise, ship, haul, collection, everything())
   
-  # RESUME HERE
-  
   # Format samples table
   ## First entry for species caught and entered into Catch form
   samples <- samples %>%

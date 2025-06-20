@@ -608,9 +608,10 @@ ctd.cast.depth         <- 350
 
 # UCTD data   
 uctd.dir               <- file.path(survey.dir[survey.vessel.primary],"DATA/UCTD/PROCESSED")
-uctd.hdr.pattern       <- ".*UCTD\\d{3}-\\d{1}.*.asc"
-uctd.cast.pattern      <- ".*_processed.asc"
-uctd.cast.depth        <- 350
+uctd.type              <- "Valeport" # "Valeport" or "Oceansciences"
+uctd.hdr.pattern       <- ".*UCTD\\d{3}-\\d{1}.*.vp2"
+uctd.cast.pattern      <- ".*UCTD\\d{3}-\\d{1}.*.vp2"
+uctd.cast.depth        <- 330
 
 # TDR data
 tdr.dir.kite           <- here("Data/TDR/Kite")

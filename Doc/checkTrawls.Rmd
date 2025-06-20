@@ -128,7 +128,8 @@ haul.bad <- haul.all %>%
 
 # Get only hauls from current survey
 haul <- filter(haul.all, cruise %in% cruise.name) %>% 
-  filter(!collection %in% haul.bad$collection) %>% 
+  filter(!collection %in% haul.bad$collection) %>%
+  filter(!haul %in% trawl.haul.exclude) %>% 
   mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
          cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) # Assign cluster
 
@@ -156,6 +157,8 @@ catch <- catch.all %>%
   left_join(select(spp.codes, species, scientificName, commonName)) %>% 
   filter(cruise %in% cruise.name & ship %in% cruise.ship & 
            scientificName %in% cps.spp & netSampleType == 'codend') %>% 
+  # Removes catch from any bad or manually excluded hauls
+  filter(!haul %in% haul$haul) %>% 
   filter(!presenceOnly == "Y") %>%
   left_join(select(haul, haul, cluster)) %>% 
   mutate(key = paste(haul, scientificName),
@@ -508,7 +511,9 @@ bad.lengths <-  lengths.all %>%
 lengths <- lengths.all %>% 
   filter(cruise %in% cruise.name & ship %in% cruise.ship & 
            scientificName %in% c(cps.spp, "Doryteuthis opalescens", "Merluccius productus") & 
-           toupper(isRandomSample) == "Y") 
+           toupper(isRandomSample) == "Y") %>% 
+  # Removes lengths from any bad or manually excluded hauls
+  filter(!haul %in% haul$haul)
 
 # Summarize Fulton's condition factor (K) for identifying outliers
 K.summ <- lengths %>%

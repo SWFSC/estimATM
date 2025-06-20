@@ -242,6 +242,7 @@ if (sampling.trawl) {
     filter(cruise %in% cruise.name & ship %in% cruise.ship) %>% 
     # Remove bad trawls
     filter(!trawlPerformance %in% trawl.performance) %>% 
+    filter(!haul %in% trawl.haul.exclude) %>%
     arrange(haul) %>% 
     mutate(duration = difftime(haulBackTime, equilibriumTime, units = "mins"), # Calculate duration
            cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1,

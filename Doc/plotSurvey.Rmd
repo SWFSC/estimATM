@@ -109,12 +109,14 @@ if (copy.files) {
   }
   
   if (sampling.trawl) {
-    # Copy trawl Access database
-    haul.db <- dir_ls(file.path(survey.dir[survey.vessel.primary], trawl.dir),
-                      regexp = trawl.db.name)
+    # List all trawl databases
+    haul.db.info <- dir_ls(file.path(survey.dir[survey.vessel.primary], trawl.dir),
+                           regexp = trawl.db.ext) %>% 
+      tibble(file_info(.))
     
-    file_copy(haul.db, here("Data/Trawl"), overwrite = overwrite.files)
-    
+    # Copy most recently modified trawl database
+    file_copy(haul.db.info$path[which.max(haul.db.info$modification_time)], 
+              here("Data/Trawl", trawl.db.name), overwrite = TRUE)
   }
   
   if (sampling.cufes) {

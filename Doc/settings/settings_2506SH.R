@@ -626,6 +626,7 @@ tdr.offset             <- rep(0, 100)
 tdr.offset             <- setNames(tdr.offset, 1:length(tdr.offset)) # Add names from haul numbers
 tdr.nav.source         <- "ERDDAP"
 tdr.trawl.source       <- "Access"
+tdr.cruise             <- c("202506") # Cruise name(s) for TDR files
 
 # Biomass estimation settings ------------------------------------------
 # Length bins and labels for calculating length frequencies 

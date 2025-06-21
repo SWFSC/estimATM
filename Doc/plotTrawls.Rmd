@@ -20,7 +20,7 @@ if (!require("pak")) install.packages("pak")
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,plotly,lubridate,here,odbc,DBI,glue,
                knitr,DT,fs,cowplot,oce,sf,mapview,shadowtext,
-               patchwork)
+               patchwork,RSQLite)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
@@ -56,10 +56,10 @@ copy.files   <- T # Copy TDR files
 process.rsk  <- T # Process RBR Duet^3^ TDR files (.rsk format)
 process.asc  <- F # Process Seabird TDR files (.asc format)
 asc.offset   <- 0 # ASCII file time offset, in hours
-process.tv80 <- T # Process Simrad TV80 data
+process.tv80 <- F # Process Simrad TV80 data
 
 # Usually F; set T to reprocess all TDR/TV80 files
-process.tdr.all   <- F # Process all TDR files 
+process.tdr.all   <- T # Process all TDR files 
 process.tv80.all  <- F # Process all TV80 files
 
 get.db      <- T # Extract data from trawl database (F for testing)
@@ -109,7 +109,7 @@ if (get.nav.sh) {
 }
 ```
 
-```{r get-trawl-data}
+```{r get-trawl-data, eval=FALSE}
 if (get.db) {
   if (tdr.trawl.source == "SQL") {
     # Configure ODBC connection to TRAWL database
@@ -147,58 +147,37 @@ if (get.db) {
 }
 ```
 
-```{r format-trawl-data}
-# Create startLatitudeDecimal and startLongitudeDecimal for Access data
-if (tdr.trawl.source == "Access") {
-  # Reformat haul data to match SQL
-  haul.all <- haul.all %>% 
-    arrange(haul) %>% 
-    mutate(
-      startLatDecimal  =   startLatitudeDegrees + (startLatitudeMinutes/60),
-      startLongDecimal = -(startLongitudeDegrees + (startLongitudeMinutes/60)),
-      stopLatDecimal   =   stopLatitudeDegrees + (stopLatitudeMinutes/60),
-      stopLongDecimal  = -(stopLongitudeDegrees + (stopLongitudeMinutes/60))) %>%
-    mutate(haulBackTime = case_when(
-      haulBackTime < equilibriumTime ~ haulBackTime + days(1),
-      TRUE ~ haulBackTime))
+```{r collect-trawl-data}
+if (get.db) {
+  # Source script to collect data from trawl database
+  source(here("Code/collect_trawl_database.R"))
   
-  # Identify hauls where date of equilibriumTime or haulBackTime is incorrect
-  eq.fix <- which(c(0, diff(haul.all$equilibriumTime)) < 0)
-  hb.fix <- which(c(0, diff(haul.all$haulBackTime)) < 0)
+} else {
+  # Load trawl data
+  load(here("Data/Trawl/trawl_data_raw.Rdata"))
   
-  # Correct equilibriumTime or haulBackTime
-  haul.all$equilibriumTime[eq.fix] <- haul.all$equilibriumTime[eq.fix] + days(1)
-  haul.all$haulBackTime[eq.fix]    <- haul.all$haulBackTime[eq.fix] + days(1)
-  
-} else if (tdr.trawl.source == "SQL") {
-  haul.all <- haul.all %>% 
-    arrange(haul) %>% 
-    mutate(
-      equilibriumTime = ymd_hms(equilibriumTime),
-      haulBackTime    = ymd_hms(haulBackTime)) #%>% 
-  #     mutate(
-  #         startLatDecimal  =   startLatitudeDegrees + (startLatitudeMinutes/60),
-  #         startLongDecimal = -(startLongitudeDegrees + (startLongitudeMinutes/60)),
-  #         stopLatDecimal   =   stopLatitudeDegrees + (stopLatitudeMinutes/60),
-  #         stopLongDecimal  = -(stopLongitudeDegrees + (stopLongitudeMinutes/60)))
 }
+```
 
-# Classify hauls by season (spring or summer)
-haul.all <- haul.all %>% 
-  mutate(season = case_when(
-    month(equilibriumTime) < 6 ~ "spring",
-    TRUE ~ "summer"))
+```{r format-trawl-data}
+# Source script to format data from trawl database
+source(here("Code/format_trawl_database.R"))
+```
+
+```{r filter-trawl-data}
+# Select bad trawls
+haul.bad <- haul.all %>% 
+  filter(trawlPerformance %in% trawl.performance) 
 
 # Get only hauls from current survey
-haul <- filter(haul.all, cruise %in% tdr.cruise) %>% 
-  arrange(haul) %>% 
-  mutate(
-    netInWaterTime  = ymd_hms(netInWaterTime,  tz = tdr.tz),
-    equilibriumTime = ymd_hms(equilibriumTime, tz = tdr.tz),
-    haulBackTime    = ymd_hms(haulBackTime,    tz = tdr.tz),
-    netOnDeckTime   = ymd_hms(netOnDeckTime,   tz = tdr.tz),
-    duration        = difftime(haulBackTime, equilibriumTime, units = "mins"), # Calculate duration
-    cluster   = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) 
+haul <- filter(haul.all, cruise %in% cruise.name) %>% 
+  filter(!collection %in% haul.bad$collection) %>%
+  filter(!haul %in% trawl.haul.exclude) %>% 
+  mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
+         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) # Assign cluster
+
+# Replace missing lat/long values for hauls (a CLAMS/SCS problem, usually)
+source(here("Code/nav_match_CLAMS.R"))
 
 # Find midpoint of each haul as the mean lat/lon
 haul.mid <- haul %>% 
@@ -216,6 +195,8 @@ cluster.mid <- haul.mid %>%
 ```
 
 ```{r process-tdr-rsk}
+# RESUME here
+
 # Calculate mean latitude for computing depth from pressure
 # Could be improved (marginally) by extracting the latitude for each haul
 mean.lat <- mean(haul$startLatDecimal)
@@ -314,7 +295,7 @@ if (process.rsk) {
       tbl.kite.tmp <- as_tibble(rsk.kite@data) %>% 
         mutate(filename = path_file(rsk.kite@metadata$filename),
                cruise = str_extract(filename, "^\\d{4}\\w{2}"),
-               haul = as.numeric(str_sub(filename, nchar(cruise) + 1, nchar(cruise) + 3)),
+               haul  = as.numeric(str_sub(filename, nchar(cruise) + 1, nchar(cruise) + 3)),
                depth = surveyR::calc_depth(mean.lat, pressure*100),
                loc   = "Kite",
                time  = force_tz(time, tz = tdr.tz)) 
@@ -336,7 +317,7 @@ if (process.rsk) {
       tbl.foot.tmp <- as_tibble(rsk.foot@data) %>% 
         mutate(filename = path_file(rsk.foot@metadata$filename),
                cruise = str_extract(filename, "^\\d{4}\\w{2}"),
-               haul = as.numeric(str_sub(filename, nchar(cruise) + 1, nchar(cruise) + 3)),
+               haul  = as.numeric(str_sub(filename, nchar(cruise) + 1, nchar(cruise) + 3)),
                depth = surveyR::calc_depth(mean.lat, pressure*100),
                loc   = "Footrope",
                time  = force_tz(time, tz = tdr.tz)) 

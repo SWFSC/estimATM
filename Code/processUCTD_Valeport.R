@@ -17,12 +17,17 @@ dir.CTD <- 'C:\\SURVEY\\2506SH\\DATA\\UCTD\\Valeport\\TO_PROCESS\\'
 
 # Template ECS file
 ECS.template <- 'C:\\SURVEY\\2506SH\\PROCESSED\\EV\\ECS\\_2506SH_Template.ecs'
+# ECS.template <- 'C:\\Users\\AST\\Desktop\\LBC Calibration 2025\\_2506LBC_Template.ecs'
 
 # ECS output directory
 dir.ECS <- 'C:\\SURVEY\\2506SH\\PROCESSED\\EV\\ECS\\'
+# dir.ECS <- 'C:\\Users\\AST\\Desktop\\LBC Calibration 2025\\ECS\\'
 
 # Minimum depth for determining start of downcast (in meters)
 minDepth <- 2
+
+# Define transducer depth
+txducer.depth <- 7.35     # 7.35 for Shimada, 2 for LBC
 
 
 # Read template ECS file --------------------------------------------------
@@ -79,7 +84,7 @@ for (i in files.CTD) {
   
   # Obtain the sound speed at the transducer depth (typically 7.35 m for
   # Intermediate position) in order to compensate calibration parameters
-  idx <- which.min(abs(data$Depth - 7.35))
+  idx <- which.min(abs(data$Depth - txducer.depth))
   txdcr.c <- data$Sound.Velocity[idx]
   
   

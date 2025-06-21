@@ -398,7 +398,7 @@ nasc.pattern.cps       <- c(SH  = "Final 38 kHz CPS_nasc_cps.csv",
                             LBC = "Final 38 kHz CPS_nasc_cps.csv")
 
 # Regex pattern for identifying krill CSV files
-nasc.pattern.krill     <- c(SH  = "Juan Krill Final 120.csv",
+nasc.pattern.krill     <- c(SH  = "Poly Krill Final 120.csv",
                             LM  = "Juan Krill Final 120.csv",
                             LBC = "Juan Krill Final 120.csv")
 

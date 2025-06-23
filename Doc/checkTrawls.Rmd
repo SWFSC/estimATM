@@ -124,14 +124,21 @@ source(here("Code/format_trawl_database.R"))
 ```{r process-haul-data}
 # Select bad trawls
 haul.bad <- haul.all %>% 
-  filter(trawlPerformance %in% trawl.performance) 
+  filter(trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
+         haul %in% trawl.haul.exclude | # Manually excluded hauls
+           # Missing data that will cause errors in nav matching
+           is.na(collection) |
+           is.na(equilibriumTime) | 
+           is.na(haulBackTime))
 
 # Get only hauls from current survey
 haul <- filter(haul.all, cruise %in% cruise.name) %>% 
-  filter(!collection %in% haul.bad$collection) %>%
-  filter(!haul %in% trawl.haul.exclude) %>% 
+  filter(!haul %in% haul.bad$haul) %>%
   mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
          cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) # Assign cluster
+
+# Get all haul numbers
+haul.good <- purrr::pluck(haul$haul)
 
 # Replace missing lat/long values for hauls (a CLAMS/SCS problem, usually)
 source(here("Code/nav_match_CLAMS.R"))
@@ -158,7 +165,7 @@ catch <- catch.all %>%
   filter(cruise %in% cruise.name & ship %in% cruise.ship & 
            scientificName %in% cps.spp & netSampleType == 'codend') %>% 
   # Removes catch from any bad or manually excluded hauls
-  filter(!haul %in% haul$haul) %>% 
+  filter(haul %in% haul.good) %>%
   filter(!presenceOnly == "Y") %>%
   left_join(select(haul, haul, cluster)) %>% 
   mutate(key = paste(haul, scientificName),
@@ -512,8 +519,8 @@ lengths <- lengths.all %>%
   filter(cruise %in% cruise.name & ship %in% cruise.ship & 
            scientificName %in% c(cps.spp, "Doryteuthis opalescens", "Merluccius productus") & 
            toupper(isRandomSample) == "Y") %>% 
-  # Removes lengths from any bad or manually excluded hauls
-  filter(!haul %in% haul$haul)
+  # Removes catch from any bad or manually excluded hauls
+  filter(haul %in% haul.good)
 
 # Summarize Fulton's condition factor (K) for identifying outliers
 K.summ <- lengths %>%
@@ -1246,7 +1253,7 @@ include_graphics(here("Figs/fig_LW_plots_final.png"))
 ## Hauls
 ### Removed hauls  
 
-Hauls removed due to trawl performance issues (e.g., aborted, bad, poor, etc.).
+Hauls removed due to trawl performance issues (e.g., aborted, bad, poor, etc.) or missing data.
 
 ```{r bad-hauls}
 haul.bad %>% 

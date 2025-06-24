@@ -56,11 +56,11 @@ copy.files   <- T # Copy TDR files
 process.rsk  <- T # Process RBR Duet^3^ TDR files (.rsk format)
 process.asc  <- F # Process Seabird TDR files (.asc format)
 asc.offset   <- 0 # ASCII file time offset, in hours
-process.tv80 <- F # Process Simrad TV80 data
+process.tv80 <- T # Process Simrad TV80 data
 
 # Usually F; set T to reprocess all TDR/TV80 files
 process.tdr.all   <- T # Process all TDR files 
-process.tv80.all  <- F # Process all TV80 files
+process.tv80.all  <- T # Process all TV80 files
 
 get.db      <- T # Extract data from trawl database (F for testing)
 get.nav     <- T # Download NOAA Ship nav data
@@ -109,44 +109,6 @@ if (get.nav.sh) {
 }
 ```
 
-```{r get-trawl-data, eval=FALSE}
-if (get.db) {
-  if (tdr.trawl.source == "SQL") {
-    # Configure ODBC connection to TRAWL database
-    trawl.con  <- dbConnect(odbc(), 
-                            Driver = "SQL Server", 
-                            Server = "161.55.235.187", 
-                            Database = "Trawl", 
-                            Trusted_Connection = "True")
-  } else if (tdr.trawl.source == "Access") {
-    # Copy trawl Access database
-    haul.db <- dir_ls(file.path(survey.dir[survey.vessel.primary], "DATA/BIOLOGICAL/HAUL"),
-                      regexp = trawl.db.name)
-    
-    file_copy(haul.db, here("Data/Trawl"), overwrite = TRUE)
-    
-    # Configure ODBC connection to TRAWL database
-    trawl.con  <- dbConnect(odbc(), 
-                            Driver = "Microsoft Access Driver (*.mdb, *.accdb)", 
-                            DBQ = file.path(here("Data/Trawl"),trawl.db.name))
-  }
-  # Import trawl database tables
-  haul.all       <- tbl(trawl.con,"Haul") %>% collect()
-  
-  # Close database channel
-  dbDisconnect(trawl.con)
-  
-  # Save trawl data
-  saveRDS(haul.all,
-          file = here("Data/Trawl/haul_data_tdr.rds"))
-  
-} else {
-  # Load trawl data
-  haul.all <- readRDS(here("Data/Trawl/haul_data_tdr.rds"))
-  
-}
-```
-
 ```{r collect-trawl-data}
 if (get.db) {
   # Source script to collect data from trawl database
@@ -167,7 +129,12 @@ source(here("Code/format_trawl_database.R"))
 ```{r filter-trawl-data}
 # Select bad trawls
 haul.bad <- haul.all %>% 
-  filter(trawlPerformance %in% trawl.performance) 
+  filter(trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
+           haul %in% trawl.haul.exclude | # Manually excluded hauls
+           # Missing data that will cause errors in nav matching
+           is.na(collection) |
+           is.na(equilibriumTime) | 
+           is.na(haulBackTime))
 
 # Get only hauls from current survey
 haul <- filter(haul.all, cruise %in% cruise.name) %>% 
@@ -195,8 +162,6 @@ cluster.mid <- haul.mid %>%
 ```
 
 ```{r process-tdr-rsk}
-# RESUME here
-
 # Calculate mean latitude for computing depth from pressure
 # Could be improved (marginally) by extracting the latitude for each haul
 mean.lat <- mean(haul$startLatDecimal)
@@ -294,12 +259,11 @@ if (process.rsk) {
       # Convert to tibble
       tbl.kite.tmp <- as_tibble(rsk.kite@data) %>% 
         mutate(filename = path_file(rsk.kite@metadata$filename),
-               cruise = str_extract(filename, "^\\d{4}\\w{2}"),
+               cruise = str_extract(filename, tdr.pattern.cruise),
                haul  = as.numeric(str_sub(filename, nchar(cruise) + 1, nchar(cruise) + 3)),
                depth = surveyR::calc_depth(mean.lat, pressure*100),
                loc   = "Kite",
                time  = force_tz(time, tz = tdr.tz)) 
-      
       
       tbl.kite <- bind_rows(tbl.kite, tbl.kite.tmp)
     }
@@ -316,7 +280,7 @@ if (process.rsk) {
       # Convert to tibble
       tbl.foot.tmp <- as_tibble(rsk.foot@data) %>% 
         mutate(filename = path_file(rsk.foot@metadata$filename),
-               cruise = str_extract(filename, "^\\d{4}\\w{2}"),
+               cruise = str_extract(filename, tdr.pattern.cruise),
                haul  = as.numeric(str_sub(filename, nchar(cruise) + 1, nchar(cruise) + 3)),
                depth = surveyR::calc_depth(mean.lat, pressure*100),
                loc   = "Footrope",
@@ -505,8 +469,16 @@ if (process.tv80) {
 if(nrow(tbl.all.new) > 0) {
   for (k in unique(tbl.all.new$haul)) {
     # Get TDR data from haul k
-    tdr.plot <- filter(tbl.all.new, haul == k) %>% 
-      mutate(time = time + hours(tdr.offset[k]))
+    tdr.plot <- filter(tbl.all.new, haul == k) %>%
+      # Correct time for kite and footrope, if necessary
+      mutate(time = case_when(
+        loc == "Kite" ~ time + hours(tdr.offset.k[k]),
+        loc == "Footrope"~ time + hours(tdr.offset.f[k])))
+    
+    # tdr.plot %>% group_by(loc) %>% summarize(start = min(time), end = max(time))
+    
+    # tdr.plot <- filter(tbl.all.new, haul == k) %>% 
+    #   mutate(time = time + hours(tdr.offset[k]))
     
     # Get haul info from haul k
     trawl.window <- haul %>% 
@@ -543,9 +515,19 @@ if(nrow(tbl.all.new) > 0) {
     
     if ("Kite" %in% tdr.plot$loc && "Footrope" %in% tdr.plot$loc) {
       tdr.plot.wider <- tdr.plot %>% 
-        select(time, depth, loc) %>% 
+        group_by(loc, time) %>% 
+        summarise(depth = mean(depth)) %>% 
         pivot_wider(names_from = loc, values_from = depth) %>% 
-        mutate(height = Kite - Footrope)  
+        mutate(height = Kite - Footrope)
+      
+      # tdr.plot.wider <- tdr.plot %>% 
+      #   select(time, depth, loc) %>% 
+      #   pivot_wider(names_from = loc, values_from = depth) %>% 
+      #   mutate(height = Kite - Footrope)
+      
+      # tdr.plot.wider |>
+      #   dplyr::summarise(n = dplyr::n(), .by = c(time, loc)) |>
+      #   dplyr::filter(n > 1L)
     }
     
     # Plot TDR data
@@ -596,7 +578,7 @@ if(nrow(tbl.all.new) > 0) {
     if(exists("tv80.meas")) {
       # Extract TV80 data for 30 min before and after haul
       trawl.tv80 <- tv80.meas %>% 
-        mutate(datetime = with_tz(datetime, tzone = tdr.tz) + hours(-1))  %>%
+        mutate(datetime = with_tz(datetime, tzone = tdr.tz) + hours(tv80.offset))  %>%
         filter(between(datetime,  
                        min(trawl.text$time, na.rm = TRUE) - minutes(10), 
                        max(trawl.text$time, na.rm = TRUE) + minutes(10))) %>% 

@@ -661,6 +661,9 @@ tdr.offset             <- setNames(tdr.offset, 1:length(tdr.offset)) # Add names
 tdr.nav.source         <- "ERDDAP"
 tdr.trawl.source       <- "Access"
 
+# TV80 data
+tv80.offset <- -1 # Offset, in hours
+
 # Biomass estimation settings ------------------------------------------
 # Length bins and labels for calculating length frequencies 
 length.min <- 1 # Minimum length bin for length frequencies

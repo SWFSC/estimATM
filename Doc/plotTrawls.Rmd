@@ -441,7 +441,9 @@ if (process.tv80) {
       for (i in 1:length(tv80.files)) {
         # Process i-th file
         tv80.meas <- bind_rows(tv80.meas,
-                               atm::extract_tv80(file = tv80.files[i]))
+                               atm::extract_tv80(file      = tv80.files[i],
+                                                 col.name  = tv80.cols, 
+                                                 skip.rows = tv80.skip))
         
         # Update the progress bar
         info <- sprintf("%d%% done", round((i / length(tv80.files)) * 100))

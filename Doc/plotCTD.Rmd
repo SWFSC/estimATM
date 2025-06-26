@@ -107,7 +107,7 @@ if (copy.files) {
   if (dir.exists(ctd.dir)) {
     # Copy CTD data -------------------------------------
     # List raw CTD ASCII files
-    ctd.hdr <- dir_ls(ctd.dir, regexp = ctd.hdr.pattern, recurse = TRUE) %>% 
+    ctd.hdr <- dir_ls(ctd.hdr.dir, regexp = ctd.hdr.pattern, recurse = TRUE) %>% 
       path_filter(regexp = "_processed", invert = TRUE)
     
     # Copy files to plotCTD directory
@@ -138,7 +138,7 @@ wpts <- read_csv(here("Data/Nav", wpt.filename))
 
 # Convert planned transects to sf; CRS = crs.geog
 wpts.sf <- wpts %>% 
-  filter(Type %in% wpt.types) %>% 
+  filter(Type %in% wpt.types, Region %in% wpt.regions) %>% 
   st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
   mutate(
     label    = paste("Transect", Transect),

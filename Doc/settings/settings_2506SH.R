@@ -601,8 +601,9 @@ if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {
 }
 
 # CTD data
-ctd.dir                <- file.path(survey.dir[survey.vessel.primary],"DATA/CTD")
-ctd.hdr.pattern        <- "SH2506*.*hdr"
+ctd.dir                <- file.path(survey.dir[survey.vessel.primary],"DATA/CTD/PROCESSED")
+ctd.hdr.dir            <- file.path(survey.dir[survey.vessel.primary],"DATA/CTD/TO_PROCESS")
+ctd.hdr.pattern        <- "*.*hdr"
 ctd.cast.pattern       <- ".*_processed.asc"
 ctd.cast.depth         <- 350
 

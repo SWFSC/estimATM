@@ -138,7 +138,7 @@ if (trawl.source == "Access") {
     rename(cruise = SURVEY, haul = EVENT_ID, gearType = GEAR, notes = COMMENTS) %>% 
     left_join(select(ships, SHIP, ship)) %>%
     left_join(event.perf) %>% 
-    left_join(event.data) %>% 
+    left_join(select(event.data, -gearType)) %>% # Fixes missing gearType in event.data
     select(cruise, ship, haul, collection, everything()) 
   
   if (!"startLatDecimal" %in% names(events))

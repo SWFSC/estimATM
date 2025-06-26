@@ -13,15 +13,15 @@ library(psych)    # For computing harmonic mean
 # User Settings -----------------------------------------------------------
 
 # Directory of CTD files to process
-dir.CTD <- 'C:\\SURVEY\\2506SH\\DATA\\UCTD\\Valeport\\TO_PROCESS\\'
+dir.CTD <- 'C:\\SURVEY\\2506SH\\DATA\\UCTD\\PROCESSED\\TO_ECS_PROCESS\\'
 
 # Template ECS file
 ECS.template <- 'C:\\SURVEY\\2506SH\\PROCESSED\\EV\\ECS\\_2506SH_Template.ecs'
-# ECS.template <- 'C:\\Users\\AST\\Desktop\\LBC Calibration 2025\\_2506LBC_Template.ecs'
+# ECS.template <- 'C:\\Users\\AST\\Desktop\\LBC Calibration 2025\\ECHOVIEW\\ECS\\_2506LBC_Template.ecs'
 
 # ECS output directory
 dir.ECS <- 'C:\\SURVEY\\2506SH\\PROCESSED\\EV\\ECS\\'
-# dir.ECS <- 'C:\\Users\\AST\\Desktop\\LBC Calibration 2025\\ECS\\'
+# dir.ECS <- 'C:\\Users\\AST\\Desktop\\LBC Calibration 2025\\ECHOVIEW\\ECS\\'
 
 # Minimum depth for determining start of downcast (in meters)
 minDepth <- 2

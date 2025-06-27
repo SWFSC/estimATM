@@ -153,7 +153,8 @@ for (i in files.CTD) {
   
   # Perform basic data error checks
   idx <- data$DepSM < 0 | data$T090C <= 0 | data$Sal00 < 0 | data$Flag < 0
-  data[idx,] <- NA
+  data <- data[!idx,]
+  # data[idx,] <- NA
   
   # Obtain the sound speed at the transducer depth (typically 7.35 m for
   # Intermediate position) in order to compensate calibration parameters

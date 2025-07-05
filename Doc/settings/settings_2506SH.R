@@ -588,6 +588,8 @@ trawl.source           <- "CLAMS-SQLite"  # "SQL" or "Access" or "CLAMS-Oracle" 
 trawl.dsn              <- "TRAWL"  # DSN for Trawl database on SQL server
 trawl.db.name          <- "TrawlDataEntry2506SH.db"
 trawl.db.ext           <- ".db"
+# Time zone for events in trawl database ("America/Los_Angeles" in past; "UTC" for CLAMS)
+trawl.db.tz            <- "UTC" 
 trawl.performance      <- c("Aborted") # Character vector; trawl performance to exclude
 trawl.haul.exclude     <- NA # c(24) # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)
 

@@ -125,12 +125,12 @@ if (trawl.source == "Access") {
            haulBackTime = Haulback, netOnDeckTime = NetOnDeck) %>% 
     mutate(countryState = paste(country, state)) %>%
     # Convert times to POSIXct and PDT time zone
-    mutate(netInWaterTime  = mdy_hms(netInWaterTime,  tz = "America/Los_Angeles"),
-           equilibriumTime = mdy_hms(equilibriumTime, tz = "America/Los_Angeles"),
-           haulBackTime    = mdy_hms(haulBackTime,    tz = "America/Los_Angeles"),
-           netOnDeckTime   = mdy_hms(netOnDeckTime,   tz = "America/Los_Angeles"),
-           EQ10Min         = mdy_hms(EQ10Min,         tz = "America/Los_Angeles"),
-           EQ20Min         = mdy_hms(EQ20Min,         tz = "America/Los_Angeles"))
+    mutate(netInWaterTime  = mdy_hms(netInWaterTime,  tz = trawl.db.tz),
+           equilibriumTime = mdy_hms(equilibriumTime, tz = trawl.db.tz),
+           haulBackTime    = mdy_hms(haulBackTime,    tz = trawl.db.tz),
+           netOnDeckTime   = mdy_hms(netOnDeckTime,   tz = trawl.db.tz),
+           EQ10Min         = mdy_hms(EQ10Min,         tz = trawl.db.tz),
+           EQ20Min         = mdy_hms(EQ20Min,         tz = trawl.db.tz))
   
   ## Join with event.data to create final events
   events <- events %>% 

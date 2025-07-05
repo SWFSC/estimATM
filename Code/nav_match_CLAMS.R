@@ -4,7 +4,7 @@
 # Replace missing lat/long values for hauls (a CLAMS/SCS problem, usually)
 # Create PDT time, for matching with trawl events
 nav.match.position <- select(nav, time, lat, long) %>% 
-  mutate(time_pdt = with_tz(time, tzone = "America/Los_Angeles")) %>% 
+  mutate(time_trawl = with_tz(time, tzone = trawl.db.tz)) %>% 
   arrange(time)
 
 # Create data frames for match results
@@ -13,12 +13,12 @@ nav.match.haul.hb <- data.frame()
 
 # Match haul times to nav data and extract positions  
 for (i in seq_along(haul$equilibriumTime)) {
-  min.diff.eq       <- which.min(abs(difftime(haul$equilibriumTime[i], nav.match.position$time_pdt)))
+  min.diff.eq       <- which.min(abs(difftime(haul$equilibriumTime[i], nav.match.position$time_trawl)))
   nav.match.haul.eq <- bind_rows(nav.match.haul.eq, nav.match.position[min.diff.eq, ])
 }
 
 for (i in seq_along(haul$haulBackTime)) {
-  min.diff.hb       <- which.min(abs(difftime(haul$haulBackTime[i], nav.match.position$time_pdt)))
+  min.diff.hb       <- which.min(abs(difftime(haul$haulBackTime[i], nav.match.position$time_trawl)))
   nav.match.haul.hb <- bind_rows(nav.match.haul.hb, nav.match.position[min.diff.hb, ])
 }
 

@@ -162,6 +162,22 @@ if (trawl.source == "Access") {
     left_join(select(ships, SHIP, ship)) %>% 
     rename(cruise = SURVEY, haul = EVENT_ID, isTDRonHeadrope = HeadropeTDR, isTDRonFootrope = FootropeTDR) 
   
+  # Format measurements table
+  measurements <- measurements %>% 
+    filter(SURVEY == cruise.name) %>% 
+    select(-DEVICE_ID) %>%
+    left_join(select(ships, SHIP, ship)) %>% 
+    filter(!duplicated(.)) %>% 
+    pivot_wider(names_from = "MEASUREMENT_TYPE", values_from = "MEASUREMENT_VALUE") %>%
+    rename(cruise = SURVEY, haul = EVENT_ID,
+           individual_ID = alpha_barcode, weightg = weight_g,
+           standardLength_mm = standard_length_mm, forkLength_mm = fork_length_mm,
+           DNAtrayNumber = dna_tray_number, DNAvialNumber = dna_vial_number, isGonadSaved = ovary_taken,
+           isAlive = fish_condition, adiposeCondition = adipose_condition,
+           visualMaturity = maturity, hasTag = head_taken) %>% 
+    left_join(select(events, cruise, ship, haul, collection)) %>% # Add collection
+    mutate(totalLength_mm = NA, mantleLength_mm = NA) 
+  
   # Create missing variable if missing
   if (!"dna_finclip_number" %in% names(measurements))
     measurements$dna_finclip_number <- NA_character_
@@ -172,20 +188,8 @@ if (trawl.source == "Access") {
   if (!"head_taken" %in% names(measurements))
     measurements$head_taken <- NA_character_
   
-  # Format measurements table
-  measurements <- measurements %>% 
-    filter(SURVEY == cruise.name) %>% 
-    select(-DEVICE_ID) %>%
-    left_join(select(ships, SHIP, ship)) %>% 
-    pivot_wider(names_from = "MEASUREMENT_TYPE", values_from = "MEASUREMENT_VALUE") %>%
-    rename(cruise = SURVEY, haul = EVENT_ID,
-           individual_ID = alpha_barcode, weightg = weight_g,
-           standardLength_mm = standard_length_mm, forkLength_mm = fork_length_mm,
-           DNAtrayNumber = dna_tray_number, DNAvialNumber = dna_vial_number, isGonadSaved = ovary_taken,
-           isAlive = fish_condition, adiposeCondition = adipose_condition,
-           visualMaturity = maturity, hasTag = head_taken) %>% 
-    left_join(select(events, cruise, ship, haul, collection)) %>% # Add collection
-    mutate(totalLength_mm = NA, mantleLength_mm = NA) %>% 
+  # Finalize formatting of measurements data frame
+  measurements <- measurements %>%  
     mutate(hasDNAfinClip = case_when(dna_finclip_number == "None" ~ "N", 
                                      !is.na(dna_finclip_number) ~ "Y",
                                      TRUE ~ NA_character_),
@@ -193,7 +197,7 @@ if (trawl.source == "Access") {
                                      .default=individual_ID),
            individual_ID = replace(individual_ID, individual_ID == "None", NA)) %>% 
     select(cruise, ship, haul, collection, everything())
-  
+
   # Format samples table
   ## First entry for species caught and entered into Catch form
   samples <- samples %>%

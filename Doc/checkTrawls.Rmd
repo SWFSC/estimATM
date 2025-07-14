@@ -580,6 +580,8 @@ This is a tool used to visualize and conduct QA/QC of trawl specimen data collec
 
 The data below was collected during the **`r survey.name.long` (`r survey.name`)**. 
 
+These results include data from hauls **`r min(haul$haul)`** to **`r max(haul$haul)`** (**`r nrow(haul)`** hauls total), conducted between **`r format(min(haul$equilibriumTime), "%F %T", tz = "America/Los_Angeles", usetz = TRUE)`** and **`r format(max(haul$equilibriumTime), "%F %T", tz = "America/Los_Angeles", usetz = TRUE)`**.
+
 # Length-weight summary
 
 View the length (cm) and weight (g) range for each species.

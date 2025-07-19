@@ -1,10 +1,12 @@
-# This script is used to batch process uCTD raw data files, then use the results
+# This script is used to batch process CTD raw data files, then use the results
 # from the CTD cast to create Echoview-calibration files (.ecs) containing the
 # appropriate temperature, salinity, absorption depths, and sound speed.
 
 # Load required packages --------------------------------------------------
 
 library(readr)    # For reading and writing plain text files
+library(stringr)  # For parsing text strings to update ECS files
+library(psych)    # For computing harmonic mean
 
 # User Settings -----------------------------------------------------------
 

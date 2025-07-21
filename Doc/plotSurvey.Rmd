@@ -1127,13 +1127,13 @@ all.mpa.types.mex <- as.factor(c(unique(as.character(baja_mpas$NOMBRE)),
 
 mpaPalMex  <- colorFactor(topo.colors(10), all.mpa.types.mex)
 
-# Create color pallette for CUFES
+# Create color palette for CUFES
 cufesPal <- colorFactor(cufes.colors, cufes.plot.spp)  
 
 # Create color palette for seep types
 seepPal <- colorFactor(c("red","blue"), c("Seep","Uncertain"))
 
-# Create color pallette for planned transects
+# Create color palette for planned transects
 txPal    <- colorFactor(wpt.colors, wpt.types)
 trawlPal <- c('#00CD66', '#0000FF', '#A020F0',
               '#F5DEB3', '#00FFFF', '#FF0000')

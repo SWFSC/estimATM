@@ -1,4 +1,4 @@
-# A utility for extracting CPS backscatter (cps.nasc) from Echoview CSV files
+# A utility  for extracting CPS backscatter (cps.nasc) from Echoview CSV files
 # Source the script (Ctrl+Shift+S) and respond to the prompts
 
 # To run in Rstudio, press the Source button or Ctrl + Shift + S

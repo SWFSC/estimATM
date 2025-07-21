@@ -995,28 +995,49 @@ if (sampling.acoustics) {
 }
 
 if (sampling.trawl) {
-  # Convert haul paths and midpoints to sf; CRS = crs.geog
+  #Get haul nav data
+  ## Create data frame to store results
+  haul.nav <- data.frame()
+  
+  for (h in unique(haul$haul)) {
+    # Get haul times
+    haul.tmp <- filter(haul, haul == h)
+    # Extract nav for each trawl period
+    nav.fishing <- filter(nav, between(time, haul.tmp$equilibriumTime, haul.tmp$haulBackTime)) %>% mutate(period = "Fishing")
+    nav.deploy  <- filter(nav, between(time, haul.tmp$netInWaterTime, haul.tmp$equilibriumTime)) %>% mutate(period = "Deployment")
+    nav.recover <- filter(nav, between(time, haul.tmp$haulBackTime, haul.tmp$netOnDeckTime)) %>% mutate(period = "Recovery")
+    
+    # Combine within haul
+    haul.nav.tmp <- bind_rows(nav.deploy, nav.fishing, nav.recover) %>% 
+      mutate(haul = h) 
+    
+    # Combine with other hauls
+    haul.nav <- haul.nav %>% 
+      bind_rows(haul.nav.tmp)
+  }
+  
   # Create haul paths from starts and ends
-  haul.paths <- select(haul, haul, lat = startLatDecimal, long = startLongDecimal) %>% 
-    bind_rows(select(haul, haul, lat = stopLatDecimal, long = stopLongDecimal)) %>% 
-    arrange(haul) %>% 
+  haul.paths <- haul.nav %>% 
+    arrange(haul, time) %>% 
     st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-    group_by(haul) %>% 
+    group_by(haul, period) %>% 
     summarise(do_union = FALSE) %>% 
     st_cast("LINESTRING") %>% 
     left_join(select(haul.catch, -X, -Y, -cluster)) %>% 
-    replace(is.na(.), 0) %>% 
+    ungroup() %>% 
     mutate(
       distance = round(as.numeric(st_length(.))/1852,1),
       label    = paste("Haul", haul),
       popup    = paste('<b>Haul:', haul, '</b><br/>',
                        'Anchovy:', Anchovy, 'kg<br/>',
                        'Sardine:', Sardine, 'kg<br/>',
-                       'Jack Mackerel:', JackMack, 'kg<br/>',
+                       'Jack mackerel:', JackMack, 'kg<br/>',
                        'P. herring:', PacHerring, 'kg<br/>',
                        'P. mackerel:', PacMack, 'kg<br/>',
-                       'All CPS:', AllCPS, 'kg'))
+                       'R. herring:', RndHerring, 'kg<br/>',
+                       'All CPS:', AllCPS, 'kg')) 
   
+  # Convert haul paths and midpoints to sf; CRS = crs.geog
   haul.locs.sf <- haul.mid %>% 
     mutate(label = paste("Haul", haul)) %>% 
     st_as_sf(coords = c("long","lat"), crs = crs.geog) 
@@ -1137,6 +1158,9 @@ seepPal <- colorFactor(c("red","blue"), c("Seep","Uncertain"))
 txPal    <- colorFactor(wpt.colors, wpt.types)
 trawlPal <- c('#00CD66', '#0000FF', '#A020F0',
               '#F5DEB3', '#00FFFF', '#FF0000')
+
+# Create color palette for trawl periods
+trawlPathPal <- colorFactor(c("green","black","red"), c("Deployment","Fishing","Recovery"))
 
 if (sampling.acoustics) {
   # Select plot levels for backscatter data
@@ -1387,7 +1411,8 @@ if (sampling.trawl) {
   if (exists("haul.paths"))
     i.map <- i.map %>% 
       # Add trawl paths 
-      addPolylines(data = haul.paths, color = c("#000000"), weight = 5, opacity = 0.8, 
+      addPolylines(data = haul.paths, weight = 5, opacity = 0.8, 
+                   color = ~trawlPathPal(period), 
                    popup = ~popup, label = ~label, 
                    group = "Trawls")
   

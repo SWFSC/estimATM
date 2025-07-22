@@ -622,16 +622,22 @@ tdr.dir.foot           <- here("Data/TDR/Footrope")
 tdr.pattern            <- "202506SH*.*rsk"
 tdr.pattern.cruise     <- "^\\d{6}\\w{2}"
 tdr.recurse            <- TRUE # Recursively search TDR directory
-tdr.tz                 <- "America/Los_Angeles" # Time zone setting for TDRs
-# Time offset, in hours (usually -1, diff between PDT and PST in summer)
+# Time zone setting for TDRs
+tdr.tz.kite            <- c(rep("America/Los_Angeles", 46), 
+                            rep("UTC", 200)) 
+tdr.tz.kite <- setNames(tdr.tz.kite, 1:length(tdr.tz.kite))
+tdr.tz.foot            <- c(rep("America/Los_Angeles", 46), 
+                            rep("UTC", 200)) 
+tdr.tz.foot <- setNames(tdr.tz.foot, 1:length(tdr.tz.foot))
+# Time offset, in hours (e.g., -1, diff between PDT and PST in summer)
 ## Kite
 ### Define offsets
-tdr.offset.k <- rep(0, 200) 
+tdr.offset.k <- c(rep(0, 46), rep(0, 200)) 
 ### Add names from haul numbers
 tdr.offset.k <- setNames(tdr.offset.k, 1:length(tdr.offset.k))
 ## Footrope
 ### Define offsets
-tdr.offset.f <- c(rep(-7, 12), rep(0, 188)) 
+tdr.offset.f <- c(rep(-7, 12), rep(0, 234)) 
 ### Add names from haul numbers
 tdr.offset.f <- setNames(tdr.offset.f, 1:length(tdr.offset.f)) 
 # Data info
@@ -640,6 +646,7 @@ tdr.trawl.source       <- "Access"
 tdr.cruise             <- c("202506") # Cruise name(s) for TDR files
 
 # TV80 data
+tv80.tz     <- "UTC"
 tv80.offset <- 0 # Offset, in hours
 # TV80 column names
 tv80.cols   <- stringr::str_split("UnixTimeSeconds;DateTime;VES_Latitude;VES_Longitude;VES_Heading;VES_Course_True;VES_Speed;VES_Course_True;VES_Speed;TRAWLEYE_Roll_code;TRAWLEYE_Depth_code;TWL_Depth;TWL_Battery;TWL_Flow1;TWL_Flow1_uncompensated_c;TWL_Geometry_Std;TWL_Pitch;TWL_Geometry_Prt;TWL_Geometry_Dif_c;DOR_Depth_Std;DOR_Temperature_Std;DOR_Battery_Prt;DOR_Roll_Std;DOR_Pitch_Std;DOR_Roll_Prt;DOR_Pitch_Prt;DOR_Depth_Prt;DOR_Depth_Dif_c;DOR_Battery_Prt;DOR_Battery_Std;DOR_Spread;DOR_Battery_Std",

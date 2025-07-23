@@ -119,10 +119,17 @@ leg.breaks <- as.numeric(lubridate::ymd(c("2025-06-11", "2025-06-27",
                                           "2025-08-24", "2025-09-13",
                                           "2025-10-01")))
 
+# Define nav source depending on location of computer
+if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D")) {
+  nav.source <- "ERDDAP"
+} else {
+  nav.source <- "ERDDAP"
+}
+
 # Define ERDDAP data variables for primary NOAA vessel
 erddap.url           <- "http://coastwatch.pfeg.noaa.gov/erddap/tabledap/fsuNoaaShip"
 erddap.vessel        <- "WTEDnrt"    # Lasker == WTEG; Shimada == WTED; add "nrt" if survey in progress
-erddap.survey.start  <- "2025-06-01" # Start of survey for ERDDAP vessel data query
+erddap.survey.start  <- "2025-06-03" # Start of survey for ERDDAP vessel data query
 erddap.survey.end    <- "2025-10-01" # End of survey for ERDDAP vessel data query
 erddap.vars          <- c("time,latitude,longitude,seaTemperature,platformSpeed,windDirection,windSpeed,flag")
 erddap.classes       <- c("character", "numeric", "numeric", "numeric","numeric","numeric","numeric","character")
@@ -572,8 +579,8 @@ scs.pattern            <- "MOA*.*xlsx" # regex for MOA files
 
 # SCS data info for extracting NAV data
 scs.nav.path           <- "C:/SURVEY/2506SH/DATA/SCS" # Local
-scs.nav.dir            <- "MOA"
-scs.nav.pattern        <- "MOA Continuous.ELG"
+scs.nav.dir            <- "GPS - Science GP170"
+scs.nav.pattern        <- "GPGGA.RAW.log"
 scs.nav.recurse        <- TRUE
 
 # CUFES data

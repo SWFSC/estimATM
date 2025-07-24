@@ -577,7 +577,7 @@ if (sampling.acoustics) {
       
     } else {
       if (file.exists(here("Output/nasc_cps.Rdata"))) {
-        # Load data frame with already processed backscatter data
+        # Load data frame with already processed backscatter data     
         load(here("Output/nasc_cps.Rdata")) 
         
         if (length(csv.changed$changed) > 0) {

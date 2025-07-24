@@ -19,7 +19,7 @@ pacman::p_load(tidyverse, here, fs)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
-pacman::p_load_gh("kstierhoff/atm")
+pacman::p_load_gh("SWFSC/atm")
 
 # Close any open graphics windows
 graphics.off()

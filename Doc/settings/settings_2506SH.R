@@ -120,8 +120,9 @@ leg.breaks <- as.numeric(lubridate::ymd(c("2025-06-11", "2025-06-27",
                                           "2025-10-01")))
 
 # Define nav source depending on location of computer
+## Options are: SCS (usually on the ship) or ERDDAP (usually on shore; 24h update rate)
 if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D")) {
-  nav.source <- "ERDDAP"
+  nav.source <- "SCS"
 } else {
   nav.source <- "ERDDAP"
 }
@@ -165,37 +166,6 @@ wpt.linetypes <- c(Adaptive = "dashed", Carranza = "solid",
                    Compulsory = "solid", Franklin = "solid", 
                    Nearshore = "solid", Offshore = "dashed", 
                    Saildrone = "dashed")
-
-# # Saildrone info -----------------------------------------------
-# # Select Saildrone numbers
-# sd.numbers <- c("1048", "1060", "1096")
-# 
-# # Set Saildrone filter method
-# sd.buffer.type   <- c("saildrone")
-# sd.buffer.dist   <- 1.5 # buffer distance (nmi) around planned transects to classify SD intervals
-# sd.filter.method <- "manual" # Options are c("buffer","manual")
-# sd.nasc.name     <- "cps_nasc_SD.csv"
-# 
-# # Define Saildrone sampling dates
-# survey.start.sd  <- "7 July" # Start of Saildrone survey
-# survey.end.sd    <- "15 October" # End of Saildrone survey
-# 
-# # Set date range
-# erddap.url.sd          <- "https://data.pmel.noaa.gov/pmel/erddap/tabledap/all_swfsc_2023"
-# erddap.survey.start.sd <- "2023-07-08T00%3A00%3A00Z"
-# erddap.survey.end.sd   <- "2023-10-15T23%3A59%3A00Z"
-# # Configure columns and classes
-# erddap.vars.sd         <- c("trajectory,latitude,longitude,SOG,time")
-# erddap.headers.sd      <- c("saildrone", "lat", "long", "SOG", "time")
-# erddap.classes.sd      <- c(rep("numeric", length(erddap.headers.sd) - 1),"character")
-# 
-# # Define date range for each Saildrone to remove overlapping transits
-# sd.date.range    <- data.frame(saildrone  = c(1048, 1060, 1096),
-#                                start.date = ymd(c("2023-07-08", "2023-07-08", "2023-07-08")),
-#                                end.date   = ymd(c("2023-10-15", "2023-10-15", "2023-10-15")))
-# 
-# # Adjust time in Saildrone gps.csv files, if problems with Mission Planner (e.g., 1907RL)
-# sd.time.offset   <- 0 # Hours to add/subtract from GPS data (typically 0)
 
 # Filter variables for TRAWL and CUFES data on SQL Server ----------------------
 cruise.name <- 202506 # May be a numeric or numeric vector (e.g., c(201704,201706,...))
@@ -578,10 +548,12 @@ scs.source             <- "ELG" # "CSV", "ELG", or "XLSX"
 scs.pattern            <- "MOA*.*xlsx" # regex for MOA files
 
 # SCS data info for extracting NAV data
+scs.nav.script         <- "get_nav_scs5.r"
 scs.nav.path           <- "C:/SURVEY/2506SH/DATA/SCS" # Local
 scs.nav.dir            <- "GPS - Science GP170"
 scs.nav.pattern        <- "GPGGA.RAW.log"
 scs.nav.recurse        <- TRUE
+scs.nav.seconds        <- c(1, 30) # Seconds to retain in high-res nav data, e.g., c(1, 30) will retain two points per minute
 
 # CUFES data
 cufes.source           <- "SQLite" # "SQL" or "SQLite"

@@ -76,8 +76,7 @@ if (nav.source == "ERDDAP") {
   source(here("Code/get_nav_erddap.R"))
 } else if (nav.source == "SCS") {
   # Source code to get nav data from SCS
-  # Not working with SCS post-2022 (new HTML-based SCS on FSVs); must update
-  source(here("Code/get_nav_scs.R"))
+  source(here("Code",  scs.nav.script))
 }
 
 # Get nav data from Shimada

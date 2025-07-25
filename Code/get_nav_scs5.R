@@ -41,14 +41,14 @@ if (get.nav) {
              long = X7, long.dir = X8) %>% 
       mutate(lat  = scs2dd(paste0(lat, lat.dir)),
              long = scs2dd(paste0(long, long.dir))) %>%
+      arrange(time) %>%
       # Filter data where seconds are in scs.nav.seconds
       filter(round(second(time)) %in% scs.nav.seconds) %>% 
-      select(time, lat, long, id) %>% 
+      select(time, lat, long) %>% 
       mutate(leg = paste("Leg",
                          cut(as.numeric(date(time)), 
                              leg.breaks,
-                             labels = FALSE))) %>%
-      arrange(time)
+                             labels = FALSE))) 
     
     # Save nav data
     save(nav, file = here("Data/Nav/nav_data.Rdata"))
@@ -77,17 +77,18 @@ if (get.nav) {
              long = X7, long.dir = X8) %>% 
       mutate(lat = scs2dd(paste0(lat, lat.dir)),
              long = scs2dd(paste0(long, long.dir))) %>% 
-      select(time, lat, long, id) %>% 
+      arrange(time) %>% 
+      select(time, lat, long) %>% 
       # Filter data where seconds are in scs.nav.seconds
       filter(round(second(time)) %in% scs.nav.seconds) %>% 
-      mutate(leg      = paste("Leg", 
-                              cut(as.numeric(date(time)), 
-                                  leg.breaks, 
-                                  labels = FALSE))) %>% 
-      arrange(time)
+      mutate(leg = paste("Leg", 
+                         cut(as.numeric(date(time)), 
+                             leg.breaks, 
+                             labels = FALSE))) 
     
     # Combine existing and new/changed data and remove duplicate rows
     nav <- bind_rows(nav, nav.tmp) %>% 
+      arrange(time) %>% 
       distinct() 
   } 
 } else {
@@ -99,7 +100,8 @@ if (get.nav) {
 saveRDS(logs.snapshot.start, here("Output/logs_snapshot_end.rds"))
 
 # Convert nav to spatial
-nav.sf <- st_as_sf(nav, coords = c("long","lat"), crs = crs.geog) 
+nav.sf <- st_as_sf(nav, coords = c("long","lat"), crs = crs.geog) %>% 
+  arrange(time)
 
 # Cast nav to transects
 nav.paths.sf <- nav.sf %>% 

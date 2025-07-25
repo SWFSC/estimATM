@@ -82,7 +82,7 @@ resize.map    <- F # Resize map during survey; if T, uses anticipated bounds of 
 if (nav.source == "ERDDAP") {
   source(here("Code/get_nav_erddap.R"))
 } else if (nav.source == "SCS") {
-  source(here("Code/get_nav_scs.R"))
+  source(here("Code", scs.nav.script))
 }
 
 # Source code to get nav data for Shimada from ERDDAP

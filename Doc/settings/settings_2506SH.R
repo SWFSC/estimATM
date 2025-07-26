@@ -597,7 +597,7 @@ uctd.hdr.pattern       <- ".*UCTD\\d{3}-\\d{1}.*.vp2"
 uctd.cast.pattern      <- ".*UCTD\\d{3}-\\d{1}.*.vp2"
 uctd.cast.depth        <- 330
 
-# TDR data
+# RBR TDR data
 tdr.dir.kite           <- here("Data/TDR/Kite")
 tdr.dir.foot           <- here("Data/TDR/Footrope")
 tdr.pattern            <- "202506SH*.*rsk"
@@ -625,6 +625,9 @@ tdr.offset.f <- setNames(tdr.offset.f, 1:length(tdr.offset.f))
 tdr.nav.source         <- "ERDDAP"
 tdr.trawl.source       <- "Access"
 tdr.cruise             <- c("202506") # Cruise name(s) for TDR files
+
+# Seabird TDR data
+tdr.offset.asc <- 0
 
 # TV80 data
 tv80.tz     <- "UTC"

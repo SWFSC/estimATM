@@ -55,21 +55,30 @@ dir_create(here(c("Figs/TDR", "Output")))
 copy.files   <- T # Copy TDR files
 process.rsk  <- T # Process RBR Duet^3^ TDR files (.rsk format)
 process.asc  <- F # Process Seabird TDR files (.asc format)
-asc.offset   <- 0 # ASCII file time offset, in hours
 process.tv80 <- T # Process Simrad TV80 data
 
 # Usually F; set T to reprocess all TDR/TV80 files
 process.tdr.all   <- T # Process all TDR files 
-process.tv80.all  <- T # Process all TV80 files
+process.tv80.all  <- F # Process all TV80 files
 
 get.db      <- T # Extract data from trawl database (F for testing)
-get.nav     <- T # Download NOAA Ship nav data
+get.nav     <- T #  Download NOAA Ship nav data
 get.nav.sh  <- F # Download NOAA Ship nav data
 ```
 
 ```{r copy-files}
 if (copy.files) {
-  # Create directory for TDR files -------------------------------------------------
+  # Copy trawl database -------------------------------------------------
+  # List all trawl databases
+  haul.db.info <- dir_ls(file.path(survey.dir[survey.vessel.primary], trawl.dir),
+                         regexp = trawl.db.ext) %>% 
+    tibble(file_info(.))
+  
+  # Copy most recently modified trawl database
+  file_copy(haul.db.info$path[which.max(haul.db.info$modification_time)], 
+            here("Data/Trawl", trawl.db.name), overwrite = TRUE)
+  
+  # Create directory for TDR files -------------------------------------------------  
   dir_create(here("Data/TDR", c("Kite","Footrope")))
   
   # Copy TDR files
@@ -343,7 +352,7 @@ if (process.asc) {
                haul  = as.numeric(str_sub(filename, nchar("starboard_") + 1, nchar("starboard_") + 3)),
                loc   = "Starboard",
                depth = surveyR::calc_depth(mean.lat, pressure*100)-10,
-               time = dmy_hms(paste(date, time)) - hours(asc.offset),
+               time = dmy_hms(paste(date, time)) - hours(tdr.offset.asc),
                time = with_tz(time, tzone = tdr.tz))
       
       tbl.stbd <- bind_rows(tbl.stbd, asc.stbd)
@@ -371,7 +380,7 @@ if (process.asc) {
                haul  = as.numeric(str_sub(filename, nchar("port_") + 1, nchar("port_") + 3)),
                loc   = "Port",
                depth = surveyR::calc_depth(mean.lat, pressure*100)-10,
-               time = dmy_hms(paste(date, time)) - hours(asc.offset),
+               time = dmy_hms(paste(date, time)) - hours(tdr.offset.asc),
                time = with_tz(time, tzone = tdr.tz))
       
       tbl.port <- bind_rows(tbl.port, asc.port)

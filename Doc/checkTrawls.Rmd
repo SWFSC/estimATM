@@ -20,7 +20,7 @@ if (!require("pak")) install.packages("pak")
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,plotly,lubridate,mapview,kableExtra,leaflet,
                here,bookdown,odbc,DBI,knitr,DT,fs,sf,leafem,naniar,
-               cowplot,RSQLite)
+               cowplot,RSQLite,xts)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")

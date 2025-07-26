@@ -11,7 +11,7 @@ if (!require("pacman")) install.packages("pacman")
 if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
-pacman::p_load(tidyverse,lubridate,here,fs,sf,mapview,DT,lwgeom)
+pacman::p_load(tidyverse,lubridate,here,fs,sf,mapview,DT,lwgeom,xts)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")

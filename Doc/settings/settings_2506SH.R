@@ -551,7 +551,9 @@ scs.pattern            <- "MOA*.*xlsx" # regex for MOA files
 scs.nav.script         <- "get_nav_scs5.r"
 scs.nav.path           <- "C:/SURVEY/2506SH/DATA/SCS" # Local
 scs.nav.dir            <- "GPS - Science GP170"
-scs.nav.pattern        <- "GPGGA.RAW.log"
+scs.nav.pattern        <- "RAW.log"
+scs.gga.pattern        <- "GPGGA.RAW.log"
+scs.vtg.pattern        <- "GPVTG.RAW.log"
 scs.nav.recurse        <- TRUE
 scs.nav.seconds        <- c(1, 30) # Seconds to retain in high-res nav data, e.g., c(1, 30) will retain two points per minute
 
@@ -632,7 +634,6 @@ tv80.cols   <- stringr::str_split("UnixTimeSeconds;DateTime;VES_Latitude;VES_Lon
                                 ";")[[1]]
 # Number of rows to skip when reading TV80 data files
 tv80.skip   <- 0 
-
 
 # Biomass estimation settings ------------------------------------------
 # Length bins and labels for calculating length frequencies 

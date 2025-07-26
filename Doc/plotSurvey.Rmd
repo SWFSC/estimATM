@@ -15,7 +15,7 @@ if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,raster,cowplot,DBI,odbc,RSQLite,scatterpie,ggspatial,vroom,
-               readxl,lubridate,rnaturalearth,sf,here,naniar,mapview,
+               readxl,lubridate,rnaturalearth,sf,here,naniar,mapview,xts,
                shadowtext,knitr,ggrepel,fs,plotly,leaflet,leaflet.extras,bookdown,
                htmltools,leafem,DT,rworldmap,rworldxtra,lwgeom,htmlwidgets)
 
@@ -101,10 +101,10 @@ if (copy.files) {
     dir_create(here("Data/SCS"))
     
     # List MOA Continuous .elg files from the appropriate locations
-    moa.files <- dir_ls(scs.nav.path, regexp = scs.nav.pattern, recurse = scs.nav.recurse) %>% 
+    log.files <- dir_ls(scs.nav.path, regexp = scs.nav.pattern, recurse = scs.nav.recurse) %>% 
       str_subset(scs.nav.dir)
     
-    file_copy(moa.files, here("Data/SCS"), overwrite = overwrite.csv)
+    file_copy(log.files, here("Data/SCS"), overwrite = overwrite.csv)
   }
   
   if (sampling.trawl) {

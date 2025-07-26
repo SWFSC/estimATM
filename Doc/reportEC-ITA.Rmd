@@ -16,7 +16,7 @@ if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,swfscMisc,lubridate,cowplot,here,marmap,fs,sf, odbc,
-               mapview,mapdata,photobiology,ggmap,knitr,bookdown,tcltk,
+               mapview,mapdata,photobiology,ggmap,knitr,bookdown,tcltk,xts,
                rnaturalearth,ggspatial,kableExtra,geosphere,janitor,DT)
 
 # Install and load required packages from Github -------------------------------

@@ -16,7 +16,7 @@ if (!require("pak")) install.packages("pak")
 pacman::p_load(tidyverse,raster,cowplot,DBI,odbc,RSQLite,scatterpie,ggspatial,vroom,
                readxl,lubridate,rnaturalearth,sf,here,naniar,mapview,
                shadowtext,knitr,ggrepel,fs,plotly,leaflet,leaflet.extras,bookdown,
-               htmltools,leafem,DT,rworldmap,rworldxtra,
+               htmltools,leafem,DT,rworldmap,rworldxtra,xts,
                lwgeom,htmlwidgets)
 
 # Install and load required packages from Github -------------------------------

@@ -15,7 +15,7 @@ if (!require("pacman")) install.packages("pacman")
 if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
-pacman::p_load(tidyverse,swfscMisc,lubridate,sp,mapview,RODBC,leafem,
+pacman::p_load(tidyverse,swfscMisc,lubridate,sp,mapview,RODBC,leafem,xts,
                knitr,geosphere,ggrepel,cowplot,sf,leaflet, htmltools, janitor,
                odbc,kableExtra,rnaturalearth,shadowtext,here,fs,ggspatial,
                RSQLite,DT)

@@ -16,7 +16,7 @@ if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,swfscMisc,lubridate,cowplot,here,marmap,fs,sf, odbc,
-               mapview,mapdata,photobiology,ggmap,knitr,bookdown,tcltk,
+               mapview,mapdata,photobiology,ggmap,knitr,bookdown,tcltk,RSQLite,
                rnaturalearth,ggspatial,kableExtra,geosphere,janitor,DT)
 
 # Install and load required packages from Github -------------------------------
@@ -67,13 +67,13 @@ source(here("Doc/settings", prj.settings))
 # Set processing controls -------------------------------------------------
 save.figs     <- T # Create new figures
 get.db        <- T # Download data from databases (fast; generally TRUE)
-get.nav       <- F # Download Lasker nav data from ERDDAP
+get.nav       <- T # Download Lasker nav data from ERDDAP
 nav.source    <- "ERDDAP" # Navigation data source: ERDDAP or SCS
 get.nav.sh    <- F # Download Shimada nav data from ERDDAP
 get.nav.sd    <- F # Download Saildrone nav data from ERDDAP
-get.nav.ns    <- T # Process data from nearshore vessels
+get.nav.ns    <- F # Process data from nearshore vessels
 get.bathy     <- T # Download ETOPO1 bathymetry data in the survey footprint
-extract.bathy <- F # Extract bathymetry for each nav point
+extract.bathy <- T # Extract bathymetry for each nav point
 resize.map    <- F # Resize map during survey; if T, uses anticipated bounds of survey area
 ```
 
@@ -317,7 +317,7 @@ if (extract.bathy) {
   # Get nav depth and compute photoperiod
   nav.depth <- get.depth(noaa.bathy, nav$long, nav$lat, locator = F, distance = T) %>%
     rename(long = lon) %>%
-    bind_cols(select(nav, time, dist)) %>%
+    bind_cols(select(nav, time, dist, SOG)) %>%
     mutate(dist.depth = c(0, diff(dist.km))) %>%
     filter(dist.depth < 100)  %>% # Remove distant points
     mutate(depth_bin = cut(depth, c(min(depth), -200, 0), include.lowest = T, labels = F),
@@ -340,6 +340,7 @@ if (extract.bathy) {
   
   # Save results
   save(nav.depth, file = here("Output/nav_bathy_Lasker.Rdata"))
+  write_csv(nav.depth, here("Output/nav_bathy_Lasker.csv"))
   
 } else {
   # Load extracted bathymetry
@@ -358,8 +359,24 @@ nav.summ <- nav.depth %>%
     dist_nmi = round(dist_km * 0.539957)) %>% 
   select(depth_bin:dist_km, dist_nmi, everything())
 
+nav.sog.summ <- nav.depth %>% 
+  filter(!is.nan(dist), SOG > 5) %>% 
+  mutate(date = date(time)) %>% 
+  group_by(date, day_night) %>% 
+  summarise(
+    SOG  = mean(SOG)) 
+
+nav.sog.summ.all <- nav.depth %>% 
+  filter(!is.nan(dist), SOG > 5) %>% 
+  mutate(date = date(time)) %>% 
+  group_by(day_night) %>% 
+  summarise(
+    SOG  = mean(SOG)) 
+
 # Write results to file
 write_csv(nav.summ, here("Output", paste0(survey.name, "_LineKilometers_", survey.vessel, ".csv")))
+
+write_csv(nav.sog.summ, here("Output", paste0(survey.name, "_SOG_Summary_", survey.vessel, ".csv")))
 ```
 
 ```{r summarize-results-ns}
@@ -934,53 +951,6 @@ if (file.exists(paste0(here("Figs"), "/", survey.name, "_nav_depth_Saildrone.png
 
 ## Summarize trawl data
 
-```{r import-trawl-data, include=FALSE}
-if (get.db) {
-  if (trawl.source == "SQL") {
-    # Configure ODBC connection to TRAWL database
-    trawl.con  <- dbConnect(odbc(), 
-                            Driver = "SQL Server", 
-                            Server = "161.55.235.187", 
-                            Database = "Trawl", 
-                            Trusted_Connection = "True")
-  } else if (trawl.source == "Access") {
-    trawl.con  <- dbConnect(odbc(), 
-                            Driver = "Microsoft Access Driver (*.mdb, *.accdb)", 
-                            DBQ = file.path(here("Data/Trawl"),trawl.db.name))
-  }
-  
-  # Import trawl database tables
-  catch.all	     <- tbl(trawl.con, "Catch") %>% collect()
-  haul.all       <- tbl(trawl.con, "Haul") %>% collect()
-  lengths.all    <- tbl(trawl.con, "Specimen") %>% collect()
-  if (dbExistsTable(trawl.con, "LengthFrequency"))
-    lengthFreq.all <- tbl(trawl.con,"LengthFrequency") %>% collect()
-  spp.codes      <- tbl(trawl.con, "SpeciesCodes") %>% collect()
-  
-  # Close database channel
-  dbDisconnect(trawl.con)
-  
-  # Replace round herring in the database
-  spp.codes$scientificName[spp.codes$species == 161743] <- "Etrumeus teres"
-  
-  # Save imported database data to .Rdata file
-  if (exists("lengthFreq.all")) {
-    save(catch.all, haul.all, lengths.all, spp.codes, lengthFreq.all, 
-         file = here("Data/Trawl/trawl_data.Rdata"))
-  } else {
-    save(catch.all, haul.all, lengths.all, spp.codes,  
-         file = here("Data/Trawl/trawl_data.Rdata"))
-  }
-  
-  # Save species codes
-  save(spp.codes, file = here("Output/species_codes.Rdata"))
-  write_csv(spp.codes, here("Output/species_codes.csv"))
-} else {
-  # Load previously imported database data
-  load(here("Data/Trawl/trawl_data.Rdata"))
-}
-``` 
-
 ```{r collect-trawl-data}
 if (get.db) {
   # Source script to collect data from trawl database
@@ -1001,7 +971,12 @@ source(here("Code/format_trawl_database.R"))
 ```{r process-haul-data}
 # Select bad trawls
 haul.bad <- haul.all %>% 
-  filter(trawlPerformance %in% trawl.performance) 
+  filter(trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
+           haul %in% trawl.haul.exclude | # Manually excluded hauls
+           # Missing data that will cause errors in nav matching
+           is.na(collection) |
+           is.na(equilibriumTime) | 
+           is.na(haulBackTime)) 
 
 # Get only hauls from current survey
 haul <- filter(haul.all, cruise %in% cruise.name) %>% 

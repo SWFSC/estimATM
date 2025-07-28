@@ -15,9 +15,10 @@ if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,raster,cowplot,DBI,odbc,RSQLite,scatterpie,ggspatial,vroom,
-               readxl,lubridate,rnaturalearth,sf,here,naniar,mapview,xts,
+               readxl,lubridate,rnaturalearth,sf,here,naniar,mapview,xts,terra,
                shadowtext,knitr,ggrepel,fs,plotly,leaflet,leaflet.extras,bookdown,
-               htmltools,leafem,DT,rworldmap,rworldxtra,lwgeom,htmlwidgets)
+               htmltools,leafem,DT,rworldmap,rworldxtra,lwgeom,htmlwidgets,httr,
+               ncdf4)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
@@ -78,6 +79,9 @@ process.csv.all    <- F # Process all CSV files (F = new files only)
 sampling.acoustics <- T 
 sampling.trawl     <- T 
 sampling.cufes     <- F 
+
+# Get environmental layers from ERDDAP (e.g., sardine potential habitat, Chl a, etc.)
+get.env            <- T
 
 # Control script behavior (often F)
 scale.pies         <- F # Scale catch pies to by total weight
@@ -1118,6 +1122,13 @@ if (sampling.cufes) {
 
 ```
 
+```{r get-raster-erddap}
+if (get.env) {
+  source(here("Code/get_env_erddap.R"))
+}
+```
+
+
 ```{r create-leaflet-map, out.width="100%", out.height="8in"}
 # Leaflet options
 # https://rstudio.github.io/leaflet/
@@ -1270,6 +1281,7 @@ i.map <- leaflet() %>%
                    "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
     overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs",
                       "State Waters", "Exclusive Economic Zones", 
+                      "Sardine habitat","Chlorophyll",
                       "Bathymetry Contours",
                       "Planned Transects (Core)", "Planned Transects (Ancillary)",
                       "Vessel Track", "Vessel Positions", "Trawls",
@@ -1424,6 +1436,28 @@ if (sampling.trawl) {
                        group =  "Trawls")    
 }
 
+# Add raster habitat layers
+## Potential sardine habitat
+if (exists("sar.hab"))
+  i.map <- i.map %>% addTiles() %>%
+  addRasterImage(sar.hab, colors = sar.pal, opacity = 0.5,
+                 group = "Sardine habitat") %>%
+  addLegend(pal = sar.pal, values = values(sar.hab),
+            title = "Sardine habitat",
+            group = "Sardine habitat")
+
+## Chlorophyll a
+if (exists("chl.a"))
+  i.map <- i.map %>% addTiles() %>%
+  addRasterImage(chl.a, colors = chl.pal, opacity = 0.5,
+                 group = "Chlorophyll") %>%
+  addLegend(
+    position = "bottomright",
+    pal = chl.pal,
+    values = values(chl.a),
+    title = "Chlorophyll a (mg/m^3)",
+    group = "Chlorophyll")
+
 # Add Saildrone data
 if (exists("nav.sd.paths.sf"))
   i.map <- i.map %>% 
@@ -1449,6 +1483,7 @@ i.map <- i.map %>%
   hideGroup(c("Backscatter (Large)", "Backscatter-Krill", "Backscatter-Krill (Small)", 
               "CUFES Egg Density", "CUFES Egg Density-Other",
               "CUFES Egg Density-Squid", "CUFES Egg Density-Hake", "CUFES (Negative)",
+              "Sardine habitat","Chlorophyll",
               "Vessel Positions", "Saildrone Tracks", 
               "Saildrone Tracks", "Saildrone Positions",
               "State Waters", "Exclusive Economic Zones",

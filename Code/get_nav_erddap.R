@@ -41,8 +41,6 @@ if (get.nav) {
                                   leg.breaks, 
                                   labels = FALSE)),
              id       = seq_along(time)) 
-    
-    # ggplot(nav.temp, aes(long, lat, colour = SST)) + geom_path() + coord_map()
 
     # Append new nav data
     if (exists("nav")) {
@@ -62,7 +60,10 @@ if (get.nav) {
            SST > 0, SST < 35,
            is.nan(SOG) == FALSE, SOG > 0, SOG < 15,
            between(lat, min(survey.lat), max(survey.lat)), 
-           between(long, min(survey.long), max(survey.long)))
+           between(long, min(survey.long), max(survey.long))) %>% 
+    # Remove duplicates and arrange by time
+    filter(!duplicated(time)) %>% 
+    arrange(time)
   
   # Convert nav to spatial
   nav.sf <- st_as_sf(nav, coords = c("long","lat"), crs = crs.geog) 

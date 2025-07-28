@@ -71,6 +71,7 @@ Data/Nav/GPS/*
 Data/Nav/JCF/*
 Data/Nav/mygeodata/*
 Data/Nav/Mexico/*
+Data/Raster/*
 Data/SCS/*
 Data/Seine/*
 Data/TDR/*

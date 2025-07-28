@@ -119,10 +119,18 @@ leg.breaks <- as.numeric(lubridate::ymd(c("2025-06-11", "2025-06-27",
                                           "2025-08-24", "2025-09-13",
                                           "2025-10-01")))
 
+# Define nav source depending on location of computer
+## Options are: SCS (usually on the ship) or ERDDAP (usually on shore; 24h update rate)
+if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D")) {
+  nav.source <- "SCS"
+} else {
+  nav.source <- "ERDDAP"
+}
+
 # Define ERDDAP data variables for primary NOAA vessel
 erddap.url           <- "http://coastwatch.pfeg.noaa.gov/erddap/tabledap/fsuNoaaShip"
 erddap.vessel        <- "WTEDnrt"    # Lasker == WTEG; Shimada == WTED; add "nrt" if survey in progress
-erddap.survey.start  <- "2025-06-01" # Start of survey for ERDDAP vessel data query
+erddap.survey.start  <- "2025-06-03" # Start of survey for ERDDAP vessel data query
 erddap.survey.end    <- "2025-10-01" # End of survey for ERDDAP vessel data query
 erddap.vars          <- c("time,latitude,longitude,seaTemperature,platformSpeed,windDirection,windSpeed,flag")
 erddap.classes       <- c("character", "numeric", "numeric", "numeric","numeric","numeric","numeric","character")
@@ -158,37 +166,6 @@ wpt.linetypes <- c(Adaptive = "dashed", Carranza = "solid",
                    Compulsory = "solid", Franklin = "solid", 
                    Nearshore = "solid", Offshore = "dashed", 
                    Saildrone = "dashed")
-
-# # Saildrone info -----------------------------------------------
-# # Select Saildrone numbers
-# sd.numbers <- c("1048", "1060", "1096")
-# 
-# # Set Saildrone filter method
-# sd.buffer.type   <- c("saildrone")
-# sd.buffer.dist   <- 1.5 # buffer distance (nmi) around planned transects to classify SD intervals
-# sd.filter.method <- "manual" # Options are c("buffer","manual")
-# sd.nasc.name     <- "cps_nasc_SD.csv"
-# 
-# # Define Saildrone sampling dates
-# survey.start.sd  <- "7 July" # Start of Saildrone survey
-# survey.end.sd    <- "15 October" # End of Saildrone survey
-# 
-# # Set date range
-# erddap.url.sd          <- "https://data.pmel.noaa.gov/pmel/erddap/tabledap/all_swfsc_2023"
-# erddap.survey.start.sd <- "2023-07-08T00%3A00%3A00Z"
-# erddap.survey.end.sd   <- "2023-10-15T23%3A59%3A00Z"
-# # Configure columns and classes
-# erddap.vars.sd         <- c("trajectory,latitude,longitude,SOG,time")
-# erddap.headers.sd      <- c("saildrone", "lat", "long", "SOG", "time")
-# erddap.classes.sd      <- c(rep("numeric", length(erddap.headers.sd) - 1),"character")
-# 
-# # Define date range for each Saildrone to remove overlapping transits
-# sd.date.range    <- data.frame(saildrone  = c(1048, 1060, 1096),
-#                                start.date = ymd(c("2023-07-08", "2023-07-08", "2023-07-08")),
-#                                end.date   = ymd(c("2023-10-15", "2023-10-15", "2023-10-15")))
-# 
-# # Adjust time in Saildrone gps.csv files, if problems with Mission Planner (e.g., 1907RL)
-# sd.time.offset   <- 0 # Hours to add/subtract from GPS data (typically 0)
 
 # Filter variables for TRAWL and CUFES data on SQL Server ----------------------
 cruise.name <- 202506 # May be a numeric or numeric vector (e.g., c(201704,201706,...))
@@ -571,10 +548,14 @@ scs.source             <- "ELG" # "CSV", "ELG", or "XLSX"
 scs.pattern            <- "MOA*.*xlsx" # regex for MOA files
 
 # SCS data info for extracting NAV data
+scs.nav.script         <- "get_nav_scs5.r"
 scs.nav.path           <- "C:/SURVEY/2506SH/DATA/SCS" # Local
-scs.nav.dir            <- "MOA"
-scs.nav.pattern        <- "MOA Continuous.ELG"
+scs.nav.dir            <- "GPS - Science GP170"
+scs.nav.pattern        <- "RAW.log"
+scs.gga.pattern        <- "GPGGA.RAW.log"
+scs.vtg.pattern        <- "GPVTG.RAW.log"
 scs.nav.recurse        <- TRUE
+scs.nav.seconds        <- c(1, 30) # Seconds to retain in high-res nav data, e.g., c(1, 30) will retain two points per minute
 
 # CUFES data
 cufes.source           <- "SQLite" # "SQL" or "SQLite"
@@ -616,22 +597,28 @@ uctd.hdr.pattern       <- ".*UCTD\\d{3}-\\d{1}.*.vp2"
 uctd.cast.pattern      <- ".*UCTD\\d{3}-\\d{1}.*.vp2"
 uctd.cast.depth        <- 330
 
-# TDR data
+# RBR TDR data
 tdr.dir.kite           <- here("Data/TDR/Kite")
 tdr.dir.foot           <- here("Data/TDR/Footrope")
 tdr.pattern            <- "202506SH*.*rsk"
 tdr.pattern.cruise     <- "^\\d{6}\\w{2}"
 tdr.recurse            <- TRUE # Recursively search TDR directory
-tdr.tz                 <- "America/Los_Angeles" # Time zone setting for TDRs
-# Time offset, in hours (usually -1, diff between PDT and PST in summer)
+# Time zone setting for TDRs
+tdr.tz.kite            <- c(rep("America/Los_Angeles", 46), 
+                            rep("UTC", 200)) 
+tdr.tz.kite <- setNames(tdr.tz.kite, 1:length(tdr.tz.kite))
+tdr.tz.foot            <- c(rep("America/Los_Angeles", 46), 
+                            rep("UTC", 200)) 
+tdr.tz.foot <- setNames(tdr.tz.foot, 1:length(tdr.tz.foot))
+# Time offset, in hours (e.g., -1, diff between PDT and PST in summer)
 ## Kite
 ### Define offsets
-tdr.offset.k <- rep(0, 200) 
+tdr.offset.k <- c(rep(0, 46), rep(0, 200)) 
 ### Add names from haul numbers
 tdr.offset.k <- setNames(tdr.offset.k, 1:length(tdr.offset.k))
 ## Footrope
 ### Define offsets
-tdr.offset.f <- c(rep(-7, 12), rep(0, 188)) 
+tdr.offset.f <- c(rep(-7, 12), rep(0, 234)) 
 ### Add names from haul numbers
 tdr.offset.f <- setNames(tdr.offset.f, 1:length(tdr.offset.f)) 
 # Data info
@@ -639,14 +626,17 @@ tdr.nav.source         <- "ERDDAP"
 tdr.trawl.source       <- "Access"
 tdr.cruise             <- c("202506") # Cruise name(s) for TDR files
 
+# Seabird TDR data
+tdr.offset.asc <- 0
+
 # TV80 data
+tv80.tz     <- "UTC"
 tv80.offset <- 0 # Offset, in hours
 # TV80 column names
 tv80.cols   <- stringr::str_split("UnixTimeSeconds;DateTime;VES_Latitude;VES_Longitude;VES_Heading;VES_Course_True;VES_Speed;VES_Course_True;VES_Speed;TRAWLEYE_Roll_code;TRAWLEYE_Depth_code;TWL_Depth;TWL_Battery;TWL_Flow1;TWL_Flow1_uncompensated_c;TWL_Geometry_Std;TWL_Pitch;TWL_Geometry_Prt;TWL_Geometry_Dif_c;DOR_Depth_Std;DOR_Temperature_Std;DOR_Battery_Prt;DOR_Roll_Std;DOR_Pitch_Std;DOR_Roll_Prt;DOR_Pitch_Prt;DOR_Depth_Prt;DOR_Depth_Dif_c;DOR_Battery_Prt;DOR_Battery_Std;DOR_Spread;DOR_Battery_Std",
                                 ";")[[1]]
 # Number of rows to skip when reading TV80 data files
 tv80.skip   <- 0 
-
 
 # Biomass estimation settings ------------------------------------------
 # Length bins and labels for calculating length frequencies 

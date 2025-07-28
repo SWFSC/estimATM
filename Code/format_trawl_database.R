@@ -309,7 +309,8 @@ if (trawl.source == "Access") {
 haul.all <- haul.all %>% 
   mutate(season = case_when(
     month(equilibriumTime) < 6 ~ "spring",
-    TRUE ~ "summer"))
+    TRUE ~ "summer")) %>% 
+  arrange(haul)
 
 # Compute totalWeight and totalNum, which don't reliably exist in either database
 catch.all <- catch.all %>% 

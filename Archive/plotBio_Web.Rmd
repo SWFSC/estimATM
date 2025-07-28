@@ -16,7 +16,7 @@ if (!require("pak")) install.packages("pak")
 pacman::p_load(tidyverse,raster,cowplot,DBI,odbc,RSQLite,scatterpie,ggspatial,vroom,
                readxl,lubridate,rnaturalearth,sf,here,naniar,mapview,
                shadowtext,knitr,ggrepel,fs,plotly,leaflet,leaflet.extras,bookdown,
-               htmltools,leafem,DT,rworldmap,rworldxtra,
+               htmltools,leafem,DT,rworldmap,rworldxtra,xts,
                lwgeom,htmlwidgets)
 
 # Install and load required packages from Github -------------------------------
@@ -123,7 +123,7 @@ if (copy.files) {
 if (nav.source == "ERDDAP") {
   source(here("Code/get_nav_erddap.R"))
 } else if (nav.source == "SCS") {
-  source(here("Code/get_nav_scs.R"))
+  source(here("Code", scs.nav.script))
 }
 
 # Read transect waypoints

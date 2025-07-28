@@ -15,7 +15,7 @@ if (!require("pacman")) install.packages("pacman")
 if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
-pacman::p_load(tidyverse,swfscMisc,lubridate,sp,mapview,RODBC,leafem,
+pacman::p_load(tidyverse,swfscMisc,lubridate,sp,mapview,RODBC,leafem,xts,
                knitr,geosphere,ggrepel,cowplot,sf,leaflet, htmltools, janitor,
                odbc,kableExtra,rnaturalearth,shadowtext,here,fs,ggspatial,
                RSQLite,DT)
@@ -208,7 +208,7 @@ if (do.spatial) {
 if (nav.source == "ERDDAP") {
   source(here("Code/get_nav_erddap.R"))
 } else if (nav.source == "SCS") {
-  source(here("Code/get_nav_scs.R"))
+  source(here("Code", scs.nav.script))
 }
 
 # Read transect waypoints

@@ -16,7 +16,11 @@ if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,swfscMisc,lubridate,cowplot,here,marmap,fs,sf, odbc,
+<<<<<<< HEAD
                mapview,mapdata,photobiology,ggmap,knitr,bookdown,tcltk,RSQLite,
+=======
+               mapview,mapdata,photobiology,ggmap,knitr,bookdown,tcltk,xts,
+>>>>>>> bc1b2c709ebe110980d7a0ffa088aef15bd61f50
                rnaturalearth,ggspatial,kableExtra,geosphere,janitor,DT)
 
 # Install and load required packages from Github -------------------------------
@@ -82,7 +86,7 @@ resize.map    <- F # Resize map during survey; if T, uses anticipated bounds of 
 if (nav.source == "ERDDAP") {
   source(here("Code/get_nav_erddap.R"))
 } else if (nav.source == "SCS") {
-  source(here("Code/get_nav_scs.R"))
+  source(here("Code", scs.nav.script))
 }
 
 # Source code to get nav data for Shimada from ERDDAP

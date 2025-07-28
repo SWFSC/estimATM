@@ -15,9 +15,10 @@ if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,raster,cowplot,DBI,odbc,RSQLite,scatterpie,ggspatial,vroom,
-               readxl,lubridate,rnaturalearth,sf,here,naniar,mapview,
+               readxl,lubridate,rnaturalearth,sf,here,naniar,mapview,xts,terra,
                shadowtext,knitr,ggrepel,fs,plotly,leaflet,leaflet.extras,bookdown,
-               htmltools,leafem,DT,rworldmap,rworldxtra,lwgeom,htmlwidgets)
+               htmltools,leafem,DT,rworldmap,rworldxtra,lwgeom,htmlwidgets,httr,
+               ncdf4)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
@@ -67,7 +68,6 @@ get.db             <- T # Import trawl database
 get.nav            <- T # Download NOAA Ship nav data
 get.nav.sd         <- F # Download Saildrone nav data from ERDDAP
 get.nav.sh         <- F # Download NOAA Ship nav data
-nav.source         <- "ERDDAP" # Navigation data source: ERDDAP or SCS
 save.figs          <- T # Save figures
 copy.files         <- T # Copy data files from data to estimATM directory
 overwrite.files    <- T # Overwrite existing files when copying (not CSV, see below)
@@ -79,6 +79,9 @@ process.csv.all    <- F # Process all CSV files (F = new files only)
 sampling.acoustics <- T 
 sampling.trawl     <- T 
 sampling.cufes     <- F 
+
+# Get environmental layers from ERDDAP (e.g., sardine potential habitat, Chl a, etc.)
+get.env            <- T
 
 # Control script behavior (often F)
 scale.pies         <- F # Scale catch pies to by total weight
@@ -102,10 +105,10 @@ if (copy.files) {
     dir_create(here("Data/SCS"))
     
     # List MOA Continuous .elg files from the appropriate locations
-    moa.files <- dir_ls(scs.nav.path, regexp = scs.nav.pattern, recurse = scs.nav.recurse) %>% 
+    log.files <- dir_ls(scs.nav.path, regexp = scs.nav.pattern, recurse = scs.nav.recurse) %>% 
       str_subset(scs.nav.dir)
     
-    file_copy(moa.files, here("Data/SCS"), overwrite = overwrite.csv)
+    file_copy(log.files, here("Data/SCS"), overwrite = overwrite.csv)
   }
   
   if (sampling.trawl) {
@@ -151,7 +154,7 @@ if (copy.files) {
 if (nav.source == "ERDDAP") {
   source(here("Code/get_nav_erddap.R"))
 } else if (nav.source == "SCS") {
-  source(here("Code/get_nav_scs.R"))
+  source(here("Code", scs.nav.script))
 }
 
 if (get.nav.sh) {
@@ -577,7 +580,7 @@ if (sampling.acoustics) {
       
     } else {
       if (file.exists(here("Output/nasc_cps.Rdata"))) {
-        # Load data frame with already processed backscatter data
+        # Load data frame with already processed backscatter data     
         load(here("Output/nasc_cps.Rdata")) 
         
         if (length(csv.changed$changed) > 0) {
@@ -995,28 +998,49 @@ if (sampling.acoustics) {
 }
 
 if (sampling.trawl) {
-  # Convert haul paths and midpoints to sf; CRS = crs.geog
+  #Get haul nav data
+  ## Create data frame to store results
+  haul.nav <- data.frame()
+  
+  for (h in unique(haul$haul)) {
+    # Get haul times
+    haul.tmp <- filter(haul, haul == h)
+    # Extract nav for each trawl period
+    nav.fishing <- filter(nav, between(time, haul.tmp$equilibriumTime, haul.tmp$haulBackTime)) %>% mutate(period = "Fishing")
+    nav.deploy  <- filter(nav, between(time, haul.tmp$netInWaterTime, haul.tmp$equilibriumTime)) %>% mutate(period = "Deployment")
+    nav.recover <- filter(nav, between(time, haul.tmp$haulBackTime, haul.tmp$netOnDeckTime)) %>% mutate(period = "Recovery")
+    
+    # Combine within haul
+    haul.nav.tmp <- bind_rows(nav.deploy, nav.fishing, nav.recover) %>% 
+      mutate(haul = h) 
+    
+    # Combine with other hauls
+    haul.nav <- haul.nav %>% 
+      bind_rows(haul.nav.tmp)
+  }
+  
   # Create haul paths from starts and ends
-  haul.paths <- select(haul, haul, lat = startLatDecimal, long = startLongDecimal) %>% 
-    bind_rows(select(haul, haul, lat = stopLatDecimal, long = stopLongDecimal)) %>% 
-    arrange(haul) %>% 
+  haul.paths <- haul.nav %>% 
+    arrange(haul, time) %>% 
     st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-    group_by(haul) %>% 
+    group_by(haul, period) %>% 
     summarise(do_union = FALSE) %>% 
     st_cast("LINESTRING") %>% 
     left_join(select(haul.catch, -X, -Y, -cluster)) %>% 
-    replace(is.na(.), 0) %>% 
+    ungroup() %>% 
     mutate(
       distance = round(as.numeric(st_length(.))/1852,1),
       label    = paste("Haul", haul),
       popup    = paste('<b>Haul:', haul, '</b><br/>',
                        'Anchovy:', Anchovy, 'kg<br/>',
                        'Sardine:', Sardine, 'kg<br/>',
-                       'Jack Mackerel:', JackMack, 'kg<br/>',
+                       'Jack mackerel:', JackMack, 'kg<br/>',
                        'P. herring:', PacHerring, 'kg<br/>',
                        'P. mackerel:', PacMack, 'kg<br/>',
-                       'All CPS:', AllCPS, 'kg'))
+                       'R. herring:', RndHerring, 'kg<br/>',
+                       'All CPS:', AllCPS, 'kg')) 
   
+  # Convert haul paths and midpoints to sf; CRS = crs.geog
   haul.locs.sf <- haul.mid %>% 
     mutate(label = paste("Haul", haul)) %>% 
     st_as_sf(coords = c("long","lat"), crs = crs.geog) 
@@ -1098,6 +1122,13 @@ if (sampling.cufes) {
 
 ```
 
+```{r get-raster-erddap}
+if (get.env) {
+  source(here("Code/get_env_erddap.R"))
+}
+```
+
+
 ```{r create-leaflet-map, out.width="100%", out.height="8in"}
 # Leaflet options
 # https://rstudio.github.io/leaflet/
@@ -1127,16 +1158,19 @@ all.mpa.types.mex <- as.factor(c(unique(as.character(baja_mpas$NOMBRE)),
 
 mpaPalMex  <- colorFactor(topo.colors(10), all.mpa.types.mex)
 
-# Create color pallette for CUFES
+# Create color palette for CUFES
 cufesPal <- colorFactor(cufes.colors, cufes.plot.spp)  
 
 # Create color palette for seep types
 seepPal <- colorFactor(c("red","blue"), c("Seep","Uncertain"))
 
-# Create color pallette for planned transects
+# Create color palette for planned transects
 txPal    <- colorFactor(wpt.colors, wpt.types)
 trawlPal <- c('#00CD66', '#0000FF', '#A020F0',
               '#F5DEB3', '#00FFFF', '#FF0000')
+
+# Create color palette for trawl periods
+trawlPathPal <- colorFactor(c("green","black","red"), c("Deployment","Fishing","Recovery"))
 
 if (sampling.acoustics) {
   # Select plot levels for backscatter data
@@ -1247,6 +1281,7 @@ i.map <- leaflet() %>%
                    "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
     overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs",
                       "State Waters", "Exclusive Economic Zones", 
+                      "Sardine habitat","Chlorophyll",
                       "Bathymetry Contours",
                       "Planned Transects (Core)", "Planned Transects (Ancillary)",
                       "Vessel Track", "Vessel Positions", "Trawls",
@@ -1387,7 +1422,8 @@ if (sampling.trawl) {
   if (exists("haul.paths"))
     i.map <- i.map %>% 
       # Add trawl paths 
-      addPolylines(data = haul.paths, color = c("#000000"), weight = 5, opacity = 0.8, 
+      addPolylines(data = haul.paths, weight = 5, opacity = 0.8, 
+                   color = ~trawlPathPal(period), 
                    popup = ~popup, label = ~label, 
                    group = "Trawls")
   
@@ -1399,6 +1435,28 @@ if (sampling.trawl) {
                        popup = ~popup, label = ~label,
                        group =  "Trawls")    
 }
+
+# Add raster habitat layers
+## Potential sardine habitat
+if (exists("sar.hab"))
+  i.map <- i.map %>% addTiles() %>%
+  addRasterImage(sar.hab, colors = sar.pal, opacity = 0.5,
+                 group = "Sardine habitat") %>%
+  addLegend(pal = sar.pal, values = values(sar.hab),
+            title = "Sardine habitat",
+            group = "Sardine habitat")
+
+## Chlorophyll a
+if (exists("chl.a"))
+  i.map <- i.map %>% addTiles() %>%
+  addRasterImage(chl.a, colors = chl.pal, opacity = 0.5,
+                 group = "Chlorophyll") %>%
+  addLegend(
+    position = "bottomright",
+    pal = chl.pal,
+    values = values(chl.a),
+    title = "Chlorophyll a (mg/m^3)",
+    group = "Chlorophyll")
 
 # Add Saildrone data
 if (exists("nav.sd.paths.sf"))
@@ -1425,6 +1483,7 @@ i.map <- i.map %>%
   hideGroup(c("Backscatter (Large)", "Backscatter-Krill", "Backscatter-Krill (Small)", 
               "CUFES Egg Density", "CUFES Egg Density-Other",
               "CUFES Egg Density-Squid", "CUFES Egg Density-Hake", "CUFES (Negative)",
+              "Sardine habitat","Chlorophyll",
               "Vessel Positions", "Saildrone Tracks", 
               "Saildrone Tracks", "Saildrone Positions",
               "State Waters", "Exclusive Economic Zones",

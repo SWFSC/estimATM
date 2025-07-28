@@ -20,7 +20,7 @@ if (!require("pak")) install.packages("pak")
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,plotly,lubridate,mapview,kableExtra,leaflet,
                here,bookdown,odbc,DBI,knitr,DT,fs,sf,leafem,naniar,
-               cowplot,RSQLite)
+               cowplot,RSQLite,xts)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
@@ -67,8 +67,6 @@ get.db     <- T # Extract data from trawl database (F for testing)
 get.nav    <- T # Download NOAA Ship nav data
 get.nav.sh <- F # Download NOAA Ship nav data
 copy.files <- T # Copy trawl database
-nav.source <- "ERDDAP" # Navigation data source: ERDDAP or SCS
-# clams.info <- source(here::here("Code/clams_conn_test.R"))
 ```
 
 ```{r get-nav}
@@ -78,8 +76,7 @@ if (nav.source == "ERDDAP") {
   source(here("Code/get_nav_erddap.R"))
 } else if (nav.source == "SCS") {
   # Source code to get nav data from SCS
-  # Not working with SCS post-2022 (new HTML-based SCS on FSVs); must update
-  source(here("Code/get_nav_scs.R"))
+  source(here("Code",  scs.nav.script))
 }
 
 # Get nav data from Shimada
@@ -255,15 +252,36 @@ haul.catch <- project_sf(haul.catch, crs = crs.proj)
 ```
 
 ```{r summarise-hauls}
+# Get haul nav data
+## Create data frame to store results
+haul.nav <- data.frame()
+
+for (h in unique(haul$haul)) {
+  # Get haul times
+  haul.tmp <- filter(haul, haul == h)
+  # Extract nav for each trawl period
+  nav.fishing <- filter(nav, between(time, haul.tmp$equilibriumTime, haul.tmp$haulBackTime)) %>% mutate(period = "Fishing")
+  nav.deploy  <- filter(nav, between(time, haul.tmp$netInWaterTime, haul.tmp$equilibriumTime)) %>% mutate(period = "Deployment")
+  nav.recover <- filter(nav, between(time, haul.tmp$haulBackTime, haul.tmp$netOnDeckTime)) %>% mutate(period = "Recovery")
+  
+  # Combine within haul
+  haul.nav.tmp <- bind_rows(nav.deploy, nav.fishing, nav.recover) %>% 
+    mutate(haul = h) 
+  
+  # Combine with other hauls
+  haul.nav <- haul.nav %>% 
+    bind_rows(haul.nav.tmp)
+}
+
 # Create haul paths from starts and ends
-haul.paths <- select(haul, haul, lat = startLatDecimal, long = startLongDecimal) %>% 
-  bind_rows(select(haul, haul, lat = stopLatDecimal, long = stopLongDecimal)) %>% 
-  arrange(haul) %>% 
+haul.paths <- haul.nav %>% 
+  arrange(haul, time) %>% 
   st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-  group_by(haul) %>% 
-  summarise(do_union = F) %>% 
+  group_by(haul, period) %>% 
+  summarise(do_union = FALSE) %>% 
   st_cast("LINESTRING") %>% 
   left_join(select(haul.catch, -X, -Y, -cluster)) %>% 
+  ungroup() %>% 
   mutate(
     distance = round(as.numeric(st_length(.))/1852,1),
     label    = paste("Haul", haul),
@@ -288,9 +306,6 @@ if (trawl.source == "Access") {
                      stopLatMin    = stopLatitudeMinutes,
                      stopLongDeg   = stopLongitudeDegrees,
                      stopLongMin   = stopLongitudeMinutes))  
-} else {
-  # Do nothing for now
-  haul.paths <- haul.paths
 }
 
 # Convert haul locations to sf
@@ -1265,7 +1280,7 @@ haul.bad %>%
   datatable(rownames = FALSE)
 ```
 
-### Hauls distances
+### Haul distances
 
 Trawl distances are examined to look for data entry errors. Trawls longer than 5 nmi are highlighted orange.
 
@@ -1273,6 +1288,7 @@ Trawl distances are examined to look for data entry errors. Trawls longer than 5
 haul.paths %>% 
   st_set_geometry(NULL) %>% 
   arrange(desc(haul)) %>% 
+  filter(period == "Fishing") %>% 
   mutate(distance = cell_spec(
     distance, knitr.format, color = "black",
     background = ifelse(distance <= 5, "white", "orange"))) %>%
@@ -1285,9 +1301,9 @@ haul.paths %>%
   scroll_box(height = "250px")
 ```
 
-### Hauls durations
+### Haul durations
 
-Trawl durations are examined to look for data entry errors. Trawls longer than 50 min are highlighted orange.
+Trawl duration is examined to look for data entry errors. Trawls longer than 50 min are highlighted orange.
 
 ```{r check-trawl-duration}
 haul %>%
@@ -1295,7 +1311,7 @@ haul %>%
   mutate(duration = cell_spec(
     duration, knitr.format, color = "black",
     background = ifelse(duration >= 50, "orange", "white"))) %>%
-  select(haul, cluster, equilibriumTime, haulBackTime, duration) %>%
+  select(haul, cluster, netInWaterTime, equilibriumTime, haulBackTime, netOnDeckTime, duration) %>%
   kable(format = knitr.format, booktabs = TRUE, escape = FALSE,
         align = c("c")) %>% 
   kable_styling(bootstrap_options = c("striped","hover","condensed"),
@@ -1312,11 +1328,12 @@ Trawl durations are examined to look at trends in deployment, recovery, and tota
 # Plot trawl durations
 plot.evolution <- ggplot(data = haul) + 
   geom_line(aes(haul, as.numeric(evolutionTime)), colour = "green") +
-  geom_point(aes(haul, as.numeric(evolutionTime)), shape = 21, fill = "white", colour = "green") +
+  geom_point(aes(haul, as.numeric(evolutionTime), fill = trawlPerformance), 
+             shape = 21, colour = "green", show.legend = FALSE) +
   labs(x = "\nHaul", y = "Duration (mins)", title = "Evolution Time") + 
-  scale_x_continuous(breaks = seq(0, 500, 5)) + 
+  scale_x_continuous(breaks = seq(0, 500, 5)) +
+  scale_fill_manual(values = c("Good" = "green", "Poor" = "blue", "Aborted" = "red")) +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
-
 
 plot.deployment <- ggplot(data = haul) +
   geom_line(aes(haul, as.numeric(deploymentTime), color = "Deployment")) +
@@ -1347,7 +1364,12 @@ include_graphics(here("Figs/fig_trawl_evoution.png"))
 
 ### Haul paths
 
+Examine haul paths: green during deployment, black during fishing, and red during recovery.
+
 ```{r map-hauls,out.height="8in",out.width="100%"}
+# Create color palette for trawl periods
+trawlPathPal <- colorFactor(c("green","black","red"), c("Deployment","Fishing","Recovery"))
+
 # Provider tiles info: http://leaflet-extras.github.io/leaflet-providers/preview/index.html
 if (exists("nav.paths.sf")) {
   i.map <- leaflet() %>% 
@@ -1357,7 +1379,8 @@ if (exists("nav.paths.sf")) {
     addPolylines(data = nav.paths.sf, color = "#000414", weight = 1, 
                  label = ~leg, group = "Vessel Track") %>%
     # Add trawl paths 
-    addPolylines(data = haul.paths, color = c("#000000"), weight = 5, opacity = 0.8, 
+    addPolylines(data = haul.paths, weight = 5, opacity = 0.8, 
+                 color = ~trawlPathPal(period), 
                  popup = ~popup, label = ~label, 
                  group = "Trawls") %>% 
     # Add trawl catch

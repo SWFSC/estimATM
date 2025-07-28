@@ -20,7 +20,7 @@ if (!require("pak")) install.packages("pak")
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,plotly,lubridate,mapview,kableExtra,leaflet,
                here,bookdown,odbc,DBI,knitr,DT,fs,sf,leafem,naniar,
-               cowplot)
+               cowplot,xts)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
@@ -80,7 +80,7 @@ nav.source <- "GPX" # Navigation data source: CSV or GPX
 # } else if (nav.source == "SCS") {
 #   # Source code to get nav data from SCS
 #   # Not working with SCS post-2022 (new HTML-based SCS on FSVs); must update
-#   source(here("Code/get_nav_scs.R"))
+#   source(here("Code", scs.nav.script))
 # }
 ```
 

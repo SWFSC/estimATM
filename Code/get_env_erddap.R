@@ -24,7 +24,7 @@ chl.hab.date <- chl.hab.info$alldata$NC_GLOBAL[chl.hab.info$alldata$NC_GLOBAL$at
 
 sar.url <- URLencode(paste0(
   "https://coastwatch.pfeg.noaa.gov/erddap/griddap/sardine_habitat_modis_v2.nc?potential_habitat_probability%5B(",
-  sar.hab.date, # "2025-07-25T12:00:00Z",
+  "last", #sar.hab.date, # "2025-07-25T12:00:00Z",
   # format(ymd_hms(paste(Sys.Date(), "12:00:00")) - days(3), format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"), # "2025-07-25T12:00:00Z",
   ")%5D%5B(",27.0,"):(",51.0,
   ")%5D%5B(",-130.0,"):(",-113.0,
@@ -33,7 +33,7 @@ sar.url <- URLencode(paste0(
 
 chl.url <- URLencode(paste0(
   "https://coastwatch.noaa.gov/erddap/griddap/noaacwNPPN20VIIRSDINEOFDaily.nc?chlor_a%5B(",
-  chl.hab.date,
+  "last", #chl.hab.date,
   # format(ymd_hms(paste(Sys.Date(), "12:00:00")) - days(10), format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"), # "2025-07-01T12:00:00Z",
   ")%5D%5B(",0.0,")%5D%5B(",27.0,"):(", 51.0,
   ")%5D%5B(",-130.0,"):(",-113.0,

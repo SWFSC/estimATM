@@ -1393,3 +1393,96 @@ write.csv(ctd.info.all, file = here("Output/cast_info_all.csv"),
           quote = FALSE, row.names = FALSE)
 ```
 
+# All CTD/UCTD casts
+
+Locations of CTD (blue points) and UCTD (green points) locations.  
+
+```{r i-map-all-ctds, out.width='100%'}
+# Create color palette for planned transects
+txPal    <- colorFactor(wpt.colors, wpt.types)
+
+# Map casts
+# Add nav data
+i.map.all.ctds <- i.map %>%
+  # Enable tile caching
+  enableTileCaching() %>%
+  # Add provider tiles; # http://leaflet-extras.github.io/leaflet-providers/preview/index.html
+  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "Esri.NatGeoWorldMap",
+                   options = tileOptions(useCache = useCachedTile,
+                                         crossOrigin = useCrossOrigin)) %>%
+  addProviderTiles(providers$Esri.OceanBasemap, group = "Esri.OceanBasemap",
+                   options = tileOptions(useCache = useCachedTile,
+                                         crossOrigin = useCrossOrigin)) %>%
+  addProviderTiles(providers$Esri.WorldStreetMap, group = "Esri.WorldStreetMap",
+                   options = tileOptions(useCache = useCachedTile,
+                                         crossOrigin = useCrossOrigin)) %>%
+  addProviderTiles(providers$Esri.WorldImagery, group = "Esri.WorldImagery",
+                   options = tileOptions(useCache = useCachedTile,
+                                         crossOrigin = useCrossOrigin)) %>%
+  addProviderTiles(providers$OpenStreetMap.Mapnik, group = "OpenStreetMap.Mapnik",
+                   options = tileOptions(useCache = useCachedTile,
+                                         crossOrigin = useCrossOrigin)) %>%
+  # Add transects
+  addPolylines(data = transects.sf, color = ~txPal(Type),
+               weight = 3, opacity = 0.5,
+               label = ~label,
+               popup = ~popup,
+               group = "Transects") %>% 
+  # Add nav data
+  addPolylines(data = nav.paths.sf, color = "#000414", weight = 1, 
+               label = ~leg, group = "Vessel Track") %>% 
+  # Add layer controls
+  addLayersControl(
+    baseGroups = c("Esri.NatGeoWorldMap", "Esri.OceanBasemap",
+                   "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
+    overlayGroups = c("UCTD Casts-Unprocessed", "UCTD Casts",
+                      "CTD Casts-Unprocessed", "CTD Casts",
+                      "Transects","Vessel Track"),
+    options = layersControlOptions(collapsed = FALSE))
+
+# Add UCTD cast data
+if (exists("uctd.missing.sf")) {
+  i.map.all.ctds <- i.map.all.ctds %>% 
+    addCircleMarkers(data = uctd.missing.sf,
+                     radius = 5, color = "red", stroke = TRUE, opacity = 0.5,
+                     fillOpacity = 0.8, fillColor =  "green", 
+                     label = ~cast,
+                     popup = ~cast,
+                     group = "UCTD Casts-Unprocessed")
+}
+
+if (exists("uctd.sf")) {
+  i.map.all.ctds <- i.map.all.ctds %>% 
+    addCircleMarkers(data = uctd.sf,
+                     radius = 5, color = "#000414", stroke = FALSE, opacity = 0.5,
+                     fillOpacity = 0.8, fillColor =  "green", 
+                     label = ~cast,
+                     popup = ~cast,
+                     group = "UCTD Casts")
+}
+
+# Add UCTD cast data
+if (exists("ctd.missing.sf")) {
+  i.map.all.ctds <- i.map.all.ctds %>% 
+    addCircleMarkers(data = ctd.missing.sf,
+                     radius = 5, color = "red", stroke = TRUE, opacity = 0.5,
+                     fillOpacity = 0.8, fillColor =  "blue", 
+                     label = ~cast,
+                     popup = ~cast,
+                     group = "CTD Casts-Unprocessed")
+}
+
+if (exists("ctd.sf")) {
+  i.map.all.ctds <- i.map.all.ctds %>% 
+    addCircleMarkers(data = ctd.sf,
+                     radius = 5, color = "#000414", stroke = FALSE, opacity = 0.5,
+                     fillOpacity = 0.8, fillColor =  "blue", 
+                     label = ~cast,
+                     popup = ~cast,
+                     group = "CTD Casts")
+}
+
+# Plot map
+i.map.all.ctds
+```
+

@@ -10,6 +10,9 @@
 # sar.url <- "https://coastwatch.pfeg.noaa.gov/erddap/griddap/sardine_habitat_modis_v2.nc?potential_habitat_probability%5B(2025-07-14T12:00:00Z)%5D%5B(27.0):(51.0)%5D%5B(-130.0):(-113.0)%5D&.draw=surface&.vars=longitude%7Clatitude%7Cpotential_habitat_probability&.colorBar=%7CD%7C%7C0.17%7C0.184%7C2&.bgColor=0xffccccff"
 # chl.url <- "https://coastwatch.noaa.gov/erddap/griddap/noaacwNPPN20VIIRSDINEOFDaily.nc?chlor_a%5B(2025-07-01T12:00:00Z)%5D%5B(0.0)%5D%5B(39.125):(34.125)%5D%5B(-124.375):(-120.375)%5D&.draw=surface&.vars=longitude%7Clatitude%7Cchlor_a&.colorBar=%7C%7CLog%7C0.03%7C30%7C&.bgColor=0xffccccff"
 
+# Create directory for raster data
+dir_create(here("Data/Raster"))
+
 sar.url <- URLencode(paste0(
   "https://coastwatch.pfeg.noaa.gov/erddap/griddap/sardine_habitat_modis_v2.nc?potential_habitat_probability%5B(",
   format(ymd_hms(paste(Sys.Date(), "12:00:00")) - days(3), format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"), # "2025-07-25T12:00:00Z",

@@ -121,7 +121,7 @@ leg.breaks <- as.numeric(lubridate::ymd(c("2025-06-11", "2025-06-27",
 
 # Define nav source depending on location of computer
 ## Options are: SCS (usually on the ship) or ERDDAP (usually on shore; 24h update rate)
-if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D")) {
+if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {
   nav.source <- "SCS"
 } else {
   nav.source <- "ERDDAP"

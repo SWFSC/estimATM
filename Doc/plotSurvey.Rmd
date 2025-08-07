@@ -18,7 +18,7 @@ pacman::p_load(tidyverse,raster,cowplot,DBI,odbc,RSQLite,scatterpie,ggspatial,vr
                readxl,lubridate,rnaturalearth,sf,here,naniar,mapview,xts,terra,
                shadowtext,knitr,ggrepel,fs,plotly,leaflet,leaflet.extras,bookdown,
                htmltools,leafem,DT,rworldmap,rworldxtra,lwgeom,htmlwidgets,httr,
-               ncdf4)
+               ncdf4,rerddap)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
@@ -81,7 +81,7 @@ sampling.trawl     <- T
 sampling.cufes     <- F 
 
 # Get environmental layers from ERDDAP (e.g., sardine potential habitat, Chl a, etc.)
-get.env            <- F
+get.env            <- T
 
 # Control script behavior (often F)
 scale.pies         <- F # Scale catch pies to by total weight

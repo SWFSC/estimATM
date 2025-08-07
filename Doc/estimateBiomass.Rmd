@@ -94,11 +94,11 @@ source(here("Doc/settings", prj.settings))
 ```{r user-controls, echo = TRUE}
 # Processing controls (T/F) ---------------------------------------------------
 ### Usually TRUE
-get.db            <- F # Download data from databases (fast; generally TRUE)
+get.db            <- T # Download data from databases (fast; generally TRUE)
 get.nav           <- T # Download primary vessel nav data from ERDDAP
 get.nav.sd        <- F # Download Saildrone nav data from ERDDAP
 get.nav.sh        <- F # Download NOAA Ship nav data
-copy.files        <- F # Copy data files to local directory 
+copy.files        <- T # Copy data files to local directory 
 process.csv       <- T # Process Echoview files
 save.figs         <- T # Draw new figures and maps
 download.hab      <- F # Download habitat map
@@ -111,11 +111,11 @@ do.imap           <- T # Create interactive Leaflet map
 save.imap         <- F # Save Leaflet maps
 overwrite.files   <- T # Overwrite files (TRUE if files have changed)
 overwrite.csv     <- T # Overwrite CSV files (TRUE if files have changed)
-process.csv.all   <- F # Process all acoustic backscatter files (F = new files only)
+process.csv.all   <- T # Process all acoustic backscatter files (F = new files only)
 process.csv.krill <- T # Process krill backscatter data
 process.cufes     <- F # Process CUFES data (no CUFES sampling post-2023)
-process.cal       <- T # Process calibration results
-process.ctd       <- F # Process CTD and UCTD casts
+process.cal       <- F # Process calibration results
+process.ctd       <- T # Process CTD and UCTD casts
 match.intervals   <- F # Match intervals for comparing EK60 and EK80
 get.bathy         <- T # Extract ETOPO1 bathymetry data in the survey footprint
 resize.map        <- F # Resize map during survey; if T, uses anticipated bounds of survey area
@@ -159,17 +159,22 @@ if (copy.files) {
   dir_create(here("Data", c("Backscatter", "Calibration", "CTD", "CUFES", "Trawl", "UCTD")))
   dir_create(here("Data/Backscatter", nasc.vessels))
   
-  # Copy trawl Access database
-  haul.db <- dir_ls(file.path(survey.dir[survey.vessel.primary], "DATA/BIOLOGICAL/HAUL"),
-                    regexp = trawl.db.name)
+  # List all trawl databases
+  haul.db.info <- dir_ls(file.path(survey.dir[survey.vessel.primary], trawl.dir),
+                         regexp = trawl.db.ext) %>% 
+    tibble(file_info(.))
   
-  file_copy(haul.db, here("Data/Trawl"), overwrite = overwrite.files)
+  # Copy most recently modified trawl database
+  file_copy(haul.db.info$path[which.max(haul.db.info$modification_time)], 
+            here("Data/Trawl", trawl.db.name), overwrite = TRUE)
   
   # Copy CUFES files
-  cufes.file <- dir_ls(file.path(survey.dir[survey.vessel.primary], "DATA/BIOLOGICAL/CUFES"), 
-                       regexp = cufes.db.sqlite)
-  
-  file_copy(cufes.file, here("Data/CUFES"), overwrite = overwrite.files)
+  if(file.exists(file.path(survey.dir[survey.vessel.primary], "DATA/BIOLOGICAL/CUFES"))) {
+    cufes.file <- dir_ls(file.path(survey.dir[survey.vessel.primary], "DATA/BIOLOGICAL/CUFES"), 
+                         regexp = cufes.db.sqlite)
+    
+    file_copy(cufes.file, here("Data/CUFES"), overwrite = overwrite.files)  
+  }
   
   # Copy CSV files for CPS
   pb <- tkProgressBar("R Progress Bar", "CSV File Copying", 0, 100, 0)

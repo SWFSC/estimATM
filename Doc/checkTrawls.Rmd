@@ -90,14 +90,8 @@ if (get.nav.sh) {
 dir_create(here("Data/Trawl"))
 
 if (copy.files) {
-    # List all trawl databases
-    haul.db.info <- dir_ls(file.path(survey.dir[survey.vessel.primary], trawl.dir),
-                           regexp = trawl.db.ext) %>% 
-      tibble(file_info(.))
-    
-    # Copy most recently modified trawl database
-    file_copy(haul.db.info$path[which.max(haul.db.info$modification_time)], 
-              here("Data/Trawl", trawl.db.name), overwrite = TRUE)
+  # Copy trawl database files
+  source(here("Code/copy_files_trawl.R"))
 }
 ```
 
@@ -122,7 +116,7 @@ source(here("Code/format_trawl_database.R"))
 # Select bad trawls
 haul.bad <- haul.all %>% 
   filter(trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
-         haul %in% trawl.haul.exclude | # Manually excluded hauls
+           haul %in% trawl.haul.exclude | # Manually excluded hauls
            # Missing data that will cause errors in nav matching
            is.na(collection) |
            is.na(equilibriumTime) | 

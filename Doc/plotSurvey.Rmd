@@ -97,36 +97,22 @@ dir_create(here(), c("Output", "Figs"))
 ```{r copy-files, include=F}
 if (copy.files) {
   # Create data directories
-  dir_create(here("Data", c("Backscatter","CUFES","Trawl")))
+  dir_create(here("Data", c("Backscatter","CUFES","SCS","Trawl")))
   dir_create(here("Data/Backscatter", nasc.vessels))
   
   if (nav.source == "SCS") {
-    # Create data directories
-    dir_create(here("Data/SCS"))
-    
-    # List MOA Continuous .elg files from the appropriate locations
-    log.files <- dir_ls(scs.nav.path, regexp = scs.nav.pattern, recurse = scs.nav.recurse) %>% 
-      str_subset(scs.nav.dir)
-    
-    file_copy(log.files, here("Data/SCS"), overwrite = overwrite.csv)
+    # Copy SCS files
+    source(here("Code/copy_files_scs.R"))
   }
   
   if (sampling.trawl) {
-    # List all trawl databases
-    haul.db.info <- dir_ls(file.path(survey.dir[survey.vessel.primary], trawl.dir),
-                           regexp = trawl.db.ext) %>% 
-      tibble(file_info(.))
-    
-    # Copy most recently modified trawl database
-    file_copy(haul.db.info$path[which.max(haul.db.info$modification_time)], 
-              here("Data/Trawl", trawl.db.name), overwrite = TRUE)
+    # Copy trawl database files
+    source(here("Code/copy_files_trawl.R"))
   }
   
   if (sampling.cufes) {
     # Copy CUFES files
-    cufes.file <- dir_ls(file.path(survey.dir[survey.vessel.primary], "DATA/BIOLOGICAL/CUFES")) 
-    
-    file_copy(cufes.file, here("Data/CUFES"), overwrite = overwrite.files)
+    source(here("Code/copy_files_cufes.R"))
   }
   
   if (sampling.acoustics) {

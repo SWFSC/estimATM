@@ -545,10 +545,6 @@ limit.cluster.dist     <- c(OS  = FALSE,
 cluster.source <- c(OS = "cluster",
                     NS = "haul")
 
-# Manually exclude hauls from the analysis
-# List hauls (e.g., c(1, 2...n)), else NA
-haul.rm <- NA
-
 # Maximum distance to trawl clusters
 cum.biomass.limit      <- 0.90 # Distance used to compute max.cluster.distance
 
@@ -582,7 +578,7 @@ trawl.dsn              <- "TRAWL"  # DSN for Trawl database on SQL server
 trawl.dir              <- file.path(survey.dir, "DATA/BIOLOGICAL/HAUL")
 trawl.db.access        <- "TrawlDataEntry2307RL.accdb"
 trawl.performance      <- c("Aborted", "Poor") # Character vector; trawl performance to exclude
-trawl.haul.exclude     <- NA # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)
+trawl.haul.rm          <- NA # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)
 
 # CTD data
 ctd.dir                <- file.path(survey.dir[survey.vessel.primary],"DATA/CTD")

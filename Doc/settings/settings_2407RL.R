@@ -583,9 +583,6 @@ limit.cluster.dist     <- c(OS  = FALSE,
 cluster.source <- c(OS = "cluster",
                     NS = "cluster")
 
-# Manually exclude hauls or purse seine sets from the analysis
-# List trawl hauls (e.g., c(1, 2,...n)), else NA
-haul.rm     <- NA
 # List sets (e.g., c("LBC 2024-07-16 25",...n)), else NA
 key.set.rm  <- c("LBC 2024-07-16 25") # Set/landing 25/160 had no specimens due to a freezer failure
 
@@ -621,7 +618,7 @@ trawl.source           <- "SQL"    # "SQL" or "Access"
 trawl.dsn              <- "TRAWL"  # DSN for Trawl database on SQL server
 trawl.db.access        <- "TrawlDataEntry2407RL.accdb"
 trawl.performance      <- c("Aborted") # Character vector; trawl performance to exclude
-trawl.haul.exclude     <- NA # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)
+trawl.haul.rm          <- NA # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)
 
 # Location of trawl database
 if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {

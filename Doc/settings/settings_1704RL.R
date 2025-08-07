@@ -340,7 +340,7 @@ trawl.dsn              <- "TRAWL"  # DSN for Trawl database on SQL server
 trawl.dir              <- file.path(survey.dir,"DATA/BIOLOGICAL/HAUL")
 trawl.db.access        <- "TrawlDataEntry1704RL.accdb"
 trawl.performance      <- c("Aborted", "Bad", "Poor") # Character vector; trawl performance to exclude
-trawl.haul.exclude     <- NA # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)
+trawl.haul.rm     <- NA # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)
 # CTD data
 ctd.dir                <- file.path(survey.dir[survey.vessel.primary],"DATA/CTD")
 ctd.hdr.pattern        <- ".*hdr"

@@ -529,10 +529,6 @@ limit.cluster.dist     <- c(OS  = FALSE,
 cluster.source <- c(OS = "cluster",
                     NS = "cluster")
 
-# Manually exclude hauls from the analysis
-# List hauls (e.g., c(1, 2...n)), else NA
-haul.rm <- NA
-
 # Maximum distance to trawl clusters
 cum.biomass.limit      <- 0.90 # Distance used to compute max.cluster.distance
 
@@ -572,7 +568,7 @@ trawl.db.ext           <- ".db"
 # Time zone for events in trawl database ("America/Los_Angeles" in past; "UTC" for CLAMS)
 trawl.db.tz            <- "UTC" 
 trawl.performance      <- c("Aborted") # Character vector; trawl performance to exclude
-trawl.haul.exclude     <- NA # c(24) # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)
+trawl.haul.rm          <- NA # c(24) # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)
 
 # Location of trawl database
 if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {

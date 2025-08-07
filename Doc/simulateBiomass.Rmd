@@ -576,7 +576,7 @@ haul <- haul.all %>%
   mutate(duration = difftime(haulBackTime, equilibriumTime, units = "mins")) %>% 
   # Remove bad trawls
   filter(!trawlPerformance %in% trawl.performance) %>%
-  filter(!haul %in% trawl.haul.exclude) %>%
+  filter(!haul %in% trawl.haul.rm) %>%
   # Assign cluster based on yearday
   mutate(cluster = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) 
 

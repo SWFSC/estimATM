@@ -116,7 +116,7 @@ source(here("Code/format_trawl_database.R"))
 # Select bad trawls
 haul.bad <- haul.all %>% 
   filter(trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
-           haul %in% trawl.haul.exclude | # Manually excluded hauls
+           haul %in% trawl.haul.rm | # Manually excluded hauls
            # Missing data that will cause errors in nav matching
            is.na(collection) |
            is.na(equilibriumTime) | 

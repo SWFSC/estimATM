@@ -976,7 +976,7 @@ source(here("Code/format_trawl_database.R"))
 # Select bad trawls
 haul.bad <- haul.all %>% 
   filter(trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
-           haul %in% trawl.haul.exclude | # Manually excluded hauls
+           haul %in% trawl.haul.rm | # Manually excluded hauls
            # Missing data that will cause errors in nav matching
            is.na(collection) |
            is.na(equilibriumTime) | 
@@ -1010,13 +1010,11 @@ haul <- haul.all %>%
          stopLatDecimal, stopLongDecimal, equilibriumTime, haulBackTime, 
          trawlPerformance, season, notes) %>% 
   filter(cruise %in% cruise.name & ship %in% cruise.ship) %>%
-  # Manually remove hauls
-  filter(!haul %in% haul.rm) %>% 
-  # Calculate haul duration
-  mutate(duration = difftime(haulBackTime, equilibriumTime, units = "mins")) %>% 
   # Remove bad trawls
   filter(!trawlPerformance %in% trawl.performance) %>%
-  filter(!haul %in% trawl.haul.exclude) %>%
+  filter(!haul %in% trawl.haul.rm) %>% 
+  # Calculate haul duration
+  mutate(duration = difftime(haulBackTime, equilibriumTime, units = "mins")) %>% 
   # Assign cluster based on yearday
   mutate(cluster = cumsum(c(0, diff(equilibriumTime)) > 12) + 1,
          sample.type = "Trawl") 

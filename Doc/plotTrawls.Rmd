@@ -139,7 +139,7 @@ source(here("Code/format_trawl_database.R"))
 # Select bad trawls
 haul.bad <- haul.all %>% 
   filter(trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
-           haul %in% trawl.haul.exclude | # Manually excluded hauls
+           haul %in% trawl.haul.rm | # Manually excluded hauls
            # Missing data that will cause errors in nav matching
            is.na(collection) |
            is.na(equilibriumTime) | 
@@ -148,7 +148,7 @@ haul.bad <- haul.all %>%
 # Get only hauls from current survey
 haul <- filter(haul.all, cruise %in% cruise.name) %>% 
   filter(!collection %in% haul.bad$collection) %>%
-  filter(!haul %in% trawl.haul.exclude) %>% 
+  filter(!haul %in% trawl.haul.rm) %>% 
   mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
          cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) # Assign cluster
 

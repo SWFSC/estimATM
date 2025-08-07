@@ -111,7 +111,7 @@ do.imap           <- T # Create interactive Leaflet map
 save.imap         <- F # Save Leaflet maps
 overwrite.files   <- T # Overwrite files (TRUE if files have changed)
 overwrite.csv     <- T # Overwrite CSV files (TRUE if files have changed)
-process.csv.all   <- T # Process all acoustic backscatter files (F = new files only)
+process.csv.all   <- F # Process all acoustic backscatter files (F = new files only)
 process.csv.krill <- T # Process krill backscatter data
 process.cufes     <- F # Process CUFES data (no CUFES sampling post-2023)
 process.cal       <- F # Process calibration results
@@ -171,62 +171,6 @@ if (copy.files) {
     source(here("Code/copy_files_cufes.R")) 
   }
   
-  # # Copy CSV files for CPS
-  # pb <- tkProgressBar("R Progress Bar", "CSV File Copying", 0, 100, 0)
-  # 
-  # for (d in seq_along(nasc.vessels)) {
-  #   # Get vessel name
-  #   dd <- nasc.vessels[d]
-  #   
-  #   # List CSV files for CPS and krill
-  #   csv.files.cps <- dir_ls(file.path(survey.dir[dd], 
-  #                                     nasc.dir[dd]), 
-  #                           regexp = nasc.pattern.cps[dd],
-  #                           recurse = nasc.recurse[dd],
-  #                           ignore.case = TRUE)
-  #   
-  #   csv.files.krill <- dir_ls(file.path(survey.dir[dd], 
-  #                                       nasc.dir[dd]), 
-  #                             regexp = nasc.pattern.krill[dd],
-  #                             recurse = nasc.recurse[dd],
-  #                             ignore.case = TRUE)
-  #   
-  #   # Copy CSV files
-  #   if (overwrite.csv) {
-  #     # Copy all files
-  #     file_copy(csv.files.cps, here("Data/Backscatter", dd, path_file(csv.files.cps)), 
-  #               overwrite = overwrite.csv)
-  #     
-  #     file_copy(csv.files.krill, here("Data/Backscatter", dd, path_file(csv.files.krill)), 
-  #               overwrite = overwrite.csv)
-  #   } else {
-  #     # List existing files
-  #     files.cps <- path_file(dir_ls(here("Data/Backscatter", dd),
-  #                                   regexp = nasc.pattern.cps[dd],
-  #                                   recurse = nasc.recurse[dd],
-  #                                   ignore.case = TRUE))
-  #     
-  #     files.krill <- path_file(dir_ls(here("Data/Backscatter", dd),
-  #                                     regexp = nasc.pattern.krill[dd],
-  #                                     recurse = nasc.recurse[dd],
-  #                                     ignore.case = TRUE))
-  #     
-  #     # Copy new files only
-  #     file_copy(str_subset(csv.files.cps, files.cps, negate = TRUE), 
-  #               here("Data/Backscatter", dd))
-  #     
-  #     file_copy(str_subset(csv.files.krill, files.krill, negate = TRUE), 
-  #               here("Data/Backscatter", dd))
-  #   }
-  #   
-  #   # Update the progress bar
-  #   pb.prog <- round(d/length(nasc.vessels)*100)
-  #   info <- sprintf("%d%% done", pb.prog)
-  #   setTkProgressBar(pb, pb.prog, sprintf("CSV Copying - (%s)", info), info)
-  # }
-  # 
-  # close(pb)
-  
   if (dir.exists(uctd.dir)) {
     # Copy UCTD files
     source(here("Code/copy_files_uctd.R"))
@@ -272,7 +216,7 @@ wpts <- read_csv(here("Data/Nav", wpt.filename), lazy = FALSE) %>%
   project_df(to = crs.proj)
 
 wpts.sf <- wpts %>% 
-  filter(Type %in% wpt.types) %>% 
+  filter(Type %in% wpt.types, Region %in% wpt.regions) %>%  
   st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
   mutate(
     label    = paste("Transect", Transect),
@@ -952,49 +896,6 @@ tx.order <- nasc %>%
          transect = transect.num) %>%
   arrange(rank.final)
 
-# for (i in nasc.vessels) {
-#   if (use.tx.number[i]) {
-#     # Calculate transect order per vessel
-#     tx.order.temp <- nasc %>%
-#       filter(str_detect(vessel.name, i)) %>% 
-#       group_by(transect.name) %>% 
-#       summarise(max.lat  = max(lat),
-#                 min.long = max(long)) %>% 
-#       mutate(rank.lat  = rank(max.lat), 
-#              rank.long = rev(rank(min.long)), 
-#              diff      = rank.lat - rank.long,
-#              transect.num = as.numeric(str_extract(transect.name,"[[:digit:]]+")),
-#              rank.final = rank(transect.num)) %>% 
-#       arrange(rank.final)
-#   } else {
-#     # Calculate transect order per vessel
-#     tx.order.temp <- nasc %>%
-#       filter(str_detect(vessel.name, i)) %>% 
-#       group_by(transect.name) %>% 
-#       summarise(max.lat  = max(lat),
-#                 min.long = max(long)) %>% 
-#       mutate(rank.lat  = rank(max.lat), 
-#              rank.long = rev(rank(min.long)), 
-#              diff      = rank.lat - rank.long,
-#              rank.final = rank.lat,
-#              transect.num = rank.final) %>%
-#       arrange(rank.final)
-#   }
-#   
-#   # Assign transect order based on rank latitude
-#   if (nrow(tx.order) == 0) {
-#     # If the first vessel, create transects from 0 to number of transects
-#     tx.order.temp$transect <- tx.order.temp$rank.final
-#   } else {
-#     # If not the first vessel, add rank latitude to largest existing transect number
-#     tx.order.temp$transect <- tx.order.temp$rank.final + max(tx.order$transect)
-#   }
-#   
-#   # Combine results from all vessels
-#   tx.order <- bind_rows(tx.order, tx.order.temp) %>% 
-#     arrange(transect)
-# }
-
 # Add transect numbers to NASC
 nasc <- left_join(select(nasc, -transect), 
                   select(tx.order, transect.name, transect)) %>% 
@@ -1426,28 +1327,29 @@ source(here("Code/format_trawl_database.R"))
 ```
 
 ```{r process-trawl-haul-data}
-# Classify hauls by season (spring or summer)
-haul.all <- haul.all %>% 
-  mutate(season = case_when(
-    month(equilibriumTime) < 6 ~ "spring",
-    TRUE ~ "summer"))
+# Select bad trawls
+haul.bad <- haul.all %>% 
+  filter(trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
+           haul %in% trawl.haul.rm | # Manually excluded hauls
+           # Missing data that will cause errors in nav matching
+           is.na(collection) |
+           is.na(equilibriumTime) | 
+           is.na(haulBackTime))
 
-# Filter haul data for current survey
-haul <- haul.all %>% 
-  select(cruise, ship, haul, collection, startLatDecimal, startLongDecimal, 
-         stopLatDecimal, stopLongDecimal, equilibriumTime, haulBackTime, 
-         trawlPerformance, season, notes) %>% 
-  filter(cruise %in% cruise.name & ship %in% cruise.ship) %>%
-  # Manually remove hauls
-  filter(!haul %in% haul.rm) %>% 
-  # Calculate haul duration
-  mutate(duration = difftime(haulBackTime, equilibriumTime, units = "mins")) %>% 
-  # Remove bad trawls
-  filter(!trawlPerformance %in% trawl.performance) %>%
-  filter(!haul %in% trawl.haul.exclude) %>%
-  # Assign cluster based on yearday
-  mutate(cluster = cumsum(c(0, diff(equilibriumTime)) > 12) + 1,
-         sample.type = "Trawl") 
+# Get only hauls from current survey
+haul <- filter(haul.all, cruise %in% cruise.name & ship %in% cruise.ship) %>% 
+  filter(!haul %in% haul.bad$haul) %>%
+    # Manually remove hauls
+  filter(!haul %in% trawl.haul.rm) %>% 
+  mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
+         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1, # Assign cluster
+         sample.type = "Trawl")
+
+# Get all haul numbers
+haul.good <- purrr::pluck(haul$haul)
+
+# Replace missing lat/long values for hauls (a CLAMS/SCS problem, usually)
+source(here("Code/nav_match_CLAMS.R"))
 
 if (survey.name %in% c("2107RL")) {
   # Get max haul and cluster for Lasker to increment Carranza data
@@ -1476,13 +1378,8 @@ if (survey.name %in% c("2107RL")) {
            stopLatDecimal, stopLongDecimal, equilibriumTime, haulBackTime,
            trawl.performance:cluster) 
   
-  # ggplot(haul.jcf, aes(startLongDecimal, startLatDecimal)) + geom_point() + coord_map()
-  
+  # Combine hauls from FSVs and JCF
   haul <- bind_rows(haul, haul.jcf)
-  
-  # ggplot(haul, aes(startLongDecimal, startLatDecimal, colour = ship)) + 
-  #   geom_point() + 
-  #   coord_map()  
 }
 
 if (survey.name %in% c("2207RL")) {
@@ -1633,6 +1530,8 @@ cluster.check %>%
 ```  
 
 ## Map trawl and trawl cluster locations
+
+**RESUME HERE**
 
 Examine the locations of trawl hauls and results of trawl clustering.  
 
@@ -2430,7 +2329,7 @@ lengths <- lengths.all %>%
   # Filter for cruise specific data
   filter(cruise %in% cruise.name & ship %in% cruise.ship & 
            scientificName %in% cps.spp & toupper(isRandomSample) == "Y") %>% 
-  filter(!haul %in% haul.rm)
+  filter(!haul %in% trawl.haul.rm)
 
 if (survey.name %in% c("2107RL")) {
   # Read specimen data from Carranza

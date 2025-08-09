@@ -270,6 +270,11 @@ pie.cols <- c("Engraulis mordax" = "Anchovy", "Trachurus symmetricus" = "JackMac
               "Scomber japonicus" = "PacMack", "Etrumeus acuminatus" = "RndHerring", 
               "Sardinops sagax" = "Sardine")
 
+pie.cols.prop <- c("Engraulis mordax" = "prop.anch", "Trachurus symmetricus" = "prop.jack", 
+                   "Atherinopsis californiensis" = "prop.jsmelt", "Clupea pallasii" = "prop.her", 
+                   "Scomber japonicus" = "prop.mack", "Etrumeus acuminatus" = "prop.rher", 
+                   "Sardinops sagax" = "prop.sar")
+
 # Species labels
 pie.labs <- c("Engraulis mordax" = "Anchovy", "Trachurus symmetricus" = "J. Mackerel", 
               "Atherinopsis californiensis" = "Jacksmelt", "Clupea pallasii" = "P. herring", 
@@ -670,7 +675,7 @@ nIndiv.min    <- 1
 nClusters.min <- 1
 
 # Use manually defined strata?
-stratify.manually    <- FALSE
+stratify.manually    <- TRUE
 stratify.manually.os <- FALSE
 stratify.manually.ns <- FALSE
 
@@ -678,156 +683,70 @@ stratify.manually.ns <- FALSE
 # Create a new data frame with each species, stratum, and vector containing transects
 
 if ("SD" %in% nasc.vessels) {
-  # If including Saildrone
-  strata.manual <- bind_rows(
-    data.frame(
-      scientificName = "Clupea pallasii",
-      stratum = 1,
-      transect = 57:62),
-    data.frame(
-      scientificName = "Clupea pallasii",
-      stratum = 2,
-      transect = 63:81),
-    data.frame(
-      scientificName = "Clupea pallasii",
-      stratum = 3,
-      transect = 82:87),
-    data.frame(
-      scientificName = "Engraulis mordax",
-      stratum = 1,
-      transect = 1:9),
-    data.frame(
-      scientificName = "Engraulis mordax",
-      stratum = 2,
-      transect = 10:53),
-    data.frame(
-      scientificName = "Engraulis mordax",
-      stratum = 3,
-      transect = 54:62),
-    data.frame(
-      scientificName = "Engraulis mordax",
-      stratum = 4,
-      transect = 63:81),
-    data.frame(
-      scientificName = "Engraulis mordax",
-      stratum = 5,
-      transect = 82:86),
-    data.frame(
-      scientificName = "Sardinops sagax",
-      stratum = 1,
-      transect = 1:7),
-    data.frame(
-      scientificName = "Sardinops sagax",
-      stratum = 2,
-      transect = 9:14),
-    data.frame(
-      scientificName = "Sardinops sagax",
-      stratum = 3,
-      transect = 23:32),
-    data.frame(
-      scientificName = "Sardinops sagax",
-      stratum = 4,
-      transect = 57:62),
-    data.frame(
-      scientificName = "Sardinops sagax",
-      stratum = 5,
-      transect = 63:81),
-    data.frame(
-      scientificName = "Sardinops sagax",
-      stratum = 6,
-      transect = 82:87),
-    data.frame(
-      scientificName = "Scomber japonicus",
-      stratum = 1,
-      transect = 2:5),
-    data.frame(
-      scientificName = "Scomber japonicus",
-      stratum = 4,
-      transect = 58:62),
-    data.frame(
-      scientificName = "Scomber japonicus",
-      stratum = 5,
-      transect = 63:66),
-    data.frame(
-      scientificName = "Scomber japonicus",
-      stratum = 6,
-      transect = 70:75),
-    data.frame(
-      scientificName = "Trachurus symmetricus",
-      stratum = 1,
-      transect = 1:9),
-    data.frame(
-      scientificName = "Trachurus symmetricus",
-      stratum = 2,
-      transect = 11:53),
-    data.frame(
-      scientificName = "Trachurus symmetricus",
-      stratum = 3,
-      transect = 54:62),
-    data.frame(
-      scientificName = "Trachurus symmetricus",
-      stratum = 4,
-      transect = 63:81),
-    data.frame(
-      scientificName = "Trachurus symmetricus",
-      stratum = 5,
-      transect = 82:87))
+
 } else {
   strata.manual <- bind_rows( 
     # If not using Saildrone
     data.frame(
       scientificName = "Clupea pallasii",
       stratum = 1,
-      transect = 32:45),
+      transect = 30:37),
     data.frame(
       scientificName = "Engraulis mordax",
       stratum = 1,
-      transect = 1:31),
+      transect = 1:26),
     data.frame(
-      scientificName = "Engraulis mordax",
-      stratum = 2,
-      transect = 32:44),
+      scientificName = "Etrumeus acuminatus",
+      stratum = 1,
+      transect = 1:4),
     data.frame(
       scientificName = "Sardinops sagax",
       stratum = 1,
-      transect = 1:7),
+      transect = 1:4),
     data.frame(
       scientificName = "Sardinops sagax",
       stratum = 2,
-      transect = 9:12),
+      transect = 11:15),
     data.frame(
       scientificName = "Sardinops sagax",
       stratum = 3,
-      transect = 16:22),
+      transect = 16:20),
     data.frame(
       scientificName = "Sardinops sagax",
       stratum = 4,
-      transect = 32:45),
+      transect = 22:24),
+    data.frame(
+      scientificName = "Sardinops sagax",
+      stratum = 5,
+      transect = 25:29),
+    data.frame(
+      scientificName = "Sardinops sagax",
+      stratum = 6,
+      transect = 32:36),
     data.frame(
       scientificName = "Scomber japonicus",
       stratum = 1,
-      transect = 2:5),
-    data.frame(
-      scientificName = "Scomber japonicus",
-      stratum = 2,
-      transect = 35:38),
+      transect = 1:4),
+    # data.frame(
+    #   scientificName = "Scomber japonicus",
+    #   stratum = 2,
+    #   transect = 16:19),
     data.frame(
       scientificName = "Trachurus symmetricus",
       stratum = 1,
-      transect = 1:31),
+      transect = 1:10),
     data.frame(
       scientificName = "Trachurus symmetricus",
       stratum = 2,
-      transect = 35:45))
+      transect = 15:37))
 }
 
 # Stock boundaries --------------------------------------------------------
 stock.break.anch <- c("Cape Mendocino" = 40.80)  # Latitude of Cape Mendocino
-stock.break.sar  <- c("Bodega Bay" = 38.311) # Latitude of Bodega Bay, based on differences in length dist.
-# stock.break.sar  <- 34.3 # Latitude of ~Pt. Conception, base off 2023 habitat map
+stock.break.sar  <- c("Pt. Conception" = 34.3) # Latitude of ~Pt. Conception, base off 2023 habitat map
+# stock.break.sar  <- c("Bodega Bay" = 38.311) # Latitude of Bodega Bay, based on differences in length dist.
 
 # Transects used to define stock boundaries (primary or other)
-
 # Used in estimateOffshore, where stock break using offshore transect ends is ambiguous
 stock.break.source <- "primary" 
 
@@ -862,7 +781,7 @@ cufes.threshold.anchovy <- 1   # egg density, eggs per minute
 cufes.threshold.sardine <- 0.3 # egg density, eggs per minute
 
 # # Calibration information ------------------------------------------------
-cal.vessels        <- c("SH","LBC","LM")
+cal.vessels        <- NA # c("SH","LBC","LM")
 cal.dir            <- c(SH  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS",
                         LM  = NA_character_,
                         LBC = NA_character_)

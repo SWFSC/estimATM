@@ -77,9 +77,6 @@ if (doc.type == "latex") {
 ```
 
 ```{r project-info, include=FALSE}
-# Get session.info to include in document
-session.info <- session_info()
-
 # Get project name from directory
 prj.name <- last(unlist(str_split(here(),"/")))
 
@@ -134,7 +131,7 @@ This report presents results from the **`r survey.name.long` (`r survey.name`)**
 
 The results were generated using R and Rstudio:  
 
-* `r session.info[["platform"]]$version` 
+* `r sessionInfo()$R.version$version.string`
 * Last run: `r session.info[["platform"]]$date`
 
 ## Controls and Settings

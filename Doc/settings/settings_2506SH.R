@@ -323,9 +323,9 @@ lf.ncols <- 5
 # Data sources ------------------------------------------------------------
 # Backscatter data info
 # Survey vessels that collected acoustic data (a character vector of vessel abbreviations)
-nasc.vessels           <- c("SH") #c("RL","LBC","LM","SD") 
+nasc.vessels           <- c("SH","LBC") #c("RL","LBC","LM","SD") 
 nasc.vessels.offshore  <- NA # c("SD")
-nasc.vessels.nearshore <- c("LBC","LM")
+nasc.vessels.nearshore <- c("LBC") # "LM"
 nasc.vessels.krill     <- c("SH")
 
 # Define columns to use for a fixed integration depth (if cps.nasc is not present)
@@ -361,12 +361,12 @@ sounder.type           <- c(SH  = "EK80")
 # Root directory where survey data are stored; other paths relative to this
 if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D")) {
   survey.dir           <- c(SH  = "C:/SURVEY/2506SH",
-                            LBC = "//swc-storage4-s/AST4/SURVEYS/20240708_CARNAGE_SummerCPS",
-                            LM  = "//swc-storage4-s/AST4/SURVEYS/20240703_LISA-MARIE_SummerCPS")
+                            LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS",
+                            LM  = "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS")
 } else {
   survey.dir           <- c(SH  = "C:/SURVEY/2506SH",
-                            LBC = "//swc-storage4-s/AST4/SURVEYS/20240708_CARNAGE_SummerCPS",
-                            LM  = "//swc-storage4-s/AST4/SURVEYS/20240703_LISA-MARIE_SummerCPS")   
+                            LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS",
+                            LM  = "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS")   
 }
 
 # Backscatter data (within survey.dir, typically)
@@ -374,7 +374,7 @@ nasc.dir               <- c(SH  = "PROCESSED/EV/CSV",
                             LM  = "PROCESSED/EV/CSV",
                             LBC = "PROCESSED/EV/CSV") 
 
-# Regex pattern for identifying CPS CSV files
+# Regexp pattern for identifying CPS CSV files
 nasc.pattern.cps       <- c(SH  = "Final 38 kHz CPS_nasc_cps.csv",
                             LM  = "Final 38 kHz CPS_nasc_cps.csv",
                             LBC = "Final 38 kHz CPS_nasc_cps.csv")

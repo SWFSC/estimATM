@@ -63,7 +63,7 @@ process.csv <- F
 resize.map  <- F 
 
 # Vessel-specific info
-vessel.name = "LBC"
+vessel.name = "SH"
 ```
 
 ```{r list-files}

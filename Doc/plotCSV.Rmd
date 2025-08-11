@@ -41,40 +41,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-Specified files are processed and plotted at any time, but ideally prior to being processed using plotSurvey, estimateBiomass, etc. 
-
-```{r file-settings}
-# Controls
-## Process CSV files, or just re-generate HTML/plots
-process.csv <- TRUE 
-## Scale map to survey extent
-resize.map  <- FALSE 
-
-# Vessel-specific info
-vessel.name = "LM"
-
-# File paths
-csv.paths <- c(RL  = "\\\\swc-storage4-s\\AST5\\SURVEYS\\20240625_LASKER_SummerCPS\\PROCESSED\\EV\\CSV\\",
-               LBC = "\\\\swc-storage4-s\\AST5\\SURVEYS\\20240625_CARNAGE_SummerCPS\\PROCESSED\\EV\\CSV\\",
-               LM  = "\\\\swc-storage4-s\\AST5\\SURVEYS\\20240625_LISA-MARIE_SummerCPS\\PROCESSED\\EV\\CSV\\")
-
-csv.ext <- c(RL  = "-Final 38 kHz CPS_nasc_cps.csv",
-             LBC = "-Final 38 kHz CPS_nasc_cps.csv",
-             LM  = "-Final 38 kHz CPS_nasc_cps.csv")
-```
-
-```{r list-files}
-if (process.csv) {
-  # List full file paths
-  csv.files <- c(dir_ls(
-    csv.paths[vessel.name],
-    regexp = csv.ext[vessel.name]))  
-}
-```
-
-```{r user-input}
+```{r project-info, include=FALSE}
 # Get project name from directory
-prj.name <- last(unlist(str_split(here(), "/")))
+prj.name <- last(unlist(str_split(here(),"/")))
 
 # Get all settings files
 settings.files <- dir(here("Doc/settings"))
@@ -82,6 +51,27 @@ settings.files <- dir(here("Doc/settings"))
 # Source survey settings file
 prj.settings <- settings.files[str_detect(settings.files, paste0("settings_", prj.name, ".R"))]
 source(here("Doc/settings", prj.settings))
+```
+
+Specified files are processed and plotted at any time, but ideally prior to being processed using plotSurvey, estimateBiomass, etc. 
+
+```{r file-settings}
+# Controls
+## Process CSV files, or just re-generate HTML/plots
+process.csv <- F 
+## Scale map to survey extent
+resize.map  <- F 
+
+# Vessel-specific info
+vessel.name = "LBC"
+```
+
+```{r list-files}
+if (process.csv) {
+  # List full file paths
+  csv.files <- c(dir_ls(file.path(survey.dir[vessel.name], nasc.dir[vessel.name]),
+    regexp = nasc.pattern.cps[vessel.name]))  
+}
 ```
 
 ```{r process-csv-cps, include=FALSE}
@@ -114,7 +104,7 @@ if (process.csv) {
   write_csv(nasc, file = here("Output", paste0("nasc_plotCSV_", vessel.name, ".csv")))
 
 } else {
-  load(here("Output", paste0("nasc_plotCSV_",vessel.name, ".Rdata")))
+  load(here("Output", paste0("nasc_plotCSV_", vessel.name, ".Rdata")))
 }
 
 # Get intervals with bad lat/long values
@@ -225,7 +215,7 @@ wpts <- read_csv(here("Data/Nav", wpt.filename)) %>%
 
 # Convert planned transects to sf; CRS = crs.geog
 wpts.sf <- wpts %>% 
-  filter(Type %in% wpt.types) %>% 
+  filter(Type %in% wpt.types, Region %in% wpt.regions) %>% 
   st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
   mutate(
     label    = paste("Transect", Transect),

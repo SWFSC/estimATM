@@ -77,9 +77,6 @@ if (doc.type == "latex") {
 ```
 
 ```{r project-info, include=FALSE}
-# Get session.info to include in document
-session.info <- session_info()
-
 # Get project name from directory
 prj.name <- last(unlist(str_split(here(),"/")))
 
@@ -115,7 +112,7 @@ process.csv.all   <- F # Process all acoustic backscatter files (F = new files o
 process.csv.krill <- T # Process krill backscatter data
 process.cufes     <- F # Process CUFES data (no CUFES sampling post-2023)
 process.cal       <- F # Process calibration results
-process.ctd       <- T # Process CTD and UCTD casts
+process.ctd       <- F # Process CTD and UCTD casts
 match.intervals   <- F # Match intervals for comparing EK60 and EK80
 get.bathy         <- T # Extract ETOPO1 bathymetry data in the survey footprint
 resize.map        <- F # Resize map during survey; if T, uses anticipated bounds of survey area
@@ -134,7 +131,7 @@ This report presents results from the **`r survey.name.long` (`r survey.name`)**
 
 The results were generated using R and Rstudio:  
 
-* `r session.info[["platform"]]$version` 
+* `r sessionInfo()$R.version$version.string`
 * Last run: `r session.info[["platform"]]$date`
 
 ## Controls and Settings
@@ -1445,13 +1442,35 @@ haul.mid.sf <- haul.mid %>%
   mutate(label = paste("Haul", haul)) %>% 
   st_as_sf(coords = c("long","lat"), crs = crs.geog) 
 
-# Convert haul paths and midpoints to sf; CRS = crs.geog
-# Create haul paths from starts and ends
-haul.paths <- select(haul, haul, lat = startLatDecimal, long = startLongDecimal) %>% 
-  bind_rows(select(haul, haul, lat = stopLatDecimal, long = stopLongDecimal)) %>% 
-  arrange(haul) %>% 
+# Get haul nav data
+## Create data frame to store results
+haul.nav <- data.frame()
+
+for (h in unique(haul$haul)) {
+  # Get haul times
+  haul.tmp <- filter(haul, haul == h)
+  # Extract nav for each trawl period
+  nav.fishing <- filter(nav, between(time, haul.tmp$equilibriumTime, haul.tmp$haulBackTime)) %>% 
+    mutate(period = "Fishing")
+  nav.deploy  <- filter(nav, between(time, haul.tmp$netInWaterTime, haul.tmp$equilibriumTime)) %>% 
+    mutate(period = "Deployment")
+  nav.recover <- filter(nav, between(time, haul.tmp$haulBackTime, haul.tmp$netOnDeckTime)) %>% 
+    mutate(period = "Recovery")
+  
+  # Combine within haul
+  haul.nav.tmp <- bind_rows(nav.deploy, nav.fishing, nav.recover) %>% 
+    mutate(haul = h) 
+  
+  # Combine with other hauls
+  haul.nav <- haul.nav %>% 
+    bind_rows(haul.nav.tmp)
+}
+
+# Create haul paths from nav for each trawl period (Deployment, Fishing, and Recovery)
+haul.paths <- haul.nav %>% 
+  arrange(haul, time) %>% 
   st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-  group_by(haul) %>% 
+  group_by(haul, period) %>% 
   summarise(do_union = FALSE) %>% 
   st_cast("LINESTRING") 
 
@@ -1531,8 +1550,6 @@ cluster.check %>%
 
 ## Map trawl and trawl cluster locations
 
-**RESUME HERE**
-
 Examine the locations of trawl hauls and results of trawl clustering.  
 
 (ref:map-trawl-clusters) Trawl paths (black lines; difficult to see at most scales, as mostly obscured by the trawl midpoints), trawl midpoints (red Xs), and cluster midpoints used to apportion putative CPS backscatter to species (green circles, numeric labels) are mapped relative to acoustic transects (heavy gray points) and vessel track (light gray line).
@@ -1547,7 +1564,7 @@ if (save.figs) {
     geom_point(data = nasc.plot, aes(X, Y), 
                colour = "gray50", size = 0.5, alpha = 0.75) +
     # Plot trawl paths
-    geom_sf(data = haul.paths) +
+    geom_sf(data = filter(haul.paths, period == "Fishing")) +
     # Plot trawl midpoint
     geom_sf(data = haul.mid.sf, shape = 4, colour = "red") +
     # Plot cluster midpoint
@@ -1867,6 +1884,7 @@ if (nrow(haul.pos) > 0) {
 haul.paths <- haul.paths %>% 
   left_join(select(haul.summ.wt, -cluster)) %>%
   replace(is.na(.), 0) %>% 
+  ungroup() %>% 
   mutate(
     distance = round(as.numeric(st_length(.))/1852,1),
     label    = paste("Haul", haul),
@@ -2016,6 +2034,9 @@ haul.ts <- haul %>%
   left_join(catch.ts) %>% 
   project_df(to = crs.proj)
 
+# Get species present in the trawl catch
+haul.ts.spp <- sort(unique(haul.ts$scientificName))
+
 # Export haul data for single-target TS estimation
 write_csv(haul.ts, here("Output/single_species_hauls.csv"), na = "")
 
@@ -2037,7 +2058,11 @@ if (save.figs) {
     geom_shadowtext(data = filter(haul.ts, !is.na(pctTotalCPS)), 
                     aes(X, Y, label = haul, colour = scientificName),
                     size = 2, bg.colour = "white", fontface = "bold") +
-    scale_colour_discrete(name = "Species") +
+    # scale_colour_discrete(name = "Species") +
+    # Configure trawl scale
+    scale_colour_manual(name = 'Species',
+                      labels = unname(pie.labs[names(pie.labs) %in% haul.ts.spp]),
+                      values = unname(pie.colors[names(pie.colors) %in% haul.ts.spp])) +
     coord_sf(crs = crs.proj, 
              xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
              ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
@@ -2758,7 +2783,7 @@ lw.plot <- ggplot() +
   # Plot L/W data for current survey
   geom_point(data = lengths, 
              aes(totalLength_mm, weightg,group = sex, fill = sex), 
-             shape = 21, alpha = 0.9) + 
+             shape = 21, alpha = 1) + 
   scale_fill_manual(name = "Sex", values = c("pink","lightblue","white")) +
   # Plot individuals with missing lengths and weights
   geom_point(data = filter(lengths, missing.length == TRUE), 
@@ -5810,7 +5835,7 @@ if (exists("all.ctd.casts")) {
                          breaks = seq(round(min(all.ctd.casts$Z),digits = -1), 0, 25),
                          expand = c(0,0)) + 
       theme_bw() +
-      theme(panel.grid.major = element_line(linewith = 0.75),
+      theme(panel.grid.major = element_line(linewidth = 0.75),
             legend.position  = "none") +
       ggtitle("Salinity")
     
@@ -5885,39 +5910,39 @@ UCTD and CTD casts are assigned to acoustic transects so that they may be later 
 ```{r assign-ctd-transects}
 if (exists("ctd.info.all")) {
   if (process.ctd) {
-    # Assign nearest acoustic transect to CTD/UCTD cast
-    # Create varialble for nearest cluster
-    ctd.info.all$transect.name <- NA_character_
-    ctd.info.all$transect      <- NA_real_
-    
-    # Configure progress bar
-    pb <- tkProgressBar("CTD Transect Assignment", "CTD Transect", 0, 100, 50)
-    
-    # Match CTD casts to transects
-    for (i in 1:nrow(ctd.info.all)) {
-      # Calculate distance between each CTD/UCTD and all NASC data
-      transect.distance <- distance(ctd.info.all$lat[i], ctd.info.all$long[i], 
-                                    nasc$lat, nasc$long, units = "nm")
-      # Assign trawl name and number with minimum distance to the CTD/UCTD cast
-      ctd.info.all$transect.name[i] <- nasc$transect.name[which.min(transect.distance)]
-      ctd.info.all$transect[i]      <- nasc$transect[which.min(transect.distance)]
-      # Update the progress bar
-      pb.prog <- round(i/nrow(ctd.info.all)*100)
-      info <- sprintf("%d%% done", pb.prog)
-      setTkProgressBar(pb, pb.prog, 
-                       sprintf("CTD Transect Assignment (%s)", info), info)
-    }
-    # Close progress bar
-    close(pb)
-    
-    # Save results
-    save(ctd.info.all, file = here("Output/all_ctd_info.Rdata"))
-    
-  } else {
-    if (file.exists(here("Output/all_ctd_info.Rdata"))) {
-      # Load ctd.info.all
-      load(here("Output/all_ctd_info.Rdata"))
-    }
+  #   # Assign nearest acoustic transect to CTD/UCTD cast
+  #   # Create variable for nearest cluster
+  #   ctd.info.all$transect.name <- NA_character_
+  #   ctd.info.all$transect      <- NA_real_
+  #   
+  #   # Configure progress bar
+  #   pb <- tkProgressBar("CTD Transect Assignment", "CTD Transect", 0, 100, 50)
+  #   
+  #   # Match CTD casts to transects
+  #   for (i in 1:nrow(ctd.info.all)) {
+  #     # Calculate distance between each CTD/UCTD and all NASC data
+  #     transect.distance <- swfscMisc::distance(ctd.info.all$lat[i], ctd.info.all$long[i], 
+  #                                   nasc$lat, nasc$long, units = "nm")
+  #     # Assign trawl name and number with minimum distance to the CTD/UCTD cast
+  #     ctd.info.all$transect.name[i] <- nasc$transect.name[which.min(transect.distance)]
+  #     ctd.info.all$transect[i]      <- nasc$transect[which.min(transect.distance)]
+  #     # Update the progress bar
+  #     pb.prog <- round(i/nrow(ctd.info.all)*100)
+  #     info <- sprintf("%d%% done", pb.prog)
+  #     setTkProgressBar(pb, pb.prog, 
+  #                      sprintf("CTD Transect Assignment (%s)", info), info)
+  #   }
+  #   # Close progress bar
+  #   close(pb)
+  #   
+  #   # Save results
+  #   save(ctd.info.all, file = here("Output/all_ctd_info.Rdata"))
+  #   
+  # } else {
+  #   if (file.exists(here("Output/all_ctd_info.Rdata"))) {
+  #     # Load ctd.info.all
+  #     load(here("Output/all_ctd_info.Rdata"))
+  #   }
   }
   
   # Project CTD info table
@@ -5950,34 +5975,35 @@ if (exists("ctd.info.all")) {
                xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
                ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
     
-    # Plot all CTDs and UCTDs, labeled by transect assignment
-    map.ctd.tx <- base.map + 
-      # Plot vessel track
-      geom_sf(data = nav.paths.sf, colour = 'gray50', size = 0.25, alpha = 0.5) +
-      # Plot CTD cast locations
-      geom_shadowtext(data = ctd.info.all, aes(X, Y, label = transect, colour = type),
-                      size = 2, bg.colour = "white", fontface = "bold") + 
-      scale_colour_manual(name = "Type", values = c(CTD = "blue", UCTD = "purple")) +
-      coord_sf(crs = crs.proj,
-               xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
-               ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
-    
-    # Combine plots into two panels
-    map.ctd.all <- plot_grid(map.ctd.uctd, map.ctd.tx, 
-                             nrow = 1, labels = c("a)","b)"))
+    # # Plot all CTDs and UCTDs, labeled by transect assignment
+    # map.ctd.tx <- base.map + 
+    #   # Plot vessel track
+    #   geom_sf(data = nav.paths.sf, colour = 'gray50', size = 0.25, alpha = 0.5) +
+    #   # Plot CTD cast locations
+    #   geom_shadowtext(data = ctd.info.all, aes(X, Y, label = transect, colour = type),
+    #                   size = 2, bg.colour = "white", fontface = "bold") + 
+    #   scale_colour_manual(name = "Type", values = c(CTD = "blue", UCTD = "purple")) +
+    #   coord_sf(crs = crs.proj,
+    #            xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
+    #            ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
+    # 
+    # # Combine plots into two panels
+    # map.ctd.all <- plot_grid(map.ctd.uctd, map.ctd.tx, 
+    #                          nrow = 1, labels = c("a)","b)"))
     
     # Save maps
     ggsave(here("Figs/fig_ctd_uctd_map.png"), map.ctd.uctd, 
            width = map.width, height = map.height)
     
-    ggsave(here("Figs/fig_ctd_tx_map.png"),   map.ctd.tx,   
-           width = map.width, height = map.height)
-    
-    ggsave(here("Figs/fig_ctd_map_all.png"),  map.ctd.all,  
-           width = map.width*2, height = map.height)
+    # ggsave(here("Figs/fig_ctd_tx_map.png"),   map.ctd.tx,   
+    #        width = map.width, height = map.height)
+    # 
+    # ggsave(here("Figs/fig_ctd_map_all.png"),  map.ctd.all,  
+    #        width = map.width*2, height = map.height)
   }
   
-  include_graphics(here("Figs/fig_ctd_map_all.png"))
+  include_graphics(here("Figs/fig_ctd_uctd_map.png"))
+  # include_graphics(here("Figs/fig_ctd_uctd_map_all.png"))
 } else {
   print("No CTD casts present.")
 }
@@ -9046,31 +9072,31 @@ if (file.exists(here("Figs/fig_biomass_dens_nse_Etrumeus acuminatus-All.png"))) 
 
 ```{r process-cal-all}
 # Process calibration results from CW- and FM-mode calibrations. Vessel, procedure, and directory info is configured in the settings file for each survey.
-
-if (process.cal) {
-  # Plot CW calibration results
-  source(here("Code/processCal-CW.R"))
+if (!is.na(cal.vessels)) {
+  if (process.cal) {
+    # Plot CW calibration results
+    source(here("Code/processCal-CW.R"))
+    
+    # Plot FM calibration results
+    source(here("Code/processCal-FM.R"))
+    
+    # Extract calibration results from past surveys
+    source(here("Code/extractCalAll.R"))
+    
+  } else {
+    # Load CW results
+    load(here("Output/cal_results_CW.Rdata"))
+    
+    # Load FM results
+    load(here("Output/cal_results_FM.Rdata"))
+    
+    # Load CW calibration results from past surveys
+    load(here("Data/Calibration/cal_results_all.Rdata"))
+  }
   
-  # Plot FM calibration results
-  source(here("Code/processCal-FM.R"))
-  
-  # Extract calibration results from past surveys
-  source(here("Code/extractCalAll.R"))
-  
-} else {
-  # Load CW results
-  load(here("Output/cal_results_CW.Rdata"))
-  
-  # Load FM results
-  load(here("Output/cal_results_FM.Rdata"))
-  
-  # Load CW calibration results from past surveys
-  load(here("Data/Calibration/cal_results_all.Rdata"))
-  
-}
-
-if (save.figs) {
-  source(here("Code/plot_CalTimeSeries.R"))
+  if (save.figs) {
+    source(here("Code/plot_CalTimeSeries.R"))
+  }
 }
 ```  
 

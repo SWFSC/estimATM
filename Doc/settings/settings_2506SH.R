@@ -2,8 +2,8 @@
 ## Settings in this section control various behaviors and tasks used in the main data processing scripts
 ### Biomass estimation
 process.seine     <- F # Process purse seine data, if present
-process.nearshore <- F # Process near backscatter data; typically TRUE
-estimate.ns       <- F # Estimate biomass in the nearshore strata; T if nearshore surveyed
+process.nearshore <- T # Process near backscatter data; typically TRUE
+estimate.ns       <- T # Estimate biomass in the nearshore strata; T if nearshore surveyed
 process.offshore  <- F # Process offshore backscatter data
 estimate.os       <- F # Estimate biomass in the offshore strata; T if offshore surveyed
 combine.regions   <- F # Combine nearshore/offshore plots with those from the core region
@@ -325,7 +325,7 @@ lf.ncols <- 5
 # Survey vessels that collected acoustic data (a character vector of vessel abbreviations)
 nasc.vessels           <- c("SH","LBC") #c("RL","LBC","LM","SD") 
 nasc.vessels.offshore  <- NA # c("SD")
-nasc.vessels.nearshore <- c("LBC") # "LM"
+nasc.vessels.nearshore <- c("LBC", "LM")
 nasc.vessels.krill     <- c("SH")
 
 # Define columns to use for a fixed integration depth (if cps.nasc is not present)
@@ -415,7 +415,7 @@ nasc.max               <- NA
 # Use seine data to apportion nearshore backscatter
 # If seine catches were believed to be representative, TRUE
 # Else, FALSE (e.g., if sets were non-random or otherwise believed to be biased)
-use.seine.data  <- TRUE
+use.seine.data  <- FALSE
 seine.source    <- "SQL"
 seine.db.name   <- "SeineDataEntry2506SH.accdb"
 seine.types     <- c("survey", "research", NA)
@@ -435,7 +435,7 @@ deep.nasc.vessels <- c("LBC", "LM")
 
 # Which net data should be used to apportion nearshore backscatter?
 # "Trawl" and/or "Seine"
-catch.source.ns <- c("Purse seine", "Trawl")
+catch.source.ns <- c("Trawl") # "Purse seine" 
 
 # Define path to seine data directories for each vessel
 seine.data.paths <- c("LBC"= file.path(survey.dir["LBC"], "DATA/SEINE/lbc_data_2506SH.xlsx"),
@@ -452,7 +452,8 @@ seine.data.paths <- c("LBC"= file.path(survey.dir["LBC"], "DATA/SEINE/lbc_data_2
 # If T, read cps.nasc from file defined in data.cps.nasc (below)
 source.cps.nasc        <- c(SH  = FALSE,
                             LM  = FALSE,
-                            LBC = FALSE) # in the nearshore strata
+                            LBC = FALSE,
+                            NS  = FALSE) # in the nearshore strata
 
 # File containing CPS nasc from CTD app
 data.cps.nasc          <- c(SH  = here("Data/Backscatter/nasc_cps_SH_2506SH.csv")) # in the nearshore strata 

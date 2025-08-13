@@ -1118,7 +1118,7 @@ if (sampling.cufes) {
 
 ```
 
-```{r get-raster-erddap}
+```{r get-raster-erddap,include=F}
 if (get.env) {
   # Get and process environmental data from ERDDAP
   source(here("Code/get_env_erddap.R"))

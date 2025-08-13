@@ -10,49 +10,100 @@
 # See leaflet example here
 # https://rstudio.github.io/leaflet/articles/raster.html
 
-# Get dataset info and extract latest date 
-sar.hab.info <- rerddap::info("sardine_habitat_modis_v2", url = "https://coastwatch.pfeg.noaa.gov/erddap/")
-sar.hab.date <- sar.hab.info$alldata$NC_GLOBAL[sar.hab.info$alldata$NC_GLOBAL$attribute_name == "time_coverage_end", "value"]
-
-chl.info <- rerddap::info("noaacwNPPN20VIIRSDINEOFDaily", url = "https://coastwatch.noaa.gov/erddap/")
-chl.date <- chl.info$alldata$NC_GLOBAL[chl.info$alldata$NC_GLOBAL$attribute_name == "time_coverage_end", "value"]
+# Create directory for raster data
+dir_create(here("Data/Raster"))
 
 # Define data parameters
 # X/Y ranges
 xcoord <- c(-130, -113)
 ycoord <- c(27, 51)
-# Date ranges
-tcoord.sar <- as.character(c(date(sar.hab.date), date(sar.hab.date)))
-tcoord.chl <- as.character(c(date(chl.date), date(chl.date)))
 
-# Create directory for raster data
-dir_create(here("Data/Raster"))
+# Get dataset info and extract latest date 
+tryCatch(
+  expr = {
+    # Code that might cause an error
+    sar.hab.info <- rerddap::info("sardine_habitat_modis_v2", url = "https://coastwatch.pfeg.noaa.gov/erddap/")
+  },
+  error = function(e) {
+    # Code to execute if an error occurs
+    message(paste("Error extracting sardine habitat info: ", e$message))
+  },
+  warning = function(w) {
+    # Code to execute if a warning occurs
+    message(paste("Warning extracting sardine habitat info: ", w$message))
+  },
+  finally = {
+    # Code to execute regardless of error or warning (optional)
+    print(paste("Finished extracting sardine habitat info."))
+  }
+)
 
-# Download netCDF files
-sar.dat <- griddap(sar.hab.info,
+if (exists("sar.hab.info")) {
+  sar.hab.date <- sar.hab.info$alldata$NC_GLOBAL[sar.hab.info$alldata$NC_GLOBAL$attribute_name == "time_coverage_end", "value"]  
+  
+  # Date ranges
+  tcoord.sar <- as.character(c(date(sar.hab.date), date(sar.hab.date)))
+
+  # Download netCDF files
+  sar.dat <- griddap(sar.hab.info,
                      latitude  = ycoord, 
                      longitude = xcoord, 
-                     time      = tcoord.sar)
+                     time      = tcoord.sar) 
+  
+  # Read netCDF files with rast()
+  sar.hab <- rast(sar.dat$summary$filename, subds = "potential_habitat_probability")
+  
+  # Define color palettes
+  sar.pal <- colorNumeric(c("#0000ff", "#ff9900"), values(sar.hab), ##0000ff(blue), #ff9900 (orange)
+                          na.color = "transparent")
+  
+  # Save files
+  save(sar.hab, sar.pal, 
+       file = here("Data/Raster/hab_data_erddap.Rdata"))
+}
 
-chl.dat <- griddap(chl.info,
-                    latitude  = ycoord, 
-                    longitude = xcoord, 
-                    time      = tcoord.chl)
+# Get dataset info and extract latest date 
+tryCatch(
+  expr = {
+    # Code that might cause an error
+    chl.info <- rerddap::info("noaacwNPPN20VIIRSDINEOFDaily", url = "https://coastwatch.noaa.gov/erddap/")
+  },
+  error = function(e) {
+    # Code to execute if an error occurs
+    message(paste("Error extracting chlorophyll-a info: ", e$message))
+  },
+  warning = function(w) {
+    # Code to execute if a warning occurs
+    message(paste("Warning extracting chlorophyll-a info: ", w$message))
+  },
+  finally = {
+    # Code to execute regardless of error or warning (optional)
+    print(paste("Finished extracting chlorophyll-a info."))
+  }
+)
 
-# Read netCDF files with rast()
-sar.hab <- rast(sar.dat$summary$filename, subds = "potential_habitat_probability")
-chl.a   <- rast(chl.dat$summary$filename, subds = "chlor_a")
+if (exists("chl.info")) {
+  chl.date <- chl.info$alldata$NC_GLOBAL[chl.info$alldata$NC_GLOBAL$attribute_name == "time_coverage_end", "value"]
+  
+  # Date ranges
+  tcoord.chl <- as.character(c(date(chl.date), date(chl.date)))
 
-# Define color palettes
-sar.pal <- colorNumeric(c("#0000ff", "#ff9900"), values(sar.hab), ##0000ff(blue), #ff9900 (orange)
-                    na.color = "transparent")
+  chl.dat <- griddap(chl.info,
+                     latitude  = ycoord, 
+                     longitude = xcoord, 
+                     time      = tcoord.chl)
+  
+  # Read netCDF files with rast()
+  chl.a   <- rast(chl.dat$summary$filename, subds = "chlor_a")
 
-chl.pal <- colorNumeric("viridis", values(chl.a), ##0000ff(blue), #ff9900 (orange)
-                        na.color = "transparent")
-
-# Save 
-save(sar.hab, chl.a, sar.pal, chl.pal,
-     file = here("Data/Raster/env_data_erddap.Rdata"))
+  # Define color palettes
+  chl.pal <- colorNumeric("viridis", values(chl.a), ##0000ff(blue), #ff9900 (orange)
+                          na.color = "transparent")
+  
+  # Save 
+  save(chl.a, chl.pal,
+       file = here("Data/Raster/chl_data_erddap.Rdata"))
+  }
 
 # Example code for testing script
 

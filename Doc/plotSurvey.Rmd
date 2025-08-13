@@ -1124,8 +1124,12 @@ if (get.env) {
   source(here("Code/get_env_erddap.R"))
 } else {
   # Look for existing data and load if present
-  if (file.exists(here("Data/Raster/env_data_erddap.Rdata"))) {
-    load(here("Data/Raster/env_data_erddap.Rdata"))
+  if (file.exists(here("Data/Raster/hab_data_erddap.Rdata"))) {
+    load(here("Data/Raster/hab_data_erddap.Rdata"))
+  }
+  
+  if (file.exists(here("Data/Raster/chl_data_erddap.Rdata"))) {
+    load(here("Data/Raster/chl_data_erddap.Rdata"))
   }
 }
 ```

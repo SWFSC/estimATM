@@ -1362,7 +1362,7 @@ Examine haul paths: green during deployment, black during fishing, and red durin
 
 ```{r map-hauls,out.height="8in",out.width="100%"}
 # Create color palette for trawl periods
-trawlPathPal <- colorFactor(c("green","black","red"), c("Deployment","Fishing","Recovery"))
+trawlPathPal <- colorFactor(c("blue","black","red"), c("Deployment","Fishing","Recovery"))
 
 # Provider tiles info: http://leaflet-extras.github.io/leaflet-providers/preview/index.html
 if (exists("nav.paths.sf")) {

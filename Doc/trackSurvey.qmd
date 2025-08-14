@@ -1,0 +1,393 @@
+---
+title: "trackSurvey: Survey Progress Visualizer"
+author: "Kevin L. Stierhoff"
+format: html
+editor: visual
+---
+
+```{r setup,echo=F,message=F,warning=F,error=F,include=F}
+# Install and load pacman (library management package)
+if (!require("pacman")) install.packages("pacman")
+if (!require("pak")) install.packages("pak")
+
+# Install and load required packages from CRAN ---------------------------------
+pacman::p_load(tidyverse,raster,cowplot,DBI,odbc,RSQLite,scatterpie,ggspatial,vroom,
+               readxl,lubridate,rnaturalearth,sf,here,naniar,mapview,xts,terra,
+               shadowtext,knitr,ggrepel,fs,plotly,leaflet,leaflet.extras,bookdown,
+               htmltools,leafem,DT,rworldmap,rworldxtra,lwgeom,htmlwidgets,httr,
+               ncdf4,rerddap)
+
+# Install and load required packages from Github -------------------------------
+if (!require("atm")) pkg_install("SWFSC/atm")
+if (!require("surveyR")) pkg_install("SWFSC/surveyR")
+pacman::p_load_gh("SWFSC/atm")
+pacman::p_load_gh("SWFSC/surveyR")
+
+# rnaturalearth data
+pacman::p_load_gh("ropenscilabs/rnaturalearthdata")
+pacman::p_load_gh("ropenscilabs/rnaturalearthhires")
+
+# Define method of table generation (whether kable or xtable) for best formatting
+doc.type <- knitr::opts_knit$get('rmarkdown.pandoc.to')
+doc.name <- knitr::current_input()
+if (is.null(doc.type)) {doc.type <- "html"}
+if (is.null(doc.name)) {doc.name <- "plotSurvey.Rmd"}
+
+# global knitr chunk options
+knitr::opts_chunk$set(
+  echo = FALSE, warning = FALSE, message = FALSE, 
+  fig.align = "center", dev = "png", dev.args = list(type = "cairo"), dpi = 150
+)
+knitr::opts_chunk$set(cache = FALSE)
+```
+
+```{r user-input, include=FALSE}
+# Get project name from directory
+prj.name <- last(unlist(str_split(here(), "/")))
+
+# Get all settings files
+settings.files <- dir(here("Doc/settings"))
+
+# Source survey settings file
+prj.settings <- settings.files[str_detect(settings.files, paste0("settings_", prj.name, ".R"))]
+
+source(here("Doc/settings", prj.settings))
+```
+
+
+```{r processing-controls}
+# Control script behavior (usually T)
+get.nav            <- T # Download NOAA Ship nav data
+save.figs          <- T # Save figures
+copy.files         <- T # Copy data files from data to estimATM directory
+overwrite.files    <- T # Overwrite existing files when copying (not CSV, see below)
+
+# Control script behavior (often F)
+resize.map         <- F # Resize map during survey; if T, uses anticipated bounds of survey area
+```
+
+```{r config-project}
+dir_create(here(), c("Output", "Figs"))
+```
+
+```{r copy-files, include=F}
+if (copy.files) {
+  # Create data directories
+  dir_create(here("Data", c("SCS")))
+  
+  if (nav.source == "SCS") {
+    # Copy SCS files
+    source(here("Code/copy_files_scs.R"))
+  }
+}
+```
+
+```{r process-nav}
+# Source code to get nav data from ERDDAP or SCS
+if (nav.source == "ERDDAP") {
+  source(here("Code/get_nav_erddap.R"))
+} else if (nav.source == "SCS") {
+  source(here("Code", scs.nav.script))
+}
+
+# Read transect waypoints
+wpts <- read_csv(here("Data/Nav", wpt.filename))
+
+# Convert planned transects to sf; CRS = crs.geog
+wpts.sf <- wpts %>% 
+  filter(Type %in% wpt.types, Region %in% wpt.regions) %>% 
+  st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
+  mutate(
+    label = paste("Transect", Transect),
+    popup = paste('<b>Transect:</b>', Transect, Type)
+  )
+
+transects.sf <- wpts.sf %>% 
+  group_by(Type, Transect, Region) %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("LINESTRING") %>% 
+  ungroup() %>% 
+  mutate(
+    distance = round(as.numeric(st_length(.))/1852,1),
+    label    = paste("Transect", Transect),
+    popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
+                     'Distance:', distance, 'nmi<br/>')
+  )
+
+# Get most recent vessel position for plotting
+nav.now <- tail(nav.sf, 1) %>% 
+  mutate(label = paste("Last position:", time, "UTC"),
+         popup = paste0('<b>Vessel name: </b>', survey.vessel, '<br/>',
+                        '<b>Last position: </b>', time, ' UTC<br/>'))
+
+# Set padding around data  
+if (resize.map) {
+  # Use nav data to resize map to survey progress
+  map.bounds <- nav.paths.sf %>% 
+    st_transform(crs = crs.proj) %>%
+    st_bbox()  
+} else {
+  # Use transects to set map to survey extent
+  map.bounds <- transects.sf %>%
+    st_transform(crs = crs.proj) %>%
+    st_bbox()  
+}
+```
+
+```{r create-basemap,include=F}
+# Configure base map options -----------------
+# Import landmarks
+locations <- filter(read.csv(here("Data/Map/locations.csv")), name %in% label.list) %>%
+  project_df(to = crs.proj)
+
+# Get state data
+states <- ne_states(country = 'United States of America', returnclass = 'sf')
+ca     <- filter(states, name == "California")
+
+# Get countries
+countries <- ne_countries(scale = "large", returnclass = "sf") %>%
+  filter(subregion %in% c("Northern America","Central America"))
+
+# Read bathy contours shapefile 
+bathy <- st_read(here("Data/GIS/bathy_contours.shp")) %>% 
+  st_transform(crs.geog) %>% 
+  rename(Depth = Contour)
+
+# Determine map aspect ratio and set height and width
+map.aspect <- (map.bounds$xmax - map.bounds$xmin)/(map.bounds$ymax - map.bounds$ymin)
+map.height <- 10
+map.width  <- map.height*map.aspect
+
+# Create base map
+base.map <- get_basemap(nav.paths.sf, states, countries, locations, bathy, map.bounds, crs = crs.proj) 
+
+# Save the basemap
+ggsave(base.map, file = here("Figs/fig_basemap.png"), 
+       height = map.height, width = map.width)
+
+save(base.map, file = here("Data/Map/basemap.Rdata"))
+```
+
+```{r get-spatial-files,include=F}
+# Import shapefiles ------------------------------------------------
+# Read CA State Waters shapefile
+ca_waters <- st_read(here("Data/GIS/ca_state_waters.shp")) %>% 
+  st_transform(crs.geog)
+
+or_waters <- st_read(here("Data/GIS/or_state_waters.shp")) %>% 
+  st_transform(crs.geog)
+
+# Read CA MPAs shapefile
+ca_mpas <- st_read(here("Data/GIS/ca_mpas.shp")) %>% 
+  st_transform(crs.geog) %>% 
+  mutate(MPA = paste(NAME, Type))
+
+or_mpas <- st_read(here("Data/GIS/or_mpas.shp")) %>% 
+  st_transform(crs.geog) 
+
+wc_mpas <- st_read(here("Data/GIS/wc_mpas.shp")) %>% 
+  st_transform(crs.geog) 
+
+nms_bounds <- st_read(here("Data/GIS/national_marine_sanctuaries.shp"))
+
+# Read MPA shapefiles  -----------------------------------------
+# Canada
+scott_islands_mpa <- st_read(here("Data/GIS/scott_islands_mpa_polygon.shp")) %>% 
+  st_transform(crs.geog) %>% 
+  mutate(MPA = "Scott Islands Protected Marine Area") %>% 
+  st_difference(filter(countries, name == "Canada"))
+
+pacific_rim_mpa <- st_read(here("Data/GIS/pacific_rim_reserve_polygon.shp")) %>% 
+  st_transform(crs.geog) %>% 
+  mutate(MPA = "Pacific Rim National Park Reserve") 
+
+# Mexico
+baja_mpas <- st_read(here("Data/GIS/baja_mpas.shp")) %>% 
+  st_transform(crs.geog)
+
+mex_mpas <- st_read(here("Data/GIS/mex_mpas.shp")) %>% 
+  st_transform(crs.geog)
+
+# Read CA MPAs shapefile
+eez_usa <- st_read(here("Data/GIS/eez_us.shp")) %>% 
+  st_transform(crs.geog)
+eez_can <- st_read(here("Data/GIS/eez_canada.shp")) %>% 
+  st_transform(crs.geog)
+eez_mex <- st_read(here("Data/GIS/eez_mex.shp")) %>% 
+  st_transform(crs.geog)
+```
+
+```{r create-leaflet-map, out.width="100%", out.height="8in"}
+# Leaflet options
+# https://rstudio.github.io/leaflet/
+
+# Info on tile caching
+# https://bhaskarvk.github.io/leaflet.extras/reference/TileCaching.html
+
+# Set padding around data  
+imap.bounds <- map_bounds(nav$lat, nav$long, 0.1) 
+
+# Create color palette for MPAs
+## CA and OR MPAs
+all.mpa.types <- as.factor(c(unique(as.character(ca_mpas$Type)), 
+                             unique(as.character(or_mpas$Label))))
+
+mpaPal  <- colorFactor(topo.colors(10), all.mpa.types)
+
+## All West Coast MPAs
+mpaPalWC <- colorFactor(topo.colors(10), unique(wc_mpas$Design))
+
+## National Marine Sanctuaries
+mpaPalNMS  <- colorFactor(topo.colors(10), as.factor(unique(nms_bounds$NAME)))
+
+# Create color palette for Mexico MPAs
+all.mpa.types.mex <- as.factor(c(unique(as.character(baja_mpas$NOMBRE)),
+                                 unique(as.character(mex_mpas$NOMBRE))))
+
+mpaPalMex  <- colorFactor(topo.colors(10), all.mpa.types.mex)
+
+# Create color palette for planned transects
+txPal    <- colorFactor(wpt.colors, wpt.types)
+
+# Create or load oceanIcons
+if(!file.exists(here("Images/oceanIcons.Rdata"))) {
+  source(here("Code/create_ocean_icons.R"))
+} else {
+  load(here("Images/oceanIcons.Rdata"))  
+}
+
+# Plotting preferences -------------------------------------------------------
+# Leaflet tile options; set both to T if caching
+
+# Create leaflet map
+i.map <- leaflet() %>% 
+# Enable tile caching
+enableTileCaching() %>%
+# Add provider tiles; # http://leaflet-extras.github.io/leaflet-providers/preview/index.html
+addProviderTiles(providers$Esri.NatGeoWorldMap, group = "Esri.NatGeoWorldMap",
+                 options = tileOptions(useCache = useCachedTile,
+                                       crossOrigin = useCrossOrigin)) %>%
+addProviderTiles(providers$Esri.OceanBasemap, group = "Esri.OceanBasemap",
+                 options = tileOptions(useCache = useCachedTile,
+                                       crossOrigin = useCrossOrigin)) %>%
+addProviderTiles(providers$Esri.WorldStreetMap, group = "Esri.WorldStreetMap",
+                 options = tileOptions(useCache = useCachedTile,
+                                       crossOrigin = useCrossOrigin)) %>%
+addProviderTiles(providers$Esri.WorldImagery, group = "Esri.WorldImagery",
+                 options = tileOptions(useCache = useCachedTile,
+                                       crossOrigin = useCrossOrigin)) %>%
+addProviderTiles(providers$OpenStreetMap.Mapnik, group = "OpenStreetMap.Mapnik",
+                 options = tileOptions(useCache = useCachedTile,
+                                       crossOrigin = useCrossOrigin)) %>%
+# Add EEZs
+addPolylines(data = eez_usa, color = "#000414", weight = 3, 
+             label = "EEZ-U.S.", group = "Exclusive Economic Zones") %>% 
+addPolylines(data = eez_can, color = "#000414", weight = 3, 
+             label = "EEZ-Canada", group = "Exclusive Economic Zones") %>% 
+addPolylines(data = eez_mex, color = "#000414", weight = 3, 
+             label = "EEZ-Mexico", group = "Exclusive Economic Zones") %>% 
+# Add bathymetry contours
+addPolylines(data = bathy, color = "white", weight = 2, 
+             label = ~paste(Depth, "m"), group = "Bathymetry Contours") %>% 
+# Add National Marine Sanctuaries
+addPolygons(data = nms_bounds, color = "#000414", weight = 2, fillColor = ~mpaPal(NAME),
+            fillOpacity = 0.25, label = ~htmlEscape(NAME), group = "U.S. MPAs") %>%
+# Add State waters
+addPolygons(data = or_waters, weight = 2, fillColor = "transparent", 
+            opacity = 0.75,
+            label = ~htmlEscape("OR State Waters"),
+            group = "State Waters") %>%
+addPolygons(data = ca_waters, weight = 2, fillColor = "transparent",
+            opacity = 0.75,
+            label = ~htmlEscape("CA State Waters"),
+            group = "State Waters") %>%
+# Add West Coast MPAs
+addPolygons(data = wc_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalWC(Design),
+            fillOpacity = 0.3, label = ~htmlEscape(Site_Nm), group = "State MPAs") %>%
+# Add Canadian MPAs
+addPolygons(data = scott_islands_mpa, color = "#000414", weight = 2, 
+            label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
+addPolygons(data = pacific_rim_mpa, color = "#000414", weight = 2, 
+            label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
+# Add Mexico MPAs
+# Baja
+addPolygons(data = baja_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalMex(NOMBRE),
+            fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
+# All of Mexico
+addPolygons(data = mex_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalMex(NOMBRE),
+            fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
+# Add core planned transects
+addPolylines(data = filter(transects.sf, Type %in% c("Compulsory", "Adaptive")),
+             color = ~txPal(Type), weight = 3, opacity = 0.5,
+             label = ~htmlEscape(paste(Type, Transect)),
+             popup = ~popup,
+             group = "Planned Transects (Core)") %>%
+addCircleMarkers(data = filter(wpts.sf, Type %in% c("Compulsory", "Adaptive")),
+                 radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
+                 fillOpacity = 0.5, fillColor =  ~txPal(Type), 
+                 label = ~htmlEscape(paste(Type, Waypoint)),
+                 popup = ~popup,
+                 group = "Planned Transects (Core)") %>%
+# Add ancillary planned transects
+addPolylines(data = filter(transects.sf, !Type %in% c("Compulsory", "Adaptive")),
+             color = ~txPal(Type), weight = 3, opacity = 0.5,
+             # label = ~htmlEscape(paste(Type, Transect)),
+             popup = ~popup,
+             group = "Planned Transects (Ancillary)") %>%
+addCircleMarkers(data = filter(wpts.sf, !Type %in% c("Compulsory", "Adaptive")),
+                 radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
+                 fillOpacity = 0.5, fillColor =  ~txPal(Type),
+                 # label = ~htmlEscape(paste(Type, Waypoint)),
+                 popup = ~popup,
+                 group = "Planned Transects (Ancillary)") %>%
+# Add scale bar
+addScaleBar(position = "bottomright") %>%
+# Add map coordinates
+addMouseCoordinates() %>% 
+# Add measurement tool
+addMeasure(primaryLengthUnit = "miles", secondaryLengthUnit = "km",
+           primaryAreaUnit = "sqmiles", secondaryAreaUnit = "sqmeters",
+           position = "topleft") %>% 
+# Add layer controls
+addLayersControl(
+  baseGroups = c("Esri.NatGeoWorldMap", "Esri.OceanBasemap",
+                 "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
+  overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs",
+                    "State Waters", "Exclusive Economic Zones", 
+                    "Bathymetry Contours",
+                    "Planned Transects (Core)", "Planned Transects (Ancillary)",
+                    "Vessel Track", "Vessel Positions"),
+  options = layersControlOptions(collapsed = FALSE)) %>% 
+fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
+          imap.bounds$range.lon[2], imap.bounds$range.lat[2])
+
+if (exists("nav.paths.sf"))
+  i.map <- i.map %>% 
+  # Add nav data
+  addPolylines(data = nav.paths.sf, color = "#000414", weight = 1, 
+               label = ~leg, group = "Vessel Track") %>%
+  addMarkers(data = nav.now, label = ~label, popup = ~popup, icon = ~oceanIcons["ship"],
+             group = "Vessel Positions")
+
+# Set visible layers
+i.map <- i.map %>%  
+  hideGroup(c("State Waters", "Exclusive Economic Zones",
+              "Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs"))
+```
+
+Survey progress for the **`r survey.name`**
+
+_**Last updated:**_ `r format(Sys.time(), "%F %T", tz = "America/Los_Angeles", usetz = TRUE)`
+
+# Interactive data explorer 
+
+An interactive map of the survey plan versus the survey progress. Hover-over or click on some map objects for more info.
+
+```{r interactive-map, out.height="12in", out.width="100%"}
+# Display map
+i.map
+```  
+
+For questions about this page, please contact Kevin Stierhoff ([kevin.stierhoff@noaa.gov](mailto:kevin.stierhoff@noaa.gov)).
+
+

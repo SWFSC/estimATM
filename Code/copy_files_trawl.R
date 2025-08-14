@@ -5,4 +5,4 @@ haul.db.info <- dir_ls(file.path(survey.dir[survey.vessel.primary], trawl.dir),
 
 # Copy most recently modified trawl database
 file_copy(haul.db.info$path[which.max(haul.db.info$modification_time)], 
-          here("Data/Trawl", trawl.db.name), overwrite = TRUE)
+          here("Data/Trawl", trawl.db.name), overwrite = overwrite.files)

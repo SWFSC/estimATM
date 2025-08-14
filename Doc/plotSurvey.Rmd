@@ -1175,7 +1175,7 @@ trawlPal <- c('#00CD66', '#0000FF', '#A020F0',
               '#F5DEB3', '#00FFFF', '#FF0000')
 
 # Create color palette for trawl periods
-trawlPathPal <- colorFactor(c("green","black","red"), c("Deployment","Fishing","Recovery"))
+trawlPathPal <- colorFactor(c("blue","black","red"), c("Deployment","Fishing","Recovery"))
 
 if (sampling.acoustics) {
   # Select plot levels for backscatter data

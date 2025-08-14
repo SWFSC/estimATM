@@ -40,6 +40,9 @@ if (get.nav) {
                               cut(as.numeric(date(time)), 
                                   leg.breaks, 
                                   labels = FALSE)),
+             Leg      = cut(as.numeric(date(time)), 
+                                  leg.breaks, 
+                                  labels = FALSE),
              id       = seq_along(time)) 
 
     # Append new nav data
@@ -70,9 +73,10 @@ if (get.nav) {
   
   # Cast nav to transects
   nav.paths.sf <- nav.sf %>% 
-    group_by(leg) %>% 
+    group_by(leg, Leg) %>% 
     summarise(do_union = FALSE) %>% 
     st_cast("LINESTRING") %>% 
+    ungroup() %>% 
     mutate(distance_nmi = as.numeric(st_length(.)*0.000539957))
   
   # Save results

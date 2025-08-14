@@ -15,7 +15,7 @@ pacman::p_load(tidyverse,raster,cowplot,DBI,odbc,RSQLite,scatterpie,ggspatial,vr
                readxl,lubridate,rnaturalearth,sf,here,naniar,mapview,xts,terra,
                shadowtext,knitr,ggrepel,fs,plotly,leaflet,leaflet.extras,bookdown,
                htmltools,leafem,DT,rworldmap,rworldxtra,lwgeom,htmlwidgets,httr,
-               ncdf4,rerddap)
+               ncdf4,rerddap,patchwork)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
@@ -54,7 +54,6 @@ prj.settings <- settings.files[str_detect(settings.files, paste0("settings_", pr
 source(here("Doc/settings", prj.settings))
 ```
 
-
 ```{r processing-controls}
 # Control script behavior (usually T)
 get.nav            <- T # Download NOAA Ship nav data
@@ -90,6 +89,10 @@ if (nav.source == "ERDDAP") {
   source(here("Code", scs.nav.script))
 }
 
+# Remove non-survey legs
+nav.paths.sf <- nav.paths.sf %>% 
+  filter(!leg == "Leg NA", !is.na(Leg))
+  
 # Read transect waypoints
 wpts <- read_csv(here("Data/Nav", wpt.filename))
 
@@ -114,6 +117,14 @@ transects.sf <- wpts.sf %>%
                      'Distance:', distance, 'nmi<br/>')
   )
 
+if (exists("tx.breaks")) {
+  transects.sf <- transects.sf %>% 
+    mutate(Leg = as.factor(cut(Transect, tx.breaks, labels = FALSE)))
+  
+  wpts.sf <- wpts.sf %>% 
+    mutate(Leg = as.factor(cut(Transect, tx.breaks, labels = FALSE)))
+}
+
 # Get most recent vessel position for plotting
 nav.now <- tail(nav.sf, 1) %>% 
   mutate(label = paste("Last position:", time, "UTC"),
@@ -132,6 +143,33 @@ if (resize.map) {
     st_transform(crs = crs.proj) %>%
     st_bbox()  
 }
+```
+
+```{r create-map-labels}
+# Create acoustic transect labels for maps
+tx.labels.tmp <- wpts %>% 
+  filter(Type %in% c("Compulsory","Adaptive"),
+         Region %in% wpt.regions) %>% 
+  group_by(Type, Transect) %>% 
+  summarise(
+    transect.name = Transect[1],
+    start.lat = Latitude[which.max(Longitude)],
+    start.long = max(Longitude),
+    end.lat = Latitude[which.min(Longitude)],
+    end.long = min(Longitude),
+    brg = 90 - swfscMisc::bearing(end.lat,end.long,start.lat,start.long)[1]) %>% 
+  ungroup()
+
+tx.end.labels <- tx.labels.tmp %>% 
+  filter(start.lat < 48.54116) %>% 
+  select(Type, transect.name, lat = end.lat, long = end.long, brg) 
+
+tx.start.labels <- tx.labels.tmp %>% 
+  filter(start.lat >= 48.54116) %>% 
+  select(Type, transect.name, lat = start.lat, long = start.long, brg) %>% 
+  rbind(tx.end.labels)
+
+tx.labels <- project_df(tx.start.labels, to = crs.proj)
 ```
 
 ```{r create-basemap,include=F}
@@ -217,7 +255,65 @@ eez_mex <- st_read(here("Data/GIS/eez_mex.shp")) %>%
   st_transform(crs.geog)
 ```
 
-```{r create-leaflet-map, out.width="100%", out.height="8in"}
+```{r create-static-maps}
+# Define manual color palette
+legPalette <- c("#FF0000", "#FFA500", "#FFFF00", "#008000", "#0000FF", "#8A2BE2")
+
+# Map planned transects
+map.plan <- base.map + 
+  geom_sf(data = filter(transects.sf, !is.na(Leg), Type %in% c("Compulsory","Adaptive")), 
+          aes(colour = factor(Leg)),
+          linewidth = 1) + 
+  # Plot acoustic transect labels N of Cape Flattery
+  geom_shadowtext(data = tx.labels,
+                  aes(X, Y, label = transect.name,
+                      angle = brg),
+                  size = 2.5,
+                  fontface = 'bold.italic',
+                  colour = "black",
+                  bg.colour = "white") +
+  scale_colour_manual(name = "Leg", values = legPalette) +
+  labs(title = "Projected progress",
+       subtitle = "Based on start-of-survey estimates") +
+  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+               xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
+               ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
+# Map progress
+map.progress <- base.map + 
+  geom_sf(data = filter(transects.sf, !is.na(Leg), Type %in% c("Compulsory","Adaptive")), 
+          colour = "gray50",
+          linewidth = 0.5, linetype = "dashed") + 
+  geom_sf(data = nav.paths.sf, aes(colour = factor(Leg)),
+          linewidth = 1) + 
+  # Plot acoustic transect labels N of Cape Flattery
+  geom_shadowtext(data = tx.labels,
+                  aes(X, Y, label = transect.name,
+                      angle = brg),
+                  size = 2.5, 
+                  fontface = 'bold.italic',
+                  colour = "black",
+                  bg.colour = "white") +
+  scale_colour_manual(name = "Leg", values = legPalette) +
+  labs(title = "Actual progress",
+       subtitle = "Vessel position over time") +
+  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+               xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
+               ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
+
+# Arrange figures
+map.plan.comp <- map.plan + map.progress
+
+ggsave(map.plan.comp, filename = here("Figs/fig_compare_survey_progress.png"),
+       height = 10, width = 10)
+```
+
+```{r create-mapview-map, eval=FALSE}
+# Map compulsory and adaptive transects by Leg
+mapview(filter(transects.sf, !is.na(Leg), Type %in% c("Compulsory","Adaptive")), zcol = "Leg") + 
+  mapview(nav.paths.sf, zcol = "leg") 
+```
+
+```{r create-leaflet-map, out.width="100%", out.height="8in", eval = FALSE}
 # Leaflet options
 # https://rstudio.github.io/leaflet/
 
@@ -318,13 +414,13 @@ addPolygons(data = mex_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPal
             fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
 # Add core planned transects
 addPolylines(data = filter(transects.sf, Type %in% c("Compulsory", "Adaptive")),
-             color = ~txPal(Type), weight = 3, opacity = 0.5,
+             color = ~Leg, weight = 3, opacity = 0.5,
              label = ~htmlEscape(paste(Type, Transect)),
              popup = ~popup,
              group = "Planned Transects (Core)") %>%
 addCircleMarkers(data = filter(wpts.sf, Type %in% c("Compulsory", "Adaptive")),
                  radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
-                 fillOpacity = 0.5, fillColor =  ~txPal(Type), 
+                 fillOpacity = 0.5, fillColor =  ~Leg, 
                  label = ~htmlEscape(paste(Type, Waypoint)),
                  popup = ~popup,
                  group = "Planned Transects (Core)") %>%
@@ -336,7 +432,7 @@ addPolylines(data = filter(transects.sf, !Type %in% c("Compulsory", "Adaptive"))
              group = "Planned Transects (Ancillary)") %>%
 addCircleMarkers(data = filter(wpts.sf, !Type %in% c("Compulsory", "Adaptive")),
                  radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
-                 fillOpacity = 0.5, fillColor =  ~txPal(Type),
+                 fillOpacity = 0.5, fillColor =  ~Leg,
                  # label = ~htmlEscape(paste(Type, Waypoint)),
                  popup = ~popup,
                  group = "Planned Transects (Ancillary)") %>%
@@ -377,17 +473,16 @@ i.map <- i.map %>%
 
 Survey progress for the **`r survey.name`**
 
-_**Last updated:**_ `r format(Sys.time(), "%F %T", tz = "America/Los_Angeles", usetz = TRUE)`
+***Last updated:*** `r format(Sys.time(), "%F %T", tz = "America/Los_Angeles", usetz = TRUE)`
 
-# Interactive data explorer 
+# Survey progress map
 
 An interactive map of the survey plan versus the survey progress. Hover-over or click on some map objects for more info.
 
-```{r interactive-map, out.height="12in", out.width="100%"}
-# Display map
-i.map
-```  
+![](images/fig_compare_survey_progress.png){fig-align="center"}
 
-For questions about this page, please contact Kevin Stierhoff ([kevin.stierhoff@noaa.gov](mailto:kevin.stierhoff@noaa.gov)).
+```{r interactive-map, out.height="12in", out.width="100%",eval=FALSE}
+include_graphics(here("Figs/fig_compare_survey_progress.png"))
+```
 
-
+For questions about this page, please contact Kevin Stierhoff ([kevin.stierhoff\@noaa.gov](mailto:kevin.stierhoff@noaa.gov)).

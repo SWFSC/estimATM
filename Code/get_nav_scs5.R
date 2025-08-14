@@ -57,7 +57,10 @@ if (get.nav) {
       mutate(leg = paste("Leg",
                          cut(as.numeric(date(time)), 
                              leg.breaks,
-                             labels = FALSE))) 
+                             labels = FALSE)),
+             Leg = cut(as.numeric(date(time)), 
+                       leg.breaks, 
+                       labels = FALSE)) 
     
     # Process and format all VTG (SOG, CMG) files
     nav.vtg <- vtg.files %>% 
@@ -111,7 +114,10 @@ if (get.nav) {
       mutate(leg = paste("Leg",
                          cut(as.numeric(date(time)), 
                              leg.breaks,
-                             labels = FALSE))) 
+                             labels = FALSE)),
+             Leg = cut(as.numeric(date(time)), 
+                       leg.breaks, 
+                       labels = FALSE)) 
     
     # Process and format all VTG (SOG, CMG) files
     nav.vtg.tmp <- vtg.to.process %>% 
@@ -145,9 +151,10 @@ nav.sf <- st_as_sf(nav, coords = c("long","lat"), crs = crs.geog) %>%
 
 # Cast nav to transects
 nav.paths.sf <- nav.sf %>% 
-  group_by(leg) %>% 
+  group_by(leg, Leg) %>% 
   summarise(do_union = FALSE) %>% 
   st_cast("LINESTRING") %>% 
+  ungroup() %>% 
   mutate(distance_nmi = as.numeric(st_length(.)*0.000539957))
 
 # Save results

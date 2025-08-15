@@ -1649,7 +1649,7 @@ salmon.catch %>%
   select(-species) %>% 
   adorn_totals(where = "row") %>% 
   kable(format = knitr.format,booktabs = TRUE, escape = FALSE,
-        align = c("c","l",rep("r",ncol(salmon.catch) - 2)),
+        align = c(rep("l", 4), rep("r", 2)),
         digits = c(rep(0, 6), 4)) %>% 
   kable_styling(bootstrap_options = c("striped","hover","condensed"), 
                 full_width = FALSE) %>%

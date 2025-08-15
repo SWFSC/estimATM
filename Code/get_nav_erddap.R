@@ -36,13 +36,6 @@ if (get.nav) {
                wind_dir < 180 ~ wind_dir + 180,
                TRUE ~ wind_dir - 180),
              wind_angle = (wind_dir/360)*2*pi,
-             leg      = paste("Leg", 
-                              cut(as.numeric(date(time)), 
-                                  leg.breaks, 
-                                  labels = FALSE)),
-             Leg      = cut(as.numeric(date(time)), 
-                                  leg.breaks, 
-                                  labels = FALSE),
              id       = seq_along(time)) 
 
     # Append new nav data
@@ -66,6 +59,14 @@ if (get.nav) {
            between(long, min(survey.long), max(survey.long))) %>% 
     # Remove duplicates and arrange by time
     filter(!duplicated(time)) %>% 
+    mutate(
+      leg = paste("Leg", 
+                  cut(as.numeric(date(time)), 
+                      leg.breaks, 
+                      labels = FALSE)),
+      Leg = cut(as.numeric(date(time)), 
+                leg.breaks, 
+                labels = FALSE)) %>% 
     arrange(time)
   
   # Convert nav to spatial

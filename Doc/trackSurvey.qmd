@@ -15,7 +15,7 @@ pacman::p_load(tidyverse,raster,cowplot,DBI,odbc,RSQLite,scatterpie,ggspatial,vr
                readxl,lubridate,rnaturalearth,sf,here,naniar,mapview,xts,terra,
                shadowtext,knitr,ggrepel,fs,plotly,leaflet,leaflet.extras,bookdown,
                htmltools,leafem,DT,rworldmap,rworldxtra,lwgeom,htmlwidgets,httr,
-               ncdf4,rerddap,patchwork)
+               ncdf4,rerddap,patchwork,kableExtra)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
@@ -39,6 +39,13 @@ knitr::opts_chunk$set(
   fig.align = "center", dev = "png", dev.args = list(type = "cairo"), dpi = 150
 )
 knitr::opts_chunk$set(cache = FALSE)
+
+# Determine global knitr table format
+if (doc.type == "latex") {
+  knitr.format <- "latex"
+} else {
+  knitr.format <- "html" 
+}
 ```
 
 ```{r user-input, include=FALSE}
@@ -92,7 +99,7 @@ if (nav.source == "ERDDAP") {
 # Remove non-survey legs
 nav.paths.sf <- nav.paths.sf %>% 
   filter(!leg == "Leg NA", !is.na(Leg))
-  
+
 # Read transect waypoints
 wpts <- read_csv(here("Data/Nav", wpt.filename))
 
@@ -276,8 +283,8 @@ map.plan <- base.map +
   labs(title = "Projected progress",
        subtitle = "Based on start-of-survey estimates") +
   coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
-               xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
-               ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
+           xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
+           ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
 # Map progress
 map.progress <- base.map + 
   geom_sf(data = filter(transects.sf, !is.na(Leg), Type %in% c("Compulsory","Adaptive")), 
@@ -297,8 +304,8 @@ map.progress <- base.map +
   labs(title = "Actual progress",
        subtitle = "Vessel position over time") +
   coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
-               xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
-               ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
+           xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
+           ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
 
 # Arrange figures
 map.plan.comp <- map.plan + map.progress
@@ -357,105 +364,105 @@ if(!file.exists(here("Images/oceanIcons.Rdata"))) {
 
 # Create leaflet map
 i.map <- leaflet() %>% 
-# Enable tile caching
-enableTileCaching() %>%
-# Add provider tiles; # http://leaflet-extras.github.io/leaflet-providers/preview/index.html
-addProviderTiles(providers$Esri.NatGeoWorldMap, group = "Esri.NatGeoWorldMap",
-                 options = tileOptions(useCache = useCachedTile,
-                                       crossOrigin = useCrossOrigin)) %>%
-addProviderTiles(providers$Esri.OceanBasemap, group = "Esri.OceanBasemap",
-                 options = tileOptions(useCache = useCachedTile,
-                                       crossOrigin = useCrossOrigin)) %>%
-addProviderTiles(providers$Esri.WorldStreetMap, group = "Esri.WorldStreetMap",
-                 options = tileOptions(useCache = useCachedTile,
-                                       crossOrigin = useCrossOrigin)) %>%
-addProviderTiles(providers$Esri.WorldImagery, group = "Esri.WorldImagery",
-                 options = tileOptions(useCache = useCachedTile,
-                                       crossOrigin = useCrossOrigin)) %>%
-addProviderTiles(providers$OpenStreetMap.Mapnik, group = "OpenStreetMap.Mapnik",
-                 options = tileOptions(useCache = useCachedTile,
-                                       crossOrigin = useCrossOrigin)) %>%
-# Add EEZs
-addPolylines(data = eez_usa, color = "#000414", weight = 3, 
-             label = "EEZ-U.S.", group = "Exclusive Economic Zones") %>% 
-addPolylines(data = eez_can, color = "#000414", weight = 3, 
-             label = "EEZ-Canada", group = "Exclusive Economic Zones") %>% 
-addPolylines(data = eez_mex, color = "#000414", weight = 3, 
-             label = "EEZ-Mexico", group = "Exclusive Economic Zones") %>% 
-# Add bathymetry contours
-addPolylines(data = bathy, color = "white", weight = 2, 
-             label = ~paste(Depth, "m"), group = "Bathymetry Contours") %>% 
-# Add National Marine Sanctuaries
-addPolygons(data = nms_bounds, color = "#000414", weight = 2, fillColor = ~mpaPal(NAME),
-            fillOpacity = 0.25, label = ~htmlEscape(NAME), group = "U.S. MPAs") %>%
-# Add State waters
-addPolygons(data = or_waters, weight = 2, fillColor = "transparent", 
-            opacity = 0.75,
-            label = ~htmlEscape("OR State Waters"),
-            group = "State Waters") %>%
-addPolygons(data = ca_waters, weight = 2, fillColor = "transparent",
-            opacity = 0.75,
-            label = ~htmlEscape("CA State Waters"),
-            group = "State Waters") %>%
-# Add West Coast MPAs
-addPolygons(data = wc_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalWC(Design),
-            fillOpacity = 0.3, label = ~htmlEscape(Site_Nm), group = "State MPAs") %>%
-# Add Canadian MPAs
-addPolygons(data = scott_islands_mpa, color = "#000414", weight = 2, 
-            label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
-addPolygons(data = pacific_rim_mpa, color = "#000414", weight = 2, 
-            label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
-# Add Mexico MPAs
-# Baja
-addPolygons(data = baja_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalMex(NOMBRE),
-            fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
-# All of Mexico
-addPolygons(data = mex_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalMex(NOMBRE),
-            fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
-# Add core planned transects
-addPolylines(data = filter(transects.sf, Type %in% c("Compulsory", "Adaptive")),
-             color = ~Leg, weight = 3, opacity = 0.5,
-             label = ~htmlEscape(paste(Type, Transect)),
-             popup = ~popup,
-             group = "Planned Transects (Core)") %>%
-addCircleMarkers(data = filter(wpts.sf, Type %in% c("Compulsory", "Adaptive")),
-                 radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
-                 fillOpacity = 0.5, fillColor =  ~Leg, 
-                 label = ~htmlEscape(paste(Type, Waypoint)),
-                 popup = ~popup,
-                 group = "Planned Transects (Core)") %>%
-# Add ancillary planned transects
-addPolylines(data = filter(transects.sf, !Type %in% c("Compulsory", "Adaptive")),
-             color = ~txPal(Type), weight = 3, opacity = 0.5,
-             # label = ~htmlEscape(paste(Type, Transect)),
-             popup = ~popup,
-             group = "Planned Transects (Ancillary)") %>%
-addCircleMarkers(data = filter(wpts.sf, !Type %in% c("Compulsory", "Adaptive")),
-                 radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
-                 fillOpacity = 0.5, fillColor =  ~Leg,
-                 # label = ~htmlEscape(paste(Type, Waypoint)),
-                 popup = ~popup,
-                 group = "Planned Transects (Ancillary)") %>%
-# Add scale bar
-addScaleBar(position = "bottomright") %>%
-# Add map coordinates
-addMouseCoordinates() %>% 
-# Add measurement tool
-addMeasure(primaryLengthUnit = "miles", secondaryLengthUnit = "km",
-           primaryAreaUnit = "sqmiles", secondaryAreaUnit = "sqmeters",
-           position = "topleft") %>% 
-# Add layer controls
-addLayersControl(
-  baseGroups = c("Esri.NatGeoWorldMap", "Esri.OceanBasemap",
-                 "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
-  overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs",
-                    "State Waters", "Exclusive Economic Zones", 
-                    "Bathymetry Contours",
-                    "Planned Transects (Core)", "Planned Transects (Ancillary)",
-                    "Vessel Track", "Vessel Positions"),
-  options = layersControlOptions(collapsed = FALSE)) %>% 
-fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
-          imap.bounds$range.lon[2], imap.bounds$range.lat[2])
+  # Enable tile caching
+  enableTileCaching() %>%
+  # Add provider tiles; # http://leaflet-extras.github.io/leaflet-providers/preview/index.html
+  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "Esri.NatGeoWorldMap",
+                   options = tileOptions(useCache = useCachedTile,
+                                         crossOrigin = useCrossOrigin)) %>%
+  addProviderTiles(providers$Esri.OceanBasemap, group = "Esri.OceanBasemap",
+                   options = tileOptions(useCache = useCachedTile,
+                                         crossOrigin = useCrossOrigin)) %>%
+  addProviderTiles(providers$Esri.WorldStreetMap, group = "Esri.WorldStreetMap",
+                   options = tileOptions(useCache = useCachedTile,
+                                         crossOrigin = useCrossOrigin)) %>%
+  addProviderTiles(providers$Esri.WorldImagery, group = "Esri.WorldImagery",
+                   options = tileOptions(useCache = useCachedTile,
+                                         crossOrigin = useCrossOrigin)) %>%
+  addProviderTiles(providers$OpenStreetMap.Mapnik, group = "OpenStreetMap.Mapnik",
+                   options = tileOptions(useCache = useCachedTile,
+                                         crossOrigin = useCrossOrigin)) %>%
+  # Add EEZs
+  addPolylines(data = eez_usa, color = "#000414", weight = 3, 
+               label = "EEZ-U.S.", group = "Exclusive Economic Zones") %>% 
+  addPolylines(data = eez_can, color = "#000414", weight = 3, 
+               label = "EEZ-Canada", group = "Exclusive Economic Zones") %>% 
+  addPolylines(data = eez_mex, color = "#000414", weight = 3, 
+               label = "EEZ-Mexico", group = "Exclusive Economic Zones") %>% 
+  # Add bathymetry contours
+  addPolylines(data = bathy, color = "white", weight = 2, 
+               label = ~paste(Depth, "m"), group = "Bathymetry Contours") %>% 
+  # Add National Marine Sanctuaries
+  addPolygons(data = nms_bounds, color = "#000414", weight = 2, fillColor = ~mpaPal(NAME),
+              fillOpacity = 0.25, label = ~htmlEscape(NAME), group = "U.S. MPAs") %>%
+  # Add State waters
+  addPolygons(data = or_waters, weight = 2, fillColor = "transparent", 
+              opacity = 0.75,
+              label = ~htmlEscape("OR State Waters"),
+              group = "State Waters") %>%
+  addPolygons(data = ca_waters, weight = 2, fillColor = "transparent",
+              opacity = 0.75,
+              label = ~htmlEscape("CA State Waters"),
+              group = "State Waters") %>%
+  # Add West Coast MPAs
+  addPolygons(data = wc_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalWC(Design),
+              fillOpacity = 0.3, label = ~htmlEscape(Site_Nm), group = "State MPAs") %>%
+  # Add Canadian MPAs
+  addPolygons(data = scott_islands_mpa, color = "#000414", weight = 2, 
+              label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
+  addPolygons(data = pacific_rim_mpa, color = "#000414", weight = 2, 
+              label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
+  # Add Mexico MPAs
+  # Baja
+  addPolygons(data = baja_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalMex(NOMBRE),
+              fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
+  # All of Mexico
+  addPolygons(data = mex_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalMex(NOMBRE),
+              fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
+  # Add core planned transects
+  addPolylines(data = filter(transects.sf, Type %in% c("Compulsory", "Adaptive")),
+               color = ~Leg, weight = 3, opacity = 0.5,
+               label = ~htmlEscape(paste(Type, Transect)),
+               popup = ~popup,
+               group = "Planned Transects (Core)") %>%
+  addCircleMarkers(data = filter(wpts.sf, Type %in% c("Compulsory", "Adaptive")),
+                   radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
+                   fillOpacity = 0.5, fillColor =  ~Leg, 
+                   label = ~htmlEscape(paste(Type, Waypoint)),
+                   popup = ~popup,
+                   group = "Planned Transects (Core)") %>%
+  # Add ancillary planned transects
+  addPolylines(data = filter(transects.sf, !Type %in% c("Compulsory", "Adaptive")),
+               color = ~txPal(Type), weight = 3, opacity = 0.5,
+               # label = ~htmlEscape(paste(Type, Transect)),
+               popup = ~popup,
+               group = "Planned Transects (Ancillary)") %>%
+  addCircleMarkers(data = filter(wpts.sf, !Type %in% c("Compulsory", "Adaptive")),
+                   radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
+                   fillOpacity = 0.5, fillColor =  ~Leg,
+                   # label = ~htmlEscape(paste(Type, Waypoint)),
+                   popup = ~popup,
+                   group = "Planned Transects (Ancillary)") %>%
+  # Add scale bar
+  addScaleBar(position = "bottomright") %>%
+  # Add map coordinates
+  addMouseCoordinates() %>% 
+  # Add measurement tool
+  addMeasure(primaryLengthUnit = "miles", secondaryLengthUnit = "km",
+             primaryAreaUnit = "sqmiles", secondaryAreaUnit = "sqmeters",
+             position = "topleft") %>% 
+  # Add layer controls
+  addLayersControl(
+    baseGroups = c("Esri.NatGeoWorldMap", "Esri.OceanBasemap",
+                   "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
+    overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs",
+                      "State Waters", "Exclusive Economic Zones", 
+                      "Bathymetry Contours",
+                      "Planned Transects (Core)", "Planned Transects (Ancillary)",
+                      "Vessel Track", "Vessel Positions"),
+    options = layersControlOptions(collapsed = FALSE)) %>% 
+  fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
+            imap.bounds$range.lon[2], imap.bounds$range.lat[2])
 
 if (exists("nav.paths.sf"))
   i.map <- i.map %>% 
@@ -477,12 +484,106 @@ Survey progress for the **`r survey.name`**
 
 # Survey progress map
 
-An interactive map of the survey plan versus the survey progress. Hover-over or click on some map objects for more info.
+A map showing the the anticipated (left) versus actual (right) survey progress.  
 
 ![](images/fig_compare_survey_progress.png){fig-align="center"}
 
-```{r interactive-map, out.height="12in", out.width="100%",eval=FALSE}
-include_graphics(here("Figs/fig_compare_survey_progress.png"))
+```{r summarize-das}
+# Summarise planned DAS
+das.planned <- data.frame(
+  Leg = seq(1, length(leg.days)),
+  planned.start = leg.ends[seq(1, length(leg.ends), 2)],
+  planned.end = leg.ends[seq(2, length(leg.ends), 2)]) %>% 
+  mutate(das.planned = as.numeric(planned.end - planned.start)+1)
+
+# Summarise actual DAS
+das.actual <- nav %>% 
+  # Calculate legs using the actual leg dates
+  mutate(leg2 = cut(as.numeric(date(time)), 
+                    as.numeric(leg.ends),
+                    labels = FALSE)) %>% 
+  filter(!is.na(Leg), leg2 %% 2 != 0) %>% 
+  group_by(leg2) %>% 
+  summarise(
+    actual.start = min(date(time)),
+    actual.end = max(date(time)),
+    das.actual = n_distinct(date(time))) %>% 
+  mutate(Leg = seq_along(leg2)) %>% 
+  select(Leg, everything(), -leg2)
+
+# Load acoustic data, to summarise actual survey days
+load("C:/KLS/CODE/Github/estimATM/2506SH/Output/nasc_cps.Rdata")
+
+das.survey <- nasc.cps %>% 
+  # Calculate legs using the actual leg dates
+  mutate(leg2 = cut(as.numeric(date(datetime)), 
+                    as.numeric(leg.ends),
+                    labels = FALSE)) %>% 
+  filter(leg2 %% 2 != 0) %>% 
+  group_by(leg2) %>% 
+  summarise(
+    survey.start = min(date(datetime)),
+    survey.end = max(date(datetime)),
+    das.survey = n_distinct(date(datetime))) %>% 
+  mutate(Leg = seq_along(leg2)) %>% 
+  select(Leg, everything(), -leg2)
+
+das.summary <- das.planned %>% 
+  left_join(das.actual) %>% 
+  left_join(das.survey) %>% 
+  mutate(delta.das = das.planned - das.actual,
+         delta.survey = das.planned - das.survey)
+```
+
+# Progress summaries so far
+These tables are meant to summarize planned versus realized survey effort. **Note:** these metrics are still under development and may not be completely accurate.
+
+## Planned vs. actual days at sea (DAS)
+
+How many days has the ship been on the water versus how many days were planned? This is derived from the entire vessel track, regardless of whether we were conducting a survey, including transits, etc. Red cells indicate differences between actual and planned dates or values.
+
+```{r das-summary}
+das.summary %>% 
+  filter(!is.na(actual.start)) %>% 
+  mutate(
+    actual.start = cell_spec(
+      actual.start, knitr.format, color = "black",
+      background = ifelse(actual.start >= planned.start, "red", "green")),
+    actual.end = cell_spec(
+      actual.end, knitr.format, color = "black",
+      background = ifelse(actual.end < planned.end, "red", "green")),
+    delta.das = cell_spec(
+      delta.das, knitr.format, color = "black",
+      background = ifelse(delta.das < das.planned, "red", "green"))) %>% 
+  select(Leg, planned.start, actual.start, planned.end, actual.end, 
+         das.planned, das.actual, delta.das) %>%
+  kable(format = knitr.format,booktabs = TRUE, escape = FALSE) %>% 
+  kable_styling(bootstrap_options = c("striped","hover","condensed"), 
+                full_width = FALSE) 
+```
+
+## Planned vs. actual **survey** days at sea (DAS)
+
+How many days has the ship been conducting acoustic transect sampling versus how many days were planned? This is derived from the acoustic data collected along planned transects, and excludes transits between transects and to/from ports of call. Red cells indicate differences between actual and planned dates or values.  
+
+```{r survey-summary}
+das.summary %>% 
+  filter(!is.na(actual.start)) %>% 
+  mutate(
+    survey.start = cell_spec(
+      survey.start, knitr.format, color = "black",
+      background = ifelse(survey.start >= planned.start, "red", "green")),
+    survey.end = cell_spec(
+      survey.end, knitr.format, color = "black",
+      background = ifelse(survey.end < planned.end, "red", "green")),
+    delta.survey = cell_spec(
+      delta.survey, knitr.format, color = "black",
+      background = ifelse(delta.survey < das.planned, "red", "green"))) %>% 
+  select(Leg, planned.start, survey.start, planned.end, survey.end, 
+         das.planned, das.survey, delta.survey) %>%
+  kable(format = knitr.format,booktabs = TRUE, escape = FALSE) %>% 
+  kable_styling(bootstrap_options = c("striped","hover","condensed"), 
+                full_width = FALSE) 
 ```
 
 For questions about this page, please contact Kevin Stierhoff ([kevin.stierhoff\@noaa.gov](mailto:kevin.stierhoff@noaa.gov)).

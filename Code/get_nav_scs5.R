@@ -53,14 +53,7 @@ if (get.nav) {
       arrange(time) %>%
       # Filter data where seconds are in scs.nav.seconds
       filter(round(second(time)) %in% scs.nav.seconds) %>% 
-      select(time, lat, long) %>% 
-      mutate(leg = paste("Leg",
-                         cut(as.numeric(date(time)), 
-                             leg.breaks,
-                             labels = FALSE)),
-             Leg = cut(as.numeric(date(time)), 
-                       leg.breaks, 
-                       labels = FALSE)) 
+      select(time, lat, long) 
     
     # Process and format all VTG (SOG, CMG) files
     nav.vtg <- vtg.files %>% 
@@ -110,14 +103,7 @@ if (get.nav) {
       arrange(time) %>%
       # Filter data where seconds are in scs.nav.seconds
       filter(round(second(time)) %in% scs.nav.seconds) %>% 
-      select(time, lat, long) %>% 
-      mutate(leg = paste("Leg",
-                         cut(as.numeric(date(time)), 
-                             leg.breaks,
-                             labels = FALSE)),
-             Leg = cut(as.numeric(date(time)), 
-                       leg.breaks, 
-                       labels = FALSE)) 
+      select(time, lat, long) 
     
     # Process and format all VTG (SOG, CMG) files
     nav.vtg.tmp <- vtg.to.process %>% 
@@ -144,6 +130,16 @@ if (get.nav) {
 
 # Save snapshot
 saveRDS(logs.snapshot.start, here("Output/logs_snapshot_end.rds"))
+
+# Define leg breaks
+nav <- nav %>% 
+  mutate(leg = paste("Leg",
+                     cut(as.numeric(date(time)), 
+                         leg.breaks,
+                         labels = FALSE)),
+         Leg = cut(as.numeric(date(time)), 
+                   leg.breaks, 
+                   labels = FALSE)) 
 
 # Convert nav to spatial
 nav.sf <- st_as_sf(nav, coords = c("long","lat"), crs = crs.geog) %>% 

@@ -114,9 +114,9 @@ daynight.filter        <- c("Day","Night")# A character string including "Day", 
 
 # Inport dates for classifying data by cruise leg (if desired) -----------------
 # Use start dates of each leg + end date of last leg
-leg.breaks <- as.numeric(lubridate::ymd(c("2025-06-11", "2025-06-27", 
-                                          "2025-07-16", "2025-08-04", 
-                                          "2025-08-24", "2025-09-13",
+leg.breaks <- as.numeric(lubridate::ymd(c("2025-06-11", "2025-06-30", 
+                                          "2025-07-19", "2025-08-08", 
+                                          "2025-08-28", "2025-09-18",
                                           "2025-10-01")))
 
 # Anticipated progress throught the transect plan

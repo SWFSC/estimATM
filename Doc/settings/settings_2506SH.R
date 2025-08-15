@@ -238,10 +238,14 @@ other.color        <- 'gray'
 seine.color <- "white"
 trawl.color <- "black"
 
-# Define species to be analysed
+# Define species to be analysed -------------------
+## CPS species
 cps.spp            <- c("Clupea pallasii","Engraulis mordax","Sardinops sagax",
                         "Scomber japonicus","Trachurus symmetricus", 
                         "Etrumeus acuminatus")
+
+## trouts & salmon, Pacific salmon unid, pink, chum, coho, sockeye, Chinook, steelhead, cutthroat trout
+salmon.spp <- c(161931, 161974, 161975, 161976, 161977, 161979, 161980, 161989, 161983) 
 
 # CUFES -------------------------------------------------------
 cufes.start        <- NA # Start of survey for CUFES filtering

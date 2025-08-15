@@ -20,13 +20,17 @@ if (!require("pak")) install.packages("pak")
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,plotly,lubridate,mapview,kableExtra,leaflet,
                here,bookdown,odbc,DBI,knitr,DT,fs,sf,leafem,naniar,
-               cowplot,RSQLite,xts)
+               cowplot,RSQLite,xts,rnaturalearth,htmltools,janitor)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
 if (!require("surveyR")) pkg_install("SWFSC/surveyR")
 pacman::p_load_gh("SWFSC/atm")
 pacman::p_load_gh("SWFSC/surveyR")
+
+# rnaturalearth data
+pacman::p_load_gh("ropenscilabs/rnaturalearthdata")
+pacman::p_load_gh("ropenscilabs/rnaturalearthhires")
 
 # Define method of table generation (whether kable or xtable) for best formatting
 doc.type <- knitr::opts_knit$get('rmarkdown.pandoc.to')
@@ -63,10 +67,11 @@ dir_create(here(c("Figs", "Output")))
 
 ```{r user-settings}
 # User-specified settings
-get.db     <- T # Extract data from trawl database (F for testing)
-get.nav    <- T # Download NOAA Ship nav data
-get.nav.sh <- F # Download NOAA Ship nav data
-copy.files <- T # Copy trawl database
+get.db          <- T # Extract data from trawl database (F for testing)
+get.nav         <- T # Download NOAA Ship nav data
+get.nav.sh      <- F # Download NOAA Ship nav data
+copy.files      <- T # Copy trawl database
+overwrite.files <- T # Overwrite files
 ```
 
 ```{r get-nav}
@@ -561,6 +566,24 @@ if (nrow(lengths.binned) > 0) {
          height = 6, width = 6)
 }
 ```  
+
+```{r protected-salmon-catch}
+# Get protected salmon catch
+salmon.catch <- catch.all %>%
+  filter(cruise %in% cruise.name & ship %in% cruise.ship & 
+           species %in% salmon.spp & netSampleType == 'codend') %>%
+  left_join(select(spp.codes, species, scientificName, commonName)) %>%
+  group_by(haul, species, scientificName, commonName) %>% 
+  summarise(totalNum = sum(totalNum),
+            totalWeight = sum(totalWeight))
+
+salmon.hauls <- filter(haul.all, haul %in% unique(salmon.catch$haul))
+```
+
+```{r protected-salmon-hauls}
+# Get hauls with protected salmon catch
+salmon.hauls <- filter(haul.all, haul %in% unique(salmon.catch$haul))
+```
 
 ```{r flag-outliers}
 # Select outliers
@@ -1360,15 +1383,116 @@ include_graphics(here("Figs/fig_trawl_evoution.png"))
 
 Examine haul paths: green during deployment, black during fishing, and red during recovery.
 
-```{r map-hauls,out.height="8in",out.width="100%"}
+```{r load-spatial-data,include=F}
+# Import shapefiles ------------------------------------------------
+# Get state data
+states <- ne_states(country = 'United States of America', returnclass = 'sf')
+ca     <- filter(states, name == "California")
+
+# Get countries
+countries <- ne_countries(scale = "large", returnclass = "sf") %>%
+  filter(subregion %in% c("Northern America","Central America"))
+
+# Read bathy contours shapefile 
+bathy <- st_read(here("Data/GIS/bathy_contours.shp")) %>% 
+  st_transform(crs.geog) %>% 
+  rename(Depth = Contour)
+
+# Read CA State Waters shapefile
+ca_waters <- st_read(here("Data/GIS/ca_state_waters.shp")) %>% 
+  st_transform(crs.geog)
+
+or_waters <- st_read(here("Data/GIS/or_state_waters.shp")) %>% 
+  st_transform(crs.geog)
+
+# Read CA MPAs shapefile
+ca_mpas <- st_read(here("Data/GIS/ca_mpas.shp")) %>% 
+  st_transform(crs.geog) %>% 
+  mutate(MPA = paste(NAME, Type))
+
+or_mpas <- st_read(here("Data/GIS/or_mpas.shp")) %>% 
+  st_transform(crs.geog) 
+
+wc_mpas <- st_read(here("Data/GIS/wc_mpas.shp")) %>% 
+  st_transform(crs.geog) 
+
+nms_bounds <- st_read(here("Data/GIS/national_marine_sanctuaries.shp"))
+
+# Read MPA shapefiles  -----------------------------------------
+# Canada
+scott_islands_mpa <- st_read(here("Data/GIS/scott_islands_mpa_polygon.shp")) %>% 
+  st_transform(crs.geog) %>% 
+  mutate(MPA = "Scott Islands Protected Marine Area") %>% 
+  st_difference(filter(countries, name == "Canada"))
+
+pacific_rim_mpa <- st_read(here("Data/GIS/pacific_rim_reserve_polygon.shp")) %>% 
+  st_transform(crs.geog) %>% 
+  mutate(MPA = "Pacific Rim National Park Reserve") 
+
+# Mexico
+baja_mpas <- st_read(here("Data/GIS/baja_mpas.shp")) %>% 
+  st_transform(crs.geog)
+
+mex_mpas <- st_read(here("Data/GIS/mex_mpas.shp")) %>% 
+  st_transform(crs.geog)
+```
+
+```{r map-hauls,out.height="10in",out.width="100%"}
+# Create color palette for MPAs
+## CA and OR MPAs
+all.mpa.types <- as.factor(c(unique(as.character(ca_mpas$Type)), 
+                             unique(as.character(or_mpas$Label))))
+
+mpaPal  <- colorFactor(topo.colors(10), all.mpa.types)
+
+## All West Coast MPAs
+mpaPalWC <- colorFactor(topo.colors(10), unique(wc_mpas$Design))
+
+## National Marine Sanctuaries
+mpaPalNMS  <- colorFactor(topo.colors(10), as.factor(unique(nms_bounds$NAME)))
+
+# Create color palette for Mexico MPAs
+all.mpa.types.mex <- as.factor(c(unique(as.character(baja_mpas$NOMBRE)),
+                                 unique(as.character(mex_mpas$NOMBRE))))
+
+mpaPalMex  <- colorFactor(topo.colors(10), all.mpa.types.mex)
+
+# Create color palette for planned transects
+txPal    <- colorFactor(wpt.colors, wpt.types)
+trawlPal <- c('#00CD66', '#0000FF', '#A020F0',
+              '#F5DEB3', '#00FFFF', '#FF0000')
+
 # Create color palette for trawl periods
 trawlPathPal <- colorFactor(c("blue","black","red"), c("Deployment","Fishing","Recovery"))
+
+# Set padding around data  
+imap.bounds <- map_bounds(haul$startLatDecimal, haul$startLongDecimal, 0.1) 
 
 # Provider tiles info: http://leaflet-extras.github.io/leaflet-providers/preview/index.html
 if (exists("nav.paths.sf")) {
   i.map <- leaflet() %>% 
     # Add provider tiles
     addProviderTiles(providers$Esri.NatGeoWorldMap) %>%
+    # Add National Marine Sanctuaries
+    addPolygons(data = nms_bounds, color = "#000414", weight = 2, fillColor = ~mpaPal(NAME),
+                fillOpacity = 0.25, label = ~htmlEscape(NAME), group = "U.S. MPAs") %>%
+    # Add State waters
+    addPolygons(data = or_waters, weight = 2, fillColor = "transparent", 
+                opacity = 0.75,
+                label = ~htmlEscape("OR State Waters"),
+                group = "State Waters") %>%
+    addPolygons(data = ca_waters, weight = 2, fillColor = "transparent",
+                opacity = 0.75,
+                label = ~htmlEscape("CA State Waters"),
+                group = "State Waters") %>%
+    # Add West Coast MPAs
+    addPolygons(data = wc_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalWC(Design),
+                fillOpacity = 0.3, label = ~htmlEscape(Site_Nm), group = "State MPAs") %>%
+    # Add Canadian MPAs
+    addPolygons(data = scott_islands_mpa, color = "#000414", weight = 2, 
+                label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
+    addPolygons(data = pacific_rim_mpa, color = "#000414", weight = 2, 
+                label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
     # Add nav data
     addPolylines(data = nav.paths.sf, color = "#000414", weight = 1, 
                  label = ~leg, group = "Vessel Track") %>%
@@ -1381,7 +1505,13 @@ if (exists("nav.paths.sf")) {
     addCircleMarkers(data = cluster.catch.sf, radius = 5, color = "#000000", stroke = TRUE, weight = 2,
                      opacity = 0.8, fillOpacity = 1, fillColor =  "white",
                      popup = ~popup, label = ~label,
-                     group =  "Trawls") %>% 
+                     group =  "Trawls") %>%
+    # Add trawls with procted salmon catch
+    addCircleMarkers(data = filter(haul.locs.sf, haul %in% salmon.hauls$haul), 
+                     radius = 5, color = "#000000", stroke = TRUE, weight = 2,
+                     opacity = 0.8, fillOpacity = 1, fillColor =  "green",
+                     popup = ~label, label = ~label,
+                     group =  "Trawls-Salmon") %>%
     # Add scale bar
     addScaleBar(position = "bottomright") %>%
     # Add map coordinates
@@ -1389,7 +1519,19 @@ if (exists("nav.paths.sf")) {
     # Add measurement tool
     addMeasure(primaryLengthUnit = "miles", secondaryLengthUnit = "km",
                primaryAreaUnit = "sqmiles", secondaryAreaUnit = "sqmeters",
-               position = "topleft")
+               position = "topleft") %>% 
+    # Add layer controls
+    addLayersControl(
+      baseGroups = c("Esri.NatGeoWorldMap", "Esri.OceanBasemap",
+                     "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
+      overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs",
+                        "State Waters", "Exclusive Economic Zones", 
+                        "Vessel Track", "Vessel Positions", "Trawls-Salmon"),
+      options = layersControlOptions(collapsed = FALSE)) %>% 
+    hideGroup(c("Exclusive Economic Zones","Trawls-Salmon",
+                "Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs")) %>% 
+    fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
+              imap.bounds$range.lon[2], imap.bounds$range.lat[2])
   
   # Add Shimada data
   if (exists("nav.paths.sh.sf"))
@@ -1452,6 +1594,9 @@ cluster.check %>%
   scroll_box(height = "250px")
 ```
 
+### Protected salmon hauls
+
+
 ## Catches
 ### Catch data - All
 
@@ -1493,6 +1638,23 @@ catch.comp %>%
   row_spec(0, align = c("c")) %>%
   collapse_rows(columns = 1) %>% 
   scroll_box(height = "250px")  
+```
+
+### Catch data - Protected salmon
+
+List catches with protected salmon present. A total of `r sum(salmon.catch$totalNum, na.rm = T)` protected salmon have been collected.
+
+```{r salmon-catch-table}
+salmon.catch %>% 
+  select(-species) %>% 
+  adorn_totals(where = "row") %>% 
+  kable(format = knitr.format,booktabs = TRUE, escape = FALSE,
+        align = c("c","l",rep("r",ncol(salmon.catch) - 2)),
+        digits = c(rep(0, 6), 4)) %>% 
+  kable_styling(bootstrap_options = c("striped","hover","condensed"), 
+                full_width = FALSE) %>%
+  column_spec(3, italic = TRUE) %>%
+  row_spec(0, align = c("c")) 
 ```
 
 ### Catch errors

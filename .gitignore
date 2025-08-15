@@ -95,7 +95,9 @@ Doc/*.pptx
 Doc/tex2pdf*
 Doc/*.toc
 Doc/archive
+Doc/images*
 Doc/rsconnect/*
+Doc/trackSurvey_files/*
 Figs/*.pdf
 Figs/*.png
 Figs/*.jpg

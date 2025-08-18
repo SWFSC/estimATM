@@ -200,6 +200,7 @@ if (trawl.source == "Access") {
     left_join(select(events, cruise, ship, haul, collection)) %>% # Add collection
     left_join(itis.codes) %>% 
     # left_join(spp.codes) %>% 
+    mutate_at(vars(cruise, collection), as.numeric) %>% 
     select(cruise, ship, haul, collection, everything())
   
   specimens <- specimens %>% 

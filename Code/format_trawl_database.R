@@ -146,15 +146,6 @@ if (trawl.source == "Access") {
     mutate(startLatDecimal = NA, startLongDecimal = NA,
            stopLatDecimal = NA, stopLongDecimal = NA)
   
-  # Format catch data
-  catch.data <- catch.data %>% 
-    rename(cruise = SURVEY, haul = EVENT_ID, species_code = SPECIES_CODE) %>%
-    left_join(select(ships, SHIP, ship)) %>% 
-    left_join(select(events, cruise, ship, haul, collection)) %>% # Add collection
-    left_join(itis.codes) %>% 
-    # left_join(spp.codes) %>% 
-    select(cruise, ship, haul, collection, everything())
-  
   # Format gear accessory table
   gear.accy <- gear.accy %>% 
     filter(SURVEY == cruise.name) %>% 
@@ -254,25 +245,78 @@ if (trawl.source == "Access") {
   
   # Build catch table
   ## Get presence-only samples
-  catch.present <- samples %>%
-    filter(SAMPLE_TYPE=="Present") %>% 
-    mutate(presenceOnly = "Y")
+  catch.present <- samples%>%
+    filter(SAMPLE_TYPE=="Present")%>%
+    mutate(presenceOnly="Y")%>%
+    left_join(spp.codes)%>%
+    mutate(commonName=case_when(commonName=="None"~scientificName,.default=commonName))%>%
+    select(cruise,ship,haul,collection,species,commonName,scientificName)
   
-  ## Get all other catch samples
-  catch.summ <- catch.data %>%
-    mutate(presenceOnly = "N") 
+  # we need to build the sample part of the catch table
+  # includes species specific sample weights from individual measured cps and 
+  # remainder weights of those measured cps 
+  
+  # need to get suSampleWt and subSampleCount of random individuals measured 
+  sp_subsampleWt_count <- specimens %>%
+    left_join(spp.codes)%>%
+    group_by(cruise,ship,haul,collection,species,commonName,scientificName)%>%
+    filter(isRandomSample=="Y")%>%
+    summarise(subSampleCount=length(weightg),
+              subSampleWtkg=sum(weightg/1000)) ### specimen weights are in kg right now 
+  
+  # getting basket data with species info 
+  basket_samples <- baskets %>%
+    left_join(samples)%>%
+    left_join(spp.codes)
+  
+  
+  # weight of animalia in sorted baskets is given to subsampling weight instead of remainder weight
+  animalia.sub.wts <- basket_samples %>%
+    filter(commonName=="Animalia" & BASKET_TYPE=="Toss")%>%
+    group_by(cruise,ship,haul,collection,species,commonName,scientificName,BASKET_TYPE) %>%
+    summarise(subSampleWtkg = sum(WEIGHT))
+  
+  # need to rowbind subweight 
+  sub.wts <- bind_rows(sp_subsampleWt_count,animalia.sub.wts)%>%
+    select(!BASKET_TYPE)
+  
+  # get remainder weight of 
+  rem.wts <- basket_samples %>%
+    filter(!commonName=="Animalia" & !SAMPLE_TYPE=="Mix1")%>%
+    filter(BASKET_TYPE=="Toss")%>%
+    group_by(cruise,ship,haul,collection,species,commonName,scientificName,BASKET_TYPE) %>%
+    summarise(
+      remwt = sum(WEIGHT))%>%
+    select(!BASKET_TYPE)
+  
+  # need to join rem weights and subsampling weights
+  sorted.weights <- left_join(sub.wts,rem.wts)%>%
+    group_by(haul,commonName,scientificName) %>%
+    mutate(tot.wt.sort=rowSums(across(c(subSampleWtkg, remwt)), na.rm = TRUE))%>%
+    group_by(haul) %>%
+    mutate(total_haul_wt=sum(tot.wt.sort,na.rm=T),
+           sp.fraction=(tot.wt.sort/total_haul_wt))
+  
+  unsort.basket.wts <-   basket_samples %>%
+    filter(SAMPLE_TYPE=="Mix1" & BASKET_TYPE=="Toss")%>%
+    group_by(haul) %>%
+    summarise(tot.wt.unsort = sum(WEIGHT))%>%
+    select(haul,tot.wt.unsort)
+  
+  catch_calc_table <- left_join(sorted.weights,unsort.basket.wts)%>%
+    mutate(sp.est.unsort=case_when(!is.na(tot.wt.unsort)~(round(sp.fraction*tot.wt.unsort,3)),.default=tot.wt.unsort),
+           remainingSubSampleWtkg=sp.est.unsort+remwt)%>%
+    mutate(presenceOnly="N")
+  
+  
+  catch.summ <- catch_calc_table %>%
+    select(cruise,ship,haul,species,commonName,scientificName,subSampleCount,subSampleWtkg,remainingSubSampleWtkg,presenceOnly)
   
   ## Combine catch and presence-only
   catch.all <- catch.summ %>% 
     bind_rows(catch.present) %>%
     arrange(haul) 
   
-  # need to get subSampleWt of random individuals measured 
-  sp_subsampleWt_count <- specimens %>%
-    group_by(cruise, ship, haul, collection, species) %>%
-    filter(isRandomSample == "Y")%>%
-    summarise(subSampleWtkg = sum(weightg, na.rm = TRUE)/1000, # Check the na.rm
-              subSampleCount = length(weightg))
   
   # Create final tables -------------------------------------------
   ## Final haul table 
@@ -287,6 +331,7 @@ if (trawl.source == "Access") {
   catch.all <- catch.all %>%
     mutate(selectionReason = NA_character_, 
            flaggedData = NA_character_,
+           notes = NA_character_,
            netSampleType="codend") %>%
     mutate_at(vars(haul, collection, species), as.numeric) %>% 
     left_join(sp_subsampleWt_count) %>%

@@ -336,8 +336,6 @@ if (trawl.source == "Access") {
            netSampleType="codend") %>%
     mutate_at(vars(haul, collection, species), as.numeric) %>% 
     left_join(sp_subsampleWt_count) %>%
-    mutate(countcheck = SAMPLED_NUMBER == subSampleCount,
-           remainingSubSampleWtkg = round(WEIGHT_IN_HAUL - SAMPLED_WEIGHT, 3)) %>% 
     mutate(flaggedData = NA_character_,
            hasLF = case_when(species %in% c(161729, 161828, 172412, 168586, 164792, 161746, 551209,
                                             161974, 161975, 161976, 161977, 161979, 161980, 161989) ~ "Y",

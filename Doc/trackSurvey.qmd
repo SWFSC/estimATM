@@ -514,7 +514,7 @@ das.actual <- nav %>%
   select(Leg, everything(), -leg2)
 
 # Load acoustic data, to summarise actual survey days
-load("C:/KLS/CODE/Github/estimATM/2506SH/Output/nasc_cps.Rdata")
+load(here("Output/nasc_cps.Rdata"))
 
 das.survey <- nasc.cps %>% 
   # Calculate legs using the actual leg dates

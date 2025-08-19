@@ -1741,6 +1741,7 @@ if (nrow(catch) > 0) {
   # Calculate total weight of all CPS species
   haul.summ.wt <- haul.summ.wt %>% 
     replace(is.na(.), 0) %>%
+    ungroup() %>% 
     mutate(AllCPS = rowSums(select(., -haul, -cluster, -sample.type))) %>%
     arrange(haul)
   

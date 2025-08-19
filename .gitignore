@@ -131,6 +131,7 @@ Output/saildrone_mapview_files/*
 Output/shapefiles
 Output/tables/*
 Output/tables_updated/*
+Output/trackSurvey/*
 Output/waypoints/*
 Output/waypoints_updated/*
 Reviews/*

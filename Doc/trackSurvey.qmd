@@ -486,7 +486,11 @@ Survey progress for the **`r survey.name`**
 
 A map showing the the anticipated (left) versus actual (right) survey progress.
 
-![](images/fig_compare_survey_progress.png){fig-align="center"}
+```{r survey-progress-map}
+#| fig-height: 10
+#| fig-width: 10 
+map.plan.comp
+```
 
 ```{r summarize-das}
 # Summarise planned DAS

@@ -370,8 +370,8 @@ wpt.summ <- wpts %>%
   group_by(Transect) %>% 
   slice(which.max(Longitude))
 
-if (file.exists(here("Data/Nav/transect_plan.csv"))) {
-tx.plan <- read_csv(here("Data/Nav/transect_plan.csv")) %>% 
+if (file.exists(here("Data/Nav", paste0("transect_plan_", survey.name, ".csv")))) {
+tx.plan <- read_csv(here("Data/Nav", paste0("transect_plan_", survey.name, ".csv"))) %>% 
   mutate(date = mdy(date),
          Transect = floor(tx.plan)) %>% 
   left_join(select(wpt.summ, Transect, Latitude))

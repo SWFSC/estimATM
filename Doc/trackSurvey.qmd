@@ -314,6 +314,117 @@ ggsave(map.plan.comp, filename = here("Figs/fig_compare_survey_progress.png"),
        height = 10, width = 10)
 ```
 
+```{r plot-survey-progress}
+# Load backscatter data
+load(here("Output/nasc_cps.Rdata"))
+
+# Summarize backscatter data by vessel and date
+nasc.summ.all <- nasc.cps %>% 
+  mutate(date.pdt = with_tz(datetime, tzone = "America/Los_Angeles")) %>%
+  mutate(date = date(date.pdt),
+         vessel.name = survey.vessel.primary) %>% 
+  mutate(vessel = case_when(
+    vessel.name == "SH" ~ "Shimada",
+    vessel.name == "LM" ~ "Lisa Marie",
+    vessel.name == "LBC" ~ "Long Beach Carnage")) %>% 
+  group_by(vessel, date) %>% 
+  summarise(lat = mean(lat)) %>% 
+  mutate(key = paste(vessel, date))
+
+# Summarize underway nav data by vessel and date
+nav.summ.fsv <- nav %>% 
+  mutate(time.pdt = with_tz(time, tzone = "America/Los_Angeles")) %>% 
+  mutate(vessel = survey.vessel,
+         date = date(time.pdt)) %>% 
+  group_by(vessel, date) %>% 
+  summarise(lat = mean(lat)) %>% 
+  mutate(key = paste(vessel, date)) %>% 
+  mutate(sampling = case_when(
+    key %in% unique(nasc.summ.all$key) ~ TRUE,
+    TRUE ~ FALSE))
+ 
+# Combine all nav data
+nav.summ.all <- nav.summ.fsv #%>% bind_rows(nav.summ.lbc) %>% bind_rows(nav.summ.lm) 
+
+# Format leg breaks
+leg.breaks <- data.frame(
+  # Get leg end dates
+  date = ymd(leg.ends[c(1, seq(2, length(leg.ends), 2))]),
+  # Get leg labels
+  leg = c("Start", paste("Leg", seq(1, (length(leg.ends)/2), 1)))
+)
+
+# Create landmarks data.frame
+landmarks <- data.frame(
+  lat = c(36.646, 40.50),
+  name = c("Monterey","Cape Mendocino"),
+  date = mean(c(min(leg.ends),max(leg.ends))))
+
+# Anticipated progress through the transect plan
+tx.breaks <- c(min(transects.sf$Transect[transects.sf$Type == "Compulsory"]),
+               tx.breaks[2:length(tx.breaks)-1],
+               max(transects.sf$Transect[transects.sf$Type == "Compulsory"]))
+
+wpt.summ <- wpts %>% 
+  filter(Type == "Compulsory", Region %in% wpt.regions) %>%
+  group_by(Transect) %>% 
+  slice(which.max(Longitude))
+
+if (file.exists(here("Data/Nav/transect_plan.csv"))) {
+tx.plan <- read_csv(here("Data/Nav/transect_plan.csv")) %>% 
+  mutate(date = mdy(date),
+         Transect = floor(tx.plan)) %>% 
+  left_join(select(wpt.summ, Transect, Latitude))
+}
+
+# Calculate goal transects
+tx.goals <- wpts %>% 
+  filter(Transect %in% tx.breaks, Type %in% c("Compulsory")) %>% 
+  group_by(Transect) %>% 
+  slice(which.max(Longitude)) %>% 
+  ungroup() %>% 
+  mutate(label = paste("Leg", seq_along(Transect)-1),
+         date = min(leg.ends) - days(10)) %>% 
+  mutate(label = case_when(
+    label == "Leg 0" ~ "Start",
+    TRUE ~ label
+  ))
+
+# Plot survey progress
+vessel.progress.plot <- ggplot() +  #nav.summ.all, aes(date, lat, group = vessel, colour = vessel)
+  geom_line(linewidth = 1, linetype = "dashed") + 
+  # planned transects
+  geom_line(data = tx.plan, aes(date, Latitude), inherit.aes = FALSE,
+            linewidth = 1, linetype = "dashed", colour = "gray50") +
+  geom_point(data = tx.plan, aes(date, Latitude), inherit.aes = FALSE,
+             size = 2, shape = 21, colour = "gray50", fill = "white") +
+  # # planned transects - revised
+  # geom_line(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
+  #           linewidth = 1, linetype = "dashed", colour = "blue") +
+  # geom_point(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
+  #            size = 2, shape = 21, colour = "blue", fill = "white") +
+  geom_vline(xintercept = leg.breaks$date, linetype = "dashed") +
+  geom_hline(yintercept = tx.goals$Latitude, linetype = "dashed") +
+  geom_text(data = leg.breaks, aes(date, 31, label = leg), inherit.aes = FALSE) +
+  geom_text(data = tx.goals, aes(date, Latitude + 0.4, label = label), inherit.aes = FALSE) +
+  # geom_text(data = landmarks, aes(date, lat+0.25, label = name), inherit.aes = FALSE) +
+  geom_line(data = nav.summ.all, aes(date, lat, group = vessel, colour = vessel)) + 
+  # geom_line(data = nav.summ.all, aes(date, lat, group = vessel, colour = vessel),
+  #           linewidth = 1, linetype = "dashed") + 
+  geom_point(data = nav.summ.all, aes(date, lat, group = vessel, colour = vessel, fill = sampling), 
+             size = 2, shape = 21) +
+  scale_colour_discrete(name = "Vessel") +
+  scale_fill_manual(name = "Sampling", values = c("TRUE" = 'black', "FALSE" = 'white')) +
+  scale_x_date(date_breaks = "10 days") + 
+  labs(x = "Date", y = "Latitude") + 
+  theme_bw()
+
+ggsave(vessel.progress.plot, 
+       filename = here("Figs/fig_vessel_progress.png"), 
+       height = 7, width = 12)
+```
+
+
 ```{r create-mapview-map, eval=FALSE}
 # Map compulsory and adaptive transects by Leg
 mapview(filter(transects.sf, !is.na(Leg), Type %in% c("Compulsory","Adaptive")), zcol = "Leg") + 
@@ -489,7 +600,21 @@ A map showing the the anticipated (left) versus actual (right) survey progress.
 ```{r survey-progress-map}
 #| fig-height: 10
 #| fig-width: 10 
+
+# Print plan map
 map.plan.comp
+```
+
+# Survey progress plot
+
+Actual survey progress by _`r survey.vessel`_ (pink line) relative to the original plan (gray line). Filled points indicate dates when acoustic/trawl sampling occurred (i.e., survey days), while open points indicate transits. The vertical and horizontal dashed lines represent the expected date and latitude at the end of each planned survey leg, respectively.  
+
+```{r survey-progress-plot}
+#| fig-height: 7
+#| fig-width: 12 
+
+# Print plan plot
+vessel.progress.plot
 ```
 
 ```{r summarize-das}

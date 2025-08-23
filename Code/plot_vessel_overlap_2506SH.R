@@ -113,12 +113,12 @@ wpt.summ <- wpts %>%
   group_by(Transect) %>% 
   slice(which.max(Longitude))
 
-tx.plan <- read_csv(here("Data/Nav/transect_plan.csv")) %>% 
+tx.plan <- read_csv(here("Data/Nav/transect_plan_2506SH.csv")) %>% 
   mutate(date = mdy(date),
          Transect = floor(tx.plan)) %>% 
   left_join(select(wpt.summ, Transect, Latitude))
 
-tx.plan2 <- read_csv(here("Data/Nav/transect_plan.csv")) %>% 
+tx.plan2 <- read_csv(here("Data/Nav/transect_plan_2506SH.csv")) %>% 
   mutate(date = mdy(date),
          Transect = floor(tx.plan2)) %>% 
   left_join(select(wpt.summ, Transect, Latitude))

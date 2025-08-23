@@ -424,7 +424,6 @@ ggsave(vessel.progress.plot,
        height = 7, width = 12)
 ```
 
-
 ```{r create-mapview-map, eval=FALSE}
 # Map compulsory and adaptive transects by Leg
 mapview(filter(transects.sf, !is.na(Leg), Type %in% c("Compulsory","Adaptive")), zcol = "Leg") + 
@@ -607,7 +606,7 @@ map.plan.comp
 
 # Survey progress plot
 
-Actual survey progress by _`r survey.vessel`_ (pink line) relative to the original plan (gray line). Filled points indicate dates when acoustic/trawl sampling occurred (i.e., survey days), while open points indicate transits. The vertical and horizontal dashed lines represent the expected date and latitude at the end of each planned survey leg, respectively.  
+Actual survey progress by *`r survey.vessel`* (pink line) relative to the original plan (gray line). Filled points indicate dates when acoustic/trawl sampling occurred (i.e., survey days), while open points indicate transits. The vertical and horizontal dashed lines represent the expected date and latitude at the end of each planned survey leg, respectively.
 
 ```{r survey-progress-plot}
 #| fig-height: 7

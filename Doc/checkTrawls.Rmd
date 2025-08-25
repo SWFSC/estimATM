@@ -1610,9 +1610,6 @@ cluster.check %>%
   scroll_box(height = "250px")
 ```
 
-### Protected salmon hauls
-
-
 ## Catches
 ### Catch data - All
 

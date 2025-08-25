@@ -59,6 +59,9 @@ settings.files <- dir(here("Doc/settings"))
 prj.settings <- settings.files[str_detect(settings.files, paste0("settings_", prj.name, ".R"))]
 
 source(here("Doc/settings", prj.settings))
+
+# Set allowances for transit days during the survey
+das.survey.transit <- 1
 ```
 
 ```{r processing-controls}
@@ -624,8 +627,6 @@ das.planned <- data.frame(
   planned.end = leg.ends[seq(2, length(leg.ends), 2)]) %>% 
   mutate(das.planned = as.numeric(planned.end - planned.start) + 1)
 
-
-
 # Summarise actual DAS
 das.actual <- nav %>% 
   # Calculate legs using the actual leg dates
@@ -633,6 +634,7 @@ das.actual <- nav %>%
                     as.numeric(leg.ends),
                     labels = FALSE)) %>% 
   filter(!is.na(Leg), leg2 %% 2 != 0) %>% 
+  filter(SOG > 1) %>% 
   group_by(leg2) %>% 
   summarise(
     actual.start = min(date(time)),
@@ -707,7 +709,7 @@ These tables are meant to summarize planned versus realized survey effort. **Not
 
 ## Planned vs. actual days at sea (DAS)
 
-How many days has the ship been on the water versus how many days were planned? This is derived from the entire vessel track, regardless of whether we were conducting a survey, including transits, etc. Red cells indicate differences between actual and planned dates or values.
+How many days has the ship been on the water versus how many days were planned? This is derived from the entire vessel track, regardless of whether we were conducting a survey, including transits, etc. **Red** cells indicate differences between actual and planned dates or values.
 
 ```{r das-summary}
 das.summary %>% 
@@ -715,13 +717,13 @@ das.summary %>%
   mutate(
     actual.start = cell_spec(
       actual.start, knitr.format, color = "black",
-      background = ifelse(actual.start >= planned.start, "red", "green")),
+      background = ifelse(actual.start >= planned.start, "red", "white")),
     actual.end = cell_spec(
       actual.end, knitr.format, color = "black",
-      background = ifelse(actual.end < planned.end, "red", "green")),
+      background = ifelse(actual.end < planned.end, "red", "white")),
     delta.das = cell_spec(
       delta.das, knitr.format, color = "black",
-      background = ifelse(delta.das < das.planned, "red", "green"))) %>% 
+      background = ifelse(delta.das < das.planned, "red", "white"))) %>% 
   select(Leg, planned.start, actual.start, planned.end, actual.end, 
          das.planned, das.actual, delta.das) %>%
   kable(format = knitr.format,booktabs = TRUE, escape = FALSE) %>% 
@@ -731,7 +733,7 @@ das.summary %>%
 
 ## Planned vs. actual **survey** days at sea (DAS)
 
-How many days has the ship been conducting acoustic transect sampling versus how many days were planned? This is derived from the acoustic data collected along planned transects, and excludes transits between transects and to/from ports of call. Red cells indicate differences between actual and planned dates or values.
+How many days has the ship been conducting acoustic transect sampling versus how many days were planned? This is derived from the acoustic data collected along planned transects, and excludes transits between transects and to/from ports of call. Red cells indicate differences between actual and planned dates or values. These values allow for **`r das.survey.transit`** DAS for transit at the beginning and end of each survey leg, when acoustic transect sampling may not actually be conducted. Values in [**red**]{style="color:red"} below are a possible reason for concern.
 
 ```{r survey-summary}
 das.summary %>% 
@@ -739,13 +741,17 @@ das.summary %>%
   mutate(
     survey.start = cell_spec(
       survey.start, knitr.format, color = "black",
-      background = ifelse(survey.start >= planned.start, "red", "green")),
+      background = ifelse(survey.start > planned.start + days(das.survey.transit), 
+                          "red", "white")),
     survey.end = cell_spec(
       survey.end, knitr.format, color = "black",
-      background = ifelse(survey.end < planned.end, "red", "green")),
+      background = ifelse(survey.end < planned.end - days(das.survey.transit), 
+                          "red", "white")),
     delta.survey = cell_spec(
       delta.survey, knitr.format, color = "black",
-      background = ifelse(delta.survey < das.planned, "red", "green"))) %>% 
+      # 2 DAS seems like  reasonable number of transit days at the beginning/end
+      # of a survey leg, so anything greater than that is reason for concern.
+      background = ifelse(delta.survey > das.survey.transit*2, "red", "white"))) %>% 
   select(Leg, planned.start, survey.start, planned.end, survey.end, 
          das.planned, das.survey, delta.survey) %>%
   kable(format = knitr.format,booktabs = TRUE, escape = FALSE) %>% 

@@ -1,6 +1,6 @@
 ---
 title: "Estimate CPS biomass from Acoustic-Trawl Surveys"
-author: "Kevin L. Stierhoff (Maintainer), Juan P. Zwolinski, and David A. Demer"
+author: "Kevin L. Stierhoff (Maintainer), Josiah S. Renfree, Juan P. Zwolinski, and David A. Demer"
 date: '`r format(Sys.time(), format = "%F %T", usetz = TRUE)`'
 csl: csl/ices-journal-of-marine-science.csl
 css: css/ast.css
@@ -95,9 +95,9 @@ get.db            <- T # Download data from databases (fast; generally TRUE)
 get.nav           <- T # Download primary vessel nav data from ERDDAP
 get.nav.sd        <- F # Download Saildrone nav data from ERDDAP
 get.nav.sh        <- F # Download NOAA Ship nav data
-copy.files        <- T # Copy data files to local directory 
+copy.files        <- F # Copy data files to local directory 
 process.csv       <- T # Process Echoview files
-save.figs         <- T # Draw new figures and maps
+save.figs         <- F # Draw new figures and maps
 download.hab      <- F # Download habitat map
 process.scs       <- F # Process SCS data 
 
@@ -108,8 +108,8 @@ do.imap           <- T # Create interactive Leaflet map
 save.imap         <- F # Save Leaflet maps
 overwrite.files   <- T # Overwrite files (TRUE if files have changed)
 overwrite.csv     <- T # Overwrite CSV files (TRUE if files have changed)
-process.csv.all   <- T # Process all acoustic backscatter files (F = new files only)
-process.csv.krill <- T # Process krill backscatter data
+process.csv.all   <- F # Process all acoustic backscatter files (F = new files only)
+process.csv.krill <- F # Process krill backscatter data
 process.cufes     <- F # Process CUFES data (no CUFES sampling post-2023)
 process.cal       <- F # Process calibration results
 process.ctd       <- F # Process CTD and UCTD casts
@@ -132,7 +132,7 @@ This report presents results from the **`r survey.name.long` (`r survey.name`)**
 The results were generated using R and Rstudio:  
 
 * `r sessionInfo()$R.version$version.string`
-* Last run: `r session.info[["platform"]]$date`
+* Last run: `r format(Sys.time(), "%F %T", tz = "America/Los_Angeles", usetz = TRUE)`
 
 ## Controls and Settings
 
@@ -8266,8 +8266,189 @@ save(L.abund.table, abund.summ, file = here("Output/abundance_table_all.Rdata"))
 write_csv(abund.summ, here("Output/abundance_table_all.csv"))
 ```
 
+```{r biomass-summ-all,results='asis'}
+# Get survey estimates for all strata
+be.all     <- be %>% 
+  mutate(Region = "Core") %>% 
+  select(Species, Stock, Region, everything()) %>% 
+  filter(Stratum == "All")
+be.all.ns  <- be.ns %>%
+  mutate(Region = "Nearshore") %>%
+  select(Species, Stock, Region, everything()) %>%
+  filter(Stratum == "All")
+be.all.nse <- be.nse %>% 
+  mutate(Region = "NSE") %>% 
+  select(Species, Stock, Region, everything()) %>% 
+  filter(Stratum == "All")
+
+# Summarise biomass for all regions included in the final estimates
+be.all.var <- be.all %>% 
+  bind_rows(be.all.ns) %>%
+  select(Species, Stock, biomass.sd) %>% 
+  group_by(Species, Stock) %>%
+  summarise(biomass.sd = sqrt(sum(biomass.sd^2)))
+
+# Combine core and nearshore biomass
+be.all.summ <- be.all %>% 
+  bind_rows(be.all.ns) %>%
+  group_by(Species, Stock) %>% 
+  select(-Region, -Stratum, -biomass.sd, -biomass.cv) %>% 
+  summarise_all(list(sum)) %>% 
+  left_join(be.all.var) %>% 
+  mutate(biomass.cv = biomass.sd/Biomass*100)
+```
+
+```{r biomass-table-all,results='asis'}
+# Format bootstrap estimate tables
+be.table <- be  %>%
+  rename(Name = Species,
+         Number           = Stratum,
+         Transects        = nTransects,
+         Clusters         = nClusters,
+         Individuals      = nIndiv,
+         "$\\hat{B}$"     = Biomass,
+         SD               = biomass.sd,
+         CV               = biomass.cv,
+         "CI$_{L,95\\%}$" = lower.ci.B,
+         "CI$_{U,95\\%}$" = upper.ci.B) %>% 
+  select(-SD)  
+
+if (exists("be.ns")) {
+  be.table.ns <- be.ns  %>%
+    rename(Name = Species,
+           Number           = Stratum,
+           Transects        = nTransects,
+           Clusters         = nClusters,
+           Individuals      = nIndiv,
+           "$\\hat{B}$"     = Biomass,
+           SD               = biomass.sd,
+           CV               = biomass.cv,
+           "CI$_{L,95\\%}$" = lower.ci.B,
+           "CI$_{U,95\\%}$" = upper.ci.B) %>% 
+    select(-SD)
+}
+
+if (exists("be.nse")) {
+  be.table.nse <- be.nse  %>%
+    rename(Name = Species,
+           Number           = Stratum,
+           Transects        = nTransects,
+           Clusters         = nClusters,
+           Individuals      = nIndiv,
+           "$\\hat{B}$"     = Biomass,
+           SD               = biomass.sd,
+           CV               = biomass.cv,
+           "CI$_{L,95\\%}$" = lower.ci.B,
+           "CI$_{U,95\\%}$" = upper.ci.B) %>% 
+    select(-SD)
+}
+
+if (exists("be.os")) {
+  be.table.os <- be.os  %>%
+    rename(Name = Species,
+           Number           = Stratum,
+           Transects        = nTransects,
+           Clusters         = nClusters,
+           Individuals      = nIndiv,
+           "$\\hat{B}$"     = Biomass,
+           SD               = biomass.sd,
+           CV               = biomass.cv,
+           "CI$_{L,95\\%}$" = lower.ci.B,
+           "CI$_{U,95\\%}$" = upper.ci.B) %>%
+    select(-SD)  
+}
+
+# Format summary table
+be.table.summ <- be.all.summ %>% 
+  rename(Name = Species,
+         # Number           = Stratum,
+         Transects        = nTransects,
+         Clusters         = nClusters,
+         Individuals      = nIndiv,
+         "$\\hat{B}$"     = Biomass,
+         SD               = biomass.sd,
+         CV               = biomass.cv,
+         "CI$_{L,95\\%}$" = lower.ci.B,
+         "CI$_{U,95\\%}$" = upper.ci.B) %>% 
+  select(-SD)
+``` 
+
 ## Results for anchovy (_Engraulis mordax_)
 ### Northern stock
+#### Biomass estimates
+
+(ref:biomass-anch-n) Biomass estimates (metric tons, t) and their precisions (upper and lower 95% confidence intervals, CI~95%~; and coefficients of variation, CVs) for the northern subpopulation of Northern Anchovy (_Engraulis mordax_) in the core and nearshore survey regions. Stratum areas are nmi^2^.
+
+```{r biomass-anch-n}
+
+be.table.sub.all <- be.table.summ %>% 
+  filter(Name == "Engraulis mordax", Stock == "Northern") %>% 
+  mutate(Region = "All")
+
+be.table.sub <- be.table %>% 
+  filter(Name == "Engraulis mordax", Stock == "Northern") %>% 
+  mutate(Region = "Core") 
+
+if (exists("be.table.ns")) {
+  be.table.sub.ns <- be.table.ns %>%
+    filter(Name == "Engraulis mordax", Stock == "Northern") %>%
+    mutate(Region = "Nearshore")
+  
+  be.table.sub <- be.table %>% 
+    filter(Name == "Engraulis mordax", Stock == "Northern") %>% 
+    mutate(Region = "Core") %>% 
+    bind_rows(be.table.sub.ns) %>% 
+    bind_rows(be.table.sub.all) %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+} else {
+  be.table.sub <- be.table %>% 
+    filter(Name == "Engraulis mordax", Stock == "Northern") %>% 
+    mutate(Region = "Core") %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+}
+
+# Write results to CSV for stock assessors
+be.table.sub %>% 
+  rename("point_estimate" = "$\\hat{B}$",
+         "ci_lower" = "CI$_{L,95\\%}$",
+         "ci_upper" =	"CI$_{U,95\\%}$") %>%
+  write_csv(file = here("Output/biomass_final_Engraulis_mordax_Northern.csv"),
+            na = "")
+
+if (nrow(be.table.sub) != 0) {
+  if (doc.type == "docx") {
+    regulartable(be.table.sub) %>%
+      merge_v(j = c("Region")) %>%
+      add_header(Region  = "",
+                 # Stock    = "",
+                 Number   = "Stratum", Area = "Stratum", Transects = "Stratum", Distance = "Stratum",
+                 Clusters = "Trawl", Individuals = "Trawl",
+                 "$\\hat{B}$" = "Biomass", "CI$_{L,95\\%}$" = "Biomass", "CI$_{U,95\\%}$" = "Biomass",
+                 CV = "Biomass") %>%
+      merge_h(part = "header") %>%
+      align(align = "center",part = "header") %>%
+      autofit()
+  } else {
+    kable(be.table.sub, format = knitr.format, booktabs = FALSE, escape = FALSE,
+          align           = c(rep("l", 1), rep("r",ncol(be.table.sub) - 2)),
+          digits          = c(0),
+          format.args     = list(big.mark = ","),
+          caption = '(ref:biomass-anch-n)') %>%
+      kable_styling(latex_options = c("hold_position","scale_down"),
+                    position = "center",
+                    font_size = 8) %>%
+      row_spec(nrow(be.table.sub), bold = T) %>%
+      collapse_rows(columns = 1, valign = "top") %>%
+      add_header_above(c("Stratum" = 5, "Trawl" = 2, "Biomass" = 4))
+  }
+} else {
+  print("No results for this species/subpopulation.")
+}
+```  
+
+#### Biomass density 
 
 (ref:biom-dens-anch-n) Biomass densities of northern stock of Northern Anchovy (_Engraulis mordax_), per strata, throughout the survey region. The blue numbers represent the locations of trawl clusters with at least one anchovy. The gray line represents the vessel track.
 
@@ -8287,7 +8468,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-disagg-anch-n) Abundance versus standard length ($L_S$, upper panel) and biomass (t) versus $L_S$ (lower panel) for the northern stock of Northern Anchovy (_Engraulis mordax_) in the survey area.
+#### Length-disaggregated abundance
+
+(ref:l-disagg-anch-n) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for the northern stock of Northern Anchovy (_Engraulis mordax_) in the survey area.
 
 ```{r l-disagg-anch-n,fig.cap='(ref:l-disagg-anch-n)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for anchovy
@@ -8306,7 +8489,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-freq-summ-anch-n) Abundance versus standard length ($L_S$, cm) for the northern stock of Northern Anchovy (_Engraulis mordax_).
+#### Abundande-by-length table
+
+(ref:l-freq-summ-anch-n) Abundance versus standard length (cm) for the northern stock of Northern Anchovy (_Engraulis mordax_).
 
 ```{r l-freq-summ-anch-n}
 # Print table for anchovy
@@ -8342,6 +8527,79 @@ if ("Engraulis mordax" %in% unique(abund.summ$Species)) {
 ```
 
 ### Central stock
+#### Biomass estimates
+
+(ref:biomass-anch-c) Biomass estimates (metric tons, t) and their precisions (upper and lower 95% confidence intervals, CI~95%~; and coefficients of variation, CVs) for the central subpopulation of Northern Anchovy (_Engraulis mordax_) in the core and nearshore survey regions. Stratum areas are nmi^2^.
+
+```{r biomass-anch-c}
+be.table.sub.all <- be.table.summ %>% 
+  filter(Name == "Engraulis mordax", Stock == "Central") %>% 
+  mutate(Region = "All")
+
+be.table.sub <- be.table %>% 
+  filter(Name == "Engraulis mordax", Stock == "Central") %>% 
+  mutate(Region = "Core") 
+
+if (exists("be.table.ns")) {
+  be.table.sub.ns <- be.table.ns %>%
+    filter(Name == "Engraulis mordax", Stock == "Central") %>%
+    mutate(Region = "Nearshore")
+  
+  be.table.sub <- be.table %>% 
+    filter(Name == "Engraulis mordax", Stock == "Central") %>% 
+    mutate(Region = "Core") %>% 
+    bind_rows(be.table.sub.ns) %>% 
+    bind_rows(be.table.sub.all) %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+} else {
+  be.table.sub <- be.table %>% 
+    filter(Name == "Engraulis mordax", Stock == "Central") %>% 
+    mutate(Region = "Core") %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+}
+
+# Write results to CSV for stock assessors
+be.table.sub %>% 
+  rename("point_estimate" = "$\\hat{B}$",
+         "ci_lower" = "CI$_{L,95\\%}$",
+         "ci_upper" =	"CI$_{U,95\\%}$") %>%
+  write_csv(file = here("Output/biomass_final_Engraulis_mordax_Central.csv"),
+            na = "")
+
+if (nrow(be.table.sub) != 0) {
+  if (doc.type == "docx") {
+    regulartable(be.table.sub) %>% 
+      merge_v(j = c("Region")) %>%
+      add_header(Region  = "",
+                 # Stock    = "",
+                 Number   = "Stratum", Area = "Stratum", Transects = "Stratum", Distance = "Stratum",
+                 Clusters = "Trawl", Individuals = "Trawl",
+                 "$\\hat{B}$" = "Biomass", "CI$_{L,95\\%}$" = "Biomass", "CI$_{U,95\\%}$" = "Biomass",
+                 CV = "Biomass") %>% 
+      merge_h(part = "header") %>% 
+      align(align = "center",part = "header") %>% 
+      autofit()
+  } else {
+    kable(be.table.sub, format = knitr.format, booktabs = FALSE, escape = FALSE,
+          align           = c(rep("l", 1), rep("r",ncol(be.table.sub) - 2)),
+          digits          = c(0),
+          format.args     = list(big.mark = ","),
+          caption = '(ref:biomass-anch-c)') %>% 
+      kable_styling(latex_options = c("hold_position","scale_down"),
+                    position = "center",
+                    font_size = 8) %>% 
+      row_spec(nrow(be.table.sub), bold = T) %>%
+      collapse_rows(columns = 1, valign = "top") %>%
+      add_header_above(c("Stratum" = 5, "Trawl" = 2, "Biomass" = 4))
+  }
+} else {
+  print("No results for this species/subpopulation.")
+}
+```  
+
+#### Biomass density
 
 (ref:biom-dens-anch-c) Biomass densities of central stock of Northern Anchovy (_Engraulis mordax_), per strata, throughout the survey region. The blue numbers represent the locations of trawl clusters with at least one anchovy. The gray line represents the vessel track.
 
@@ -8362,7 +8620,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-disagg-anch-c) Abundance versus standard length ($L_S$, upper panel) and biomass (t) versus $L_S$ (lower panel) for the central stock of Northern Anchovy (_Engraulis mordax_) in the survey area.
+#### Length-disaggregated abundance
+
+(ref:l-disagg-anch-c) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for the central stock of Northern Anchovy (_Engraulis mordax_) in the survey area.
 
 ```{r l-disagg-anch-c,fig.cap='(ref:l-disagg-anch-c)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for anchovy
@@ -8381,7 +8641,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-freq-summ-anch-c) Abundance versus standard length ($L_S$, cm) for the central stock of Northern Anchovy (_Engraulis mordax_).
+#### Abundande-by-length table
+
+(ref:l-freq-summ-anch-c) Abundance versus standard length (cm) for the central stock of Northern Anchovy (_Engraulis mordax_).
 
 ```{r l-freq-summ-anch-c}
 # Print table for anchovy
@@ -8404,7 +8666,7 @@ if ("Engraulis mordax" %in% unique(abund.summ$Species)) {
       kable(abund.summ.table, booktabs = FALSE,escape = FALSE,longtable = T,
             digits = c(0),
             format.args = list(big.mark = ","),
-            caption = '(ref:l-freq-summ-anch-n)') %>%
+            caption = '(ref:l-freq-summ-anch-c)') %>%
         kable_styling(latex_options = c("striped","repeat_headers")) %>%
         column_spec(1, italic = T) %>% 
         collapse_rows(columns = c(1:2)) %>%
@@ -8417,8 +8679,9 @@ if ("Engraulis mordax" %in% unique(abund.summ$Species)) {
 ```
 
 ### All stocks
+#### Cluster-specific length distributions
 
-(ref:rlf-anchovy) Standard length ($L_S$) frequency distributions of Northern Anchovy (_Engraulis mordax_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum and across all strata (i.e., for the entire survey).
+(ref:rlf-anchovy) Standard length frequency distributions of Northern Anchovy (_Engraulis mordax_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum and across all strata (i.e., for the entire survey).
 
 ```{r rlf-anchovy,out.height='100%',fig.pos='H'}
 # Insert relative length frequency plot for anchovy
@@ -8431,6 +8694,79 @@ if (file.exists(here("Figs/fig_cluster_relative_length_frequency_Engraulis morda
 
 ## Results for sardine (_Sardinops sagax_)
 ### Northern stock
+#### Biomass estimates
+
+(ref:biomass-sar-n) Biomass estimates (metric tons, t) and their precisions (upper and lower 95% confidence intervals, CI~95%~; and coefficients of variation, CVs) for the northern subpopulation of Pacific Sardine (_Sardinops sagax_) in the core and nearshore survey regions. Stratum areas are nmi^2^.
+
+```{r biomass-sar-n}
+be.table.sub.all <- be.table.summ %>% 
+  filter(Name == "Sardinops sagax", Stock == "Northern") %>% 
+  mutate(Region = "All")
+
+be.table.sub <- be.table %>% 
+  filter(Name == "Sardinops sagax", Stock == "Northern") %>% 
+  mutate(Region = "Core") 
+
+if (exists("be.table.ns")) {
+  be.table.sub.ns <- be.table.ns %>%
+    filter(Name == "Sardinops sagax", Stock == "Northern") %>%
+    mutate(Region = "Nearshore")
+  
+  be.table.sub <- be.table %>% 
+    filter(Name == "Sardinops sagax", Stock == "Northern") %>%
+    mutate(Region = "Core") %>% 
+    bind_rows(be.table.sub.ns) %>% 
+    bind_rows(be.table.sub.all) %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+} else {
+  be.table.sub <- be.table %>% 
+    filter(Name == "Sardinops sagax", Stock == "Northern") %>%
+    mutate(Region = "Core") %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+}
+
+# Write results to CSV for stock assessors
+be.table.sub %>% 
+  rename("point_estimate" = "$\\hat{B}$",
+         "ci_lower" = "CI$_{L,95\\%}$",
+         "ci_upper" =	"CI$_{U,95\\%}$") %>%
+  write_csv(file = here("Output/biomass_final_Sardinops_sagax_Northern.csv"),
+            na = "")
+
+if (nrow(be.table.sub) != 0) {
+  if (doc.type == "docx") {
+    regulartable(be.table.sub) %>% 
+      merge_v(j = c("Region")) %>%
+      add_header(Region  = "",
+                 # Stock    = "",
+                 Number   = "Stratum", Area = "Stratum", Transects = "Stratum", Distance = "Stratum",
+                 Clusters = "Trawl", Individuals = "Trawl",
+                 "$\\hat{B}$" = "Biomass", "CI$_{L,95\\%}$" = "Biomass", "CI$_{U,95\\%}$" = "Biomass",
+                 CV = "Biomass") %>% 
+      merge_h(part = "header") %>% 
+      align(align = "center",part = "header") %>% 
+      autofit()
+  } else {
+    kable(be.table.sub, format = knitr.format, booktabs = FALSE, escape = FALSE,
+          align           = c(rep("l", 1), rep("r",ncol(be.table.sub) - 2)),
+          digits          = c(0),
+          format.args     = list(big.mark = ","),
+          caption = '(ref:biomass-sar-n)') %>% 
+      kable_styling(latex_options = c("hold_position","scale_down"),
+                    position = "center",
+                    font_size = 8) %>% 
+      row_spec(nrow(be.table.sub), bold = T) %>%
+      collapse_rows(columns = 1, valign = "top") %>%
+      add_header_above(c("Stratum" = 5, "Trawl" = 2, "Biomass" = 4))
+  }
+} else {
+  print("No results for this species/subpopulation.")
+}
+```  
+
+#### Biomass density
 
 (ref:biom-dens-sar-n) Biomass densities of northern stock of Pacific Sardine (_Sardinops sagax_), per strata, throughout the survey region. The blue numbers represent the locations of trawl clusters with at least one sardine. The gray line represents the vessel track.
 
@@ -8451,7 +8787,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-disagg-sar-n) Abundance versus standard length ($L_S$, upper panel) and biomass (t) versus $L_S$ (lower panel) for the northern stock of Pacific Sardine (_Sardinops sagax_) in the survey area.
+#### Length-disaggregated abundance
+
+(ref:l-disagg-sar-n) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for the northern stock of Pacific Sardine (_Sardinops sagax_) in the survey area.
 
 ```{r l-disagg-sar-n,fig.cap='(ref:l-disagg-sar-n)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for sardine
@@ -8470,7 +8808,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-freq-summ-sar-n) Abundance versus standard length ($L_S$, cm) for the northern stock of Pacific Sardine (_Sardinops sagax_).
+#### Abundande-by-length table
+
+(ref:l-freq-summ-sar-n) Abundance versus standard length (cm) for the northern stock of Pacific Sardine (_Sardinops sagax_).
 
 ```{r l-freq-summ-sar-n}
 # Print table for sardine
@@ -8506,6 +8846,79 @@ if ("Sardinops sagax" %in% unique(abund.summ$Species)) {
 ```
 
 ### Southern stock
+#### Biomass estimates
+
+(ref:biomass-sar-s) Biomass estimates (metric tons, t) and their precisions (upper and lower 95% confidence intervals, CI~95%~; and coefficients of variation, CVs) for the southern subpopulation of Pacific Sardine (_Sardinops sagax_) in the core and nearshore survey regions. Stratum areas are nmi^2^.
+
+```{r biomass-sar-s}
+be.table.sub.all <- be.table.summ %>% 
+  filter(Name == "Sardinops sagax", Stock == "Southern") %>% 
+  mutate(Region = "All")
+
+be.table.sub <- be.table %>% 
+  filter(Name == "Sardinops sagax", Stock == "Southern") %>% 
+  mutate(Region = "Core") 
+
+if (exists("be.table.ns")) {
+  be.table.sub.ns <- be.table.ns %>%
+    filter(Name == "Sardinops sagax", Stock == "Southern") %>%
+    mutate(Region = "Nearshore")
+  
+  be.table.sub <- be.table %>% 
+    filter(Name == "Sardinops sagax", Stock == "Southern") %>%
+    mutate(Region = "Core") %>% 
+    bind_rows(be.table.sub.ns) %>% 
+    bind_rows(be.table.sub.all) %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+} else {
+  be.table.sub <- be.table %>% 
+    filter(Name == "Sardinops sagax", Stock == "Southern") %>%
+    mutate(Region = "Core") %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+}
+
+# Write results to CSV for stock assessors
+be.table.sub %>% 
+  rename("point_estimate" = "$\\hat{B}$",
+         "ci_lower" = "CI$_{L,95\\%}$",
+         "ci_upper" =	"CI$_{U,95\\%}$") %>%
+  write_csv(file = here("Output/biomass_final_Sardinops_sagax_Southern.csv"),
+            na = "")
+
+if (nrow(be.table.sub) != 0) {
+  if (doc.type == "docx") {
+    regulartable(be.table.sub) %>% 
+      merge_v(j = c("Region")) %>%
+      add_header(Region  = "",
+                 # Stock    = "",
+                 Number   = "Stratum", Area = "Stratum", Transects = "Stratum", Distance = "Stratum",
+                 Clusters = "Trawl", Individuals = "Trawl",
+                 "$\\hat{B}$" = "Biomass", "CI$_{L,95\\%}$" = "Biomass", "CI$_{U,95\\%}$" = "Biomass",
+                 CV = "Biomass") %>% 
+      merge_h(part = "header") %>% 
+      align(align = "center",part = "header") %>% 
+      autofit()
+  } else {
+    kable(be.table.sub, format = knitr.format, booktabs = FALSE, escape = FALSE,
+          align           = c(rep("l", 1), rep("r",ncol(be.table.sub) - 2)),
+          digits          = c(0),
+          format.args     = list(big.mark = ","),
+          caption = '(ref:biomass-sar-s)') %>% 
+      kable_styling(latex_options = c("hold_position","scale_down"),
+                    position = "center",
+                    font_size = 8) %>% 
+      row_spec(nrow(be.table.sub), bold = T) %>%
+      collapse_rows(columns = 1, valign = "top") %>%
+      add_header_above(c("Stratum" = 5, "Trawl" = 2, "Biomass" = 4))
+  }
+} else {
+  print("No results for this species/subpopulation.")
+}
+```  
+
+#### Biomass density
 
 (ref:biom-dens-sar-s) Biomass densities of southern stock of Pacific Sardine (_Sardinops sagax_), per strata, throughout the survey region. The blue numbers represent the locations of trawl clusters with at least one sardine. The gray line represents the vessel track.
 
@@ -8525,7 +8938,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-disagg-sar-s) Abundance versus standard length ($L_S$, upper panel) and biomass (t) versus $L_S$ (lower panel) for the southern stock of Pacific Sardine (_Sardinops sagax_) in the survey area.
+#### Length-disaggregated abundance
+
+(ref:l-disagg-sar-s) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for the southern stock of Pacific Sardine (_Sardinops sagax_) in the survey area.
 
 ```{r l-disagg-sar-s,fig.cap='(ref:l-disagg-sar-s)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for sardine
@@ -8544,7 +8959,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-freq-summ-sar-s) Abundance versus standard length ($L_S$, cm) for the southern stock of Pacific Sardine (_Sardinops sagax_).
+#### Abundande-by-length table
+
+(ref:l-freq-summ-sar-s) Abundance versus standard length (cm) for the southern stock of Pacific Sardine (_Sardinops sagax_).
 
 ```{r l-freq-summ-sar-s}
 # Print table for sardine
@@ -8580,8 +8997,9 @@ if ("Sardinops sagax" %in% unique(abund.summ$Species)) {
 ```
 
 ### All stocks
+#### Cluster-specific length distributions
 
-(ref:rlf-sardine) Standard length ($L_S$) frequency distributions of Pacific Sardine (_Sardinops sagax_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum and across all strata (i.e., for the entire survey).
+(ref:rlf-sardine) Standard length frequency distributions of Pacific Sardine (_Sardinops sagax_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum and across all strata (i.e., for the entire survey).
 
 ```{r rlf-sardine,out.height='100%',fig.pos='H'}
 # Insert relative length frequency plot for sardine
@@ -8593,6 +9011,79 @@ if (file.exists(here("Figs/fig_cluster_relative_length_frequency_Sardinops sagax
 ``` 
 
 ## Results for Pacific mackerel (_Scomber japonicus_)  
+#### Biomass estimates
+
+(ref:biomass-mack) Biomass estimates (metric tons, t) and their precisions (upper and lower 95% confidence intervals, CI~95%~; and coefficients of variation, CVs) for Pacific Mackerel (_Scomber japonicus_) in nearshore survey region. Stratum areas are nmi^2^.
+
+```{r biomass-mack}
+be.table.sub.all <- be.table.summ %>% 
+  filter(Name == "Scomber japonicus") %>% 
+  mutate(Region = "All")
+
+be.table.sub <- be.table %>% 
+  filter(Name == "Scomber japonicus") %>% 
+  mutate(Region = "Core") 
+
+if (exists("be.table.ns")) {
+  be.table.sub.ns <- be.table.ns %>%
+    filter(Name == "Scomber japonicus") %>% 
+    mutate(Region = "Nearshore")
+  
+  be.table.sub <- be.table %>% 
+    filter(Name == "Scomber japonicus") %>% 
+    mutate(Region = "Core") %>% 
+    bind_rows(be.table.sub.ns) %>% 
+    bind_rows(be.table.sub.all) %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+} else {
+  be.table.sub <- be.table %>% 
+    filter(Name == "Scomber japonicus") %>% 
+    mutate(Region = "Core") %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+}
+
+# Write results to CSV for stock assessors
+be.table.sub %>% 
+  rename("point_estimate" = "$\\hat{B}$",
+         "ci_lower" = "CI$_{L,95\\%}$",
+         "ci_upper" =	"CI$_{U,95\\%}$") %>%
+  write_csv(file = here("Output/biomass_final_Scomber_japonicus_all.csv"),
+            na = "")
+
+if (nrow(be.table.sub) != 0) {
+  if (doc.type == "docx") {
+    regulartable(be.table.sub) %>% 
+      merge_v(j = c("Region")) %>%
+      add_header(Region  = "",
+                 # Stock    = "",
+                 Number   = "Stratum", Area = "Stratum", Transects = "Stratum", Distance = "Stratum",
+                 Clusters = "Trawl", Individuals = "Trawl",
+                 "$\\hat{B}$" = "Biomass", "CI$_{L,95\\%}$" = "Biomass", "CI$_{U,95\\%}$" = "Biomass",
+                 CV = "Biomass") %>% 
+      merge_h(part = "header") %>% 
+      align(align = "center",part = "header") %>% 
+      autofit()
+  } else {
+    kable(be.table.sub, format = knitr.format, booktabs = FALSE, escape = FALSE,
+          align           = c(rep("l", 1), rep("r",ncol(be.table.sub) - 2)),
+          digits          = c(0),
+          format.args     = list(big.mark = ","),
+          caption = '(ref:biomass-mack)') %>% 
+      kable_styling(latex_options = c("hold_position","scale_down"),
+                    position = "center",
+                    font_size = 8) %>% 
+      row_spec(nrow(be.table.sub), bold = T) %>%
+      collapse_rows(columns = 1, valign = "top") %>%
+      add_header_above(c("Stratum" = 5, "Trawl" = 2, "Biomass" = 4))
+  }
+} else {
+  print("No results for this species/subpopulation.")
+}
+```  
+
+#### Biomass density
 
 (ref:biom-dens-mack) Biomass densities of Pacific mackerel (_Scomber japonicus_), per strata, throughout the survey region. The blue numbers represent the locations of trawl clusters with at least one mackerel The gray line represents the vessel track.
 
@@ -8613,7 +9104,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-disagg-mack) Abundance versus standard length ($L_S$, upper panel) and biomass (t) versus $L_S$ (lower panel) for Pacific mackerel (_Scomber japonicus_) in the survey area.
+#### Length-disaggregated abundance
+
+(ref:l-disagg-mack) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for Pacific mackerel (_Scomber japonicus_) in the survey area.
 
 ```{r l-disagg-mack,fig.cap='(ref:l-disagg-mack)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for P. mackerel
@@ -8632,7 +9125,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-freq-summ-mack) Abundance versus standard length ($L_S$, cm) for for Pacific mackerel (_Scomber japonicus_).
+#### Abundande-by-length table
+
+(ref:l-freq-summ-mack) Abundance versus standard length (cm) for for Pacific mackerel (_Scomber japonicus_).
 
 ```{r l-freq-summ-mack}
 # Print table for mack mackerel
@@ -8667,6 +9162,8 @@ if ("Scomber japonicus" %in% unique(abund.summ$Species)) {
 }
 ```
 
+#### Cluster-specific length distributions
+
 (ref:rlf-mack) Fork length ($L_F$) frequency distributions of Pacific Mackerel (_Scomber japonicus_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum and across all strata (i.e., for the entire survey).
 
 ```{r rlf-mack,out.height='100%',fig.pos='H'}
@@ -8679,6 +9176,79 @@ if (file.exists(here("Figs/fig_cluster_relative_length_frequency_Scomber japonic
 ``` 
 
 ## Results for Jack Mackerel (_Trachurus symmetricus_)
+#### Biomass estimates
+
+(ref:biomass-jack) Biomass estimates (metric tons, t) and their precisions (upper and lower 95% confidence intervals, CI~95%~; and coefficients of variation, CVs) for Jack Mackerel (_Trachurus symmetricus_) in the core and nearshore survey regions. Stratum areas are nmi^2^.
+
+```{r biomass-jack}
+be.table.sub.all <- be.table.summ %>% 
+  filter(Name == "Trachurus symmetricus") %>% 
+  mutate(Region = "All")
+
+be.table.sub <- be.table %>% 
+  filter(Name == "Trachurus symmetricus") %>% 
+  mutate(Region = "Core") 
+
+if (exists("be.table.ns")) {
+  be.table.sub.ns <- be.table.ns %>%
+    filter(Name == "Trachurus symmetricus") %>% 
+    mutate(Region = "Nearshore")
+  
+  be.table.sub <- be.table %>% 
+    filter(Name == "Trachurus symmetricus") %>% 
+    mutate(Region = "Core") %>% 
+    bind_rows(be.table.sub.ns) %>% 
+    bind_rows(be.table.sub.all) %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+} else {
+  be.table.sub <- be.table %>% 
+    filter(Name == "Trachurus symmetricus") %>% 
+    mutate(Region = "Core") %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+}
+
+# Write results to CSV for stock assessors
+be.table.sub %>% 
+  rename("point_estimate" = "$\\hat{B}$",
+         "ci_lower" = "CI$_{L,95\\%}$",
+         "ci_upper" =	"CI$_{U,95\\%}$") %>%
+  write_csv(file = here("Output/biomass_final_Trachurus_symmetricus_All.csv"),
+            na = "")
+
+if (nrow(be.table.sub) != 0) {
+  if (doc.type == "docx") {
+    regulartable(be.table.sub) %>% 
+      merge_v(j = c("Region")) %>%
+      add_header(Region  = "",
+                 # Stock    = "",
+                 Number   = "Stratum", Area = "Stratum", Transects = "Stratum", Distance = "Stratum",
+                 Clusters = "Trawl", Individuals = "Trawl",
+                 "$\\hat{B}$" = "Biomass", "CI$_{L,95\\%}$" = "Biomass", "CI$_{U,95\\%}$" = "Biomass",
+                 CV = "Biomass") %>% 
+      merge_h(part = "header") %>% 
+      align(align = "center",part = "header") %>% 
+      autofit()
+  } else {
+    kable(be.table.sub, format = knitr.format, booktabs = FALSE, escape = FALSE,
+          align           = c(rep("l", 1), rep("r",ncol(be.table.sub) - 2)),
+          digits          = c(0),
+          format.args     = list(big.mark = ","),
+          caption = '(ref:biomass-jack)') %>% 
+      kable_styling(latex_options = c("hold_position","scale_down"),
+                    position = "center",
+                    font_size = 8) %>% 
+      row_spec(nrow(be.table.sub), bold = T) %>% 
+      collapse_rows(columns = 1, valign = "top") %>%
+      add_header_above(c("Stratum" = 5, "Trawl" = 2, "Biomass" = 4))
+  }
+} else {
+  print("No results for this species/subpopulation.")
+}
+```  
+
+#### Biomass density
 
 (ref:biom-dens-jack) Biomass densities of Jack Mackerel (_Trachurus symmetricus_), per strata, throughout the survey region. The blue numbers represent the locations of trawl clusters with at least one jack mackerel. The gray line represents the vessel track.
 
@@ -8699,7 +9269,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-disagg-jack) Abundance versus standard length ($L_S$, upper panel) and biomass (t) versus $L_S$ (lower panel) for Jack Mackerel (_Trachurus symmetricus_) in the survey area.
+#### Length-disaggregated abundance
+
+(ref:l-disagg-jack) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for Jack Mackerel (_Trachurus symmetricus_) in the survey area.
 
 ```{r l-disagg-jack,fig.cap='(ref:l-disagg-jack)',out.height='100%',fig.pos='H'}
 if (combine.regions) {
@@ -8717,7 +9289,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-freq-summ-jack) Abundance versus standard length ($L_S$, cm) for for Jack Mackerel (_Trachurus symmetricus_).
+#### Abundande-by-length table
+
+(ref:l-freq-summ-jack) Abundance versus standard length (cm) for for Jack Mackerel (_Trachurus symmetricus_).
 
 ```{r l-freq-summ-jack}
 # Print table for jack mackerel
@@ -8752,6 +9326,8 @@ if ("Trachurus symmetricus" %in% unique(abund.summ$Species)) {
 }
 ```
 
+#### Cluster-specific length distributions
+
 (ref:rlf-jack) Fork length ($L_F$) frequency distributions of Jack Mackerel (_Trachurus symmetricus_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum and across all strata (i.e., for the entire survey).
 
 ```{r rlf-jack,out.height='100%',fig.pos='H'}
@@ -8764,6 +9340,79 @@ if (file.exists(here("Figs/fig_cluster_relative_length_frequency_Trachurus symme
 ``` 
 
 ## Results for Pacific herring (_Clupea pallasii_)
+#### Biomass estimates
+
+(ref:biomass-her) Biomass estimates (metric tons, t) and their precisions (upper and lower 95% confidence intervals, CI~95%~; and coefficients of variation, CVs) for Pacific Herring (_Clupea pallasii_) in the core and nearshore survey regions. Stratum areas are nmi^2^.
+
+```{r biomass-her}
+be.table.sub.all <- be.table.summ %>% 
+  filter(Name == "Clupea pallasii") %>% 
+  mutate(Region = "All")
+
+be.table.sub <- be.table %>% 
+  filter(Name == "Clupea pallasii") %>% 
+  mutate(Region = "Core") 
+
+if (exists("be.table.ns")) {
+  be.table.sub.ns <- be.table.ns %>%
+    filter(Name == "Clupea pallasii") %>% 
+    mutate(Region = "Nearshore")
+  
+  be.table.sub <- be.table %>% 
+    filter(Name == "Clupea pallasii") %>% 
+    mutate(Region = "Core") %>% 
+    bind_rows(be.table.sub.ns) %>% 
+    bind_rows(be.table.sub.all) %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+} else {
+  be.table.sub <- be.table %>% 
+    filter(Name == "Clupea pallasii") %>% 
+    mutate(Region = "Core") %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+}
+
+# Write results to CSV for stock assessors
+be.table.sub %>% 
+  rename("point_estimate" = "$\\hat{B}$",
+         "ci_lower" = "CI$_{L,95\\%}$",
+         "ci_upper" =	"CI$_{U,95\\%}$") %>%
+  write_csv(file = here("Output/biomass_final_Clupea_pallasii_All.csv"),
+            na = "")
+
+if (nrow(be.table.sub) != 0) {
+  if (doc.type == "docx") {
+    regulartable(be.table.sub) %>% 
+      merge_v(j = c("Region")) %>%
+      add_header(Region  = "",
+                 # Stock    = "",
+                 Number   = "Stratum", Area = "Stratum", Transects = "Stratum", Distance = "Stratum",
+                 Clusters = "Trawl", Individuals = "Trawl",
+                 "$\\hat{B}$" = "Biomass", "CI$_{L,95\\%}$" = "Biomass", "CI$_{U,95\\%}$" = "Biomass",
+                 CV = "Biomass") %>% 
+      merge_h(part = "header") %>% 
+      align(align = "center",part = "header") %>% 
+      autofit()
+  } else {
+    kable(be.table.sub, format = knitr.format, booktabs = FALSE, escape = FALSE,
+          align           = c(rep("l", 1), rep("r",ncol(be.table.sub) - 2)),
+          digits          = c(0),
+          format.args     = list(big.mark = ","),
+          caption = '(ref:biomass-her)') %>% 
+      kable_styling(latex_options = c("hold_position","scale_down"),
+                    position = "center",
+                    font_size = 8) %>% 
+      row_spec(nrow(be.table.sub), bold = T) %>% 
+      collapse_rows(columns = 1, valign = "top") %>%
+      add_header_above(c("Stratum" = 5, "Trawl" = 2, "Biomass" = 4))
+  }
+} else {
+  print("No results for this species/subpopulation.")
+}
+```  
+
+#### Biomass density
 
 (ref:biom-dens-her) Biomass densities of Pacific herring (_Clupea pallasii_), per strata, throughout the survey region. The blue numbers represent the locations of trawl clusters with at least one herring. The gray line represents the vessel track.
 
@@ -8783,7 +9432,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-disagg-her) Abundance versus standard length ($L_S$, upper panel) and biomass (t) versus $L_S$ (lower panel) for Pacific herring (_Clupea pallasii_) in the survey area.
+#### Length-disaggregated abundance
+
+(ref:l-disagg-her) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for Pacific herring (_Clupea pallasii_) in the survey area.
 
 ```{r l-disagg-her,fig.cap='(ref:l-disagg-her)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for herring
@@ -8802,7 +9453,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-freq-summ-her) Abundance versus standard length ($L_S$, cm) for for Pacific herring (_Clupea pallasii_).
+#### Abundande-by-length table
+
+(ref:l-freq-summ-her) Abundance versus standard length (cm) for for Pacific herring (_Clupea pallasii_).
 
 ```{r l-freq-summ-her}
 # Print table for jack mackerel
@@ -8837,7 +9490,9 @@ if ("Clupea pallasii" %in% unique(abund.summ$Species)) {
 }
 ```
 
-(ref:rlf-her) Standard length ($L_S$) frequency distributions of Pacific herring (_Clupea pallasii_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum and across all strata (i.e., for the entire survey).
+#### Cluster-specific length distributions
+
+(ref:rlf-her) Standard length frequency distributions of Pacific herring (_Clupea pallasii_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum and across all strata (i.e., for the entire survey).
 
 ```{r rlf-her,out.height='100%',fig.pos='H'}
 # Insert relative length frequency plot for herring
@@ -8849,6 +9504,79 @@ if (file.exists(here("Figs/fig_cluster_relative_length_frequency_Clupea pallasii
 ```
 
 ## Results for round herring (_Etrumeus acuminatus_)
+#### Biomass estimates
+
+(ref:biomass-rher) Biomass estimates (metric tons, t) and their precisions (upper and lower 95% confidence intervals, CI~95%~; and coefficients of variation, CVs) for Round Herring (_Etrumeus acuminatus_) in the core  and nearshore survey regions. Stratum areas are nmi^2^.
+
+```{r biomass-rher}
+be.table.sub.all <- be.table.summ %>% 
+  filter(Name == "Etrumeus acuminatus") %>% 
+  mutate(Region = "All")
+
+be.table.sub <- be.table %>% 
+  filter(Name == "Etrumeus acuminatus") %>% 
+  mutate(Region = "Core") 
+
+if (exists("be.table.ns")) {
+  be.table.sub.ns <- be.table.ns %>%
+    filter(Name == "Etrumeus acuminatus") %>% 
+    mutate(Region = "Nearshore")
+  
+  be.table.sub <- be.table %>% 
+    filter(Name == "Etrumeus acuminatus") %>% 
+    mutate(Region = "Core") %>% 
+    bind_rows(be.table.sub.ns) %>% 
+    bind_rows(be.table.sub.all) %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+} else {
+  be.table.sub <- be.table %>% 
+    filter(Name == "Etrumeus acuminatus") %>% 
+    mutate(Region = "Core") %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+}
+
+# Write results to CSV for stock assessors
+be.table.sub %>% 
+  rename("point_estimate" = "$\\hat{B}$",
+         "ci_lower" = "CI$_{L,95\\%}$",
+         "ci_upper" =	"CI$_{U,95\\%}$") %>%
+  write_csv(file = here("Output/biomass_final_Etrumeus_acuminatus_All.csv"),
+            na = "")
+
+if (nrow(be.table.sub) != 0) {
+  if (doc.type == "docx") {
+    regulartable(be.table.sub) %>% 
+      merge_v(j = c("Region")) %>%
+      add_header(Region  = "",
+                 # Stock    = "",
+                 Number   = "Stratum", Area = "Stratum", Transects = "Stratum", Distance = "Stratum",
+                 Clusters = "Trawl", Individuals = "Trawl",
+                 "$\\hat{B}$" = "Biomass", "CI$_{L,95\\%}$" = "Biomass", "CI$_{U,95\\%}$" = "Biomass",
+                 CV = "Biomass") %>% 
+      merge_h(part = "header") %>% 
+      align(align = "center",part = "header") %>% 
+      autofit()
+  } else {
+    kable(be.table.sub, format = knitr.format, booktabs = FALSE, escape = FALSE,
+          align           = c(rep("l", 1), rep("r",ncol(be.table.sub) - 2)),
+          digits          = c(0),
+          format.args     = list(big.mark = ","),
+          caption = '(ref:biomass-rher)') %>% 
+      kable_styling(latex_options = c("hold_position","scale_down"),
+                    position = "center",
+                    font_size = 8) %>% 
+      row_spec(nrow(be.table.sub), bold = T) %>% 
+      collapse_rows(columns = 1, valign = "top") %>%
+      add_header_above(c("Stratum" = 5, "Trawl" = 2, "Biomass" = 4))
+  }
+} else {
+  print("No results for this species/subpopulation.")
+}
+```  
+
+#### Biomass density
 
 (ref:biom-dens-rher) Biomass densities of round herring (_Etrumeus acuminatus_), per strata, throughout the survey region. The blue numbers represent the locations of trawl clusters with at least one herring. The gray line represents the vessel track.
 
@@ -8868,7 +9596,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-disagg-rher) Abundance versus standard length ($L_S$, upper panel) and biomass (t) versus $L_S$ (lower panel) for round herring (_Etrumeus acuminatus_) in the survey area.
+#### Length-disaggregated abundance
+
+(ref:l-disagg-rher) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for round herring (_Etrumeus acuminatus_) in the survey area.
 
 ```{r l-disagg-rher,fig.cap='(ref:l-disagg-rher)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for herring
@@ -8887,7 +9617,9 @@ if (combine.regions) {
 }
 ```
 
-(ref:l-freq-summ-rher) Abundance versus standard length ($L_S$, cm) for for round herring (_Etrumeus acuminatus_).
+#### Abundande-by-length table
+
+(ref:l-freq-summ-rher) Abundance versus standard length (cm) for for round herring (_Etrumeus acuminatus_).
 
 ```{r l-freq-summ-rher}
 # Print table for round herring
@@ -8910,7 +9642,7 @@ if ("Etrumeus acuminatus" %in% unique(abund.summ$Species)) {
       kable(abund.summ.table, booktabs = FALSE,escape = FALSE,longtable = T,
             digits = c(0),
             format.args = list(big.mark = ","),
-            caption = '(ref:l-freq-summ-her)') %>%
+            caption = '(ref:l-freq-summ-rher)') %>%
         kable_styling(latex_options = c("striped","repeat_headers")) %>%
         column_spec(1, italic = T) %>% 
         collapse_rows(columns = c(1:2)) %>%
@@ -8922,7 +9654,9 @@ if ("Etrumeus acuminatus" %in% unique(abund.summ$Species)) {
 }
 ```
 
-(ref:rlf-rher) Standard length ($L_S$) frequency distributions of round herring (_Etrumeus acuminatus_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum and across all strata (i.e., for the entire survey).
+#### Cluster-specific length distributions
+
+(ref:rlf-rher) Standard length frequency distributions of round herring (_Etrumeus acuminatus_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum and across all strata (i.e., for the entire survey).
 
 ```{r rlf-rher,out.height='100%',fig.pos='H'}
 # Insert relative length frequency plot for round herring

@@ -1,6 +1,19 @@
-# Map trawl species proportions -------------------------------------------------------
-# Get species present in the trawl catch
-pie.spp.ns <- sort(unique(set.catch$scientificName))
+# Map cluster species proportions -------------------------------------------------------
+# Use cluster.pos.ns to identify species present in the nearshore biomass estimation
+# More robust than set.catch when seine data are not 
+pie.cols.ns <- cluster.pos.ns %>% 
+  select(cluster:RndHerring) %>% 
+  pivot_longer(cols = -cluster, names_to = "spp", values_to = "totalWeight") %>% 
+  group_by(spp) %>% 
+  summarise(meanWeight = mean(totalWeight)) %>% 
+  filter(meanWeight > 0.0000001) %>% 
+  pluck("spp")
+
+# Get species present in the nearshore catch
+pie.spp.ns <- sort(names(pie.cols)[pie.cols %in% pie.cols.ns])
+
+# Get species present in the nearshore catch
+# pie.spp.ns <- sort(unique(set.catch$scientificName))
 
 if (nrow(cluster.pos.ns) > 0) {
   # Create trawl haul figure

@@ -6,14 +6,15 @@ process.nearshore <- T # Process near backscatter data; typically TRUE
 estimate.ns       <- T # Estimate biomass in the nearshore strata; T if nearshore surveyed
 process.offshore  <- F # Process offshore backscatter data
 estimate.os       <- F # Estimate biomass in the offshore strata; T if offshore surveyed
-combine.regions   <- F # Combine nearshore/offshore plots with those from the core region
+combine.regions   <- T # Combine nearshore/offshore plots with those from the core region
 
 # Survey planning ---------------------------------------------------------
 ## This section controls and configures settings used by makeTransects and checkTransects for generating and checking survey transects
 ### Transect spacing (nautical miles)
 tx.spacing.fsv  <- 15 # For Lasker 
 tx.spacing.sd   <- 15 # For Saildrone
-tx.spacing.ns   <- 7 # For nearshore sampling
+tx.break.ns     <- 52 # Northernmost transect sampled by the southern F/V, 64 in 2024, near Carmel
+tx.spacing.ns   <- c("S" = 7, "N" = 7, "CI" = 2.5) # or NA
 tx.spacing.os   <- 40 # Nearshore transect spacing, in nmi; set NA if calculating programatically
 
 # Mainland buffer distance for FSV and Saildrone transects
@@ -435,7 +436,7 @@ seine.vessels.long     <- c("LBC" = "Long Beach Carnage",
 
 # Deep backscatter correction
 # Correct deep backscatter?
-adj.deep.nasc <- TRUE
+adj.deep.nasc <- FALSE
 # Remove deep backscatter, if a correction is not applied? Set to FALSE if adj.deep.nasc = TRUE
 rm.deep.nasc <- FALSE
 # Vessels for which to remove deep backscatter that may be anchovy
@@ -671,7 +672,7 @@ boot.num <- 5 # 1000 during final
 do.lf    <- TRUE
 
 # Define regions to present in main Results
-estimate.regions   <- c("Core") # Add "Nearshore"
+estimate.regions   <- c("Core", "Nearshore")
 
 # Define rules for selecting and pruning sampling strata -----------------------
 # Defines breaks between strata
@@ -699,7 +700,7 @@ if ("SD" %in% nasc.vessels) {
     data.frame(
       scientificName = "Clupea pallasii",
       stratum = 1,
-      transect = 30:37),
+      transect = 30:39),
     data.frame(
       scientificName = "Engraulis mordax",
       stratum = 1,
@@ -736,10 +737,18 @@ if ("SD" %in% nasc.vessels) {
       scientificName = "Scomber japonicus",
       stratum = 1,
       transect = 1:4),
-    # data.frame(
-    #   scientificName = "Scomber japonicus",
-    #   stratum = 2,
-    #   transect = 16:19),
+    data.frame(
+      scientificName = "Scomber japonicus",
+      stratum = 2,
+      transect = 16:19),
+    data.frame(
+      scientificName = "Scomber japonicus",
+      stratum = 3,
+      transect = 23:25),
+    data.frame(
+      scientificName = "Scomber japonicus",
+      stratum = 4,
+      transect = 41:42),
     data.frame(
       scientificName = "Trachurus symmetricus",
       stratum = 1,
@@ -747,7 +756,7 @@ if ("SD" %in% nasc.vessels) {
     data.frame(
       scientificName = "Trachurus symmetricus",
       stratum = 2,
-      transect = 15:37))
+      transect = 15:42))
 }
 
 # Stock boundaries --------------------------------------------------------

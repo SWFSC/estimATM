@@ -1,6 +1,19 @@
-# Map trawl species proportions -------------------------------------------------------
-# Get species present in the trawl catch
-pie.spp.ns <- sort(unique(set.catch$scientificName))
+# Map cluster species proportions -------------------------------------------------------
+# Use cluster.pos.ns to identify species present in the nearshore biomass estimation
+# More robust than set.catch when seine data are not 
+pie.cols.ns <- cluster.pos.ns %>% 
+  select(cluster:RndHerring) %>% 
+  pivot_longer(cols = -cluster, names_to = "spp", values_to = "totalWeight") %>% 
+  group_by(spp) %>% 
+  summarise(meanWeight = mean(totalWeight)) %>% 
+  filter(meanWeight > 0.0000001) %>% 
+  pluck("spp")
+
+# Get species present in the nearshore catch
+pie.spp.ns <- sort(names(pie.cols)[pie.cols %in% pie.cols.ns])
+
+# Get species present in the nearshore catch
+# pie.spp.ns <- sort(unique(set.catch$scientificName))
 
 if (nrow(cluster.pos.ns) > 0) {
   # Create trawl haul figure
@@ -8,8 +21,6 @@ if (nrow(cluster.pos.ns) > 0) {
     # Plot transects data
     geom_sf(data = filter(transects.sf, Type == "Nearshore"), size = 0.5, colour = "gray70", 
             alpha = 0.75, linetype = "dashed") +
-    # plot ship track data
-    # geom_sf(data = nav.paths.sf, colour = "gray50", size = 0.5, alpha = 0.5) +
     # Plot trawl pies
     geom_scatterpie(data = cluster.pos.ns, aes(X, Y, group = cluster, r = pie.radius, colour = sample.type),
                     cols = pie.cols[names(pie.cols) %in% pie.spp.ns],
@@ -77,8 +88,6 @@ if (exists("cluster.pos.ns.deep")) {
       # Plot transects data
       geom_sf(data = filter(transects.sf, Type == "Nearshore"), size = 0.5, colour = "gray70", 
               alpha = 0.75, linetype = "dashed") +
-      # plot ship track data
-      # geom_sf(data = nav.paths.sf, colour = "gray50", size = 0.5, alpha = 0.5) +
       # Plot trawl pies
       geom_scatterpie(data = cluster.pos.ns.deep, aes(X, Y, group = cluster, r = pie.radius, colour = sample.type),
                       cols = pie.cols[names(pie.cols) %in% pie.spp.ns.deep],

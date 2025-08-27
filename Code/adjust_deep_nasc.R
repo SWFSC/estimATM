@@ -56,9 +56,12 @@ if (process.seine) {
   load(here("Output/super_clusters_hauls_ns_deep.Rdata"))
 }
 
-
-save(clf.ns.deep, hlf.ns.deep, super.clusters.ns.deep, super.hauls.ns.deep, lf.final.ns.deep, set.pie.deep, 
+# Save after processing nearshore
+save(clf.ns.deep, hlf.ns.deep, super.clusters.ns.deep, super.hauls.ns.deep, lf.final.ns.deep, 
      file = here("Output/clf_nearshore_deep.Rdata"))
+
+# Write clf.ns.deep to CSV
+write_csv(clf.ns.deep, file = here("Output/clf_nearshore_deep.csv"))
 
 # Assign backscatter to trawl clusters ------------------------------------
 cluster.match.ns.deep <- super.clusters.ns.deep %>% 
@@ -291,14 +294,7 @@ nasc.nearshore.deep <- nasc.nearshore.deep %>%
     sar.dens  = cps.nasc.deep*prop.sar  / (4*pi*sigmawg.sar)  / 1000,
     rher.dens = cps.nasc.deep*prop.rher / (4*pi*sigmawg.rher) / 1000)
 
-# Add deep density to shallow density
-nasc.nearshore <- nasc.nearshore %>% 
-  mutate(anch.dens = anch.dens + nasc.nearshore.deep$anch.dens,
-         her.dens  = her.dens  + nasc.nearshore.deep$her.dens,
-         jack.dens = jack.dens + nasc.nearshore.deep$jack.dens,
-         mack.dens = mack.dens + nasc.nearshore.deep$mack.dens,
-         sar.dens  = sar.dens  + nasc.nearshore.deep$sar.dens,
-         rher.dens = rher.dens + nasc.nearshore.deep$rher.dens)
-
 # Remove point estimates, if they exist
 if(exists("point.estimates.ns.deep")) rm(point.estimates.ns.deep)
+
+# RESUME HERE

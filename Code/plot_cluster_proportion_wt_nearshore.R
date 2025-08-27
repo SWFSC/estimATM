@@ -21,8 +21,6 @@ if (nrow(cluster.pos.ns) > 0) {
     # Plot transects data
     geom_sf(data = filter(transects.sf, Type == "Nearshore"), size = 0.5, colour = "gray70", 
             alpha = 0.75, linetype = "dashed") +
-    # plot ship track data
-    # geom_sf(data = nav.paths.sf, colour = "gray50", size = 0.5, alpha = 0.5) +
     # Plot trawl pies
     geom_scatterpie(data = cluster.pos.ns, aes(X, Y, group = cluster, r = pie.radius, colour = sample.type),
                     cols = pie.cols[names(pie.cols) %in% pie.spp.ns],
@@ -90,8 +88,6 @@ if (exists("cluster.pos.ns.deep")) {
       # Plot transects data
       geom_sf(data = filter(transects.sf, Type == "Nearshore"), size = 0.5, colour = "gray70", 
               alpha = 0.75, linetype = "dashed") +
-      # plot ship track data
-      # geom_sf(data = nav.paths.sf, colour = "gray50", size = 0.5, alpha = 0.5) +
       # Plot trawl pies
       geom_scatterpie(data = cluster.pos.ns.deep, aes(X, Y, group = cluster, r = pie.radius, colour = sample.type),
                       cols = pie.cols[names(pie.cols) %in% pie.spp.ns.deep],

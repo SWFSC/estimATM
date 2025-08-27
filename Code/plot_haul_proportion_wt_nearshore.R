@@ -12,17 +12,12 @@ pie.cols.ns <- cluster.pos.ns %>%
 # Get species present in the nearshore catch
 pie.spp.ns <- sort(names(pie.cols)[pie.cols %in% pie.cols.ns])
 
-# Get species present in the nearshore catch
-# pie.spp.ns <- sort(unique(set.catch$scientificName))
-
 if (nrow(haul.pos.ns) > 0) {
   # Create trawl haul figure
   set.pie.haul.wt <- base.map +
     # Plot transects data
     geom_sf(data = filter(transects.sf, Type == "Nearshore"), size = 0.5, colour = "gray70", 
             alpha = 0.75, linetype = "dashed") +
-    # # plot ship track data
-    # geom_sf(data = nav.paths.sf, colour = "gray50", size = 0.5, alpha = 0.5) +
     # Plot trawl pies
     geom_scatterpie(data = haul.pos.ns, aes(X, Y, group = haul, r = pie.radius, colour = sample.type),
                     cols = pie.cols[names(pie.cols) %in% pie.spp.ns],
@@ -89,8 +84,6 @@ if (exists("haul.pos.ns.deep")) {
       # Plot transects data
       geom_sf(data = filter(transects.sf, Type == "Nearshore"), size = 0.5, colour = "gray70", 
               alpha = 0.75, linetype = "dashed") +
-      # plot ship track data
-      # geom_sf(data = nav.paths.sf, colour = "gray50", size = 0.5, alpha = 0.5) +
       # Plot trawl pies
       geom_scatterpie(data = haul.pos.ns.deep, aes(X, Y, group = haul, r = pie.radius, colour = sample.type),
                       cols = pie.cols[names(pie.cols) %in% pie.spp.ns.deep],

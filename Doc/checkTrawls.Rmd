@@ -126,7 +126,8 @@ source(here("Code/format_trawl_database.R"))
 ```{r process-haul-data}
 # Select bad trawls
 haul.bad <- haul.all %>% 
-  filter(trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
+  filter(cruise %in% cruise.name,
+         trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
            haul %in% trawl.haul.rm | # Manually excluded hauls
            # Missing data that will cause errors in nav matching
            is.na(collection) |
@@ -137,8 +138,9 @@ haul.bad <- haul.all %>%
 haul <- filter(haul.all, cruise %in% cruise.name) %>% 
   filter(!haul %in% haul.bad$haul) %>%
   mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
-         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) # Assign cluster
-
+         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) %>%  # Assign cluster
+  mutate(leg = cut(as.numeric(date(equilibriumTime)), leg.breaks, 
+                   include.lowest = TRUE, labels = FALSE))
 # Get all haul numbers
 haul.good <- purrr::pluck(haul$haul)
 
@@ -1596,6 +1598,8 @@ cluster.check <- haul %>%
   mutate(firstHaulStart = format(firstHaulStart,"%m/%d/%Y %H:%M"),
          lastHaulEnd    = format(lastHaulEnd,"%m/%d/%Y %H:%M"))
 
+save(cluster.check, file = here("Output/cluster_check.Rdata"))
+
 # Print cluster check table
 cluster.check %>% 
   arrange(desc(cluster)) %>% 
@@ -1608,6 +1612,47 @@ cluster.check %>%
                 full_width = FALSE) %>%
   row_spec(0, align = c("c")) %>% 
   scroll_box(height = "250px")
+```
+
+### Haul summary
+
+This table summarizes the number of nighttime surface trawls conducted during each survey leg. nNights is the total number of nights (i.e., clusters) when trawling occurred, while column totals provide the total number of nights with a given number of trawls conducted. nHauls is the total number of hauls that occurred during a given survey leg.
+
+```{r summarise-cluster-sampling}
+# Summarize the number of nights witn n number of hauls
+haul.summary <- haul %>% 
+  group_by(leg, cluster) %>% 
+  summarise(
+    haulsPerNight = n_distinct(haul)) %>% 
+  group_by(Leg = leg, haulsPerNight) %>% 
+  tally(name = "nNights") 
+
+# Summarize the total number of hauls per Leg
+haul.summary.all <- haul.summary %>% 
+  mutate(nHauls = haulsPerNight*nNights) %>% 
+  group_by(Leg) %>% 
+  summarise(nHauls = sum(nHauls)) %>% 
+  mutate(Leg = as.character(Leg))
+
+# Combine night and total haul statistics
+haul.summary <- haul.summary %>%  
+  pivot_wider(names_from = haulsPerNight, values_from = nNights, values_fn = sum) %>% 
+  mutate(across(everything(), ~replace(., is.na(.), 0))) %>% 
+  adorn_totals(name = "All", where = c("row","col")) %>% 
+  left_join(select(haul.summary.all, Leg, nHauls)) %>% 
+  rename(nNights = All)
+
+haul.summary$nHauls[haul.summary$Leg == "All"] <- sum(haul.summary$nHauls, na.rm = TRUE)
+
+haul.summary %>% 
+  kable(format = knitr.format, booktabs = TRUE, escape = FALSE,
+        align = c("c")) %>% 
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                full_width = FALSE) %>%
+  row_spec(0, align = c("c")) %>% 
+  add_header_above(c(" " = 1, "Trawls/night" = 3, " " = 2))
+
+write_csv(haul.summary, file = here("Output/trawl_effort_summary_leg.csv"))
 ```
 
 ## Catches

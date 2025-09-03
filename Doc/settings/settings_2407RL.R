@@ -111,6 +111,13 @@ leg.breaks <- as.numeric(lubridate::ymd(c("2024-06-26", "2024-07-22",
                                           "2024-08-17", "2024-09-12",
                                           "2024-09-30")))
 
+## Options are: SCS (usually on the ship) or ERDDAP (usually on shore; 24h update rate)
+if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D")) {
+  nav.source <- "SCS"
+} else {
+  nav.source <- "ERDDAP"
+}
+
 # Define ERDDAP data variables for primary NOAA vessel
 erddap.url           <- "http://coastwatch.pfeg.noaa.gov/erddap/tabledap/fsuNoaaShip"
 erddap.vessel        <- "WTEG"    # Lasker == WTEG; Shimada == WTED; add "nrt" if during survey
@@ -370,7 +377,7 @@ sounder.type           <- c(RL  = "EK80",
 # Location of survey data on AST1, AST2, etc. (a vector of file paths)
 # Root directory where survey data are stored; other paths relative to this
 if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {
-  survey.dir           <- c(RL  = "//swc-storage4-s/AST5/SURVEYS/20240625_LASKER_SummerCPS",
+  survey.dir           <- c(RL  = "//swc-storage4-s/AST4/SURVEYS/20240625_LASKER_SummerCPS",
                             LBC = "//swc-storage4-s/AST4/SURVEYS/20240625_CARNAGE_SummerCPS",
                             LM  = "//swc-storage4-s/AST4/SURVEYS/20240625_LISA-MARIE_SummerCPS")
 } else if (Sys.info()['nodename'] %in% c("RL4433188-CHL1")) {
@@ -616,7 +623,11 @@ cufes.vessels          <- c("RL")
 # Trawl data
 trawl.source           <- "SQL"    # "SQL" or "Access"
 trawl.dsn              <- "TRAWL"  # DSN for Trawl database on SQL server
-trawl.db.access        <- "TrawlDataEntry2407RL.accdb"
+trawl.db.name          <- "TrawlDataEntry2407RL.accdb"
+trawl.db.ext           <- ".accdb"
+# Time zone for events in trawl database ("America/Los_Angeles" in past; "UTC" for CLAMS)
+trawl.db.tz            <- "America/Los_Angeles" 
+
 trawl.performance      <- c("Aborted") # Character vector; trawl performance to exclude
 trawl.haul.rm          <- NA # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)
 

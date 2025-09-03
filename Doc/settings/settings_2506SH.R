@@ -430,9 +430,8 @@ seine.db.name   <- "SeineDataEntry2506SH.accdb"
 seine.types     <- c("survey", "research", NA)
 
 # Survey vessels that collected purse seine data
-seine.vessels          <- c("LBC","LM")
-seine.vessels.long     <- c("LBC" = "Long Beach Carnage",
-                            "LM"  = "Lisa Marie")
+seine.vessels          <- c("LBC") # ,"LM"
+seine.vessels.long     <- c("LBC" = "Long Beach Carnage") # ,"LM"  = "Lisa Marie"
 
 # Deep backscatter correction
 # Correct deep backscatter?

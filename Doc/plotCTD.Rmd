@@ -129,7 +129,9 @@ write_csv(nav.gps, here("Output/nav.gps.csv"))
 
 # Get most recent vessel position for plotting
 nav.now <- tail(nav.sf, 1) %>% 
-  mutate(label = paste("Last position:", time, "UTC"))
+  mutate(label = paste("Last position:", time, "UTC"),
+         popup = paste0('<b>Vessel name: </b>', survey.vessel, '<br/>',
+                        '<b>Last position: </b>', time, ' UTC<br/>'))
 ```
 
 ```{r process-uctd}
@@ -1364,6 +1366,13 @@ Locations of CTD (blue points) and UCTD (green points) locations.
 # Create color palette for planned transects
 txPal    <- colorFactor(wpt.colors, wpt.types)
 
+# Create or load oceanIcons
+if(!file.exists(here("Images/oceanIcons.Rdata"))) {
+  source(here("Code/create_ocean_icons.R"))
+} else {
+  load(here("Images/oceanIcons.Rdata"))  
+}
+
 # Map casts
 # Add nav data
 i.map.all.ctds <- i.map %>%
@@ -1385,6 +1394,9 @@ i.map.all.ctds <- i.map %>%
   addProviderTiles(providers$OpenStreetMap.Mapnik, group = "OpenStreetMap.Mapnik",
                    options = tileOptions(useCache = useCachedTile,
                                          crossOrigin = useCrossOrigin)) %>%
+  # Add bathymetry contours
+  addPolylines(data = bathy, color = "white", weight = 2, 
+               label = ~paste(Depth, "m"), group = "Bathymetry Contours") %>% 
   # Add transects
   addPolylines(data = transects.sf, color = ~txPal(Type),
                weight = 3, opacity = 0.5,
@@ -1394,13 +1406,15 @@ i.map.all.ctds <- i.map %>%
   # Add nav data
   addPolylines(data = nav.paths.sf, color = "#000414", weight = 1, 
                label = ~leg, group = "Vessel Track") %>% 
+  addMarkers(data = nav.now, label = ~label, popup = ~popup, icon = ~oceanIcons["ship"],
+             group = "Vessel Positions") %>% 
   # Add layer controls
   addLayersControl(
     baseGroups = c("Esri.NatGeoWorldMap", "Esri.OceanBasemap",
                    "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
     overlayGroups = c("UCTD Casts-Unprocessed", "UCTD Casts",
                       "CTD Casts-Unprocessed", "CTD Casts",
-                      "Transects","Vessel Track"),
+                      "Transects","Vessel Track","Vessel Positions"),
     options = layersControlOptions(collapsed = FALSE))
 
 # Add UCTD cast data

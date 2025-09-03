@@ -109,7 +109,7 @@ save.imap         <- F # Save Leaflet maps
 overwrite.files   <- T # Overwrite files (TRUE if files have changed)
 overwrite.csv     <- T # Overwrite CSV files (TRUE if files have changed)
 process.csv.all   <- F # Process all acoustic backscatter files (F = new files only)
-process.csv.krill <- F # Process krill backscatter data
+process.csv.krill <- T # Process krill backscatter data
 process.cufes     <- F # Process CUFES data (no CUFES sampling post-2023)
 process.cal       <- F # Process calibration results
 process.ctd       <- F # Process CTD and UCTD casts
@@ -6197,6 +6197,9 @@ txPal    <- colorFactor(wpt.colors, wpt.types)
 trawlPal <- c('#00CD66', '#0000FF', '#A020F0',
               '#F5DEB3', '#00FFFF', '#FF0000')
 
+# Create color palette for trawl periods
+trawlPathPal <- colorFactor(c("blue","black","red"), c("Deployment","Fishing","Recovery"))
+
 # Create color palette for CTD casts
 ctdPal <- colorFactor(c("#FFA500", "#A020F0"), c("CTD", "UCTD"))
 
@@ -6524,7 +6527,9 @@ if (do.imap) {
   # Add trawl paths 
   if (nrow(haul.paths) > 0)
     i.map <- i.map %>%  
-      addPolylines(data = haul.paths, color = c("#000000"), weight = 5, opacity = 0.8, 
+      addPolylines(data = haul.paths, 
+                   color = ~trawlPathPal(period), 
+                   weight = 5, opacity = 0.8, 
                    popup = ~popup, label = ~label, 
                    group = "Trawls") 
   if (nrow(cluster.catch.sf) > 0)

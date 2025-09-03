@@ -17,25 +17,25 @@ library(psych)    # For computing harmonic mean
 # User Settings -----------------------------------------------------------
 
 # Directory of CTD files to process
-dir.CTD <- '\\\\swc-storage4-s\\AST5\\SURVEYS\\20240625_LISA-MARIE_SummerCPS\\DATA\\CTD\\CTD_to_Process\\'
+dir.CTD <- '\\\\swc-storage4-s\\AST4\\SURVEYS\\20250725_LISA-MARIE_SummerCPS\\DATA\\CTD\\CTD_to_Process\\'
 
 # Directory to store processed data results
-dir.output <- '\\\\swc-storage4-s\\AST5\\SURVEYS\\20240625_LISA-MARIE_SummerCPS\\DATA\\CTD\\PROCESSED\\20241206\\'
+dir.output <- '\\\\swc-storage4-s\\AST4\\SURVEYS\\20250725_LISA-MARIE_SummerCPS\\DATA\\CTD\\Processed\\'
 
 # Directory containing SBEDataProcessing Program Setup (.psa) files
-dir.PSA <- '\\\\swc-storage4-s\\AST5\\SURVEYS\\20240625_LISA-MARIE_SummerCPS\\DATA\\CTD\\PSA\\'
+dir.PSA <- '\\\\swc-storage4-s\\AST4\\SURVEYS\\20250725_LISA-MARIE_SummerCPS\\DATA\\CTD\\PSA\\'
 
 # CTD configuration file
-file.con <- '\\\\swc-storage4-s\\AST5\\SURVEYS\\20240625_LISA-MARIE_SummerCPS\\DATA\\CTD\\19-8196_2022_cal2024_07_02.xmlcon'
+file.con <- '\\\\swc-storage4-s\\AST4\\SURVEYS\\20250725_LISA-MARIE_SummerCPS\\DATA\\CTD\\SBE19plusV2_7572.xmlcon'
 
 # Directory of Seabird SBEDataProcessing programs
 dir.SBE <- 'C:\\Program Files (x86)\\Sea-Bird\\SBEDataProcessing-Win32\\'
 
 # Template ECS file
-ECS.template <- '\\\\swc-storage4-s\\AST5\\SURVEYS\\20240625_LISA-MARIE_SummerCPS\\PROCESSED\\EV\\ECS\\_2407LM_Post-Survey_Reprocessed_Template.ecs'
+ECS.template <- '\\\\swc-storage4-s\\AST4\\SURVEYS\\20250725_LISA-MARIE_SummerCPS\\PROCESSED\\ECS\\_2507LM_Template.ecs'
 
 # ECS output directory
-dir.ECS <- '\\\\swc-storage4-s\\AST5\\SURVEYS\\20240625_LISA-MARIE_SummerCPS\\PROCESSED\\EV\\ECS\\20241206\\'
+dir.ECS <- '\\\\swc-storage4-s\\AST4\\SURVEYS\\20250725_LISA-MARIE_SummerCPS\\PROCESSED\\ECS\\'
 
 # Time to pause between SBADataProcessing programs, in seconds
 pause <- 1
@@ -70,6 +70,17 @@ for (i in files.CTD) {
   
   # Retain just the file name (i.e., remove extension)
   file.name <- tools::file_path_sans_ext(i)
+  
+  # # Use DatCnv to convert from .hex to .cnv
+  # cmd <- sprintf('"%s" /c"%s" /i"%s" /o"%s" /f"%s" /p"%s" /s',
+  #                paste(dir.SBE, 'DatCnvW.exe', sep = ''),
+  #                paste(dir.CTD, file.name, '.XMLCON', sep = ''),
+  #                paste(dir.CTD, file.name, '.hex', sep = ''),
+  #                dir.output,
+  #                paste(file.name, '.cnv', sep = ''),
+  #                paste(dir.PSA, 'DatCnv.psa', sep = ''))
+  # system("cmd.exe", input = cmd)
+  # Sys.sleep(5)
   
   # Perform Filter
   # cmd <- sprintf('"%s" /i"%s" /o"%s" /f"%s" /p"%s" /s',

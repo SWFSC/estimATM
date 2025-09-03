@@ -614,7 +614,7 @@ map.plan.comp
 
 # Survey progress plot
 
-Actual survey progress by *`r survey.vessel`* (pink line) relative to the original plan (gray line). Points filled [**black**]{style="color:black"} indicate dates when acoustic/trawl sampling occurred (i.e., survey days), points filled [**blue**]{style="color:blue"} indicate days in port (i.e., when speeds are less than 1 kn, for example when the ship is tied-up), and open points indicate transit days (i.e., no acoustic data collected). The vertical and horizontal dashed lines represent the expected date and latitude at the end of each planned survey leg, respectively. Ideally, the actual progress line would align with the intersection of the two dashed lines at the end of a given survey leg.
+Actual survey progress by *`r survey.vessel`* (pink line) relative to the original plan (gray line). Points filled [**black**]{style="color:black"} indicate dates when acoustic/trawl sampling occurred (i.e., survey days), points filled [**blue**]{style="color:blue"} indicate days in port (i.e., when speeds are less than 1 kn, for example when the ship is tied-up), and open points indicate transit days or days on the water with no acoustic transect data collected (i.e., no acoustic data collected). The vertical and horizontal dashed lines represent the expected date and latitude at the end of each planned survey leg, respectively. Ideally, the actual progress line would align with the intersection of the two dashed lines at the end of a given survey leg.
 
 ```{r survey-progress-plot}
 #| fig-height: 7

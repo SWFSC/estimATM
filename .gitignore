@@ -97,6 +97,7 @@ Doc/*.toc
 Doc/archive
 Doc/images*
 Doc/rsconnect/*
+Doc/estimateBiomass_files/*
 Doc/trackSurvey_files/*
 Figs/*.pdf
 Figs/*.png

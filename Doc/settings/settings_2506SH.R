@@ -425,8 +425,10 @@ nasc.max               <- NA
 # If seine catches were believed to be representative, TRUE
 # Else, FALSE (e.g., if sets were non-random or otherwise believed to be biased)
 use.seine.data  <- FALSE
-seine.source    <- "SQL"
+seine.source    <- "Access"
+seine.dir       <- "DATA/BIOLOGICAL/SEINE"
 seine.db.name   <- "SeineDataEntry2506SH.accdb"
+seine.tz        <- "America/Los_Angeles"
 seine.types     <- c("survey", "research", NA)
 
 # Survey vessels that collected purse seine data

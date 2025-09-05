@@ -64,7 +64,7 @@ dir_create(here(c("Figs", "Output")))
 ```{r user-settings}
 # User-specified settings
 get.db     <- T # Extract data from trawl database (F for testing)
-get.nav    <- F # Download nearshore vessel nav data
+get.nav    <- T # Download nearshore vessel nav data
 nav.source <- "GPX" # Navigation data source: CSV or GPX
 
 # Manually define cruise and ship?
@@ -1072,9 +1072,7 @@ if (exists("set.catch.sf")) {
 
 ## Catches
 ### Catch data - All
-
-
-### Catch errors
+#### Catch errors
 
 This table includes only those sets where `totalNum` or `totalWeignt` are missing.
 

@@ -20,15 +20,23 @@ if (seine.source == "SQL") {
 
 } else if (seine.source == "Access") {
   sets.all <- sets.all %>% 
+    mutate(datetime = with_tz(mdy_hm(paste(date, time), tz = seine.tz), 
+                              tzone = "UTC")) %>% 
     arrange(datetime) %>% 
     mutate(season = case_when(
       month(datetime) < 6 ~ "spring",
       TRUE ~ "summer")) %>% 
     mutate(key = paste(cruise, ship, date, set))
   
+  if (!"set_type" %in% names(sets.all))
+    sets.all$set_type <- "research"
+  
   # Format catch data
   set.catch.all <- set.catch.all %>% 
-    mutate(key = paste(cruise, ship, date, set))
+    left_join(select(sets.all, set, cruise, ship, date)) %>% 
+    rename(totalNum = count) %>% 
+    mutate(totalWeight = weight_lbs * 0.453592,
+           key = paste(cruise, ship, date, set))
   
 } else if (trawl.source == "Excel") {
   # Format haul data

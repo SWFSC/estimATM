@@ -103,7 +103,8 @@ for (v in seine.vessels) {
   
   if (nrow(set.lengths.tmp) > 0) {
     set.lengths.tmp <- set.lengths.tmp %>%
-      mutate(vessel_name = seine.vessels.long[v],
+      mutate(date = date(mdy(date)),
+             vessel_name = seine.vessels.long[v],
              vessel.name = v,
              key.set = paste(vessel.name, date, set),
              label = paste("Date:", date, "Set:", set, "Specimen:", specimen),
@@ -115,17 +116,16 @@ for (v in seine.vessels) {
                common_name == "Northern Anchovy" ~ "Engraulis mordax",
                common_name == "Round Herring" ~ "Etrumeus acuminatus",
                TRUE ~ NA_character_),
-             missing.weight = case_when(is.na(weight_g)   ~ T, TRUE ~ FALSE),
-             missing.length = case_when(is.na(length_mm) ~ T, TRUE ~ FALSE)) %>%
-      mutate(
-        weightg = weight_g,
-        forkLength_mm = case_when(
-          scientificName %in% c("Clupea pallasii","Scomber japonicus",
-                                "Trachurus symmetricus","Etrumeus acuminatus") ~ length_mm,
-          TRUE ~ NA_real_),
-        standardLength_mm = case_when(
-          scientificName %in% c("Engraulis mordax","Sardinops sagax") ~ length_mm,
-          TRUE ~ NA_real_)) %>%
+             missing.weight = case_when(is.na(weightg)   ~ T, TRUE ~ FALSE)) %>%
+      # mutate(
+      #   weightg = weightg,
+      #   forkLength_mm = case_when(
+      #     scientificName %in% c("Clupea pallasii","Scomber japonicus",
+      #                           "Trachurus symmetricus","Etrumeus acuminatus") ~ length_mm,
+      #     TRUE ~ NA_real_),
+      #   standardLength_mm = case_when(
+      #     scientificName %in% c("Engraulis mordax","Sardinops sagax") ~ length_mm,
+      #     TRUE ~ NA_real_)) %>%
       filter(scientificName %in% cps.spp, !is.na(set)) %>%
       mutate(
         totalLength_mm = case_when(

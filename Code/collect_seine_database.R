@@ -13,11 +13,11 @@ if (seine.source == "SQL") {
                           Trusted_Connection = "True")
 } else if (seine.source == "Access") {
   # Copy trawl Access database
-  haul.db <- fs::dir_ls(file.path(survey.dir[survey.vessel.primary],
-                              trawl.dir),
-                    regexp = trawl.db.name)
+  seine.db <- fs::dir_ls(file.path(survey.dir[survey.vessel.primary],
+                              seine.dir),
+                    regexp = seine.db.name)
   
-  fs::file_copy(haul.db, here::here("Data/Trawl"), overwrite = TRUE)
+  fs::file_copy(seine.db, here::here("Data/Seine"), overwrite = TRUE)
   
   # Configure ODBC connection to TRAWL database
   seine.con  <- DBI::dbConnect(odbc::odbc(), 
@@ -25,9 +25,9 @@ if (seine.source == "SQL") {
                           DBQ = file.path(here::here("Data/Seine"), seine.db.name))
 }
 # Import trawl database tables
-sets.all       <- dplyr::tbl(seine.con,"Nearshore_Set") %>% dplyr::collect()
-set.catch.all	     <- dplyr::tbl(seine.con,"Nearshore_Catch") %>% dplyr::collect()
-set.lengths.all    <- dplyr::tbl(seine.con,"Nearshore_Specimen") %>% dplyr::collect()
+sets.all        <- dplyr::tbl(seine.con,"Nearshore_Set") %>% dplyr::collect()
+set.catch.all   <- dplyr::tbl(seine.con,"Nearshore_Catch") %>% dplyr::collect()
+set.lengths.all <- dplyr::tbl(seine.con,"Nearshore_Specimen") %>% dplyr::collect()
 if (DBI::dbExistsTable(seine.con, "LengthFrequency"))
   lengthFreq.all <- dplyr::tbl(seine.con,"LengthFrequency") %>% dplyr::collect()
 spp.codes      <- dplyr::tbl(seine.con,"SpeciesCodes") %>% dplyr::collect()

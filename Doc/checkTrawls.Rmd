@@ -89,6 +89,30 @@ if (get.nav.sh) {
   source(here("Code/get_nav_erddap_SH.R"))
 }
 
+# Read transect waypoints
+wpts <- read_csv(here("Data/Nav", wpt.filename))
+
+# Convert planned transects to sf; CRS = crs.geog
+wpts.sf <- wpts %>% 
+  filter(Type %in% wpt.types, Region %in% wpt.regions) %>% 
+  st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
+  mutate(
+    label = paste("Transect", Transect),
+    popup = paste('<b>Transect:</b>', Transect, Type)
+  )
+
+transects.sf <- wpts.sf %>% 
+  group_by(Type, Transect, Region) %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("LINESTRING") %>% 
+  ungroup() %>% 
+  mutate(
+    distance = round(as.numeric(st_length(.))/1852,1),
+    label    = paste("Transect", Transect),
+    popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
+                     'Distance:', distance, 'nmi<br/>')
+  )
+
 # Get most recent vessel position for plotting
 nav.now <- tail(nav.sf, 1) %>% 
   mutate(label = paste("Last position:", time, "UTC"),
@@ -1438,6 +1462,14 @@ pacific_rim_mpa <- st_read(here("Data/GIS/pacific_rim_reserve_polygon.shp")) %>%
   st_transform(crs.geog) %>% 
   mutate(MPA = "Pacific Rim National Park Reserve") 
 
+# Read EEZ shapefiles
+eez_usa <- st_read(here("Data/GIS/eez_us.shp")) %>% 
+  st_transform(crs.geog)
+eez_can <- st_read(here("Data/GIS/eez_canada.shp")) %>% 
+  st_transform(crs.geog)
+eez_mex <- st_read(here("Data/GIS/eez_mex.shp")) %>% 
+  st_transform(crs.geog)
+
 # Mexico
 baja_mpas <- st_read(here("Data/GIS/baja_mpas.shp")) %>% 
   st_transform(crs.geog)
@@ -1489,6 +1521,13 @@ if (exists("nav.paths.sf")) {
   i.map <- leaflet() %>% 
     # Add provider tiles
     addProviderTiles(providers$Esri.NatGeoWorldMap) %>%
+    # Add EEZs
+    addPolylines(data = eez_usa, color = "#000414", weight = 3, 
+                 label = "EEZ-U.S.", group = "Exclusive Economic Zones") %>% 
+    addPolylines(data = eez_can, color = "#000414", weight = 3, 
+                 label = "EEZ-Canada", group = "Exclusive Economic Zones") %>% 
+    addPolylines(data = eez_mex, color = "#000414", weight = 3, 
+                 label = "EEZ-Mexico", group = "Exclusive Economic Zones") %>% 
     # Add National Marine Sanctuaries
     addPolygons(data = nms_bounds, color = "#000414", weight = 2, fillColor = ~mpaPal(NAME),
                 fillOpacity = 0.25, label = ~htmlEscape(NAME), group = "U.S. MPAs") %>%
@@ -1509,11 +1548,35 @@ if (exists("nav.paths.sf")) {
                 label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
     addPolygons(data = pacific_rim_mpa, color = "#000414", weight = 2, 
                 label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
+    # Add core planned transects
+    addPolylines(data = filter(transects.sf, Type %in% c("Compulsory", "Adaptive")),
+                 color = ~txPal(Type), weight = 3, opacity = 0.5,
+                 label = ~htmlEscape(paste(Type, Transect)),
+                 popup = ~popup,
+                 group = "Planned Transects (Core)") %>%
+    addCircleMarkers(data = filter(wpts.sf, Type %in% c("Compulsory", "Adaptive")),
+                     radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
+                     fillOpacity = 0.5, fillColor =  ~txPal(Type), 
+                     label = ~htmlEscape(paste(Type, Waypoint)),
+                     popup = ~popup,
+                     group = "Planned Transects (Core)") %>%
+    # Add ancillary planned transects
+    addPolylines(data = filter(transects.sf, !Type %in% c("Compulsory", "Adaptive")),
+                 color = ~txPal(Type), weight = 3, opacity = 0.5,
+                 # label = ~htmlEscape(paste(Type, Transect)),
+                 popup = ~popup,
+                 group = "Planned Transects (Ancillary)") %>%
+    addCircleMarkers(data = filter(wpts.sf, !Type %in% c("Compulsory", "Adaptive")),
+                     radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
+                     fillOpacity = 0.5, fillColor =  ~txPal(Type),
+                     # label = ~htmlEscape(paste(Type, Waypoint)),
+                     popup = ~popup,
+                     group = "Planned Transects (Ancillary)") %>%
     # Add nav data
     addPolylines(data = nav.paths.sf, color = "#000414", weight = 1, 
                  label = ~leg, group = "Vessel Track") %>%
     addMarkers(data = nav.now, label = ~label, popup = ~popup, icon = ~oceanIcons["ship"],
-             group = "Vessel Positions") %>% 
+               group = "Vessel Positions") %>% 
     # Add trawl paths 
     addPolylines(data = haul.paths, weight = 5, opacity = 0.8, 
                  color = ~trawlPathPal(period), 
@@ -1544,6 +1607,7 @@ if (exists("nav.paths.sf")) {
                      "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
       overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs",
                         "State Waters", "Exclusive Economic Zones", 
+                        "Planned Transects (Core)", "Planned Transects (Ancillary)",
                         "Vessel Track", "Vessel Positions", "Trawls-Salmon"),
       options = layersControlOptions(collapsed = FALSE)) %>% 
     hideGroup(c("Exclusive Economic Zones","Trawls-Salmon",

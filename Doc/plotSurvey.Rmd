@@ -978,7 +978,7 @@ baja_mpas <- st_read(here("Data/GIS/baja_mpas.shp")) %>%
 mex_mpas <- st_read(here("Data/GIS/mex_mpas.shp")) %>% 
   st_transform(crs.geog)
 
-# Read CA MPAs shapefile
+# Read EEZ shapefiles
 eez_usa <- st_read(here("Data/GIS/eez_us.shp")) %>% 
   st_transform(crs.geog)
 eez_can <- st_read(here("Data/GIS/eez_canada.shp")) %>% 

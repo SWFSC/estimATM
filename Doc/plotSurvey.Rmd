@@ -953,9 +953,12 @@ or_mpas <- st_read(here("Data/GIS/or_mpas.shp")) %>%
   st_transform(crs.geog) 
 
 wc_mpas <- st_read(here("Data/GIS/wc_mpas.shp")) %>% 
-  st_transform(crs.geog) 
+  st_transform(crs.geog) %>% 
+  filter(Gov_Lvl == "State")
 
-nms_bounds <- st_read(here("Data/GIS/national_marine_sanctuaries.shp"))
+nms_bounds <- st_read(here("Data/GIS/wc_mpas.shp")) %>% 
+  st_transform(crs.geog) %>% 
+  filter(Gov_Lvl == "Federal")
 
 # Read MPA shapefiles  -----------------------------------------
 # Canada
@@ -1156,7 +1159,7 @@ mpaPal  <- colorFactor(topo.colors(10), all.mpa.types)
 mpaPalWC <- colorFactor(topo.colors(10), unique(wc_mpas$Design))
 
 ## National Marine Sanctuaries
-mpaPalNMS  <- colorFactor(topo.colors(10), as.factor(unique(nms_bounds$NAME)))
+mpaPalNMS  <- colorFactor(topo.colors(10), as.factor(unique(nms_bounds$Site_Nm)))
 
 # Create color palette for Mexico MPAs
 all.mpa.types.mex <- as.factor(c(unique(as.character(baja_mpas$NOMBRE)),
@@ -1230,8 +1233,8 @@ addPolylines(data = eez_mex, color = "#000414", weight = 3,
 addPolylines(data = bathy, color = "white", weight = 2, 
              label = ~paste(Depth, "m"), group = "Bathymetry Contours") %>% 
 # Add National Marine Sanctuaries
-addPolygons(data = nms_bounds, color = "#000414", weight = 2, fillColor = ~mpaPal(NAME),
-            fillOpacity = 0.25, label = ~htmlEscape(NAME), group = "U.S. MPAs") %>%
+addPolygons(data = nms_bounds, color = "#000414", weight = 2, fillColor = ~mpaPalNMS(Site_Nm),
+            fillOpacity = 0.25, label = ~htmlEscape(Site_Nm), group = "U.S. MPAs") %>%
 # Add State waters
 addPolygons(data = or_waters, weight = 2, fillColor = "transparent", 
             opacity = 0.75,
@@ -1518,12 +1521,13 @@ i.map <- i.map %>%
               "CTD Casts",
               "Saildrone Tracks", "Saildrone Positions",
               "State Waters", "Exclusive Economic Zones",
-              "Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs"))
-
-# Save i.map
-dir_create(here("Output/imap"))
+              "Canada MPAs","Mexico MPAs"))
 
 if (save.imap) {
+  # Create output directory
+  dir_create(here("Output/imap"))
+
+  # Save i.map  
   mapshot(i.map, url = here("Output/imap/plotSurvey_explorer.HTML"))
 }
 ```

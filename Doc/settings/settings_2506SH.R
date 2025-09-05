@@ -127,9 +127,11 @@ tx.breaks <- c(0, 12, 28, 45, 59, 68)
 # Define nav source depending on location of computer
 ## Options are: SCS (usually on the ship) or ERDDAP (usually on shore; 24h update rate)
 if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {
-  nav.source <- "SCS"
+  nav.source    <- "SCS"
+  nav.source.ns <- "GPX"
 } else {
-  nav.source <- "ERDDAP"
+  nav.source    <- "ERDDAP"
+  nav.source.ns <- "GPX"
 }
 
 # Define ERDDAP data variables for primary NOAA vessel
@@ -430,6 +432,7 @@ seine.dir       <- "DATA/BIOLOGICAL/SEINE"
 seine.db.name   <- "SeineDataEntry2506SH.accdb"
 seine.tz        <- "America/Los_Angeles"
 seine.types     <- c("survey", "research", NA)
+seine.gpx.name  <- "nav_nearshore.gpx"
 
 # Survey vessels that collected purse seine data
 seine.vessels          <- c("LBC") # ,"LM"

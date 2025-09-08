@@ -448,7 +448,7 @@ deep.nasc.vessels <- c("LBC", "LM")
 
 # Which net data should be used to apportion nearshore backscatter?
 # "Trawl" and/or "Seine"
-catch.source.ns <- c("Trawl") # "Purse seine" 
+catch.source.ns <- c("Trawl", "Purse seine")
 
 # Define path to seine data directories for each vessel
 seine.data.paths <- c("LBC"= file.path(survey.dir["LBC"], "DATA/SEINE/lbc_data_2506SH.xlsx"),

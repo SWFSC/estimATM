@@ -427,9 +427,10 @@ nasc.max               <- NA
 # If seine catches were believed to be representative, TRUE
 # Else, FALSE (e.g., if sets were non-random or otherwise believed to be biased)
 use.seine.data  <- FALSE
-seine.source    <- "Access"
+seine.source    <- "Excel"
 seine.dir       <- "DATA/BIOLOGICAL/SEINE"
 seine.db.name   <- "SeineDataEntry2506SH.accdb"
+seine.xlsx.name <- "Nearshore_LBC_2506SH.xlsx"
 seine.tz        <- "America/Los_Angeles"
 seine.types     <- c("survey", "research", NA)
 seine.gpx.name  <- "nav_nearshore.gpx"

@@ -4,7 +4,7 @@
 # Trawl data are extracted using Code/collect_trawl_database.R
 # Intended to be run following collect_trawl_database.R in scripts that also load settings from Doc/settings
 
-if (seine.source == "SQL") {
+if (seine.source %in% c("SQL", "Excel")) {
   # Format set data
   sets.all <- sets.all %>% 
     mutate(datetime = datetime_UTC) %>% 
@@ -38,7 +38,7 @@ if (seine.source == "SQL") {
     mutate(totalWeight = weight_lbs * 0.453592,
            key = paste(cruise, ship, date, set))
   
-} else if (trawl.source == "Excel") {
+} else if (seine.source == "Excel") {
   # Format haul data
   sets.all <- sets.all %>% 
     arrange(datetime) %>% 

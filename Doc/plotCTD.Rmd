@@ -210,7 +210,7 @@ if (length(uctd.hdr) == 0) {
     summarise(
       time = round(sum(dt),0),
       max.depth = round(min(Z),0)) %>%
-    left_join(select(all.uctd.hdr, cast, cast.date, lat, long, SOG)) %>%
+    left_join(select(all.uctd.hdr, cast, cast.date, lag, lat, long, SOG)) %>%
     arrange(cast.date) %>%
     mutate(cast.num = seq(1, n()),
            leg = paste("Leg", cut(as.numeric(date(cast.date)), leg.breaks, labels = FALSE)))
@@ -246,7 +246,7 @@ if (length(uctd.hdr) == 0) {
   
   uctd.summ <- uctd.summ %>% 
     left_join(select(uctd.class, cast, class)) %>% 
-    select(cast.num, cast, cast.date, lat, long, SOG, 
+    select(cast.num, cast, cast.date, lag, lat, long, SOG, 
            time, max.depth, class, leg)
   
   # Remove unprocessed casts from the summary
@@ -504,7 +504,7 @@ if (length(uctd.summ) > 0) {
     mutate(cast.date = format(cast.date,"%m/%d/%Y %H:%M:%S"))
   
   # rename columns
-  names(uctd.table) <- c("Cast","Filename","Date/time","Lat","Lon",
+  names(uctd.table) <- c("Cast","Filename","Date/time","Lag (s)","Lat","Lon",
                          "SOG (kt)","Time (s)","Depth (m)","Class","Leg")
   # Write results to CSV file
   write_csv(uctd.table, here("Output/uctd_summary_table.csv"))

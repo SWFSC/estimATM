@@ -804,18 +804,27 @@ cufes.threshold.anchovy <- 1   # egg density, eggs per minute
 cufes.threshold.sardine <- 0.3 # egg density, eggs per minute
 
 # # Calibration information ------------------------------------------------
-cal.vessels        <- NA # c("SH","LBC","LM")
-cal.dir            <- c(SH  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS",
-                        LM  = NA_character_,
-                        LBC = NA_character_)
+cal.vessels        <- c("SH","LBC","LM") # c("SH")
+cal.dir            <- c(SH  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW",
+                        LM  = "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW",
+                        LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW")
+# Location of Lasker (or primary vessel) calibration single-target detections (for polar plots)
+single.targets.dir <- c(SH =  "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/EV_PROCESSING/CSV/singleTargets",
+                        LM =  "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS/DATA/EK80/CALIBRATION/POST-SURVEY/EV/singleTargets",
+                        LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS/DATA/EK80/CALIBRATION/EV/CSV")
+sphere.TS <- list(SH  = list("18" = -42.41, "38" = -42.40, "70" = -41.64, "120" = -39.80, "200" = -38.82, "333" = -36.78),
+                  LM  = list("38" = -42.36, "70" = -41.40, "120" = -39.72, "200" = -41.45),
+                  LBC = list("38" = -42.41, "70" = -41.62, "120" = -39.74, "200" = -38.84))
+# Named vector of EK80 FM-mode calibration directories
+cal.dir.fm         <- c(RL  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS/Final-FM") 
 cal.datetime       <- c(SH = "27 June")    # Date/time of calibration
-cal.plot.date      <- c(SH = "2023-06-27") # Date of the calibration, used to plot cal time series
+cal.plot.date      <- c(SH = "2025-06-27") # Date of the calibration, used to plot cal time series
 cal.window         <- c(SH = 75)           # Number of days around calibration date to look for results
 cal.group          <- c(SH = "SWFSC")      # Group conducting the calibration
 cal.personnel      <- c(SH = "A. Beittel, D. Murfin, J. Renfree, and S. Sessions") # Calibration participants
 cal.loc            <- c(SH = "10th Avenue Marine Terminal, San Diego Bay") # Location name
 cal.lat.dd         <- c(SH = 32.6956)    # Cal location latitude in decimal degrees (for mapping, e.g. with ggmap) 37.7865°N @ Pier 30-32
-cal.lon.dd         <- c(SH = -117.15278)   # Cal location longitude in decimal degrees (for mapping, e.g. with ggmap) -122.3844°W @ Pier 30-32
+cal.lon.dd         <- c(SH = -117.15278) # Cal location longitude in decimal degrees (for mapping, e.g. with ggmap) -122.3844°W @ Pier 30-32
 cal.lat            <- dd2decmin(cal.lat.dd)
 cal.lon            <- dd2decmin(cal.lon.dd)
 cal.sphere         <- c(SH = "38.1-mm diameter sphere made from tungsten carbide (WC) with 6% cobalt binder material (WC38.1)") # Cal sphere info
@@ -826,17 +835,32 @@ cal.imp.anal       <- c(SH = "Agilent 4294A Precision Impedance Analyzer") # Inf
 cal.notes          <- c(SH = "Lasker calibration sphere #1")
 
 # Physical conditions during calibration
-cal.temp           <-   c(SH = 20.16)  # enter water temperature at sphere depth
-cal.sal            <-   c(SH = 34.11)  # enter salinity at sphere depth
-cal.c              <- c(SH = 1520.8)   # enter sound speed (m/s)
-cal.min.z          <-   c(SH =  6)     # enter minimum water depth below transducers
-cal.max.z          <-   c(SH = 10)     # enter maximum water depth below transducers
+cal.temp  <- c(SH  = 20.16,
+               LM  = NA,
+               LBC = NA) # enter water temperature at sphere depth
+cal.sal   <- c(SH  = 34.11,
+               LM  = NA,
+               LBC = NA) # enter salinity at sphere depth
+cal.c     <- c(SH  = 1520.8,
+               LM  = NA,
+               LBC = NA) # enter sound speed (m/s)
+cal.min.z <- c(SH  =  6,
+               LM  = NA,
+               LBC = NA) # enter minimum water depth below transducers
+cal.max.z <- c(SH  = 10,
+               LM  = NA,
+               LBC = NA) # enter maximum water depth below transducers
 
 # Enter ambient noise estimates (dB re 1 W) for each vessel
 # Lowest to highest frequency
 cal.noise          <- list(SH  = NA,
                            LM  = NA,
                            LBC = NA)
+
+# RMS error values from Echoview processing
+cal.rms <- list(SH  = rep(NA_real_, 5), # c(0.1018, 0.1057, 0.1384, 0.1128, 0.1945, 0.4646),
+                LM  = rep(NA_real_, 4), # c(0.1380, 0.1359, 0.1667, 0.3739),
+                LBC = rep(NA_real_, 4)) # c(0.0967, 0.0875, 0.1295, 0.2589))
 
 # Axis options for calibration plots
 cal.scales    <- "free"  # fixed or free

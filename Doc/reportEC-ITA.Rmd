@@ -16,12 +16,8 @@ if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,swfscMisc,lubridate,cowplot,here,marmap,fs,sf, odbc,
-<<<<<<< HEAD
                mapview,mapdata,photobiology,ggmap,knitr,bookdown,tcltk,RSQLite,
-=======
-               mapview,mapdata,photobiology,ggmap,knitr,bookdown,tcltk,xts,
->>>>>>> bc1b2c709ebe110980d7a0ffa088aef15bd61f50
-               rnaturalearth,ggspatial,kableExtra,geosphere,janitor,DT)
+               rnaturalearth,ggspatial,kableExtra,geosphere,janitor,DT,xts)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
@@ -75,7 +71,7 @@ get.nav       <- T # Download Lasker nav data from ERDDAP
 nav.source    <- "ERDDAP" # Navigation data source: ERDDAP or SCS
 get.nav.sh    <- F # Download Shimada nav data from ERDDAP
 get.nav.sd    <- F # Download Saildrone nav data from ERDDAP
-get.nav.ns    <- F # Process data from nearshore vessels
+get.nav.ns    <- T # Process data from nearshore vessels
 get.bathy     <- T # Download ETOPO1 bathymetry data in the survey footprint
 extract.bathy <- T # Extract bathymetry for each nav point
 resize.map    <- F # Resize map during survey; if T, uses anticipated bounds of survey area
@@ -975,18 +971,26 @@ source(here("Code/format_trawl_database.R"))
 ```{r process-haul-data}
 # Select bad trawls
 haul.bad <- haul.all %>% 
-  filter(trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
+  filter(cruise %in% cruise.name,
+         trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
            haul %in% trawl.haul.rm | # Manually excluded hauls
            # Missing data that will cause errors in nav matching
            is.na(collection) |
            is.na(equilibriumTime) | 
-           is.na(haulBackTime)) 
+           is.na(haulBackTime))
 
 # Get only hauls from current survey
 haul <- filter(haul.all, cruise %in% cruise.name) %>% 
-  filter(!collection %in% haul.bad$collection) %>% 
-  mutate(duration = difftime(haulBackTime, equilibriumTime, units = "mins"), # Calculate duration
-         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) # Assign cluster
+  filter(!haul %in% haul.bad$haul) %>%
+  mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
+         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) %>%  # Assign cluster
+  mutate(leg = cut(as.numeric(date(equilibriumTime)), leg.breaks, 
+                   include.lowest = TRUE, labels = FALSE))
+# Get all haul numbers
+haul.good <- purrr::pluck(haul$haul)
+
+# Replace missing lat/long values for hauls (a CLAMS/SCS problem, usually)
+source(here("Code/nav_match_CLAMS.R"))
 
 # Find midpoint of each haul as the mean lat/lon
 haul.mid <- haul %>% 
@@ -1004,21 +1008,6 @@ cluster.mid <- haul.mid %>%
 ```
 
 ```{r process-trawl-haul-data}
-# Filter haul data for current survey
-haul <- haul.all %>% 
-  select(cruise, ship, haul, collection, startLatDecimal, startLongDecimal, 
-         stopLatDecimal, stopLongDecimal, equilibriumTime, haulBackTime, 
-         trawlPerformance, season, notes) %>% 
-  filter(cruise %in% cruise.name & ship %in% cruise.ship) %>%
-  # Remove bad trawls
-  filter(!trawlPerformance %in% trawl.performance) %>%
-  filter(!haul %in% trawl.haul.rm) %>% 
-  # Calculate haul duration
-  mutate(duration = difftime(haulBackTime, equilibriumTime, units = "mins")) %>% 
-  # Assign cluster based on yearday
-  mutate(cluster = cumsum(c(0, diff(equilibriumTime)) > 12) + 1,
-         sample.type = "Trawl") 
-
 # Filter catch data for current survey
 catch <- catch.all %>% 
   left_join(select(spp.codes, species, scientificName, commonName)) %>% 
@@ -1029,41 +1018,16 @@ catch <- catch.all %>%
   mutate(key = paste(haul, scientificName),
          sample.type = "Trawl")
 
-# Find midpoint of each haul as the mean lat/lon
-haul.mid <- haul %>% 
-  group_by(cluster, haul, sample.type) %>% 
-  summarise(
-    lat  = mean(c(startLatDecimal, stopLatDecimal)),
-    long = mean(c(startLongDecimal, stopLongDecimal)))
+# Create data frame with haul navigation data
+source(here("Code/create_haul_paths.R"))
 
-# Convert to sf for plotting
-haul.mid.sf <- haul.mid %>% 
-  mutate(label = paste("Haul", haul)) %>% 
-  st_as_sf(coords = c("long","lat"), crs = crs.geog) 
-
-# Convert haul paths and midpoints to sf; CRS = crs.geog
-# Create haul paths from starts and ends
-haul.paths <- select(haul, haul, lat = startLatDecimal, long = startLongDecimal) %>% 
-  bind_rows(select(haul, haul, lat = stopLatDecimal, long = stopLongDecimal)) %>% 
-  arrange(haul) %>% 
+# Create haul paths from nav for each trawl period (Deployment, Fishing, and Recovery)
+haul.paths <- haul.nav %>% 
+  arrange(haul, time) %>% 
   st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-  group_by(haul) %>% 
+  group_by(haul, period) %>% 
   summarise(do_union = FALSE) %>% 
   st_cast("LINESTRING") 
-
-# Find midpoint of each haul cluster as the average of haul midpoints
-cluster.mid <- haul.mid %>% 
-  group_by(cluster, sample.type) %>% 
-  summarise(
-    lat  = mean(lat),
-    long = mean(long)) %>% 
-  ungroup() %>% 
-  project_df(to = crs.proj)
-
-# Convert to sf for plotting
-cluster.mid.sf <- cluster.mid %>% 
-  mutate(label = paste("Cluster", cluster)) %>% 
-  st_as_sf(coords = c("long","lat"), crs = crs.geog) 
 ```  
 
 ### GPS data for each haul 

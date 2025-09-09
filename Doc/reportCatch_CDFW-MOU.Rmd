@@ -119,8 +119,8 @@ protected.spp <- filter(spp.codes, species %in% c(salmon, eulachon))
 # Extract catch containing protected species
 catch.psit <- catch.all %>% 
   left_join(spp.codes) %>% 
-  left_join(select(haul.all, haul, orderOcc, netInWaterTime, lat = startLatDecimal, long = startLongDecimal,
-                   surfaceTempC, salinityPPM)) %>%
+  left_join(select(haul.all, haul, orderOcc, netInWaterTime, 
+                   lat = startLatDecimal, long = startLongDecimal)) %>%
   filter(species %in% protected.spp$species) %>% 
   select(cruise,ship,haul,collection,species,commonName,scientificName,netInWaterTime,lat,long,
          remainingSubSampleWtkg,subSampleWtkg,subSampleCount,totalNum,totalWeight,
@@ -137,12 +137,11 @@ write_csv(catch.psit,
 lengths.psit <- lengths.all %>% 
   left_join(spp.codes) %>% 
   left_join(select(haul.all, haul, orderOcc, netInWaterTime, equilibriumTime, 
-                   lat = startLatDecimal, long = startLongDecimal,
-                   surfaceTempC, salinityPPM)) %>% 
+                   lat = startLatDecimal, long = startLongDecimal)) %>% 
   filter(species %in% protected.spp$species) %>% 
   select(cruise,ship,haul,collection,species,scientificName,commonName,specimenNumber,
-         orderOcc,netInWaterTime,equilibriumTime,lat,long,surfaceTempC,salinityPPM,individual_ID,
-         forkLength_mm,weightg,notes,wasFrozen,netSampleType,isAlive,
+         orderOcc,netInWaterTime,equilibriumTime,lat,long,individual_ID,
+         forkLength_mm,weightg,notes,isAlive,
          otolithNumber,DNAvialNumber,adiposeCondition,hasDNAfinClip,hasTag)
 
 # Output to CSV

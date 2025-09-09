@@ -14,7 +14,7 @@ if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,grid,gridExtra,pander,flextable,lubridate, knitr,here,
-               png,devtools,kableExtra,forcats,jpeg,bookdown,magick,
+               png,devtools,kableExtra,forcats,jpeg,bookdown,magick,RSQLite,
                odbc,cowplot,mapview,fs,sf,rnaturalearth,ggspatial)
 
 # Install and load required packages from Github -------------------------------
@@ -73,6 +73,47 @@ resize.map <- F # Resize map during survey; if T, uses anticipated bounds of sur
 sampling.cufes <- F
 ```
 
+```{r get-nav}
+# Get nav data
+if (nav.source == "ERDDAP") {
+  # Source code to get nav data from ERDDAP
+  source(here("Code/get_nav_erddap.R"))
+} else if (nav.source == "SCS") {
+  # Source code to get nav data from SCS
+  source(here("Code",  scs.nav.script))
+}
+
+# Read transect waypoints
+wpts <- read_csv(here("Data/Nav", wpt.filename))
+
+# Convert planned transects to sf; CRS = crs.geog
+wpts.sf <- wpts %>% 
+  filter(Type %in% wpt.types, Region %in% wpt.regions) %>% 
+  st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
+  mutate(
+    label = paste("Transect", Transect),
+    popup = paste('<b>Transect:</b>', Transect, Type)
+  )
+
+transects.sf <- wpts.sf %>% 
+  group_by(Type, Transect, Region) %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("LINESTRING") %>% 
+  ungroup() %>% 
+  mutate(
+    distance = round(as.numeric(st_length(.))/1852,1),
+    label    = paste("Transect", Transect),
+    popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
+                     'Distance:', distance, 'nmi<br/>')
+  )
+
+# Get most recent vessel position for plotting
+nav.now <- tail(nav.sf, 1) %>% 
+  mutate(label = paste("Last position:", time, "UTC"),
+         popup = paste0('<b>Vessel name: </b>', survey.vessel, '<br/>',
+                        '<b>Last position: </b>', time, ' UTC<br/>'))
+```
+
 ```{r get-trawl-data}
 if (get.db) {
   # Source script to collect data from trawl database
@@ -83,40 +124,57 @@ if (get.db) {
   load(here("Data/Trawl/trawl_data_raw.Rdata"))
   
 }
-
-# Remove duplicate round herring entry 
-spp.codes <- filter(spp.codes, species != 161746)
 ```
 
 ```{r format-trawl-data}
 # Source script to format data from trawl database
 source(here("Code/format_trawl_database.R"))
+
+# # Remove duplicate round herring entry 
+# spp.codes <- filter(spp.codes, species != 161746)
 ```
 
 ```{r process-trawl-data}
-haul.all <- haul.all %>% 
-  # Remove bad trawls
-  filter(!trawlPerformance %in% trawl.performance) %>%
-  # Remove trawls from other surveys
-  filter(cruise %in% cruise.name & ship %in% cruise.ship) %>% 
-  mutate(duration = difftime(haulBackTime, equilibriumTime, units = "mins"), # Calculate duration
-         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) # Assign cluster
+# Select bad trawls
+haul.bad <- haul.all %>% 
+  filter(cruise %in% cruise.name,
+         trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
+           haul %in% trawl.haul.rm | # Manually excluded hauls
+           # Missing data that will cause errors in nav matching
+           is.na(collection) |
+           is.na(equilibriumTime) | 
+           is.na(haulBackTime))
+
+# Get only hauls from current survey
+haul <- filter(haul.all, cruise %in% cruise.name) %>% 
+  filter(!haul %in% haul.bad$haul) %>%
+  mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
+         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) %>%  # Assign cluster
+  mutate(leg = cut(as.numeric(date(equilibriumTime)), leg.breaks, 
+                   include.lowest = TRUE, labels = FALSE))
+# Get all haul numbers
+haul.good <- purrr::pluck(haul$haul)
+
+# Replace missing lat/long values for hauls (a CLAMS/SCS problem, usually)
+source(here("Code/nav_match_CLAMS.R"))
 
 # Find midpoint of each haul as the mean lat/lon
-haul.mid <- haul.all %>% 
+haul.mid <- haul %>% 
   group_by(cluster, haul) %>% 
   summarise(
     lat  = mean(c(startLatDecimal, stopLatDecimal)),
     long = mean(c(startLongDecimal, stopLongDecimal))) 
 
-# Create haul paths from starts and ends
-haul.paths <- select(haul.all, haul, lat = startLatDecimal, long = startLongDecimal) %>% 
-  bind_rows(select(haul.all, haul, lat = stopLatDecimal, long = stopLongDecimal)) %>% 
-  arrange(haul) %>% 
+# Create data frame with haul navigation data
+source(here("Code/create_haul_paths.R"))
+
+# Create haul paths from nav for each trawl period (Deployment, Fishing, and Recovery)
+haul.paths <- haul.nav %>% 
+  arrange(haul, time) %>% 
   st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-  group_by(haul) %>% 
-  summarise(do_union = F) %>% 
-  st_cast("LINESTRING")
+  group_by(haul, period) %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("LINESTRING") 
 
 # Find midpoint of each haul cluster as the average of haul midpoints
 cluster.mid <- haul.mid %>% 
@@ -137,11 +195,11 @@ eez_usa <- st_read(here("Data/GIS/eez_us.shp")) %>%
   select(geometry)
 
 # Filter haul data for current survey
-haul <- haul.all %>% 
-  select(cruise, ship, haul, collection, startLatDecimal, startLongDecimal, 
-         stopLatDecimal, stopLongDecimal, equilibriumTime, haulBackTime, 
-         trawlPerformance, notes) %>% 
-  filter(cruise %in% cruise.name & ship %in% cruise.ship) %>% 
+haul <- haul %>% 
+  # select(cruise, ship, haul, collection, startLatDecimal, startLongDecimal, 
+  #        stopLatDecimal, stopLongDecimal, equilibriumTime, haulBackTime, 
+  #        trawlPerformance, notes) %>% 
+  # filter(cruise %in% cruise.name & ship %in% cruise.ship) %>% 
   st_as_sf(coords = c("startLongDecimal","startLatDecimal"), crs = crs.geog) %>% 
   st_intersection(eez_usa)
 

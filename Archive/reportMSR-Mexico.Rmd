@@ -414,7 +414,7 @@ if (nrow(haul.mex) > 0) {
     addPolylines(data = eez_mex, color = "#000414", weight = 3, 
                  label = "EEZ-Mexico") %>% 
     addPolylines(data = haul.paths, color = c("#000000"), weight = 5, opacity = 0.8, 
-                 popup = ~~paste("Haul:", haul), label = ~paste("Haul:", haul)) %>% 
+                 popup = ~paste("Haul:", haul), label = ~paste("Haul:", haul)) %>% 
     addCircleMarkers(data = haul.mex, radius = 3, color = "#000000", stroke = TRUE, weight = 2,
                      opacity = 0.8, fillOpacity = 1, fillColor =  "red",
                      label = ~paste("Haul:", haul),
@@ -445,7 +445,7 @@ if (nrow(haul.mex) > 0) {
                  label = "EEZ-U.S.") %>% 
     addPolygons(data = wa_waters, weight = 2, fillColor = "transparent") %>% 
     addPolylines(data = haul.paths, color = c("#000000"), weight = 5, opacity = 0.8, 
-                 popup = ~~paste("Haul:", haul), label = ~paste("Haul:", haul)) %>% 
+                 popup = ~paste("Haul:", haul), label = ~paste("Haul:", haul)) %>% 
     addCircleMarkers(data = haul.out, radius = 3, color = "#000000", stroke = TRUE, weight = 2,
                      opacity = 0.8, fillOpacity = 1, fillColor =  "white",
                      label = ~paste("Haul:", haul),

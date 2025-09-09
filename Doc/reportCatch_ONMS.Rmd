@@ -20,7 +20,7 @@ if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,grid,gridExtra,pander,flextable,lubridate, knitr,here,
-               png,devtools,kableExtra,forcats,jpeg,bookdown,magick,
+               png,devtools,kableExtra,forcats,jpeg,bookdown,magick,RSQLite,
                odbc,cowplot,mapview,fs,sf)
 
 # Install and load required packages from Github -------------------------------

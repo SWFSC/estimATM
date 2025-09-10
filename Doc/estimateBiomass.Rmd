@@ -97,7 +97,7 @@ get.nav.sd        <- F # Download Saildrone nav data from ERDDAP
 get.nav.sh        <- F # Download NOAA Ship nav data
 copy.files        <- F # Copy data files to local directory 
 process.csv       <- T # Process Echoview files
-save.figs         <- F # Draw new figures and maps
+save.figs         <- T # Draw new figures and maps
 download.hab      <- F # Download habitat map
 process.scs       <- F # Process SCS data 
 
@@ -114,7 +114,7 @@ process.cufes     <- F # Process CUFES data (no CUFES sampling post-2023)
 process.cal       <- F # Process calibration results
 process.ctd       <- F # Process CTD and UCTD casts
 match.intervals   <- F # Match intervals for comparing EK60 and EK80
-get.bathy         <- T # Extract ETOPO1 bathymetry data in the survey footprint
+get.bathy         <- F # Extract ETOPO1 bathymetry data in the survey footprint
 resize.map        <- F # Resize map during survey; if T, uses anticipated bounds of survey area
 ```
 
@@ -8253,30 +8253,66 @@ be.all     <- be %>%
   mutate(Region = "Core") %>% 
   select(Species, Stock, Region, everything()) %>% 
   filter(Stratum == "All")
-be.all.ns  <- be.ns %>%
-  mutate(Region = "Nearshore") %>%
-  select(Species, Stock, Region, everything()) %>%
-  filter(Stratum == "All")
+
+if (exists("be.all.ns")) {
+  be.all.ns  <- be.ns %>%
+    mutate(Region = "Nearshore") %>%
+    select(Species, Stock, Region, everything()) %>%
+    filter(Stratum == "All")
+  
+  # Summarise biomass for all regions included in the final estimates
+  be.all.var <- be.all %>% 
+    bind_rows(be.all.ns) %>%
+    select(Species, Stock, biomass.sd) %>% 
+    group_by(Species, Stock) %>%
+    summarise(biomass.sd = sqrt(sum(biomass.sd^2)))
+  
+  # Combine core and nearshore biomass
+  be.all.summ <- be.all %>% 
+    bind_rows(be.all.ns) %>%
+    group_by(Species, Stock) %>% 
+    select(-Region, -Stratum, -biomass.sd, -biomass.cv) %>% 
+    summarise_all(list(sum)) %>% 
+    left_join(be.all.var) %>% 
+    mutate(biomass.cv = biomass.sd/Biomass*100)
+} else {
+  # Summarise biomass for all regions included in the final estimates
+  be.all.var <- be.all %>% 
+    # bind_rows(be.all.ns) %>%
+    select(Species, Stock, biomass.sd) %>% 
+    group_by(Species, Stock) %>%
+    summarise(biomass.sd = sqrt(sum(biomass.sd^2)))
+  
+  # Summarise core biomass only
+  be.all.summ <- be.all %>% 
+    # bind_rows(be.all.ns) %>%
+    group_by(Species, Stock) %>% 
+    select(-Region, -Stratum, -biomass.sd, -biomass.cv) %>% 
+    summarise_all(list(sum)) %>% 
+    left_join(be.all.var) %>% 
+    mutate(biomass.cv = biomass.sd/Biomass*100)
+}
+
+# # Summarise biomass for all regions included in the final estimates
+# be.all.var <- be.all %>% 
+#   bind_rows(be.all.ns) %>%
+#   select(Species, Stock, biomass.sd) %>% 
+#   group_by(Species, Stock) %>%
+#   summarise(biomass.sd = sqrt(sum(biomass.sd^2)))
+# 
+# # Combine core and nearshore biomass
+# be.all.summ <- be.all %>% 
+#   bind_rows(be.all.ns) %>%
+#   group_by(Species, Stock) %>% 
+#   select(-Region, -Stratum, -biomass.sd, -biomass.cv) %>% 
+#   summarise_all(list(sum)) %>% 
+#   left_join(be.all.var) %>% 
+#   mutate(biomass.cv = biomass.sd/Biomass*100)
+
 be.all.nse <- be.nse %>% 
   mutate(Region = "NSE") %>% 
   select(Species, Stock, Region, everything()) %>% 
   filter(Stratum == "All")
-
-# Summarise biomass for all regions included in the final estimates
-be.all.var <- be.all %>% 
-  bind_rows(be.all.ns) %>%
-  select(Species, Stock, biomass.sd) %>% 
-  group_by(Species, Stock) %>%
-  summarise(biomass.sd = sqrt(sum(biomass.sd^2)))
-
-# Combine core and nearshore biomass
-be.all.summ <- be.all %>% 
-  bind_rows(be.all.ns) %>%
-  group_by(Species, Stock) %>% 
-  select(-Region, -Stratum, -biomass.sd, -biomass.cv) %>% 
-  summarise_all(list(sum)) %>% 
-  left_join(be.all.var) %>% 
-  mutate(biomass.cv = biomass.sd/Biomass*100)
 ```
 
 ```{r biomass-table-all,results='asis'}

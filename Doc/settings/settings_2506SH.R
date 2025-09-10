@@ -2,11 +2,11 @@
 ## Settings in this section control various behaviors and tasks used in the main data processing scripts
 ### Biomass estimation
 process.seine     <- F # Process purse seine data, if present
-process.nearshore <- T # Process near backscatter data; typically TRUE
+process.nearshore <- F # Process near backscatter data; typically TRUE
 estimate.ns       <- T # Estimate biomass in the nearshore strata; T if nearshore surveyed
 process.offshore  <- F # Process offshore backscatter data
 estimate.os       <- F # Estimate biomass in the offshore strata; T if offshore surveyed
-combine.regions   <- T # Combine nearshore/offshore plots with those from the core region
+combine.regions   <- F # Combine nearshore/offshore plots with those from the core region
 
 # Survey planning ---------------------------------------------------------
 ## This section controls and configures settings used by makeTransects and checkTransects for generating and checking survey transects
@@ -707,9 +707,17 @@ if ("SD" %in% nasc.vessels) {
       stratum = 1,
       transect = 30:39),
     data.frame(
+      scientificName = "Clupea pallasii",
+      stratum = 2,
+      transect = 40:53),
+    data.frame(
       scientificName = "Engraulis mordax",
       stratum = 1,
       transect = 1:26),
+    data.frame(
+      scientificName = "Engraulis mordax",
+      stratum = 2,
+      transect = 43:49),
     data.frame(
       scientificName = "Etrumeus acuminatus",
       stratum = 1,
@@ -739,6 +747,14 @@ if ("SD" %in% nasc.vessels) {
       stratum = 6,
       transect = 32:36),
     data.frame(
+      scientificName = "Sardinops sagax",
+      stratum = 7,
+      transect = 40:45),
+    data.frame(
+      scientificName = "Sardinops sagax",
+      stratum = 8,
+      transect = 50:53),
+    data.frame(
       scientificName = "Scomber japonicus",
       stratum = 1,
       transect = 1:4),
@@ -753,7 +769,11 @@ if ("SD" %in% nasc.vessels) {
     data.frame(
       scientificName = "Scomber japonicus",
       stratum = 4,
-      transect = 41:42),
+      transect = 41:46),
+    data.frame(
+      scientificName = "Scomber japonicus",
+      stratum = 5,
+      transect = 50:53),
     data.frame(
       scientificName = "Trachurus symmetricus",
       stratum = 1,
@@ -761,7 +781,7 @@ if ("SD" %in% nasc.vessels) {
     data.frame(
       scientificName = "Trachurus symmetricus",
       stratum = 2,
-      transect = 15:42))
+      transect = 15:53))
 }
 
 # Stock boundaries --------------------------------------------------------
@@ -804,7 +824,7 @@ cufes.threshold.anchovy <- 1   # egg density, eggs per minute
 cufes.threshold.sardine <- 0.3 # egg density, eggs per minute
 
 # # Calibration information ------------------------------------------------
-cal.vessels        <- c("SH","LBC","LM") # c("SH")
+cal.vessels        <- NA # c("SH","LBC","LM") 
 cal.dir            <- c(SH  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW",
                         LM  = "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW",
                         LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW")

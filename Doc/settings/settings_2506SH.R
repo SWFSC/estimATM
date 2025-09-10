@@ -1,8 +1,8 @@
 # Processing controls ----------------------------------------------------
 ## Settings in this section control various behaviors and tasks used in the main data processing scripts
 ### Biomass estimation
-process.seine     <- F # Process purse seine data, if present
-process.nearshore <- F # Process near backscatter data; typically TRUE
+process.seine     <- T # Process purse seine data, if present
+process.nearshore <- T # Process near backscatter data; typically TRUE
 estimate.ns       <- T # Estimate biomass in the nearshore strata; T if nearshore surveyed
 process.offshore  <- F # Process offshore backscatter data
 estimate.os       <- F # Estimate biomass in the offshore strata; T if offshore surveyed
@@ -426,7 +426,7 @@ nasc.max               <- NA
 # Use seine data to apportion nearshore backscatter
 # If seine catches were believed to be representative, TRUE
 # Else, FALSE (e.g., if sets were non-random or otherwise believed to be biased)
-use.seine.data  <- FALSE
+use.seine.data  <- TRUE
 seine.source    <- "Excel"
 seine.dir       <- "DATA/BIOLOGICAL/SEINE"
 seine.db.name   <- "SeineDataEntry2506SH.accdb"

@@ -1603,7 +1603,7 @@ if (length(island.polygons) > 0) {
 # Extract polygons that intersect the North American land mask (5m isobath)
 strata.nearshore <- strata.nearshore %>% 
   st_make_valid() %>% 
-  st_difference(st_transform(na_landmask, crs = 4326))
+  st_difference(st_transform(na_landmask, crs = crs.geog))
 
 # Remove overlap with core area super polygons
 strata.nearshore <- strata.nearshore %>% 

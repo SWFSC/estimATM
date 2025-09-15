@@ -117,7 +117,7 @@ if (process.nearshore) {
       geom_point(aes(colour = vessel.orig)) + 
       facet_wrap(~vessel.orig)
     
-    ggsave(check.deep.nasc, here("Figs/fig_check_deep_nasc.png"))
+    ggsave(check.deep.nasc, filename = here("Figs/fig_check_deep_nasc.png"))
   }
   
   # Define missing variables in the trawl data

@@ -6,7 +6,7 @@ process.nearshore <- T # Process near backscatter data; typically TRUE
 estimate.ns       <- T # Estimate biomass in the nearshore strata; T if nearshore surveyed
 process.offshore  <- F # Process offshore backscatter data
 estimate.os       <- F # Estimate biomass in the offshore strata; T if offshore surveyed
-combine.regions   <- F # Combine nearshore/offshore plots with those from the core region
+combine.regions   <- T # Combine nearshore/offshore plots with those from the core region
 
 # Survey planning ---------------------------------------------------------
 ## This section controls and configures settings used by makeTransects and checkTransects for generating and checking survey transects
@@ -443,7 +443,7 @@ seine.vessels.long     <- c("LBC" = "Long Beach Carnage") # ,"LM"  = "Lisa Marie
 # Correct deep backscatter?
 adj.deep.nasc <- FALSE
 # Remove deep backscatter, if a correction is not applied? Set to FALSE if adj.deep.nasc = TRUE
-rm.deep.nasc <- FALSE
+rm.deep.nasc <- TRUE
 # Vessels for which to remove deep backscatter that may be anchovy
 deep.nasc.vessels <- c("LBC", "LM")
 
@@ -581,7 +581,7 @@ cufes.date.format      <- "mdy" # mdy (1907RL and later) or ymd (earlier surveys
 cufes.vessels          <- c("RL")
 
 # Trawl data
-trawl.source           <- "CLAMS-SQLite"  # "SQL" or "Access" or "CLAMS-Oracle" or "CLAMS-SQLite"
+trawl.source           <- "SQL"  # "SQL" or "Access" or "CLAMS-Oracle" or "CLAMS-SQLite"
 trawl.dsn              <- "TRAWL"  # DSN for Trawl database on SQL server
 trawl.db.name          <- "TrawlDataEntry2506SH.db"
 trawl.db.ext           <- ".db"
@@ -671,7 +671,7 @@ bootstrap.est.spp      <- c("Clupea pallasii","Engraulis mordax","Sardinops saga
                             "Scomber japonicus","Trachurus symmetricus")
 
 # Number of bootstrap samples
-boot.num <- 5 # 1000 during final
+boot.num <- 100 # 1000 during final
 
 # Generate biomass length frequencies
 do.lf    <- TRUE

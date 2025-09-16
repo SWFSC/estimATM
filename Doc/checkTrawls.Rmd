@@ -195,6 +195,7 @@ catch <- catch.all %>%
   # Removes catch from any bad or manually excluded hauls
   filter(haul %in% haul.good) %>%
   filter(!presenceOnly == "Y") %>%
+  filter(!flaggedData %in% c("excludedFromBiomass")) %>% 
   left_join(select(haul, haul, cluster)) %>% 
   mutate(key = paste(haul, scientificName),
          totalWeight = subSampleWtkg + remainingSubSampleWtkg,

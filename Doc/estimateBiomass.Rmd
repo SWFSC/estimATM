@@ -1567,6 +1567,7 @@ catch <- catch.all %>%
   filter(cruise %in% cruise.name & ship %in% cruise.ship & 
            scientificName %in% cps.spp & netSampleType == 'codend') %>% 
   filter(!presenceOnly == "Y") %>%
+  filter(!flaggedData %in% c("excludedFromBiomass")) %>% 
   inner_join(select(haul, haul, cluster)) %>% 
   mutate(key = paste(haul, scientificName),
          sample.type = "Trawl")

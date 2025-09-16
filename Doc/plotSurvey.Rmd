@@ -848,6 +848,7 @@ if (exists("nasc.all")) {
   
   # Save NASC outliers
   save(big.nasc, file = here("Output/nasc_big.Rdata"))  
+  write_csv(big.nasc, file = here("Output/nasc_outliers.csv"))
 }
 ```
 

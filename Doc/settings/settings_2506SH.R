@@ -120,7 +120,7 @@ leg.breaks <- as.numeric(lubridate::ymd(c("2025-06-11", "2025-06-30",
                                           "2025-08-28", "2025-09-18",
                                           "2025-10-01")))
 
-# Anticipated progress throught the transect plan
+# Anticipated progress through the transect plan
 # Leg 1:1-12, Leg 2:13-28, Leg 3:29-45, Leg 4: 46-59, Leg 5: 60-67 + EB cal
 tx.breaks <- c(0, 12, 28, 45, 59, 68)
 

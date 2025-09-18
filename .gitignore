@@ -130,6 +130,7 @@ Output/routes/*
 Output/routes_updated/*
 Output/saildrone_mapview_files/*
 Output/shapefiles
+Output/spacing*/*
 Output/tables/*
 Output/tables_updated/*
 Output/trackSurvey/*

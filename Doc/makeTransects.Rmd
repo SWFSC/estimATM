@@ -399,7 +399,7 @@ if (exists("transects.final.ns")) rm(transects.final.ns)
 # Clip each set of FSV transects using the inshore and offshore polygons
 for (i in unique(transects.ns$loc)) {
   tx.temp <- ungroup(filter(transects.ns, loc == i)) %>% 
-    st_difference(nearshore.clip) %>% 
+    st_difference(inshore.clip) %>% 
     st_intersection(offshore.clip) %>% 
     st_intersection(states.buff.sd) %>% 
     select(loc, id)

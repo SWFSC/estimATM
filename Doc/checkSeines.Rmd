@@ -20,13 +20,17 @@ if (!require("pak")) install.packages("pak")
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,plotly,lubridate,mapview,kableExtra,leaflet,
                here,bookdown,odbc,DBI,knitr,DT,fs,sf,leafem,naniar,
-               cowplot,xts,tmaptools,htmltools)
+               cowplot,xts,tmaptools,htmltools,rnaturalearth,scatterpie)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
 if (!require("surveyR")) pkg_install("SWFSC/surveyR")
 pacman::p_load_gh("SWFSC/atm")
 pacman::p_load_gh("SWFSC/surveyR")
+
+# rnaturalearth data
+pacman::p_load_gh("ropenscilabs/rnaturalearthdata")
+pacman::p_load_gh("ropenscilabs/rnaturalearthhires")
 
 # Define method of table generation (whether kable or xtable) for best formatting
 doc.type <- knitr::opts_knit$get('rmarkdown.pandoc.to')
@@ -65,6 +69,7 @@ dir_create(here(c("Figs", "Output")))
 # User-specified settings
 get.db     <- T # Extract data from trawl database (F for testing)
 get.nav    <- T # Download nearshore vessel nav data
+resize.map <- T # Adjust map boundaries to data
 ```
 
 ```{r get-nav}
@@ -85,6 +90,30 @@ if (nav.source.ns == "ERDDAP") {
     project_sf(crs = 4326) %>% 
     select(time, lat = Y, long = X)
 }
+
+# Read transect waypoints
+wpts <- read_csv(here("Data/Nav", wpt.filename))
+
+# Convert planned transects to sf; CRS = crs.geog
+wpts.sf <- wpts %>% 
+  filter(Type %in% wpt.types, Region %in% wpt.regions) %>% 
+  st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
+  mutate(
+    label = paste("Transect", Transect),
+    popup = paste('<b>Transect:</b>', Transect, Type)
+  )
+
+transects.sf <- wpts.sf %>% 
+  group_by(Type, Transect, Region) %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("LINESTRING") %>% 
+  ungroup() %>% 
+  mutate(
+    distance = round(as.numeric(st_length(.))/1852,1),
+    label    = paste("Transect", Transect),
+    popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
+                     'Distance:', distance, 'nmi<br/>')
+  )
 ```
 
 ```{r collect-seine-data}
@@ -108,6 +137,57 @@ source(here("Code/format_seine_database.R"))
 # Get only sets from current survey
 sets <- filter(sets.all, cruise %in% cruise.name) %>% 
   mutate(key = paste(cruise, ship, date, set))
+
+# Convert sets to sf to set map bounds
+sets.sf <- sets %>% 
+  st_as_sf(coords = c("long","lat"), crs = crs.geog)
+```
+
+```{r create-basemap,include=F}
+# Configure base map options -----------------
+# Import landmarks
+locations <- filter(read.csv(here("Data/Map/locations.csv")), name %in% label.list) %>%
+  project_df(to = crs.proj)
+
+# Get state data
+states <- ne_states(country = 'United States of America', returnclass = 'sf')
+ca     <- filter(states, name == "California")
+
+# Get countries
+countries <- ne_countries(scale = "large", returnclass = "sf") %>%
+  filter(subregion %in% c("Northern America","Central America"))
+
+# Read bathy contours shapefile 
+bathy <- st_read(here("Data/GIS/bathy_contours.shp")) %>% 
+  st_transform(crs.geog) %>% 
+  rename(Depth = Contour)
+
+# Set padding around data  
+if (resize.map) {
+  # Use nav data to resize map to survey progress
+  map.bounds <- sets.sf %>% 
+    st_transform(crs = crs.proj) %>%
+    st_bbox()  
+} else {
+  # Use transects to set map to survey extent
+  map.bounds <- tranects.sf %>%
+    st_transform(crs = crs.proj) %>%
+    st_bbox()  
+}
+
+# Determine map aspect ratio and set height and width
+map.aspect <- (map.bounds$xmax - map.bounds$xmin)/(map.bounds$ymax - map.bounds$ymin)
+map.height <- 10
+map.width  <- map.height*map.aspect
+
+# Create base map
+base.map <- get_basemap(nav.ns, states, countries, locations, bathy, map.bounds, crs = crs.proj) 
+
+# Save the basemap
+ggsave(base.map, file = here("Figs/fig_basemap_checkSeines.png"), 
+       height = map.height, width = map.width)
+
+save(base.map, file = here("Data/Map/basemap_checkSeines.Rdata"))
 ```
 
 ```{r process-catch-data, message=FALSE}
@@ -170,11 +250,100 @@ if (nrow(set.catch) > 0) {
 set.catch.pie <- set.summ.wt %>% 
   select(ship, key, set_type, long, lat, any_of(names(pie.spp))) %>% 
   st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-  project_sf(crs.proj) 
+  project_sf(crs.proj) %>% 
+  # Create bins for defining point size in NASC plots
+  mutate(bin       = cut(AllCPS, trawl.breaks, include.lowest = TRUE),
+         bin.level =  as.numeric(bin),
+         sample.type = "Purse seine")
 
 # Convert set data for plotting
 set.catch.plot <- set.summ.wt %>%
   st_as_sf(coords = c("long", "lat"), crs = crs.geog)
+```
+
+```{r map-set-catches}
+# Map species proportions -------------------------------------------------------
+# Calculate pie radius based on latitude range
+pie.radius <- as.numeric(abs(map.bounds$ymin - map.bounds$ymax)*pie.scale)
+
+# Calculate pie radius of each pie, based on All CPS landings
+if (scale.pies) {
+  set.catch.pie$r    <- pie.radius*log(set.catch.pie$bin.level+1)
+} else {
+  set.catch.pie$r    <- pie.radius
+}
+
+set.pos <- filter(set.catch.pie, AllCPS > 0) %>% 
+  arrange(desc(X))
+
+# Substitute very small value for species with zero catch, just for pie charts
+if (nrow(set.pos) > 0) {
+  set.pos <- set.pos %>% 
+    replace(. == 0, 0.0000001) 
+}
+
+# Filter for empty trawls
+set.zero <- filter(set.pos, AllCPS == 0)
+
+# Use cluster.pos.ns to identify species present in the nearshore biomass estimation
+# More robust than set.catch when seine data are not 
+pie.cols.ns <- set.pos %>% 
+  select(key:RndHerring, -set_type) %>% 
+  pivot_longer(cols = -key, names_to = "spp", values_to = "totalWeight") %>% 
+  group_by(spp) %>% 
+  summarise(meanWeight = mean(totalWeight)) %>% 
+  filter(meanWeight > 0.0000001) %>% 
+  pluck("spp")
+
+# Get species present in the nearshore catch
+pie.spp.ns <- sort(names(pie.cols)[pie.cols %in% pie.cols.ns])
+
+# Get species present in the nearshore catch
+# pie.spp.ns <- sort(unique(set.catch$scientificName))
+
+if (nrow(set.pos) > 0) {
+  # Create trawl haul figure
+  set.pie.wt <- base.map +
+    # Plot transects data
+    geom_sf(data = filter(transects.sf, Type == "Nearshore"), size = 0.5, colour = "gray70", 
+            alpha = 0.75, linetype = "dashed") +
+    # Plot trawl pies
+    geom_scatterpie(data = set.pos, aes(X, Y, group = key, r = pie.radius, colour = ship),
+                    cols = pie.cols[names(pie.cols) %in% pie.spp.ns],
+                    alpha = 0.8, sorted_by_radius = TRUE) +
+    # Configure pie outline colors
+    scale_colour_manual(name = "Ship",
+                        labels = c("LBC", "LM"),
+                        values = c("LBC" = "black", "LM" = "white")) +
+    # Configure trawl scale
+    scale_fill_manual(name = 'Species',
+                      labels = unname(pie.labs[names(pie.labs) %in% pie.spp.ns]),
+                      values = unname(pie.colors[names(pie.colors) %in% pie.spp.ns])) +
+    # Plot empty cluster locations
+    geom_point(data = set.zero, aes(X, Y),
+               size = 3, shape = 21, fill = 'black', colour = 'white') +
+    # Plot panel label
+    coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+             xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
+             ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
+} else {
+  # Create trawl figure
+  set.pie.wt <- base.map +
+    # Plot transects data
+    geom_sf(data = filter(transects.sf, Type == "Nearshore"), size = 0.5, colour = "gray70", 
+            alpha = 0.75, linetype = "dashed") +
+    # Plot empty trawl locations
+    geom_point(data = set.zero, aes(X, Y), 
+               size = 3, shape = 21, fill = 'black', colour = 'white') +
+    # Plot panel label
+    coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+             xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
+             ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
+}
+
+ggsave(set.pie.wt,
+         filename = here("Figs/fig_seine_proportion_set_wt.png"),
+         width = map.width, height = map.height) 
 ```
 
 ```{r summarise-sets}
@@ -1115,6 +1284,8 @@ if (exists("set.catch.sf")) {
     addScaleBar(position = "bottomright") %>%
     # Add map coordinates
     addMouseCoordinates() %>% 
+    # Add grid lines
+    addGraticule(interval = 1, group = "Graticule") %>%
     # Add measurement tool
     addMeasure(primaryLengthUnit = "miles", secondaryLengthUnit = "km",
                primaryAreaUnit = "sqmiles", secondaryAreaUnit = "sqmeters",
@@ -1124,7 +1295,7 @@ if (exists("set.catch.sf")) {
       baseGroups = c("Esri.NatGeoWorldMap", "Esri.OceanBasemap",
                      "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
       overlayGroups = c("U.S. MPAs","State MPAs", "State Waters", 
-                        "Bathymetry Contours",
+                        "Bathymetry Contours","Graticule",
                         "Sets", "Vessel Paths"),
       options = layersControlOptions(collapsed = FALSE))%>% 
     fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
@@ -1145,7 +1316,7 @@ if (exists("set.catch.sf")) {
                        popup = ~popup, label = ~label,
                        group =  "Sets") 
   
-  if (exists("set.catch.sf") & nrow(filter(set.catch.sf, AllCPS == 0) > 0))
+  if (exists("set.catch.sf") & nrow(filter(set.catch.sf, AllCPS == 0)) > 0)
     i.map <- i.map %>% 
       addCircleMarkers(data = filter(set.catch.sf, AllCPS == 0), 
                        radius = 5, color = "#000000", stroke = TRUE, weight = 2,
@@ -1158,7 +1329,6 @@ if (exists("set.catch.sf")) {
   
 }
 ```
-
 
 ## Catches
 ### Catch data - All
@@ -1191,6 +1361,14 @@ if (nrow(catch.comp.errors) > 0) {
 } else {
   print("Hooray, no (obvious) errors!")
 }
+```
+
+#### Catch proportions
+
+Map showing the portion of each species in purse seine catches, by weight.
+
+```{r catch-proportions}
+include_graphics(here("Figs/fig_seine_proportion_set_wt.png"))
 ```
 
 ### Catch weight summary

@@ -167,11 +167,11 @@ vessel.coord.plot <- ggplot() +  #nav.summ.all, aes(date, lat, group = vessel, c
             linewidth = 1, linetype = "dashed", colour = "gray50") +
   geom_point(data = tx.plan, aes(date, Latitude), inherit.aes = FALSE,
              size = 2, shape = 21, colour = "gray50", fill = "white") +
-  # planned transects - revised
-  geom_line(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
-            linewidth = 1, linetype = "dashed", colour = "blue") +
-  geom_point(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
-             size = 2, shape = 21, colour = "blue", fill = "white") +
+  # # planned transects - revised
+  # geom_line(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
+  #           linewidth = 1, linetype = "dashed", colour = "blue") +
+  # geom_point(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
+  #            size = 2, shape = 21, colour = "blue", fill = "white") +
   geom_vline(xintercept = leg.breaks$date, linetype = "dashed") +
   geom_hline(yintercept = goals$Latitude, linetype = "dashed") +
   geom_text(data = leg.breaks, aes(date, 31, label = leg), inherit.aes = FALSE) +

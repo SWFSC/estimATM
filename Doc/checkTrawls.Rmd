@@ -1591,6 +1591,8 @@ if (exists("nav.paths.sf")) {
     addScaleBar(position = "bottomright") %>%
     # Add map coordinates
     addMouseCoordinates() %>% 
+    # Add grid lines
+    addGraticule(interval = 1, group = "Graticule") %>%
     # Add measurement tool
     addMeasure(primaryLengthUnit = "miles", secondaryLengthUnit = "km",
                primaryAreaUnit = "sqmiles", secondaryAreaUnit = "sqmeters",
@@ -1600,11 +1602,11 @@ if (exists("nav.paths.sf")) {
       baseGroups = c("Esri.NatGeoWorldMap", "Esri.OceanBasemap",
                      "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
       overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs",
-                        "State Waters", "Exclusive Economic Zones", 
+                        "State Waters", "Exclusive Economic Zones", "Graticule",
                         "Planned Transects (Core)", "Planned Transects (Ancillary)",
                         "Vessel Track", "Vessel Positions", "Trawls-Salmon"),
       options = layersControlOptions(collapsed = FALSE)) %>% 
-    hideGroup(c("Canada MPAs","Mexico MPAs")) %>% 
+    hideGroup(c("Canada MPAs","Mexico MPAs","Graticule")) %>% 
     fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
               imap.bounds$range.lon[2], imap.bounds$range.lat[2])
   

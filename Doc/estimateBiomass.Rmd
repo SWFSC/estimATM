@@ -6242,6 +6242,8 @@ if (do.imap) {
     addScaleBar(position = "bottomright") %>%
     # Add map coordinates
     addMouseCoordinates() %>% 
+    # Add grid lines
+    addGraticule(interval = 1, group = "Graticule") %>% 
     # Add measurement tool
     addMeasure(primaryLengthUnit = "miles", secondaryLengthUnit = "km",
                primaryAreaUnit = "sqmiles", secondaryAreaUnit = "sqmeters",
@@ -6249,7 +6251,7 @@ if (do.imap) {
     # Add layer controls
     addLayersControl(
       overlayGroups = c("MPAs", "State Waters", "Exclusive Economic Zones", 
-                        "Bathymetry Contours",
+                        "Bathymetry Contours","Graticule",
                         "Planned Transects (Core)", "Planned Transects (Ancillary)",
                         "Vessel Track", "Vessel Positions", "Trawls", 
                         "Trawl Cluster Polygons", "CTD Casts",
@@ -6535,7 +6537,7 @@ if (do.imap) {
   # Hide groups
   i.map <- i.map %>% 
     hideGroup(c(
-      "Exclusive Economic Zones",
+      "Exclusive Economic Zones","Graticule",
       "Backscatter (Large)", "Backscatter-Krill", 
       "CUFES Egg Density", "CUFES (Negative)", "CUFES Egg Density-Other",
       "CUFES Egg Density-Squid", "Vessel Positions", "Saildrone Tracks", 

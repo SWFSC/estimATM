@@ -314,7 +314,7 @@ if (nrow(set.pos) > 0) {
     # Configure pie outline colors
     scale_colour_manual(name = "Ship",
                         labels = c("LBC", "LM"),
-                        values = c("LBC" = "black", "LM" = "white")) +
+                        values = c("LBC" = "black", "LM" = "gray")) +
     # Configure trawl scale
     scale_fill_manual(name = 'Species',
                       labels = unname(pie.labs[names(pie.labs) %in% pie.spp.ns]),

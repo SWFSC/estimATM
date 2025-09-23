@@ -436,8 +436,8 @@ seine.types     <- c("survey", "research", NA)
 seine.gpx.name  <- "nav_nearshore.gpx"
 
 # Survey vessels that collected purse seine data
-seine.vessels          <- c("LBC") # ,"LM"
-seine.vessels.long     <- c("LBC" = "Long Beach Carnage") # ,"LM"  = "Lisa Marie"
+seine.vessels          <- c("LBC","LM") 
+seine.vessels.long     <- c("LBC" = "Long Beach Carnage","LM" = "Lisa Marie") 
 
 # Deep backscatter correction
 # Correct deep backscatter?

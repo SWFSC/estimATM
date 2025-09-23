@@ -449,7 +449,7 @@ deep.nasc.vessels <- c("LBC", "LM")
 
 # Which net data should be used to apportion nearshore backscatter?
 # "Trawl" and/or "Seine"
-catch.source.ns <- c("Trawl", "Purse seine")
+catch.source.ns <- c("Purse seine") # "Trawl"
 
 # Define path to seine data directories for each vessel
 seine.data.paths <- c("LBC"= file.path(survey.dir["LBC"], "DATA/SEINE/lbc_data_2506SH.xlsx"),
@@ -786,7 +786,7 @@ if ("SD" %in% nasc.vessels) {
 
 # Stock boundaries --------------------------------------------------------
 stock.break.anch <- c("Cape Mendocino" = 40.80)  # Latitude of Cape Mendocino
-stock.break.sar  <- c("Pt. Conception" = 34.3) # Latitude of ~Pt. Conception, base off 2023 habitat map
+stock.break.sar  <- c("Pt. Conception" = 34.55) # Latitude of ~Pt. Conception, base off 2023 habitat map
 # stock.break.sar  <- c("Bodega Bay" = 38.311) # Latitude of Bodega Bay, based on differences in length dist.
 
 # Transects used to define stock boundaries (primary or other)

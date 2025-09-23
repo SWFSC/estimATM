@@ -617,8 +617,6 @@ if (adj.deep.nasc) {
            rher.dens = rher.dens + nasc.nearshore.deep$rher.dens)  
 }
 
-# RESUME HERE ----------------------------------
-
 # Format for plotting
 nasc.density.ns <- nasc.nearshore %>%
   select(lat, long, anch.dens, her.dens, jack.dens, mack.dens, 
@@ -726,7 +724,7 @@ if (!is.na("tx.spacing.ns")) {
       vessel.name == "LBC" & transect > tx.break.ns ~ tx.spacing.ns["CI"],
       TRUE ~ NA)) %>% 
     mutate(dist.bin = cut(min.dist, tx.spacing.bins),
-           spacing  = tx.spacing.dist[as.numeric(dist.bin)],
+           spacing  = min.dist,
            dist.cum = cumsum(spacing))
 } else {
   # Bin transects by spacing
@@ -2354,8 +2352,9 @@ for (i in unique(abund.summ.ns$Species)) {
       L.abund.ns <- ggplot(filter(abund.summ.ns, Species == i, Stock == j), aes(TL, abundance)) + 
         geom_bar(stat = 'identity',fill = 'gray50',colour = 'gray20') + 
         scale_x_continuous("Length (cm)", breaks = x.breaks) + 
-        scale_y_continuous('Abundance (n)', limits = c(0, y.max.abund),
-                           expand = c(0,0), labels = fancy_sci) +
+        scale_y_continuous('Abundance (n)', 
+                           limits = c(0, y.max.abund), #, labels = fancy_sci
+                           expand = c(0,0)) +
         # facet_wrap(~Stock, nrow = 1) +
         theme_bw() +
         theme(strip.background.x = element_blank(),
@@ -2365,8 +2364,9 @@ for (i in unique(abund.summ.ns$Species)) {
       L.biomass.ns <- ggplot(filter(abund.summ.ns, Species == i, Stock == j), aes(TL, biomass)) + 
         geom_bar(stat = 'identity', fill = 'gray50', colour = 'gray20') + 
         scale_x_continuous("Length (cm)", breaks = x.breaks) + 
-        scale_y_continuous('Biomass (t)', limits = c(0, y.max.biomass),
-                           expand = c(0,0), labels = fancy_sci) +
+        scale_y_continuous('Biomass (t)', 
+                           limits = c(0, y.max.biomass),
+                           expand = c(0,0)) + #, labels = fancy_sci
         # facet_wrap(~Stock, nrow = 1) +
         theme_bw() + 
         theme(strip.background.x = element_blank(),
@@ -2628,10 +2628,10 @@ if (save.figs) {
       biomass.dens.ns <- base.map +
         geom_sf(data = filter(strata.nearshore, scientificName == i, stock == j),
                 aes(colour = factor(stratum)), fill = NA, size = 1) +
-        scale_colour_discrete('Stratum') + 
         # Plot zero nasc data
         geom_point(data = filter(nasc.nearshore, cps.nasc == 0), aes(X, Y),
                    colour = 'gray50', size = 0.15, alpha = 0.5) +
+        scale_colour_discrete(name = 'Stratum') +
         # Plot NASC data
         geom_point(data = nasc.density.plot.ns, aes(X, Y, size = bin, fill = bin),
                    shape = 21, alpha = 0.75) +
@@ -2640,6 +2640,7 @@ if (save.figs) {
                           values = dens.sizes.all.ns, labels = dens.labels.all.ns) +
         scale_fill_manual(name = bquote(atop(Biomass~density, ~'(t'~'nmi'^-2*')')),
                           values = dens.colors.all.ns, labels = dens.labels.all.ns) +
+        # scale_colour_discrete('Stratum') +
         # Configure legend guides
         guides(colour = guide_legend(order = 1),
                fill   = guide_legend(order = 2), 

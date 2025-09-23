@@ -3,155 +3,110 @@
 # This script replaces survey-specific versions, and aims to use standardized data inputs. -----
 
 # Import seine data ------------------------------------------------------------------
-if (seine.source == "Excel") {
-  ## Import set data
-  if (exists("sets")) rm(sets)
-  for (v in seine.vessels) {
-    sets.tmp <- readxl::read_xlsx(seine.data.paths[v], sheet = "sets") 
-    
-    if (nrow(sets.tmp) > 0) {
-      sets.tmp <- sets.tmp %>%
-        mutate(date = mdy(date),
-               datetime = force_tz(mdy_hms(paste(date, time_pdt)),"America/Los_Angeles"),
-               vessel_name = seine.vessels.long[v],
-               vessel.name = v,
-               key.set = paste(vessel.name, date, set),
-               sample.type = "Purse seine") %>% 
-        # Convert datetime to UTC
-        mutate(datetime = with_tz(datetime, tzone = "UTC"))
-      
-      # Combine results
-      if (exists("sets")) {
-        sets <- bind_rows(sets, sets.tmp)
-      } else {
-        sets <- sets.tmp
-      }
-    }
-  }
+#seine.source = "SQL"
+if (get.db) {
+  # Source script to collect data from trawl database
+  source(here("Code/collect_seine_database.R"))
   
-  # Manually remove "bad" sets (defined in settings)
-  if(exists("key.set.rm")) {
-    sets <- filter(sets, !key.set %in% key.set.rm)
-  }
+} else {
+  # Load trawl data
+  load(here("Data/Seine/seine_data_raw.Rdata"))
   
-  # Create set cluster file
-  set.clusters <- select(sets, key.set, date, datetime, vessel.name, lat, long, sample.type) %>%
-    filter(vessel.name %in% seine.vessels) %>% 
-    arrange(vessel.name, datetime) %>% 
-    # Begin clustering after primary survey vessel clusters
-    mutate(cluster = max(cluster.mid$cluster) + as.numeric(as.factor(key.set)),
-           haul    = max(haul.mid$haul) + as.numeric(as.factor(key.set)),
-           sample.type = "Purse seine") %>%
-    project_df(to = crs.proj)
-  
-  # Plot purse seine sets retained in the analysis
-  set.map <- base.map + 
-    geom_point(data = set.clusters, aes(X, Y, colour = vessel.name)) + 
-    coord_sf(crs = crs.proj, 
-             xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
-             ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
-  
-  ggsave(set.map, 
-         filename = here("Figs/fig_seine_sets.png"),
-         width = map.width, height = map.height)
-  
-  # Save set info
-  save(sets, set.clusters, file = here("Output/purse_seine_sets.Rdata"))
-  
-  ## Import set catch data -----------------------------------------------------------
-  if (exists("set.catch")) rm(set.catch)
-  for (v in seine.vessels) {
-    set.catch.tmp <- readxl::read_xlsx(seine.data.paths[v], sheet = "catch") %>% 
-      left_join(select(spp.codes, species, commonName, scientificName)) %>% 
-      # Retain only target CPS species
-      filter(scientificName %in% cps.spp)
-    
-    if (nrow(set.catch.tmp) > 0) {
-      set.catch.tmp <- set.catch.tmp %>%
-        mutate(date = mdy(date),
-               vessel_name = seine.vessels.long[v],
-               vessel.name = v,
-               key.set = paste(vessel.name, date, set)) %>% 
-        filter(!is.na(scientificName)) %>% 
-        group_by(key.set, vessel.name, scientificName) %>% 
-        summarise(totalWeight = sum(totalWeight, na.rm = TRUE),
-                  totalNum    = sum(totalNum, na.rm = TRUE)) 
-      
-      # Combine results
-      if (exists("set.catch")) {
-        set.catch <- bind_rows(set.catch, set.catch.tmp)
-      } else {
-        set.catch <- set.catch.tmp
-      } 
-    }
-  }
-  
-  # Remove catch data from "bad" sets
-  set.catch <- filter(set.catch, key.set %in% sets$key.set)
-  
-  # Save set catch info
-  save(set.catch, file = here("Output/purse_seine_catch.Rdata"))
-  
-  # Import set specimen data ----------------------------------------------------
-  if (exists("set.lengths")) rm(set.lengths)
-  for (v in seine.vessels) {
-    set.lengths.tmp <- readxl::read_xlsx(seine.data.paths[v], sheet = "specimens") %>% 
-      left_join(select(spp.codes, species, commonName, scientificName)) %>% 
-      # Retain only target CPS species
-      filter(scientificName %in% cps.spp)
-    
-    if (nrow(set.lengths.tmp) > 0) {
-      set.lengths.tmp <- set.lengths.tmp %>%
-        mutate(date = date(mdy(date)),
-               vessel_name = seine.vessels.long[v],
-               vessel.name = v,
-               key.set = paste(vessel.name, date, set),
-               label = paste("Date:", date, "Set:", set, "Specimen:", specimenNumber),
-               missing.weight = case_when(is.na(weightg) ~ TRUE, TRUE ~ FALSE)) %>%
-        filter(!is.na(set)) %>%
-        mutate(
-          totalLength_mm = case_when(
-            scientificName == "Clupea pallasii" ~
-              convert_length("Clupea pallasii", .$forkLength_mm, "FL", "TL"),
-            scientificName == "Engraulis mordax" ~
-              convert_length("Engraulis mordax", .$standardLength_mm, "SL", "TL"),
-            scientificName == "Sardinops sagax" ~
-              convert_length("Sardinops sagax", .$standardLength_mm, "SL", "TL"),
-            scientificName == "Scomber japonicus" ~
-              convert_length("Scomber japonicus", .$forkLength_mm, "FL", "TL"),
-            scientificName == "Trachurus symmetricus" ~
-              convert_length("Trachurus symmetricus", .$forkLength_mm, "FL", "TL"),
-            scientificName == "Etrumeus acuminatus" ~ 
-              convert_length("Etrumeus acuminatus", .$forkLength_mm, "FL", "TL"))) %>%
-        mutate(
-          weightg = case_when(
-            is.na(weightg) ~ estimate_weight(.$scientificName, .$totalLength_mm, season = tolower(survey.season)),
-            TRUE  ~ weightg),
-          totalLength_mm = case_when(
-            is.na(totalLength_mm) ~ estimate_length(.$scientificName, .$weightg, season = tolower(survey.season)),
-            TRUE ~ totalLength_mm),
-          K = round((weightg/totalLength_mm*10^3)*100)) 
-      
-      # Combine results
-      if (exists("set.lengths")) {
-        set.lengths <- bind_rows(set.lengths, set.lengths.tmp)
-      } else {
-        set.lengths <- set.lengths.tmp
-      } 
-    }
-  }
-  
-  # Remove specimen data from "bad" sets
-  set.lengths <- filter(set.lengths, key.set %in% sets$key.set)
-  
-  save(set.lengths, file = here("Output/purse_seine_lengths.Rdata"))
-  
-  # set.lengths %>% group_by(scientificName) %>% summarise(min.length = min(length_mm, na.rm = T), max.length = max(length_mm, na.rm = T))
-  # set.lengths %>% group_by(scientificName) %>% summarise(min.w = min(weight_g, na.rm = T), max.w = max(weight_g, na.rm = T))
-  # filter(set.lengths, is.na(forkLength_mm)) %>% group_by(scientificName) %>% tally()
-  # filter(set.lengths, is.na(standardLength_mm)) %>% group_by(scientificName) %>% tally()
-  
-} # Add code for importing seine data from other sources (e.g., Access/SQL)
+}
+# Format seine data
+
+# Source script to format data from trawl database
+source(here("Code/format_seine_database.R"))
+
+# Additional processing for biomass estimation
+## Process set data ------------------------------------------------
+### Get only sets from current survey
+sets <- filter(sets.all, cruise %in% cruise.name) %>% 
+  mutate(vessel.name = ship,
+         vessel_name = seine.vessels.long[ship],
+         key.set = paste(ship, date, set),
+         sample.type = "Purse seine") 
+
+# Manually remove "bad" sets (defined in settings)
+if(exists("key.set.rm")) {
+  sets <- filter(sets, !key.set %in% key.set.rm)
+}
+
+# Create set cluster file
+set.clusters <- select(sets, key.set, date, datetime, vessel.name, lat, long, sample.type) %>%
+  filter(vessel.name %in% seine.vessels) %>% 
+  arrange(vessel.name, datetime) %>% 
+  # Begin clustering after primary survey vessel clusters
+  mutate(cluster = max(cluster.mid$cluster) + as.numeric(as.factor(key.set)),
+         haul    = max(haul.mid$haul) + as.numeric(as.factor(key.set)),
+         sample.type = "Purse seine") %>%
+  project_df(to = crs.proj)
+
+# Plot purse seine sets retained in the analysis
+set.map <- base.map + 
+  geom_point(data = set.clusters, aes(X, Y, colour = vessel.name)) + 
+  coord_sf(crs = crs.proj, 
+           xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
+           ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
+
+ggsave(set.map, 
+       filename = here("Figs/fig_seine_sets.png"),
+       width = map.width, height = map.height)
+
+## Process catch data ------------------------------------------------
+set.catch <- set.catch.all %>% 
+  left_join(select(spp.codes, species, commonName, scientificName)) %>% 
+  # Retain only target CPS species
+  filter(scientificName %in% cps.spp) %>% 
+  mutate(vessel.name = ship,
+         vessel_name = seine.vessels.long[ship],
+         key.set = paste(ship, date, set)) %>% 
+  filter(key.set %in% sets$key.set) 
+
+## Process specimen data ------------------------------------------------
+set.lengths <- set.lengths.all %>% 
+  left_join(select(spp.codes, species, commonName, scientificName)) %>% 
+  # Retain only target CPS species
+  filter(scientificName %in% cps.spp) %>% 
+  mutate(vessel.name = ship,
+         vessel_name = seine.vessels.long[ship],
+         key.set = paste(ship, date, set),
+         label = paste("Date:", date, "Set:", set, "Specimen:", specimenNumber),
+         missing.weight = case_when(is.na(weightg) ~ TRUE, TRUE ~ FALSE)) %>%
+  filter(key.set %in% sets$key.set) %>% 
+  mutate(
+    totalLength_mm = case_when(
+      scientificName == "Clupea pallasii" ~
+        convert_length("Clupea pallasii", .$forkLength_mm, "FL", "TL"),
+      scientificName == "Engraulis mordax" ~
+        convert_length("Engraulis mordax", .$standardLength_mm, "SL", "TL"),
+      scientificName == "Sardinops sagax" ~
+        convert_length("Sardinops sagax", .$standardLength_mm, "SL", "TL"),
+      scientificName == "Scomber japonicus" ~
+        convert_length("Scomber japonicus", .$forkLength_mm, "FL", "TL"),
+      scientificName == "Trachurus symmetricus" ~
+        convert_length("Trachurus symmetricus", .$forkLength_mm, "FL", "TL"),
+      scientificName == "Etrumeus acuminatus" ~ 
+        convert_length("Etrumeus acuminatus", .$forkLength_mm, "FL", "TL"))) %>%
+  mutate(
+    weightg = case_when(
+      is.na(weightg) ~ estimate_weight(.$scientificName, .$totalLength_mm, season = tolower(survey.season)),
+      TRUE  ~ weightg),
+    totalLength_mm = case_when(
+      is.na(totalLength_mm) ~ estimate_length(.$scientificName, .$weightg, season = tolower(survey.season)),
+      TRUE ~ totalLength_mm),
+    K = round((weightg/totalLength_mm*10^3)*100))
+
+# Save seine data ----------------------------------------------------
+## Save set info
+save(sets, set.clusters, 
+     file = here("Output/purse_seine_sets.Rdata"))
+## Save set catch info
+save(set.catch, 
+     file = here("Output/purse_seine_catch.Rdata"))
+## Save set specimen info
+save(set.lengths, 
+     file = here("Output/purse_seine_lengths.Rdata"))
 
 # Get max TL for plotting L/W models
 L.max.ns <- set.lengths %>% 
@@ -205,6 +160,7 @@ lw.plot.ns <- ggplot() +
 # save length/weight plot
 ggsave(lw.plot.ns, filename = here("Figs/fig_LW_plots_nearshore.png"),
        width = 10, height = 7) 
+
 
 # Summarize catch data ------------------------------------------------
 set.catch.summ <- set.catch %>%
@@ -380,7 +336,7 @@ seine.summ <- set.summ.wt %>%
   select(Vessel, Set = haul, Date, Latitude, Longitude, "N. Anchovy" = Anchovy, "P. Sardine" = Sardine, 
          "P. Mackerel" = PacMack, "J. Mackerel" = JackMack, "P. Herring" = PacHerring, 
          "R. Herring" = RndHerring, "Other" = Other, Jacksmelt, "All CPS" = AllCPS) %>% 
-  mutate(Date = format(Date, "%m/%d/%Y %H:%M")) %>% 
+  # mutate(Date = format(Date, "%Y/%m/%d %H:%M:%S")) %>% 
   arrange(desc(Vessel), Set)
 
 seine.summ.deep <- set.summ.wt.deep %>%
@@ -389,7 +345,7 @@ seine.summ.deep <- set.summ.wt.deep %>%
   select(Vessel, Set = haul, Date, Latitude, Longitude, "N. Anchovy" = Anchovy, "P. Sardine" = Sardine,
          "P. Mackerel" = PacMack, "J. Mackerel" = JackMack, "P. Herring" = PacHerring,
          "R. Herring" = RndHerring, "Other" = Other, Jacksmelt, "All CPS" = AllCPS) %>%
-  mutate(Date = format(Date, "%m/%d/%Y %H:%M")) %>%
+  # mutate(Date = format(Date, "%m/%d/%Y %H:%M")) %>%
   arrange(desc(Vessel), Set)
 
 # Select positive clusters

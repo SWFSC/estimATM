@@ -134,9 +134,9 @@ The results were generated using R and Rstudio:
 * `r sessionInfo()$R.version$version.string`
 * Last run: `r format(Sys.time(), "%F %T", tz = "America/Los_Angeles", usetz = TRUE)`
 
-Critical analysis settings:
+**Critical analysis settings:**
 
-Remove deep nearshore backscatter: **`r rm.deep.nasc`**
+Remove deep nearshore backscatter: **`r rm.deep.nasc`**  
 Adjust deep nearshore backscatter: **`r adj.deep.nasc`**
 
 ## Controls and Settings

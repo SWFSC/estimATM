@@ -8188,7 +8188,7 @@ for (i in unique(abund.summ$Species)) {
       geom_bar(stat = 'identity',fill = 'gray50',colour = 'gray20') + 
       scale_x_continuous("Length (cm)", breaks = x.breaks) + 
       scale_y_continuous('Abundance (n)', limits = c(0, y.max.abund),
-                         expand = c(0,0), labels = fancy_sci) +
+                         expand = c(0,0)) + #, labels = fancy_sci
       # facet_wrap(~Stock, nrow = 1) +
       theme_bw() +
       theme(strip.background.x = element_blank(),
@@ -8199,7 +8199,7 @@ for (i in unique(abund.summ$Species)) {
       geom_bar(stat = 'identity', fill = 'gray50', colour = 'gray20') + 
       scale_x_continuous("Length (cm)", breaks = x.breaks) + 
       scale_y_continuous('Biomass (t)', limits = c(0, y.max.biomass),
-                         expand = c(0,0), labels = fancy_sci) +
+                         expand = c(0,0)) + #, labels = fancy_sci
       # facet_wrap(~Stock, nrow = 1) +
       theme_bw() + 
       theme(strip.background.x = element_blank(),
@@ -8257,7 +8257,7 @@ be.all     <- be %>%
   select(Species, Stock, Region, everything()) %>% 
   filter(Stratum == "All")
 
-if (exists("be.all.ns")) {
+if (exists("be.ns")) {
   be.all.ns  <- be.ns %>%
     mutate(Region = "Nearshore") %>%
     select(Species, Stock, Region, everything()) %>%
@@ -8296,21 +8296,21 @@ if (exists("be.all.ns")) {
     mutate(biomass.cv = biomass.sd/Biomass*100)
 }
 
-# # Summarise biomass for all regions included in the final estimates
-# be.all.var <- be.all %>% 
-#   bind_rows(be.all.ns) %>%
-#   select(Species, Stock, biomass.sd) %>% 
-#   group_by(Species, Stock) %>%
-#   summarise(biomass.sd = sqrt(sum(biomass.sd^2)))
-# 
-# # Combine core and nearshore biomass
-# be.all.summ <- be.all %>% 
-#   bind_rows(be.all.ns) %>%
-#   group_by(Species, Stock) %>% 
-#   select(-Region, -Stratum, -biomass.sd, -biomass.cv) %>% 
-#   summarise_all(list(sum)) %>% 
-#   left_join(be.all.var) %>% 
-#   mutate(biomass.cv = biomass.sd/Biomass*100)
+# Summarise biomass for all regions included in the final estimates
+be.all.var <- be.all %>%
+  bind_rows(be.all.ns) %>%
+  select(Species, Stock, biomass.sd) %>%
+  group_by(Species, Stock) %>%
+  summarise(biomass.sd = sqrt(sum(biomass.sd^2)))
+
+# Combine core and nearshore biomass
+be.all.summ <- be.all %>%
+  bind_rows(be.all.ns) %>%
+  group_by(Species, Stock) %>%
+  select(-Region, -Stratum, -biomass.sd, -biomass.cv) %>%
+  summarise_all(list(sum)) %>%
+  left_join(be.all.var) %>%
+  mutate(biomass.cv = biomass.sd/Biomass*100)
 
 be.all.nse <- be.nse %>% 
   mutate(Region = "NSE") %>% 
@@ -8400,7 +8400,6 @@ be.table.summ <- be.all.summ %>%
 (ref:biomass-anch-n) Biomass estimates (metric tons, t) and their precisions (upper and lower 95% confidence intervals, CI~95%~; and coefficients of variation, CVs) for the northern subpopulation of Northern Anchovy (_Engraulis mordax_) in the core and nearshore survey regions. Stratum areas are nmi^2^.
 
 ```{r biomass-anch-n}
-
 be.table.sub.all <- be.table.summ %>% 
   filter(Name == "Engraulis mordax", Stock == "Northern") %>% 
   mutate(Region = "All")

@@ -1205,7 +1205,6 @@ if (stratify.manually.ns) {
 # Add start latitude and longitude to strata table
 strata.final.ns <- strata.final.ns %>%
   mutate(transect.name = paste(vessel.name, transect)) %>% 
-  # mutate(transect.name = paste(vessel.name, sprintf("%03d", transect))) %>% 
   # mutate(key = paste(scientificName, stock, vessel.name, stratum)) %>% 
   left_join(tx.labels.ns) %>%
   filter(!is.na(vessel.name)) %>% 
@@ -1539,13 +1538,13 @@ strata.nearshore <- strata.nearshore %>%
   mutate(key = paste(scientificName, stock, vessel.name, stratum)) %>% 
   select(scientificName, stock, vessel.name, everything(), -stratum) %>% 
   left_join(strata.nearshore.fac, by = "key") %>% 
-  select(everything(), stratum = strata.fac)
+  select(everything(), stratum = strata.fac) 
 
 # Add new strata factor to nearshore stratum polygons
 # Create join key in nasc.stock.ns, for use in stratification later
 nasc.stock.ns <- nasc.stock.ns %>% 
   mutate(key = paste(scientificName, stock, vessel.name, stratum)) %>% 
-  left_join(strata.nearshore.fac)
+  left_join(strata.nearshore.fac) 
 
 # ggplot(strata.nearshore, aes(fill = factor(stratum))) +
 #   geom_sf() +
@@ -1739,8 +1738,13 @@ strata.final.ns <- strata.final.ns %>%
 
 saveRDS(strata.final.ns, file = here("Output/strata_final_ns.rds"))
 
+# Save workspace image to save time during nearshore estimation debugging
+# save.image(file = here("Output/debug_nearshore.Rdata"))
+# load(here("Output/debug_nearshore.Rdata"))
+
 # Remove point estimates, if they exist
 if (exists("point.estimates.ns")) rm(point.estimates.ns)
+if (exists("nasc.summ.strata.ns")) rm(nasc.summ.strata.ns)
 # if (exists("point.estimates.ns.deep")) rm(point.estimates.ns.deep)
 
 # Calculate point estimates for each species
@@ -1792,7 +1796,8 @@ for (i in unique(strata.final.ns$scientificName)) {
         filter(scientificName == i, vessel.name == j) %>% 
         select(stratum, area) %>%
         mutate(area = as.numeric(area)) %>% 
-        st_set_geometry(NULL)
+        st_set_geometry(NULL) %>% 
+        arrange(stratum)
       
       # Compute point estimates
       # Currently has na.rm = TRUE for calculating biomass
@@ -1832,7 +1837,9 @@ point.estimates.ns <- filter(point.estimates.ns, biomass.total != 0)
 
 # Add stock designations to point estimates
 point.estimates.ns <- point.estimates.ns %>% 
-  left_join(strata.summ.nearshore) 
+  left_join(strata.summ.nearshore) %>% 
+  # Recreate key to ensure proper join with strata.nearshore
+  mutate(key = paste(scientificName, stock, vessel.name, stratum))
 
 if (adj.deep.nasc) {
   point.estimates.ns <- point.estimates.ns %>% 
@@ -1847,7 +1854,10 @@ save(point.estimates.ns,
 
 # Filter strata to only include strata with point estimates > 0
 strata.nearshore <- strata.nearshore %>% 
-  filter(key %in% unique(point.estimates.ns$key))
+  # Recreate key to ensure proper join with point.estimates.ns
+  mutate(key = paste(scientificName, stock, vessel.name, stratum)) %>% 
+  filter(key %in% unique(point.estimates.ns$key)) %>% 
+  arrange(scientificName, stock, stratum)
 
 # Save strata nasc summaries to CSV
 write_csv(nasc.summ.strata.ns, here("Output/nasc_strata_summary_ns.csv"))

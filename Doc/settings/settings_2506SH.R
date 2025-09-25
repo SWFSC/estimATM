@@ -88,7 +88,7 @@ leg.length <- c(0, leg.days - leg.waste)
 leg.breaks.gpx <- cumsum(as.numeric(leg.length))
 
 # Region vector used to break transects for waypoint files
-region.vec <- c(0, 32.5353, 34.7, 41.99, 48.490, 55)
+region.vec <- c(0, 32.5353, 34.55, 41.99, 48.490, 55)
 
 ## Used by estimateAcousticKm.Rmd ------
 # Get nearshore vessels

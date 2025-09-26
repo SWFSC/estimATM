@@ -342,7 +342,7 @@ nasc.vessels.krill     <- c("SH")
 # Define columns to use for a fixed integration depth (if cps.nasc is not present)
 # Options include 0-100 (by 5), 100, 150, 250, and 350 m.
 # Defined by the atm::extract_csv() function.
-nasc.depth.sar   <- "NASC.20" # "NASC.70"
+nasc.depth.deep   <- "NASC.20" # "NASC.70"
 nasc.depth.cps   <- "NASC.250"
 nasc.depth.krill <- "NASC.350"
 

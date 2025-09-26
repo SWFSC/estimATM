@@ -95,8 +95,8 @@ if (process.nearshore) {
     # If NASC.20 is greater than cps.nasc (e.g., when backscatter near the surface was removed in nascR),
     # cps.nasc.deep = cps.nasc, else the difference between NASC.20 and cps.nasc
     mutate(cps.nasc.deep = case_when(
-      NASC.20 > cps.nasc ~ cps.nasc,
-      TRUE ~ cps.nasc - NASC.20)) 
+      purrr::pluck(., nasc.depth.deep) > cps.nasc ~ cps.nasc,
+      TRUE ~ cps.nasc - purrr::pluck(., nasc.depth.deep))) 
   
   # For vessels specified in deep.nasc.vessels,
   # replace cps.nasc with NASC.20, to examine the contribution of deep anchovy schools to the sardine estimates

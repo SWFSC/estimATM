@@ -137,7 +137,7 @@ The results were generated using R and Rstudio:
 **Critical analysis settings:**
 
 Remove deep nearshore backscatter: **`r rm.deep.nasc`**  
-Adjust deep nearshore backscatter: **`r adj.deep.nasc`**
+Adjust deep nearshore backscatter: **`r adj.deep.nasc`**  
 Deep backscatter depth: **`r nasc.depth.deep`**
 
 ## Controls and Settings

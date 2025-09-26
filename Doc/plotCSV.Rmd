@@ -15,8 +15,9 @@ css: css/ast.css
 if (!require("pacman")) install.packages("pacman")
 
 # Install and load required packages from CRAN ---------------------------------
-pacman::p_load(tidyverse,lubridate,here,sf,knitr,fs,leaflet,leaflet.extras,bookdown,
-               leafem,mapview,htmltools,rnaturalearth,stplanr,ggrepel,plotly, kableExtra)
+pacman::p_load(tidyverse,lubridate,here,sf,knitr,fs,leaflet,leaflet.extras,
+               bookdown,leafem,mapview,htmltools,rnaturalearth,stplanr,ggrepel,
+               plotly,kableExtra,tmaptools)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
@@ -64,13 +65,15 @@ resize.map  <- F
 
 # Vessel-specific info
 vessel.name = "LBC"
+# Define nav source
+if(vessel.name %in% c("LBC","LM")) nav.source <- "GPX"
 ```
 
 ```{r list-files}
 if (process.csv) {
   # List full file paths
   csv.files <- c(dir_ls(file.path(survey.dir[vessel.name], nasc.dir[vessel.name]),
-    regexp = nasc.pattern.cps[vessel.name]))  
+                        regexp = nasc.pattern.cps[vessel.name]))  
 }
 ```
 
@@ -102,7 +105,7 @@ if (process.csv) {
   # Save results
   save(nasc, file = here("Output", paste0("nasc_plotCSV_",vessel.name, ".Rdata")))
   write_csv(nasc, file = here("Output", paste0("nasc_plotCSV_", vessel.name, ".csv")))
-
+  
 } else {
   load(here("Output", paste0("nasc_plotCSV_", vessel.name, ".Rdata")))
 }
@@ -204,35 +207,48 @@ big.nasc.sf <- big.nasc %>%
   st_as_sf(coords = c("long","lat"), crs = crs.geog) 
 ```
 
-```{r load-nav-data}
-# Load nav data
-load(here("Data/Nav/nav_data.Rdata"))
+```{r get-nav}
+# Get nav data
+if (nav.source == "ERDDAP") {
+  # Source code to get nav data from ERDDAP
+  source(here("Code/get_nav_erddap.R"))
+} else if (nav.source == "SCS") {
+  # Source code to get nav data from SCS
+  # Not working with SCS post-2022 (new HTML-based SCS on FSVs); must update
+  source(here("Code", scs.nav.script))
+} else if (nav.source == "GPX") {
+  # Extract tracklines from GPX file
+  nav <- read_GPX(here("Data/Nav", seine.gpx.name))$tracks
+  
+  # Extract trackline points from GPX file
+  nav.points <- read_GPX(here("Data/Nav", seine.gpx.name))$track_points %>% 
+    project_sf(crs = 4326) %>% 
+    select(time, lat = Y, long = X)
+}
 
 # Read transect waypoints
-wpts <- read_csv(here("Data/Nav", wpt.filename)) %>% 
-  rename(lat = Latitude, long = Longitude) %>% 
-  project_df(to = crs.proj)
+wpts <- read_csv(here("Data/Nav", wpt.filename))
 
 # Convert planned transects to sf; CRS = crs.geog
 wpts.sf <- wpts %>% 
   filter(Type %in% wpt.types, Region %in% wpt.regions) %>% 
-  st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
+  st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
   mutate(
-    label    = paste("Transect", Transect),
-    popup    = paste('<b>Transect:</b>', Transect, Type)
+    label = paste("Transect", Transect),
+    popup = paste('<b>Transect:</b>', Transect, Type)
   )
 
-# Create transect lines from waypoint files and add line bearing
 transects.sf <- wpts.sf %>% 
   group_by(Type, Transect, Region) %>% 
-  summarise(do_union = F) %>% 
+  summarise(do_union = FALSE) %>% 
   st_cast("LINESTRING") %>% 
   ungroup() %>% 
-  mutate(distance = round(as.numeric(st_length(.))/1852,1),
-         brg      = 360 + stplanr::line_bearing(.),
-         label    = paste("Transect", Transect),
-         popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
-                          'Distance:', distance, 'nmi<br/>')) 
+  mutate(
+    distance = round(as.numeric(st_length(.))/1852,1),
+    label    = paste("Transect", Transect),
+    popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
+                     'Distance:', distance, 'nmi<br/>')
+  )
 ```
 
 ```{r create-leaflet-map, out.width="100%", out.height="8in"}
@@ -295,22 +311,6 @@ i.map <- leaflet() %>%
                    label = ~htmlEscape(paste(Type, Waypoint)),
                    popup = ~popup,
                    group = "Planned Transects (Ancillary)") %>%
-  # Add nav data
-  # addPolylines(data = nav.paths.sf, color = "#000414", weight = 1, 
-  #              label = ~leg, group = "Vessel Track") %>%
-  # Add backscatter data
-  addPolylines(data = nasc.paths, color = "#000414", weight = 3, 
-               label = ~transect, group = "Vessel Track") %>%
-  addCircleMarkers(data = filter(nasc.sf, NASC < 200), 
-                   radius = ~bin.level*2, color = "#000414", stroke = TRUE, weight = 1,
-                   fillOpacity = 0.75, fillColor =  "#000414", 
-                   label = ~label, popup = ~popup, 
-                   group = "Backscatter (Small)") %>%
-  addCircleMarkers(data = filter(nasc.sf, NASC >= 200), 
-                   radius = ~bin.level*2, color = "#000414", stroke = TRUE, weight = 1,
-                   fillOpacity = 0.75, fillColor =  ~nascPal(bin.level), 
-                   label = ~label, popup = ~popup,
-                   group = "Backscatter") %>%
   # Add legends
   addLegend("bottomleft", colors = nasc.colors.all, 
             values = sort(unique(nasc.cps.sf$bin.level)),
@@ -321,6 +321,8 @@ i.map <- leaflet() %>%
   addScaleBar(position = "bottomright") %>%
   # Add map coordinates
   leafem::addMouseCoordinates() %>% 
+  # Add grid lines
+  addGraticule(interval = 1, group = "Graticule") %>%
   # Add measurement tool
   # addMeasure(primaryLengthUnit = "miles", secondaryLengthUnit = "km",
   #            primaryAreaUnit = "sqmiles", secondaryAreaUnit = "sqmeters",
@@ -328,11 +330,33 @@ i.map <- leaflet() %>%
   # Add layer controls
   addLayersControl(
     overlayGroups = c("Backscatter", "Backscatter (Small)", "Vessel Track",
-                      "Planned Transects (Core)", "Planned Transects (Ancillary)"),
+                      "Planned Transects (Core)", "Planned Transects (Ancillary)",
+                      "Vessel Paths"),
     options = layersControlOptions(collapsed = F)) %>%  
   # hideGroup(c("Planned Transects (Core)", "Planned Transects (Ancillary)")) %>% 
   fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
             imap.bounds$range.lon[2], imap.bounds$range.lat[2])
+
+if (exists("nav"))
+  i.map <- i.map %>% 
+  addPolylines(data = nav, color = "blue", stroke = TRUE, weight = 2,
+               opacity = 0.5, fillOpacity = 0.5,
+               group =  "Vessel Paths")
+
+# Add backscatter data
+i.map <- i.map %>% 
+  addPolylines(data = nasc.paths, color = "#000414", weight = 8, 
+               label = ~transect, group = "Vessel Track") %>%
+  addCircleMarkers(data = filter(nasc.sf, NASC < 200), 
+                   radius = ~bin.level*2, color = "#000414", stroke = TRUE, weight = 1,
+                   fillOpacity = 0.75, fillColor =  "#000414", 
+                   label = ~label, popup = ~popup, 
+                   group = "Backscatter (Small)") %>%
+  addCircleMarkers(data = filter(nasc.sf, NASC >= 200), 
+                   radius = ~bin.level*2, color = "#000414", stroke = TRUE, weight = 1,
+                   fillOpacity = 0.75, fillColor =  ~nascPal(bin.level), 
+                   label = ~label, popup = ~popup,
+                   group = "Backscatter")
 ```
 
 # Interactive map
@@ -432,13 +456,13 @@ Table of mean NASC by transect, sorted (descending) by mean backscatter.
 
 ```{r nasc-summ}
 nasc.summ %>% 
-    kable(booktabs = TRUE, escape = FALSE,
-          digits = c(0,0,0,4,4,0)) %>% 
-    kable_styling(bootstrap_options = c("striped","hover","condensed"), 
-                  full_width = FALSE) %>%
-    # row_spec(0, align = c("c")) %>% 
-    # column_spec(1, italic = T) %>% 
-    scroll_box(height = "500px") 
+  kable(booktabs = TRUE, escape = FALSE,
+        digits = c(0,0,0,4,4,0)) %>% 
+  kable_styling(bootstrap_options = c("striped","hover","condensed"), 
+                full_width = FALSE) %>%
+  # row_spec(0, align = c("c")) %>% 
+  # column_spec(1, italic = T) %>% 
+  scroll_box(height = "500px") 
 ```
 
 # Outlier plot

@@ -6,11 +6,20 @@
 
 if (trawl.source == "SQL") {
   # Configure ODBC connection to TRAWL database
-  trawl.con  <- DBI::dbConnect(odbc::odbc(), 
-                          Driver = "SQL Server", 
-                          Server = "161.55.235.187", 
-                          Database = "Trawl", 
-                          Trusted_Connection = "True")
+  trawl.con <- DBI::dbConnect(odbc::odbc(),
+                              DRIVER="ODBC Driver 18 for SQL Server",
+                              Encrypt = "Optional",
+                              DATABASE="Trawl",
+                              Trusted_Connection= "Yes",
+                              SERVER="swc-estrella-s")
+  
+  # # Original code, prior to CLAMS integration and errors reading new data
+  # trawl.con  <- DBI::dbConnect(odbc::odbc(), 
+  #                              Driver = "ODBC Driver 18 for SQL Server",
+  #                              # Driver = "SQL Server",
+  #                              Server = "161.55.235.187", 
+  #                              Database = "Trawl", 
+  #                              Trusted_Connection = "Yes")
   
 } else if (trawl.source == "Access") {
   # Copy trawl Access database
@@ -81,10 +90,6 @@ if (trawl.source %in% c("SQL","Access")) {
        file = here::here("Data/Trawl/trawl_data_raw.Rdata"))
  
   # building catch.data table from multiple sources 
-  
-  
-  
-  
 }
 
 # Close database channel

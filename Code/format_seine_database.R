@@ -37,17 +37,4 @@ if (seine.source %in% c("SQL", "Excel")) {
     rename(totalNum = count) %>% 
     mutate(totalWeight = weight_lbs * 0.453592,
            key = paste(cruise, ship, date, set))
-  
-} else if (seine.source == "Excel") {
-  # Format haul data
-  sets.all <- sets.all %>% 
-    arrange(datetime) %>% 
-    mutate(season = case_when(
-      month(datetime) < 6 ~ "spring",
-      TRUE ~ "summer")) %>% 
-    mutate(key = paste(cruise, ship, date, set))
-  
-  # Format catch data
-  set.catch.all <- set.catch.all %>% 
-    mutate(key = paste(cruise, ship, date, set))
 }

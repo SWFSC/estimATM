@@ -1,12 +1,12 @@
 # Processing controls ----------------------------------------------------
 ## Settings in this section control various behaviors and tasks used in the main data processing scripts
 ### Biomass estimation
-process.seine     <- F # Process purse seine data, if present
-process.nearshore <- F # Process near backscatter data; typically TRUE
+process.seine     <- T # Process purse seine data, if present
+process.nearshore <- T # Process near backscatter data; typically TRUE
 estimate.ns       <- T # Estimate biomass in the nearshore strata; T if nearshore surveyed
 process.offshore  <- F # Process offshore backscatter data
 estimate.os       <- F # Estimate biomass in the offshore strata; T if offshore surveyed
-combine.regions   <- F # Combine nearshore/offshore plots with those from the core region
+combine.regions   <- T # Combine nearshore/offshore plots with those from the core region
 
 # Survey planning ---------------------------------------------------------
 ## This section controls and configures settings used by makeTransects and checkTransects for generating and checking survey transects
@@ -88,7 +88,7 @@ leg.length <- c(0, leg.days - leg.waste)
 leg.breaks.gpx <- cumsum(as.numeric(leg.length))
 
 # Region vector used to break transects for waypoint files
-region.vec <- c(0, 32.5353, 34.7, 41.99, 48.490, 55)
+region.vec <- c(0, 32.5353, 34.55, 41.99, 48.490, 55)
 
 ## Used by estimateAcousticKm.Rmd ------
 # Get nearshore vessels
@@ -120,7 +120,7 @@ leg.breaks <- as.numeric(lubridate::ymd(c("2025-06-11", "2025-06-30",
                                           "2025-08-28", "2025-09-18",
                                           "2025-10-01")))
 
-# Anticipated progress throught the transect plan
+# Anticipated progress through the transect plan
 # Leg 1:1-12, Leg 2:13-28, Leg 3:29-45, Leg 4: 46-59, Leg 5: 60-67 + EB cal
 tx.breaks <- c(0, 12, 28, 45, 59, 68)
 
@@ -334,7 +334,7 @@ lf.ncols <- 5
 # Data sources ------------------------------------------------------------
 # Backscatter data info
 # Survey vessels that collected acoustic data (a character vector of vessel abbreviations)
-nasc.vessels           <- c("SH","LBC") #c("RL","LBC","LM","SD") 
+nasc.vessels           <- c("SH","LBC","LM") #c("RL","LBC","LM","SD") 
 nasc.vessels.offshore  <- NA # c("SD")
 nasc.vessels.nearshore <- c("LBC", "LM")
 nasc.vessels.krill     <- c("SH")
@@ -342,6 +342,7 @@ nasc.vessels.krill     <- c("SH")
 # Define columns to use for a fixed integration depth (if cps.nasc is not present)
 # Options include 0-100 (by 5), 100, 150, 250, and 350 m.
 # Defined by the atm::extract_csv() function.
+nasc.depth.deep   <- "NASC.20" # "NASC.70"
 nasc.depth.cps   <- "NASC.250"
 nasc.depth.krill <- "NASC.350"
 
@@ -426,8 +427,8 @@ nasc.max               <- NA
 # Use seine data to apportion nearshore backscatter
 # If seine catches were believed to be representative, TRUE
 # Else, FALSE (e.g., if sets were non-random or otherwise believed to be biased)
-use.seine.data  <- FALSE
-seine.source    <- "Excel"
+use.seine.data  <- TRUE
+seine.source    <- "SQL"
 seine.dir       <- "DATA/BIOLOGICAL/SEINE"
 seine.db.name   <- "SeineDataEntry2506SH.accdb"
 seine.xlsx.name <- "Nearshore_LBC_2506SH.xlsx"
@@ -436,20 +437,20 @@ seine.types     <- c("survey", "research", NA)
 seine.gpx.name  <- "nav_nearshore.gpx"
 
 # Survey vessels that collected purse seine data
-seine.vessels          <- c("LBC") # ,"LM"
-seine.vessels.long     <- c("LBC" = "Long Beach Carnage") # ,"LM"  = "Lisa Marie"
+seine.vessels          <- c("LBC","LM") 
+seine.vessels.long     <- c("LBC" = "Long Beach Carnage","LM" = "Lisa Marie") 
 
 # Deep backscatter correction
 # Correct deep backscatter?
 adj.deep.nasc <- FALSE
 # Remove deep backscatter, if a correction is not applied? Set to FALSE if adj.deep.nasc = TRUE
-rm.deep.nasc <- FALSE
+rm.deep.nasc <- TRUE
 # Vessels for which to remove deep backscatter that may be anchovy
 deep.nasc.vessels <- c("LBC", "LM")
 
 # Which net data should be used to apportion nearshore backscatter?
 # "Trawl" and/or "Seine"
-catch.source.ns <- c("Trawl", "Purse seine")
+catch.source.ns <- c("Purse seine") # "Trawl"
 
 # Define path to seine data directories for each vessel
 seine.data.paths <- c("LBC"= file.path(survey.dir["LBC"], "DATA/SEINE/lbc_data_2506SH.xlsx"),
@@ -581,7 +582,7 @@ cufes.date.format      <- "mdy" # mdy (1907RL and later) or ymd (earlier surveys
 cufes.vessels          <- c("RL")
 
 # Trawl data
-trawl.source           <- "CLAMS-SQLite"  # "SQL" or "Access" or "CLAMS-Oracle" or "CLAMS-SQLite"
+trawl.source           <- "SQL"  # "SQL" or "Access" or "CLAMS-Oracle" or "CLAMS-SQLite"
 trawl.dsn              <- "TRAWL"  # DSN for Trawl database on SQL server
 trawl.db.name          <- "TrawlDataEntry2506SH.db"
 trawl.db.ext           <- ".db"
@@ -671,7 +672,7 @@ bootstrap.est.spp      <- c("Clupea pallasii","Engraulis mordax","Sardinops saga
                             "Scomber japonicus","Trachurus symmetricus")
 
 # Number of bootstrap samples
-boot.num <- 5 # 1000 during final
+boot.num <- 100 # 1000 during final
 
 # Generate biomass length frequencies
 do.lf    <- TRUE
@@ -786,7 +787,7 @@ if ("SD" %in% nasc.vessels) {
 
 # Stock boundaries --------------------------------------------------------
 stock.break.anch <- c("Cape Mendocino" = 40.80)  # Latitude of Cape Mendocino
-stock.break.sar  <- c("Pt. Conception" = 34.3) # Latitude of ~Pt. Conception, base off 2023 habitat map
+stock.break.sar  <- c("Pt. Conception" = 34.55) # Latitude of ~Pt. Conception, base off 2023 habitat map
 # stock.break.sar  <- c("Bodega Bay" = 38.311) # Latitude of Bodega Bay, based on differences in length dist.
 
 # Transects used to define stock boundaries (primary or other)

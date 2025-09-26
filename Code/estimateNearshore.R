@@ -95,8 +95,8 @@ if (process.nearshore) {
     # If NASC.20 is greater than cps.nasc (e.g., when backscatter near the surface was removed in nascR),
     # cps.nasc.deep = cps.nasc, else the difference between NASC.20 and cps.nasc
     mutate(cps.nasc.deep = case_when(
-      NASC.20 > cps.nasc ~ cps.nasc,
-      TRUE ~ cps.nasc - NASC.20)) 
+      purrr::pluck(., nasc.depth.deep) > cps.nasc ~ cps.nasc,
+      TRUE ~ cps.nasc - purrr::pluck(., nasc.depth.deep))) 
   
   # For vessels specified in deep.nasc.vessels,
   # replace cps.nasc with NASC.20, to examine the contribution of deep anchovy schools to the sardine estimates
@@ -117,7 +117,7 @@ if (process.nearshore) {
       geom_point(aes(colour = vessel.orig)) + 
       facet_wrap(~vessel.orig)
     
-    ggsave(check.deep.nasc, here("Figs/fig_check_deep_nasc.png"))
+    ggsave(check.deep.nasc, filename = here("Figs/fig_check_deep_nasc.png"))
   }
   
   # Define missing variables in the trawl data
@@ -617,8 +617,6 @@ if (adj.deep.nasc) {
            rher.dens = rher.dens + nasc.nearshore.deep$rher.dens)  
 }
 
-# RESUME HERE ----------------------------------
-
 # Format for plotting
 nasc.density.ns <- nasc.nearshore %>%
   select(lat, long, anch.dens, her.dens, jack.dens, mack.dens, 
@@ -726,7 +724,7 @@ if (!is.na("tx.spacing.ns")) {
       vessel.name == "LBC" & transect > tx.break.ns ~ tx.spacing.ns["CI"],
       TRUE ~ NA)) %>% 
     mutate(dist.bin = cut(min.dist, tx.spacing.bins),
-           spacing  = tx.spacing.dist[as.numeric(dist.bin)],
+           spacing  = min.dist,
            dist.cum = cumsum(spacing))
 } else {
   # Bin transects by spacing
@@ -1207,7 +1205,6 @@ if (stratify.manually.ns) {
 # Add start latitude and longitude to strata table
 strata.final.ns <- strata.final.ns %>%
   mutate(transect.name = paste(vessel.name, transect)) %>% 
-  # mutate(transect.name = paste(vessel.name, sprintf("%03d", transect))) %>% 
   # mutate(key = paste(scientificName, stock, vessel.name, stratum)) %>% 
   left_join(tx.labels.ns) %>%
   filter(!is.na(vessel.name)) %>% 
@@ -1541,13 +1538,13 @@ strata.nearshore <- strata.nearshore %>%
   mutate(key = paste(scientificName, stock, vessel.name, stratum)) %>% 
   select(scientificName, stock, vessel.name, everything(), -stratum) %>% 
   left_join(strata.nearshore.fac, by = "key") %>% 
-  select(everything(), stratum = strata.fac)
+  select(everything(), stratum = strata.fac) 
 
 # Add new strata factor to nearshore stratum polygons
 # Create join key in nasc.stock.ns, for use in stratification later
 nasc.stock.ns <- nasc.stock.ns %>% 
   mutate(key = paste(scientificName, stock, vessel.name, stratum)) %>% 
-  left_join(strata.nearshore.fac)
+  left_join(strata.nearshore.fac) 
 
 # ggplot(strata.nearshore, aes(fill = factor(stratum))) +
 #   geom_sf() +
@@ -1603,7 +1600,7 @@ if (length(island.polygons) > 0) {
 # Extract polygons that intersect the North American land mask (5m isobath)
 strata.nearshore <- strata.nearshore %>% 
   st_make_valid() %>% 
-  st_difference(st_transform(na_landmask, crs = 4326))
+  st_difference(st_transform(na_landmask, crs = crs.geog))
 
 # Remove overlap with core area super polygons
 strata.nearshore <- strata.nearshore %>% 
@@ -1741,8 +1738,13 @@ strata.final.ns <- strata.final.ns %>%
 
 saveRDS(strata.final.ns, file = here("Output/strata_final_ns.rds"))
 
+# Save workspace image to save time during nearshore estimation debugging
+# save.image(file = here("Output/debug_nearshore.Rdata"))
+# load(here("Output/debug_nearshore.Rdata"))
+
 # Remove point estimates, if they exist
 if (exists("point.estimates.ns")) rm(point.estimates.ns)
+if (exists("nasc.summ.strata.ns")) rm(nasc.summ.strata.ns)
 # if (exists("point.estimates.ns.deep")) rm(point.estimates.ns.deep)
 
 # Calculate point estimates for each species
@@ -1794,7 +1796,8 @@ for (i in unique(strata.final.ns$scientificName)) {
         filter(scientificName == i, vessel.name == j) %>% 
         select(stratum, area) %>%
         mutate(area = as.numeric(area)) %>% 
-        st_set_geometry(NULL)
+        st_set_geometry(NULL) %>% 
+        arrange(stratum)
       
       # Compute point estimates
       # Currently has na.rm = TRUE for calculating biomass
@@ -1834,7 +1837,9 @@ point.estimates.ns <- filter(point.estimates.ns, biomass.total != 0)
 
 # Add stock designations to point estimates
 point.estimates.ns <- point.estimates.ns %>% 
-  left_join(strata.summ.nearshore) 
+  left_join(strata.summ.nearshore) %>% 
+  # Recreate key to ensure proper join with strata.nearshore
+  mutate(key = paste(scientificName, stock, vessel.name, stratum))
 
 if (adj.deep.nasc) {
   point.estimates.ns <- point.estimates.ns %>% 
@@ -1849,7 +1854,10 @@ save(point.estimates.ns,
 
 # Filter strata to only include strata with point estimates > 0
 strata.nearshore <- strata.nearshore %>% 
-  filter(key %in% unique(point.estimates.ns$key))
+  # Recreate key to ensure proper join with point.estimates.ns
+  mutate(key = paste(scientificName, stock, vessel.name, stratum)) %>% 
+  filter(key %in% unique(point.estimates.ns$key)) %>% 
+  arrange(scientificName, stock, stratum)
 
 # Save strata nasc summaries to CSV
 write_csv(nasc.summ.strata.ns, here("Output/nasc_strata_summary_ns.csv"))
@@ -2354,8 +2362,9 @@ for (i in unique(abund.summ.ns$Species)) {
       L.abund.ns <- ggplot(filter(abund.summ.ns, Species == i, Stock == j), aes(TL, abundance)) + 
         geom_bar(stat = 'identity',fill = 'gray50',colour = 'gray20') + 
         scale_x_continuous("Length (cm)", breaks = x.breaks) + 
-        scale_y_continuous('Abundance (n)', limits = c(0, y.max.abund),
-                           expand = c(0,0), labels = fancy_sci) +
+        scale_y_continuous('Abundance (n)', 
+                           limits = c(0, y.max.abund), #, labels = fancy_sci
+                           expand = c(0,0)) +
         # facet_wrap(~Stock, nrow = 1) +
         theme_bw() +
         theme(strip.background.x = element_blank(),
@@ -2365,8 +2374,9 @@ for (i in unique(abund.summ.ns$Species)) {
       L.biomass.ns <- ggplot(filter(abund.summ.ns, Species == i, Stock == j), aes(TL, biomass)) + 
         geom_bar(stat = 'identity', fill = 'gray50', colour = 'gray20') + 
         scale_x_continuous("Length (cm)", breaks = x.breaks) + 
-        scale_y_continuous('Biomass (t)', limits = c(0, y.max.biomass),
-                           expand = c(0,0), labels = fancy_sci) +
+        scale_y_continuous('Biomass (t)', 
+                           limits = c(0, y.max.biomass),
+                           expand = c(0,0)) + #, labels = fancy_sci
         # facet_wrap(~Stock, nrow = 1) +
         theme_bw() + 
         theme(strip.background.x = element_blank(),
@@ -2628,10 +2638,10 @@ if (save.figs) {
       biomass.dens.ns <- base.map +
         geom_sf(data = filter(strata.nearshore, scientificName == i, stock == j),
                 aes(colour = factor(stratum)), fill = NA, size = 1) +
-        scale_colour_discrete('Stratum') + 
         # Plot zero nasc data
         geom_point(data = filter(nasc.nearshore, cps.nasc == 0), aes(X, Y),
                    colour = 'gray50', size = 0.15, alpha = 0.5) +
+        scale_colour_discrete(name = 'Stratum') +
         # Plot NASC data
         geom_point(data = nasc.density.plot.ns, aes(X, Y, size = bin, fill = bin),
                    shape = 21, alpha = 0.75) +
@@ -2640,6 +2650,7 @@ if (save.figs) {
                           values = dens.sizes.all.ns, labels = dens.labels.all.ns) +
         scale_fill_manual(name = bquote(atop(Biomass~density, ~'(t'~'nmi'^-2*')')),
                           values = dens.colors.all.ns, labels = dens.labels.all.ns) +
+        # scale_colour_discrete('Stratum') +
         # Configure legend guides
         guides(colour = guide_legend(order = 1),
                fill   = guide_legend(order = 2), 

@@ -1,30 +1,49 @@
 # Load packages
-pacman::p_load(tidyverse, lubridate, here, sf, gganimate, scatterpie)
-# 
+pacman::p_load(tidyverse, lubridate, here, sf, gganimate, scatterpie,tmaptools)
+
+# Install and load required packages from Github -------------------------------
+if (!require("atm")) pkg_install("SWFSC/atm")
+pacman::p_load_gh("SWFSC/atm")
+ 
 # theme_set(theme_bw())
 
 # Load nav data
 load(here("Data/Nav/nav_data_scs.Rdata"))
-# nav.lm <- readRDS(here("Data/Nav/nav_vessel_lm.rds")) %>% 
-#   filter(lat != 999, long != 999)
-# nav.lbc <- readRDS(here("Data/Nav/nav_vessel_lbc.rds")) %>% 
-#   filter(lat != 999, long != 999)
+
+# Extract tracklines from GPX file
+nav.lm <- read_GPX(here("Data/Nav/lm_nav.gpx"))$tracks
+nav.lbc <- read_GPX(here("Data/Nav/lbc_nav.gpx"))$tracks
+
+# Extract trackline points from GPX file
+nav.lm.points <- read_GPX(here("Data/Nav/lm_nav.gpx"))$track_points %>% 
+  project_sf(crs = 4326) %>% 
+  select(time, lat = Y, long = X)
+
+nav.lbc.points <- read_GPX(here("Data/Nav/lbc_nav.gpx"))$track_points %>% 
+  project_sf(crs = 4326) %>% 
+  select(time, lat = Y, long = X)
 
 # Load backscatter data
-load(here("Output/nasc_cps.Rdata"))
+nasc.sh <- readRDS(here("Data/Backscatter/SH/nasc_vessel_SH.rds"))
+nasc.lbc <- readRDS(here("Data/Backscatter/LBC/nasc_vessel_LBC_nearshore.rds"))
+# nasc.lm <- readRDS(here("Data/Backscatter/LM/nasc_vessel_LM_nearshore.rds"))
+
+# Combine backscatter data
+nasc <- nasc.sh %>% 
+  # bind_rows(nasc.lm) %>% 
+  bind_rows(nasc.lbc)
 
 # # Quick plot
 # ggplot() +
 #   geom_path(data = nav, aes(long, lat)) +
-#   geom_path(data = nav.lm, aes(long, lat), colour = "green") +
-#   geom_path(data = nav.lbc, aes(long, lat), colour = "red") +
-#   coord_map()
+#   geom_sf(data = nav.lm, colour = "green") +
+#   geom_sf(data = nav.lbc, colour = "red") +
+#   coord_sf()
 
 # Summarize latitude by date
-nasc.summ.all <- nasc.cps %>% 
+nasc.summ.all <- nasc %>% 
   mutate(date.pdt = with_tz(datetime, tzone = "America/Los_Angeles")) %>%
-  mutate(date = date(date.pdt),
-         vessel.name = "SH") %>% 
+  mutate(date = date(date.pdt)) %>% 
   mutate(vessel = case_when(
     vessel.name == "SH" ~ "Shimada",
     vessel.name == "LM" ~ "Lisa Marie",
@@ -33,7 +52,7 @@ nasc.summ.all <- nasc.cps %>%
   summarise(lat = mean(lat)) %>% 
   mutate(key = paste(vessel, date))
 
-nav.summ.fsv <- nav %>% 
+nav.summ <- nav %>% 
   mutate(time.pdt = with_tz(time, tzone = "America/Los_Angeles")) %>% 
   mutate(vessel = "Shimada",
          date = date(time.pdt)) %>% 
@@ -44,21 +63,27 @@ nav.summ.fsv <- nav %>%
     key %in% unique(nasc.summ.all$key) ~ TRUE,
     TRUE ~ FALSE))
 
-# nav.summ.lm <- nav.lm %>% 
-#   mutate(vessel = "Lisa Marie",
-#          date = date(datetime),
-#          sampling = TRUE) %>% 
-#   group_by(vessel, date, sampling) %>% 
-#   summarise(lat = mean(lat)) 
-# 
-# nav.summ.lbc <- nav.lbc %>% 
-#   mutate(vessel = "Long Beach Carnage",
-#          date = date(datetime),
-#          sampling = TRUE) %>% 
-#   group_by(vessel, date, sampling) %>% 
-#   summarise(lat = mean(lat)) 
+nav.summ.lbc <- nav.lbc.points %>%
+  mutate(vessel = "Long Beach Carnage",
+         date = date(time),
+         key = paste(vessel, date),
+         sampling = case_when(
+           key %in% unique(nasc.summ.all$key) ~ TRUE,
+           TRUE ~ FALSE)) %>%
+  group_by(vessel, date, sampling) %>%
+  summarise(lat = mean(lat))
 
-nav.summ.all <- nav.summ.fsv #%>% bind_rows(nav.summ.lbc) %>% bind_rows(nav.summ.lm) 
+nav.summ.lm <- nav.lm.points %>%
+  mutate(vessel = "Lisa Marie",
+         date = date(time),
+         key = paste(vessel, date),
+         sampling = case_when(
+           key %in% unique(nasc.summ.all$key) ~ TRUE,
+           TRUE ~ FALSE)) %>%
+  group_by(vessel, date, sampling) %>%
+  summarise(lat = mean(lat))
+
+nav.summ.all <- nav.summ %>% bind_rows(nav.summ.lbc) %>% bind_rows(nav.summ.lm) 
 
 # Add leg breaks
 # Use start dates of each leg + end date of last leg
@@ -142,11 +167,11 @@ vessel.coord.plot <- ggplot() +  #nav.summ.all, aes(date, lat, group = vessel, c
             linewidth = 1, linetype = "dashed", colour = "gray50") +
   geom_point(data = tx.plan, aes(date, Latitude), inherit.aes = FALSE,
              size = 2, shape = 21, colour = "gray50", fill = "white") +
-  # planned transects - revised
-  geom_line(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
-            linewidth = 1, linetype = "dashed", colour = "blue") +
-  geom_point(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
-             size = 2, shape = 21, colour = "blue", fill = "white") +
+  # # planned transects - revised
+  # geom_line(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
+  #           linewidth = 1, linetype = "dashed", colour = "blue") +
+  # geom_point(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
+  #            size = 2, shape = 21, colour = "blue", fill = "white") +
   geom_vline(xintercept = leg.breaks$date, linetype = "dashed") +
   geom_hline(yintercept = goals$Latitude, linetype = "dashed") +
   geom_text(data = leg.breaks, aes(date, 31, label = leg), inherit.aes = FALSE) +
@@ -157,6 +182,9 @@ vessel.coord.plot <- ggplot() +  #nav.summ.all, aes(date, lat, group = vessel, c
   #           linewidth = 1, linetype = "dashed") + 
   geom_point(data = nav.summ.all, aes(date, lat, group = vessel, colour = vessel, fill = sampling), 
              size = 2, shape = 21) +
+  # geom_point(data = filter(nav.summ.all, SOG < 1), 
+  #            aes(date, lat, group = vessel, colour = vessel), 
+  #            fill = "blue", size = 2, shape = 21, show.legend = FALSE) +
   scale_colour_discrete(name = "Vessel") +
   scale_fill_manual(name = "Sampling", values = c("TRUE" = 'black', "FALSE" = 'white')) +
   scale_x_date(date_breaks = "10 days") + 
@@ -164,5 +192,5 @@ vessel.coord.plot <- ggplot() +  #nav.summ.all, aes(date, lat, group = vessel, c
   theme_bw()
 
 ggsave(vessel.coord.plot, 
-       filename = here("Figs/fig_vessel_coordination.png"), 
+       filename = here("Figs/fig_vessel_coordination_all.png"), 
        height = 7, width = 12)

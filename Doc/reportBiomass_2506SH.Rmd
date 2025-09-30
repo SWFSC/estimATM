@@ -39,7 +39,7 @@ if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,grid,gridExtra,pander,flextable,lubridate,knitr,here,
-               png,devtools,forcats,jpeg,bookdown,magick,
+               png,devtools,forcats,jpeg,bookdown,magick,tmaptools,sf,
                odbc,cowplot,mapview,fs,patchwork,gt)
 
 # Install and load required packages from Github -------------------------------
@@ -208,7 +208,7 @@ This report provides:  1) a detailed description of the acoustic-trawl method (A
 
 The core survey region, which was sampled by NOAA ship _`r survey.vessel.long`_ (hereafter, _`r survey.vessel`_), spanned most of the continental shelf between `r survey.landmark.s`, CA and `r survey.landmark.n`. Planned transects were oriented approximately perpendicular to the coast in the SCB, and east-to-west north of Pt. Conception, from the shallowest navigable depth (~20 m) to a distance of 35 nmi offshore or, if farther, to the 1,000 ftm (~1830 m) isobath. In the SCB, transects in the core region were extended to approximately 100 nmi.      
 
-Because navigation by _`r survey.vessel`_ in water shallower than ~`r safe.depth.fsv` m was deemed inefficient, unsafe, or both, fishing vessels _Long Beach Carnage_ and _Lisa Marie_ sampled CPS in the nearshore region, along 2.5 to 5 nmi-long transects spaced 5 to 7 nmi-apart off the mainland coast of the U.S., between San Diego and Cape Flattery, as well as around Santa Cruz and Santa Catalina Islands in the Southern CA Bight. In the nearshore region, and due to sparse purse seine sampling along portions of the coast, the acoustically-sampled CPS were apportioned using the species compositions and length distributions from either daytime purse-seine sets by _Long Beach Carnage_ or _Lisa Marie_ or nighttime trawl from _`r survey.vessel`_, whichever was closest in space.  
+Because navigation by _`r survey.vessel`_ in water shallower than ~`r safe.depth.fsv` m was deemed inefficient, unsafe, or both, fishing vessels _Long Beach Carnage_ and _Lisa Marie_ sampled CPS in the nearshore region, along 5 nmi-long transects spaced 7 nmi-apart off the mainland coast of the U.S., between San Diego and Cape Flattery, and along 2 nmi-long transects spaced ~3-nmi apart around Santa Cruz and Santa Catalina Islands in the Southern CA Bight. In the nearshore region, and due to sparse purse seine sampling along portions of the coast, the acoustically-sampled CPS were apportioned using the species compositions and length distributions from either daytime purse-seine sets by _Long Beach Carnage_ or _Lisa Marie_ or nighttime trawl from _`r survey.vessel`_, whichever was closest in space.  
 
 The biomasses (metric tons, t), distributions, and demographics for each species and subpopulation are for the survey area and period, and therefore may not represent their entire population or subpopulation. Sampling was also conducted in the core and nearshore regions off Baja CA by Instituto Mexicano de Investigación en Pesca y Acuacultura Sustentables (IMIPAS, formerly INAPESCA), but the estimates in this report are only derived from data collected by  _`r survey.vessel`_, _Long Beach Carnage_, and _Lisa Marie_.  
 
@@ -233,6 +233,8 @@ The total estimated biomass of Round Herring was `r prettyNum(be.all.summ$Biomas
 <!-- `r length.summ$L.min[length.summ$scientificName == 'Etrumeus acuminatus']` to `r length.summ$L.max[length.summ$scientificName == 'Etrumeus acuminatus']` -->
 
 The total estimated biomass of `r num2words(nrow(be.all.summ))` populations or subpopulations of `r num2words(n_distinct(be.all.summ$Species))` coastal pelagic species within the survey area was `r prettyNum(sum(be.all.summ$Biomass), big.mark=",", digits = 5)` t. Of this, `r round(be.all.summ$Biomass[be.all$Species == "Engraulis mordax" & be.all.summ$Stock == "Central"]/sum(be.all.summ$Biomass)*100)`% (`r prettyNum(be.all.summ$Biomass[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Central"], big.mark=",", digits = 5)` t) was from the central subpopulation of Northern Anchovy and `r round(be.all.summ$Biomass[be.all$Species == "Trachurus symmetricus" & be.all.summ$Stock == "All"]/sum(be.all.summ$Biomass)*100)`% (`r prettyNum(be.all.summ$Biomass[be.all.summ$Species == "Trachurus symmetricus" & be.all.summ$Stock == "All"], big.mark=",", digits = 5)` t) was from Jack Mackerel. Proportions of other subpopulations, in decreasing order, were: northern subpopulation of Pacific Sardine (`r round(be.all.summ$Biomass[be.all.summ$Species == "Sardinops sagax" & be.all.summ$Stock == "Northern"]/sum(be.all.summ$Biomass)*100, 1)`%), Pacific Herring (`r round(be.all.summ$Biomass[be.all.summ$Species == "Clupea pallasii" & be.all.summ$Stock == "All"]/sum(be.all.summ$Biomass)*100, 1)`%), southern subpopulation of Pacific Sardine (`r round(be.all.summ$Biomass[be.all.summ$Species == "Sardinops sagax" & be.all.summ$Stock == "Southern"]/sum(be.all.summ$Biomass)*100)`%), Pacific Mackerel (`r round(be.all.summ$Biomass[be.all.summ$Species == "Scomber japonicus" & be.all.summ$Stock == "All"]/sum(be.all.summ$Biomass)*100, 1)`%), Round Herring (`r round(be.all.summ$Biomass[be.all.summ$Species == "Etrumeus acuminatus" & be.all.summ$Stock == "All"]/sum(be.all.summ$Biomass)*100, 1)`%), and northern subpopulation of Northern Anchovy (`r round(be.all.summ$Biomass[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Northern"]/sum(be.all.summ$Biomass)*100, 2)`%).  
+
+**For additional information about the 2025 Summer IWCPS, see the detailed survey report by de Blois et al. (In prep.).**  
 
 \newpage
 
@@ -264,9 +266,7 @@ The primary objectives of the SWFSC’s ATM surveys are to survey the distributi
 
 In `r tolower(survey.season)` `r survey.year`, the ATM survey was conducted by _`r survey.vessel`_ from `r survey.landmark.s` to `r survey.landmark.n`. From San Diego to Cape Flattery, sampling from fishing vessels _Lisa Marie_ and _Long Beach Carnage_ was used to estimate the biomasses of CPS in the nearshore regions, where sampling by _`r survey.vessel`_ was not possible or safe. 
 
-Presented here are:  1) a detailed description of the ATM used to survey CPS in the California Current Ecosystem (CCE) off the west coast of the U.S.; and 2) estimates of the abundances, biomasses, spatial distributions, and demographics of CPS, specifically the northern and southern subpopulations of Pacific Sardine, the central and northern subpopulations of Northern Anchovy, Pacific Mackerel, Jack Mackerel, Pacific Herring, and Round Herring for the core and nearshore survey regions in which they were sampled. A complementary survey off Baja CA by IMIPAS used approximately the same sampling protocol. Data from that survey, including biomass estimates for CPS in those core and nearshore regions, are reported elsewhere [@MartinezMagana2025].  
-
-The SWFSC's survey was conducted with the approval of the Secretaria de Relaciones Exteriores (SRE, Diplomatic note UAN0731/2024), the Instituto Nacional de Estadística y Geografía (INEGI; Authorization: LIG0032024, through official letter 400./67/2024), Unidad de Planeación y Coordinación Estratégica de la Secretaría de Marina (SEMAR; Letter no DAI-1305-24), Unidad Coordinadora de Asuntos Internacionales (UCAI) de la Secretaría de Medio Ambiente y Recursos Naturales (SEMARNAT; Letter UCAI/01210/2024), Universidad Nacional Autónoma de México (UNAM; Letter ICML/DIR/182/2024), Unidad de Concesiones y Servicios del Instituto Federal de Telecomunicaciones (IFT; Letter IFT/223/UCS/01962/2024), and the Comisión Nacional de Acuacultura y Pesca (CONAPESCA; Permit: PPFE/DGPPE.04357-210524).  
+Presented here are:  1) a detailed description of the ATM used to survey CPS in the California Current Ecosystem (CCE) off the west coast of the U.S., including changes related to the first Integrated West Coast Pelagics Survey (IWCPS), which combined ATM surveys for hake and CPS on the same ship; and 2) estimates of the abundances, biomasses, spatial distributions, and demographics of CPS, specifically the northern and southern subpopulations of Pacific Sardine, the central and northern subpopulations of Northern Anchovy, Pacific Mackerel, Jack Mackerel, Pacific Herring, and Round Herring for the core and nearshore survey regions in which they were sampled. **For additional information about the 2025 Summer IWCPS, see the detailed survey report by de Blois et al. (In prep.).**  
 
 \newpage
 
@@ -276,7 +276,7 @@ The SWFSC's survey was conducted with the approval of the Secretaria de Relacion
 
 The `r tolower(survey.season)` `r survey.year` survey was conducted principally using _`r survey.vessel`_, but was augmented with nearshore acoustic and purse-seine sampling by two fishing vessels, _Long Beach Carnage_ and _Lisa Marie_. The sampling domain between `r survey.landmark.s` and `r survey.landmark.n` was defined by the conceptual distribution of potential habitat for the northern subpopulation of Pacific Sardine in summer (**Fig. \@ref(fig:sardine-distribution)**), but also encompassed an unknown portion of the anticipated distributions of the southern subpopulation of Pacific Sardine, the central and northern subpopulations of Northern Anchovy, Pacific Mackerel, Jack Mackerel, Pacific Herring, and Round Herring populations off the west coasts of the U.S., Mexico, and Canada. East to west, the sampling domain extended from the coast to at least the 1,000 ftm (~1830 m) isobath (**Fig. \@ref(fig:survey-plan)**). Considering the expected distribution of the target species, and the available ship time (`r survey.das` days at sea, DAS), the primary objective was to estimate the biomasses, spatial distributions, and demographics of the northern subpopulation of Pacific Sardine and the northern and central subpopulations of Northern Anchovy, whose expected distributions were encompassed by the survey region. Secondary objectives were to estimate the biomasses, spatial distributions, and demographics of the southern subpopulation of Pacific Sardine, Pacific Mackerel, Jack Mackerel, Pacific Herring, and Round Herring, since their expected distributions extend beyond the planned survey region.  
 
-The planned core region transects were perpendicular to the coast, extending from the shallowest navigable depth (~20 m) to either a distance of 35 nmi or, where farther, to the 1,000 ftm isobath (**Fig. \@ref(fig:survey-plan)**). Compulsory transects were spaced 10 nmi apart in U.S. waters, and 20 nmi apart off Baja CA and Vancouver Is. The length of compulsory transects was shortened to 30 nmi off Baja CA, and adaptive transects, which are sampled only when CPS were observed along compulsory transects, were spaced 20 nmi apart off Vancouver Island. When CPS were observed within the westernmost 3 nmi of a transect, that transect and the next one to the north were extended in 5-nmi increments until no CPS were observed in the last 3 nmi of the extension, to a maximum extension of 50 nmi. In `r tolower(survey.season)` `r survey.year`, transects were sampled south-to-north to coordinate sampling with the CPS survey conducted by Instituto Mexicano de Investigación en Pesca y Acuacultura Sustentables (IMIPAS, formerly INAPESCA) aboard R/V _Jorge Carranza Fraser_.  
+The planned core region transects were perpendicular to the coast, extending from the shallowest navigable depth (~20 m) to either a distance of 35 nmi or, where farther, to the 1,000 ftm isobath (**Fig. \@ref(fig:survey-plan)**). Compulsory transects were spaced 10 nmi apart in U.S. waters, and 20 nmi apart off Baja CA and Vancouver Is. The length of compulsory transects was shortened to 30 nmi off Baja CA, and adaptive transects, which are sampled only when CPS were observed along compulsory transects, were spaced 20 nmi apart off Vancouver Island. When CPS were observed within the westernmost 3 nmi of a transect, that transect and the next one to the north were extended in 5-nmi increments until no CPS were observed in the last 3 nmi of the extension, to a maximum extension of 50 nmi. In `r tolower(survey.season)` `r survey.year`, transects were sampled south-to-north to coordinate sampling with the hake survey conducted by the Department of Fisheries and Oceans Canada (DFO) aboard Canadian Coast Guard Ship (CCGS) _Sir John Franklin_.  
 
 To estimate the abundances and biomasses of CPS in the nearshore region between San Diego and Cape Flattery, where _`r survey.vessel`_ could not efficiently or safely navigate or trawl, two fishing vessels were used to conduct acoustic and purse-seine sampling (magenta lines, **Fig. \@ref(fig:survey-plan)**). _Long Beach Carnage_ planned to sample as close to shore as possible, typically to the 5-m isobath, along 5-nmi-long transects spaced 5 nmi apart between San Diego and Pacific Grove, CA, and 2.5-nmi-long transects spaced 2.5 nmi apart around Santa Cruz and Santa Catalina Islands in the SCB. _Lisa Marie_ planned to sample transects as close to shore as possible, typically to the 5-m isobath, spaced 7 nmi apart between Pacific Grove and Cape Flattery (**Fig. \@ref(fig:survey-plan)**). Off OR, _Lisa Marie_ planned to conduct coordinated comparative nighttime purse-seine sampling in the core region where _`r survey.vessel`_ observed backscatter from CPS during the day.  
 
@@ -326,7 +326,7 @@ include_graphics(here("Images/img_carnage_mta4.jpg"))
 include_graphics(here("Images/img_lisa-marie_transducer-blister.png"))
 ``` 
 
-```{r process-cal}
+```{r process-cal,eval=FALSE}
 # Process calibration results from CW- and FM-mode calibrations. Vessel, procedure, and directory info is configured in the settings file for each survey.
 
 if (process.cal) {
@@ -459,7 +459,7 @@ if (exists("all.output.LM")) {
 
 On _`r survey.vessel`_, the computer clocks were synchronized with the GPS clock (UTC) using synchronization software (NetTime^[http://timesynctool.com]). The 18-kHz WBT, operated by a separate PC from the other EK80 WBTs, was programmed to track the seabed and output the detected depth to the ship’s Scientific Computing System (SCS). The echosounders were controlled by the EK80 Adaptive Logger [EAL^[https://www.fisheries.noaa.gov/west-coast/science-data/ek80-adaptive-logger/], @Renfree2016]. The EAL optimizes the pulse interval based on the seabed depth, while avoiding aliased seabed echoes, and can be programmed to periodically record pings in passive mode, for obtaining estimates of the background noise level. Acoustic sampling for CPS-density estimation along the pre-determined transects was limited to daylight hours (approximately between sunrise and sunset).  
 
-During daytime aboard _`r survey.vessel`_, measurements of volume backscattering strength ($S_v$; dB re 1 m^2^ m^-3^), indexed by time and geographic positions provided by GPS receivers, were logged to 60 m beyond the detected seabed range or to a maximum range of `r raw.log.range["RL"]` m for 38, 70, 120, 200, and 333 kHz, respectively, and stored, with a `r raw.size`-GB maximum file size, in Simrad-EK80 .raw format. At nighttime, echosounders were set to FM mode and logged to `r raw.log.range.night["RL"]` m to reduce data volume and to improve target strength ($TS$; dB re 1 m^2^) estimation and species differentiation for CPS in the depths sampled by the surface trawls. The prefix for the file names was a concatenation of the survey name (e.g.,  `r survey.name`), the operational mode (CW or FM), and the logging commencement date and time from the EK80 software. For example, a file generated by the EK80 software (`r ek80.version`) for a WBT operated in CW mode is named `2407RL-CW-D20240801-T125901.raw`.  
+During daytime aboard _`r survey.vessel`_, measurements of volume backscattering strength ($S_v$; dB re 1 m^2^ m^-3^), indexed by time and geographic positions provided by GPS receivers, were logged to 60 m beyond the detected seabed range or to a maximum range of `r raw.log.range["SH"]` m for 38, 70, 120, 200, and 333 kHz, respectively, and stored, with a `r raw.size`-GB maximum file size, in Simrad-EK80 .raw format. At nighttime, echosounders were set to FM mode and logged to `r raw.log.range.night["SH"]` m to reduce data volume and to improve target strength ($TS$; dB re 1 m^2^) estimation and species differentiation for CPS in the depths sampled by the surface trawls. The prefix for the file names was a concatenation of the survey name (e.g.,  `r survey.name`), the operational mode (CW or FM), and the logging commencement date and time from the EK80 software. For example, a file generated by the EK80 software (`r ek80.version`) for a WBT operated in CW mode is named `2506SH-CW-D20250801-T125901.raw`.  
 
 To minimize acoustic interference, transmit pulses from all echosounders and sonars (i.e., EK80, ME70, MS70, SX90, EC150-3C, and ADCP) were triggered using a synchronization system (Simrad K-Sync; Kongsberg). The K-Sync trigger rate, and thus echosounder ping interval, was modulated by the EAL using the seabed depth measured using the 18-kHz echosounder. During both day and night, the ME70, SX90, and ADCP were operated and recorded continuously whenever possible. In 2024, the MS70 was inoperable, so no data were recorded. All other instruments that produce sound within the echosounder bandwidths were secured during daytime survey operations. Exceptions were made during stations (e.g., plankton sampling and fish trawling) or in shallow water when the vessel's command occasionally operated the bridge's 50- and 200-kHz echosounders (Furuno), the Doppler velocity log (SRD-500A; Sperry Marine), or both. Analyses of data from the ADCP, EC-150, ME70, MS70, and SX90 are not presented in this report.  
 
@@ -562,10 +562,6 @@ For each dip-net sample, all specimens were sorted, weighed, and counted to prov
 
 At sea, trawl data were entered into a database (Microsoft Access). During and following the survey, data were further scrutinized and verified, or corrected. Missing length ($L_{miss}$) and weight ($W_{miss}$) measurements were estimated as $W_{miss} = \beta_0{L}^{\beta_1}$ and $L_{miss} = (W/\beta_0)^{(1/\beta_1)}$, respectively, where values for $\beta_0$ and $\beta_1$ are species- and season-specific parameters of the length-versus-weight relationships described in Palance et al. [-@Palance2019]. To identify measurement or data-entry errors, length and weight data were graphically compared (**Fig.** \@ref(fig:lw-plot)) to measurements from previous surveys and models of season-specific length-versus-weight from previous surveys [@Palance2019]. Outliers were flagged, reviewed, and corrected if errors were identified. Catch data were removed from aborted trawl hauls.  
 
-#### Comparative nighttime trawl and purse seine sampling {#methods-trawl-seine-comparison}  
-
-From 31 August to 6 September, off the coast of central OR, _Lisa Marie_ conducted nighttime purse seine sampling in core region areas where _`r survey.vessel`_ conducted nighttime trawling on the same evening (**Fig.** \@ref(fig:trawl-seine-comp-map)). This one-time research effort was not part of operational survey, and data collected during this effort were not used to estimate biomass. Prior to sunset, acousticians aboard _`r survey.vessel`_ provided the crew of _Lisa Marie_ up to three planned trawl locations for that evening. Upon completion of each trawl, _Lisa Marie_ attempted to set their purse seine as close as possible in space and time to the trawl location. Catches from both vessels were processed in the same manner as those from the main portion of the survey. Species proportions and size distributions were compared to examine similarities and differences between the two net sampling methods used to apportion acoustic backscatter observed in the core survey area.  
-
 \newpage
 \blandscape
 
@@ -576,20 +572,6 @@ include_graphics(here("Figs/fig_LW_plots.png"))
 ```  
 
 \elandscape
-\newpage
-
-```{r trawl-seine-comp-figures, include=FALSE}
-# Generate catch comparison figures
-if (save.figs) source(here("Code/comp_seine_2407RL.R"))
-```
-
-(ref:trawl-seine-comp-map) Locations of nighttime trawls (black lines) and purse seine sets (red points) used to compare net sampling methods. The dashed line indicates the path of _`r survey.vessel`_ during daytime acoustic sampling and nighttime trawling.
-
-```{r trawl-seine-comp-map, fig.cap='(ref:trawl-seine-comp-map)',out.height='8in',fig.pos='H'}
-# Include map showing locations of trawl hauls and seine sets
-include_graphics(here("Figs/fig_trawl_seine_sets_comp.png"))
-```  
-
 \newpage
 
 ## Acoustic data processing {#methods-data-processing}  
@@ -965,34 +947,28 @@ if ("Nearshore" %in% estimate.regions) {
 ```{r nav-summary}
 # Summarize Lasker days at sea
 if (file.exists(here("Data/Nav/nav_data_raw.rds"))) {
-  nav.rl <- readRDS(here("Data/Nav/nav_data_raw.rds"))
-  das.rl <- n_distinct(date(nav.rl$time))
-}
-
-# Summarize Shimada days at sea
-if (file.exists(here("Data/Nav/nav_data_raw_sh.rds"))) {
-  nav.sh <- readRDS(here("Data/Nav/nav_data_raw_sh.rds"))
-  das.sh <- n_distinct(date(nav.sh$time))
+  nav.fsv <- readRDS(here("Data/Nav/nav_data_raw.rds"))
+  das.fsv <- n_distinct(date(nav.fsv$time))
 }
 
 # Summarize Lisa Marie days at sea
-if (file.exists(here("Data/Nav/nav_vessel_lm.rds"))) {
-  nav.lm <- readRDS(here("Data/Nav/nav_vessel_lm.rds"))
-  das.lm <- n_distinct(date(nav.lm$datetime))
-}
-# Summarize Long Beach Carnage days at sea
-if (file.exists(here("Data/Nav/nav_vessel_lbc.rds"))) {
-  nav.lbc <- readRDS(here("Data/Nav/nav_vessel_lbc.rds"))
-  das.lbc <- n_distinct(date(nav.lbc$datetime))
+if (file.exists(here("Data/Nav/lm_nav.gpx"))) {
+  # Extract trackline points from GPX file
+  nav.lm <- read_GPX(here("Data/Nav/lm_nav.gpx"))$track_points %>% 
+    project_sf(crs = 4326) %>% 
+    select(time, lat = Y, long = X)
+
+  das.lm <- n_distinct(date(nav.lm$time))
 }
 
-# Summarize Saildrone days at sea
-if (file.exists(here("Data/Nav/nav_data_saildrone.Rdata"))) {
-  load(here("Data/Nav/nav_data_saildrone.Rdata"))
-  
-  das.sd <- nav.sd %>% 
-    group_by(saildrone) %>% 
-    summarise(das = n_distinct(date(datetime)))
+# Summarize Long Beach Carnage days at sea
+if (file.exists(here("Data/Nav/lbc_nav.gpx"))) {
+    # Extract trackline points from GPX file
+  nav.lbc <- read_GPX(here("Data/Nav/lbc_nav.gpx"))$track_points %>% 
+    project_sf(crs = 4326) %>% 
+    select(time, lat = Y, long = X)
+
+  das.lbc <- n_distinct(date(nav.lbc$time))
 }
 ```
 
@@ -1027,7 +1003,7 @@ if (exists("sets")) {
 
 At the beginning of Leg 1, `r num2words(5)` days at sea (DAS) were allocated for drills, training, additional sea trials with the multi-function trawl (MFT) net system, and underway echosounder calibrations (see below).  
 
-The core region of the `r tolower(survey.season)` `r survey.year` survey spanned the continental shelf from the Punta Eugenia, Baja California, Mexico to Cape Scott, Vancouver Island, between `r format(ymd(erddap.survey.start),"%d %B")` and `r format(ymd(erddap.survey.end),"%d %B %Y")`, and included most of the potential habitat for the northern subpopulation of Pacific Sardine at the time of the survey^[https://coastwatch.pfeg.noaa.gov/erddap/griddap/sardine_habitat_modis.html]. In this region, _`r survey.vessel`_ (`r das.rl-5` DAS) sampled `r nrow(nasc.summ)` east-west transects totaling `r prettyNum(sum(nasc.summ$distance), digits = 1, big.mark = ",")` nmi (**Fig. \@ref(fig:nasc-trawl)**). Catches from a total of `r nrow(haul)` nighttime surface trawls were combined into `r n_distinct(haul$cluster)` trawl clusters. In the core region, one to `r num2words(max(as.numeric(be$Stratum), na.rm = TRUE))` post-survey strata were defined by their transect spacing and the densities of biomass attributed to each species. 
+The core region of the `r tolower(survey.season)` `r survey.year` survey spanned the continental shelf from the Punta Eugenia, Baja California, Mexico to Cape Scott, Vancouver Island, between `r format(ymd(erddap.survey.start),"%d %B")` and `r format(ymd(erddap.survey.end),"%d %B %Y")`, and included most of the potential habitat for the northern subpopulation of Pacific Sardine at the time of the survey^[https://coastwatch.pfeg.noaa.gov/erddap/griddap/sardine_habitat_modis.html]. In this region, _`r survey.vessel`_ (`r das.fsv-5` DAS) sampled `r nrow(nasc.summ)` east-west transects totaling `r prettyNum(sum(nasc.summ$distance), digits = 1, big.mark = ",")` nmi (**Fig. \@ref(fig:nasc-trawl)**). Catches from a total of `r nrow(haul)` nighttime surface trawls were combined into `r n_distinct(haul$cluster)` trawl clusters. In the core region, one to `r num2words(max(as.numeric(be$Stratum), na.rm = TRUE))` post-survey strata were defined by their transect spacing and the densities of biomass attributed to each species. 
 
 The nearshore region spanned an area from 5-m depth to approximately 5 nmi from the continental coast, or 2.5 nmi from the Santa Cruz and Santa Catalina Islands, between San Diego and Cape Flattery. _Long Beach Carnage_ (`r das.lbc` DAS) surveyed from approximately San Diego to Ragged Point along the Big Sur coast, and around the Santa Cruz and Santa Catalina Islands, with `r nrow(nasc.summ.lbc.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lbc.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LBC"]` purse-seine sets (**Fig. \@ref(fig:nasc-seine-lbc)**). _Lisa Marie_ (`r das.lm` DAS) surveyed from approximately Pacific Grove, CA to Cape Flattery, WA with `r nrow(nasc.summ.lm.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lm.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LM"]` purse-seine sets (**Fig. \@ref(fig:nasc-seine-lm)**). In the nearshore region, one to `r num2words(max(as.numeric(be.ns$Stratum),na.rm = TRUE))` post-survey strata were defined by their transect spacing and the densities of biomass attributed to each species.
 
@@ -2395,9 +2371,9 @@ if (combine.regions) {
   } else {
     print("No results for this species/subpopulation.")
   }
-
+  
 } else {
-
+  
   if (file.exists(here("Figs/fig_biomass_dens_Etrumeus acuminatus-All.png"))) {
     include_graphics(here("Figs/fig_biomass_dens_Etrumeus acuminatus-All.png"))
   } else {
@@ -2427,55 +2403,6 @@ if (combine.regions) {
 }
 ``` 
 
-\newpage
-
-## Comparative nighttime trawl and purse seine sampling {#results-trawl-seine-comparison}
-
-```{r catch-comp-summary-data}
-# Load summary data if not present; if fails, source Code/comp_seine_2407RL.Rdata
-if (!exists("catch.comp.summ")) load(here("Output/catch_comp_summary.Rdata"))
-```
-
-_Lisa Marie_ conducted `r num2words(catch.comp.summ$n[catch.comp.summ$sample.type == "Purse seine"])` nighttime purse seine sets in close proximity to the `r num2words(catch.comp.summ$n[catch.comp.summ$sample.type == "Trawl"])` trawl locations sampled by _`r survey.vessel`_. In general, the species composition in catches from nighttime seine samples were visually similar to those in individual trawl hauls (**Fig. \@ref(fig:trawl-seine-comparison-haul)**) and trawl clusters (**Fig. \@ref(fig:trawl-seine-comparison-cluster)**). One notable exception was the two nearshore locations in the northern part of the area where purse seines collected Pacific Sardine but none were captured in the trawl net. Several of the purse seine samples contained no CPS, but those were farther offshore and nearby trawls contained Jack Mackerel and Pacific Mackerel.  
-
-Similar to species composition, the number and length distributions of CPS specimens were similar between purse seine and trawl samples **Fig. \@ref(fig:trawl-seine-comparison-lengths-combo)**). No Pacific Sardine were captured in the trawls, and no Northern Anchovy were collected in the purse seine samples; however, only one Northern Anchovy was collected in the trawls.   
-
-(ref:trawl-seine-comparison-haul) The proportion of CPS (by weight) in nighttime a) trawls and b) purse seines. Black points indicate trawl or purse seine samples where no CPS were collected.
-
-```{r trawl-seine-comparison-haul,eval=TRUE,fig.cap='(ref:trawl-seine-comparison-haul)',out.height='6in',fig.pos='H'}
-# Add catch comparison figure
-include_graphics(here("Figs/fig_trawl_haul_set_comp_map.png"))  
-``` 
-
-\newpage
-
-(ref:trawl-seine-comparison-cluster) The proportion of CPS (by weight) in nighttime a) trawl clusters and b) purse seines. Black points indicate trawl clusters or purse seine samples where no CPS were collected.
-
-```{r trawl-seine-comparison-cluster,eval=TRUE,fig.cap='(ref:trawl-seine-comparison-cluster)',out.height='6in',fig.pos='H'}
-# Add catch comparison figure
-include_graphics(here("Figs/fig_trawl_cluster_set_comp_map.png"))  
-``` 
-
-\newpage
-\blandscape
-
-(ref:trawl-seine-comparison-lengths-grid) Length distributions for CPS in nighttime purse seine samples by _Lisa Marie_ (top) and in trawl samples collected by _`r survey.vessel`_ (bottom).
-
-```{r trawl-seine-comparison-lengths-grid,fig.cap='(ref:trawl-seine-comparison-lengths-grid)',out.width='8in',fig.pos='H',eval=FALSE}
-
-# Add catch comparison figure
-include_graphics(here("Figs/fig_trawl_seine_lengths_comp_grid.png"))  
-``` 
-
-(ref:trawl-seine-comparison-lengths-combo) Length distributions for CPS in nighttime purse seine samples by _Lisa Marie_ and in trawl samples collected by _`r survey.vessel`_. Note: only one Northern Anchovy ($L_t$ = 177 mm) was collected in the trawls but is not presented here.
-
-```{r trawl-seine-comparison-lengths-combo,eval=TRUE,fig.cap='(ref:trawl-seine-comparison-lengths-combo)',out.width='8in',fig.pos='H'}
-
-# Add catch comparison figure
-include_graphics(here("Figs/fig_trawl_seine_lengths_comp_combo.png"))  
-``` 
-
-\elandscape
 \newpage
 
 # Discussion {#discussion}  
@@ -2633,19 +2560,19 @@ The collection and analysis of the survey data were conducted by members of 1-NO
 **Purse-seine Sampling:**  
 
 * _Lisa Marie_
-  + Z. Calef^9^ and K. Hinton^9^
++ Z. Calef^9^ and K. Hinton^9^
 * _Long Beach Carnage_
-  + J. van Noord^10^
++ J. van Noord^10^
 
 **Echosounder Calibrations:**  
 
 * _Reuben Lasker_
-  + `r cal.personnel["RL"]`
++ `r cal.personnel["RL"]`
 * _Long Beach Carnage_
-  + `r cal.personnel["LBC"]`
++ `r cal.personnel["LBC"]`
 * _Lisa Marie_
-  + `r cal.personnel["LM"]`
-  
++ `r cal.personnel["LM"]`
+
 \newpage
 \blandscape
 
@@ -2656,7 +2583,9 @@ The collection and analysis of the survey data were conducted by members of 1-NO
 Relative beam-compensated target strength ($TS_{rel}$, dB re 1 m^2^) measurements of a WC38.1 sphere at `r echo.freqs["RL"]` kHz for echosounders aboard _`r survey.vessel`_. $TS_{rel}$ is calculated as the difference between the beam-compensated target strength ($TS_c$) and the theoretical target strength ($TS_{theory}$).
 
 ```{r tsc-plot-rl, out.height='4.5in',fig.align='center',fig.pos='H'}
-include_graphics(here("Figs/fig_cal_TSrel_scatter_RL.png"))
+if (file.exists(here("Figs/fig_cal_TSrel_scatter_RL.png"))) {
+  include_graphics(here("Figs/fig_cal_TSrel_scatter_RL.png"))  
+}
 ``` 
 
 \newpage
@@ -2667,7 +2596,9 @@ Measurements of on-axis gain ($G_0$, dB); alongship ($\alpha_\mathrm{-3dB}$, cya
 
 ```{r cal-plot-fm,out.height='4.5in',fig.align='center',fig.pos='H'}  
 # Plots generated using Code/processCal-FM.R
-include_graphics(here("Figs/fig_cal_FM_AllFreqs_RL.png"))
+if (file.exists(here("Figs/fig_cal_FM_AllFreqs_RL.png"))) {
+  include_graphics(here("Figs/fig_cal_FM_AllFreqs_RL.png"))
+}
 ```
 
 \newpage
@@ -2677,7 +2608,9 @@ include_graphics(here("Figs/fig_cal_FM_AllFreqs_RL.png"))
 Relative beam-compensated target strength ($TS_{rel}$, dB re 1 m^2^) measurements of a WC38.1 sphere at `r echo.freqs["LM"]` kHz for echosounders aboard _Lisa Marie_. $TS_{rel}$ is calculated as the difference between the beam-compensated target strength ($TS_c$) and the theoretical target strength ($TS_{theory}$). The results shown here are for the post-survey calibration conducted in Gig Harbor, WA.
 
 ```{r tsc-plot-lm, out.height='4.5in',fig.align='center',fig.pos='H'}
-include_graphics(here("Figs/fig_cal_TSrel_scatter_LM.png"))
+if (file.exists(here("Figs/fig_cal_TSrel_scatter_LM.png"))) {
+  include_graphics(here("Figs/fig_cal_TSrel_scatter_LM.png"))  
+}
 ```
 
 \newpage
@@ -2687,7 +2620,9 @@ include_graphics(here("Figs/fig_cal_TSrel_scatter_LM.png"))
 Relative beam-compensated target strength ($TS_{rel}$, dB re 1 m^2^) measurements of a WC38.1 sphere at `r echo.freqs["LBC"]` kHz for echosounders aboard _Long Beach Carnage_. $TS_{rel}$ is calculated as the difference between the beam-compensated target strength ($TS_c$) and the theoretical target strength ($TS_{theory}$).
 
 ```{r tsc-plot-lbc, out.height='4.5in',fig.align='center',fig.pos='H'}
-include_graphics(here("Figs/fig_cal_TSrel_scatter_LBC.png"))
+if (file.exists(here("Figs/fig_cal_TSrel_scatter_LBC.png"))) {
+  include_graphics(here("Figs/fig_cal_TSrel_scatter_LBC.png")) 
+}
 ```
 
 \elandscape

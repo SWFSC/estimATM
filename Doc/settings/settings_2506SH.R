@@ -800,6 +800,7 @@ stock.break.source <- "primary"
 raw.prefix    <- "2506SH_EK80"
 raw.size      <- 1  # file size in gigabytes (GB)
 raw.log.range <-  350  # depth of ER60 logging (m)
+raw.log.range.night <- c(SH = "100")  # depth of ER60 logging (m)
 
 # Echoview settings
 er60.version  <- "v2.4.3" # ER60 version

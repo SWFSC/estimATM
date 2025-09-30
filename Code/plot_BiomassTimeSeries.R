@@ -119,7 +119,7 @@ biomass.ts.line.facet <- ggplot(biomass.ts,
   geom_errorbar(aes(ymin = biomass_ci_lower, ymax = biomass_ci_upper), width = 5000000) +
   geom_path() +
   geom_point(fill = "white") +
-  facet_wrap(~group) + 
+  facet_wrap(~group, scales = "free_y") + 
   scale_x_datetime(name = "Year", date_breaks = "2 years", date_labels = "%Y") +
   scale_y_continuous(expression(Biomass~(italic(t))), labels = scales::comma) +
   scale_colour_manual(name = 'Species',
@@ -137,14 +137,15 @@ biomass.ts.line.facet <- ggplot(biomass.ts,
                                 21, 22, 23,
                                 21, 22)) +
   theme_bw() +
-  theme(strip.background.x   = element_blank(),
-        strip.text.x         = element_text(face = "italic"),
-        legend.position      = "none")
+  theme(axis.text.x        = element_text(angle = 45, vjust = 0.5),
+        strip.background.x = element_blank(),
+        strip.text.x       = element_text(face = "italic"),
+        legend.position    = "none")
 
 # Save figure
 ggsave(biomass.ts.line.facet, 
        filename = here("Figs/fig_biomass_ts_line_facet.png"),
-       width = 10, height = 6)
+       width = 12, height = 7)
 
 # Create stacked bar plot
 biomass.ts.bar <- ggplot(biomass.ts, 

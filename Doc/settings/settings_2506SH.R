@@ -14,7 +14,7 @@ combine.regions   <- T # Combine nearshore/offshore plots with those from the co
 tx.spacing.fsv  <- 15 # For Lasker 
 tx.spacing.sd   <- 15 # For Saildrone
 tx.break.ns     <- 52 # Northernmost transect sampled by the southern F/V, 64 in 2024, near Carmel
-tx.spacing.ns   <- c("S" = 7, "N" = 7, "CI" = 2.5) # or NA
+tx.spacing.ns   <- c("S" = 7, "N" = 7, "CI" = 3) # or NA
 tx.spacing.os   <- 40 # Nearshore transect spacing, in nmi; set NA if calculating programatically
 
 # Mainland buffer distance for FSV and Saildrone transects
@@ -112,6 +112,7 @@ survey.twilight        <- "none"          # Sunset type for computing day/night 
 survey.twilight.offset <- 30              # Twilight offset; minutes before sunrise/after sunset
 survey.twilight.remove <- FALSE           # Remove twilight period (T/F)
 daynight.filter        <- c("Day","Night")# A character string including "Day", "Night", or both
+safe.depth.fsv         <- 30              # Shallowest depth (m) sampled by the FSV
 
 # Inport dates for classifying data by cruise leg (if desired) -----------------
 # Use start dates of each leg + end date of last leg
@@ -450,7 +451,7 @@ deep.nasc.vessels <- c("LBC", "LM")
 
 # Which net data should be used to apportion nearshore backscatter?
 # "Trawl" and/or "Seine"
-catch.source.ns <- c("Purse seine") # "Trawl"
+catch.source.ns <- c("Purse seine","Trawl") # "Trawl"
 
 # Define path to seine data directories for each vessel
 seine.data.paths <- c("LBC"= file.path(survey.dir["LBC"], "DATA/SEINE/lbc_data_2506SH.xlsx"),
@@ -548,7 +549,7 @@ limit.cluster.dist     <- c(OS  = FALSE,
 # Define source of species proportions and length frequency data (either clf or hlf)
 # Uses either haul or cluster data for a given region (NS or OS)
 cluster.source <- c(OS = "cluster",
-                    NS = "cluster")
+                    NS = "haul")
 
 # Maximum distance to trawl clusters
 cum.biomass.limit      <- 0.90 # Distance used to compute max.cluster.distance

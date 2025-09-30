@@ -2641,11 +2641,11 @@ if (save.figs) {
         # Plot zero nasc data
         geom_point(data = filter(nasc.nearshore, cps.nasc == 0), aes(X, Y),
                    colour = 'gray50', size = 0.15, alpha = 0.5) +
-        scale_colour_discrete(name = 'Stratum') +
         # Plot NASC data
         geom_point(data = nasc.density.plot.ns, aes(X, Y, size = bin, fill = bin),
                    shape = 21, alpha = 0.75) +
         # Configure size and colour scales
+        scale_colour_discrete(name = 'Stratum') +
         scale_size_manual(name = bquote(atop(Biomass~density, ~'(t'~'nmi'^-2*')')),
                           values = dens.sizes.all.ns, labels = dens.labels.all.ns) +
         scale_fill_manual(name = bquote(atop(Biomass~density, ~'(t'~'nmi'^-2*')')),

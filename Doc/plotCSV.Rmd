@@ -62,9 +62,11 @@ Specified files are processed and plotted at any time, but ideally prior to bein
 process.csv <- T 
 ## Scale map to survey extent
 resize.map  <- F 
+## Get nav data
+get.nav <- T
 
 # Vessel-specific info
-vessel.name = "LM"
+vessel.name = "LBC"
 # Define nav source
 if(vessel.name %in% c("LBC","LM")) nav.source <- "GPX"
 ```
@@ -218,10 +220,10 @@ if (nav.source == "ERDDAP") {
   source(here("Code", scs.nav.script))
 } else if (nav.source == "GPX") {
   # Extract tracklines from GPX file
-  nav <- read_GPX(here("Data/Nav", seine.gpx.name))$tracks
+  nav.paths.sf <- read_GPX(here("Data/Nav", seine.gpx.name))$tracks
   
   # Extract trackline points from GPX file
-  nav.points <- read_GPX(here("Data/Nav", seine.gpx.name))$track_points %>% 
+  nav.points.sf <- read_GPX(here("Data/Nav", seine.gpx.name))$track_points %>% 
     project_sf(crs = 4326) %>% 
     select(time, lat = Y, long = X)
 }
@@ -324,22 +326,21 @@ i.map <- leaflet() %>%
   # Add grid lines
   addGraticule(interval = 1, group = "Graticule") %>%
   # Add measurement tool
-  # addMeasure(primaryLengthUnit = "miles", secondaryLengthUnit = "km",
-  #            primaryAreaUnit = "sqmiles", secondaryAreaUnit = "sqmeters",
-  #            position = "topleft") %>% 
+  addMeasure(primaryLengthUnit = "miles", secondaryLengthUnit = "km",
+             primaryAreaUnit = "sqmiles", secondaryAreaUnit = "sqmeters",
+             position = "topleft") %>%
   # Add layer controls
   addLayersControl(
     overlayGroups = c("Backscatter", "Backscatter (Small)", "Vessel Track",
                       "Planned Transects (Core)", "Planned Transects (Ancillary)",
                       "Vessel Paths"),
     options = layersControlOptions(collapsed = F)) %>%  
-  # hideGroup(c("Planned Transects (Core)", "Planned Transects (Ancillary)")) %>% 
   fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
             imap.bounds$range.lon[2], imap.bounds$range.lat[2])
 
-if (exists("nav"))
+if (exists("nav.paths.sf"))
   i.map <- i.map %>% 
-  addPolylines(data = nav, color = "blue", stroke = TRUE, weight = 2,
+  addPolylines(data = nav.paths.sf, color = "blue", stroke = TRUE, weight = 2,
                opacity = 0.5, fillOpacity = 0.5,
                group =  "Vessel Paths")
 

@@ -75,6 +75,9 @@ if (doc.type == "latex") {
 } else {
   knitr.format <- "html" 
 }
+
+# Define global knitr NA display value
+# options(knitr.kable.NA = '-')
 ```
 
 ```{r project-info, include=FALSE}
@@ -4850,7 +4853,7 @@ tx.c <- tx.c %>%
   arrange(transect, desc(order))
 ```
 
-```{r create-final-strata-polygons}
+```{r create-final-strata-polygons, include=FALSE}
 # Read 20 m isobath points; used to create nearshore stratum polygons
 nearshore.points.sf <- st_read(here("Data/GIS/bathy_20m_points.shp")) 
 

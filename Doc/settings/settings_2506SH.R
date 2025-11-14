@@ -719,7 +719,7 @@ if ("SD" %in% nasc.vessels) {
     data.frame(
       scientificName = "Engraulis mordax",
       stratum = 2,
-      transect = 43:49),
+      transect = 40:49),
     data.frame(
       scientificName = "Etrumeus acuminatus",
       stratum = 1,
@@ -735,55 +735,47 @@ if ("SD" %in% nasc.vessels) {
     data.frame(
       scientificName = "Sardinops sagax",
       stratum = 3,
-      transect = 16:20),
+      transect = 17:20),
     data.frame(
       scientificName = "Sardinops sagax",
       stratum = 4,
-      transect = 22:24),
-    data.frame(
-      scientificName = "Sardinops sagax",
-      stratum = 5,
       transect = 25:29),
     data.frame(
       scientificName = "Sardinops sagax",
-      stratum = 6,
+      stratum = 5,
       transect = 32:36),
     data.frame(
       scientificName = "Sardinops sagax",
-      stratum = 7,
+      stratum = 6,
       transect = 40:45),
-    data.frame(
-      scientificName = "Sardinops sagax",
-      stratum = 8,
-      transect = 50:53),
     data.frame(
       scientificName = "Scomber japonicus",
       stratum = 1,
-      transect = 1:4),
+      transect = 1:3),
     data.frame(
       scientificName = "Scomber japonicus",
       stratum = 2,
-      transect = 16:19),
-    data.frame(
-      scientificName = "Scomber japonicus",
-      stratum = 3,
       transect = 23:25),
     data.frame(
       scientificName = "Scomber japonicus",
-      stratum = 4,
-      transect = 41:46),
+      stratum = 3,
+      transect = 41:47),
     data.frame(
       scientificName = "Scomber japonicus",
-      stratum = 5,
+      stratum = 4,
       transect = 50:53),
     data.frame(
       scientificName = "Trachurus symmetricus",
       stratum = 1,
-      transect = 1:10),
+      transect = 1:11),
     data.frame(
       scientificName = "Trachurus symmetricus",
       stratum = 2,
-      transect = 15:53))
+      transect = 15:19),
+    data.frame(
+      scientificName = "Trachurus symmetricus",
+      stratum = 3,
+      transect = 23:53))
 }
 
 # Stock boundaries --------------------------------------------------------

@@ -361,7 +361,7 @@ if (exists("set.catch")) {
                                 "Total weight (kg)","Total number (n)")
   
   write_csv(catch.set.summary, 
-            here("Output", paste0(survey.name, "_catch_table_nearshore_WCRO.csv")),
+            here("Output", paste0(survey.name, "_catch_table_seine_WCRO.csv")),
             na = "")
 }
 ```

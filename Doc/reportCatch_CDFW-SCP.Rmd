@@ -447,7 +447,7 @@ set.catch.table <- set.catch.ca %>%
          utm_e, utm_n, utm_zone, long, lat, gps_datum,
          map_scaling, datetime, num_M, num_F, num_UNK, totalCt, 
          method, disposition, facility) %>% 
-  mutate(datetime = format(datetime, "%m/%d/%Y"))
+  mutate(datetime = format(ymd_hms(datetime), "%m/%d/%Y"))
 
 # Save to CSV
 write_csv(set.catch.table, 

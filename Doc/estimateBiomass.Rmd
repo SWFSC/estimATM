@@ -77,7 +77,7 @@ if (doc.type == "latex") {
 }
 
 # Define global knitr NA display value
-# options(knitr.kable.NA = '-')
+options(knitr.kable.NA = '-')
 ```
 
 ```{r project-info, include=FALSE}
@@ -111,6 +111,7 @@ Adjust deep nearshore backscatter: **`r adj.deep.nasc`**
 Deep backscatter depth: **`r nasc.depth.deep`**  
 Nearshore catch source: **`r glue::glue_collapse(catch.source.ns, sep = ", ", last = " and ")`**  
 Nearshore trawl source (if included): **`r unname(cluster.source["NS"])`**  
+Number of bootstrap iterations: **`r boot.num`**  
 
 ## Controls and Settings
 

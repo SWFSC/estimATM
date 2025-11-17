@@ -684,7 +684,7 @@ if (process.csv) {
       # Process all .CSV files
       for (ii in seq_along(nasc.files)) {
         # Extract vessel nasc
-        nasc.vessel.temp <- extract_csv(nasc.files[ii]) %>% 
+        nasc.vessel.temp <- extract_csv(nasc.files[ii], Sv.max = Sv.max) %>% 
           mutate(vessel.name = i,
                  sounder = sounder.type[i],
                  transect = str_replace(transect, nasc.pattern.cps[i],""))

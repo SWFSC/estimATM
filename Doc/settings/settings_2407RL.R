@@ -441,6 +441,7 @@ nasc.recurse           <- c(RL  = FALSE,
                             SH  = FALSE)
 # Max NASC value for removing outliers
 nasc.max               <- NA
+Sv.max                 <- NULL # Max Sv value (dB); Set to -14 after testing is completed
 
 # Purse seine data info -------------------------------------------------------
 # Use seine data to apportion nearshore backscatter

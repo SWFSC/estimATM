@@ -91,7 +91,7 @@ if (process.csv) {
   # Process all .CSV files
   for (i in 1:length(csv.files)) {
     # Process i-th file
-    nasc <- bind_rows(nasc, extract_csv(csv.files[i]))
+    nasc <- bind_rows(nasc, extract_csv(csv.files[i]), Sv.max = Sv.max)
     
     # Update the progress bar
     info <- sprintf("%d%% done", round((i / length(csv.files)) * 100))

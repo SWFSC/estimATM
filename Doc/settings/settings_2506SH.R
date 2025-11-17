@@ -102,7 +102,7 @@ survey.vessel          <- "Shimada"       # Short vessel name; e.g., Shimada
 survey.vessel.primary  <- "SH"            # Primary vessel abbreviation 
 survey.name            <- "2506SH"        # SWFSC/AST survey name
 survey.start           <- "3 June"        # Survey start date
-survey.end             <- "30 September"  # Survey end date
+survey.end             <- "13 September"  # Survey end date
 survey.year            <- "2025"          # Survey year, for report
 survey.season          <- "Summer"        # Survey season, for report
 survey.das             <- 100             # Days at sea allocated
@@ -139,7 +139,7 @@ if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {
 erddap.url           <- "http://coastwatch.pfeg.noaa.gov/erddap/tabledap/fsuNoaaShip"
 erddap.vessel        <- "WTEDnrt"    # Lasker == WTEG; Shimada == WTED; add "nrt" if survey in progress
 erddap.survey.start  <- "2025-06-03" # Start of survey for ERDDAP vessel data query
-erddap.survey.end    <- "2025-10-01" # End of survey for ERDDAP vessel data query
+erddap.survey.end    <- "2025-09-14" # End of survey for ERDDAP vessel data query
 erddap.vars          <- c("time,latitude,longitude,seaTemperature,platformSpeed,windDirection,windSpeed,flag")
 erddap.classes       <- c("character", "numeric", "numeric", "numeric","numeric","numeric","numeric","character")
 erddap.headers       <- c("time", "lat","long","SST","SOG","wind_dir","wind_speed","flag")
@@ -421,8 +421,9 @@ nasc.recurse           <- c(SH  = FALSE,
                             LM  = FALSE,
                             LBC = FALSE)
 
-# Max NASC value for removing outliers
-nasc.max               <- NA
+# Max NASC and Sv values for removing outliers
+nasc.max               <- NA 
+Sv.max                 <- NULL # Max Sv value (dB); Set to -14 after testing is completed
 
 # Purse seine data info -------------------------------------------------------
 # Use seine data to apportion nearshore backscatter

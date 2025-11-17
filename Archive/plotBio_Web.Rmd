@@ -698,7 +698,8 @@ if (sampling.acoustics) {
       # Process all .CSV files
       for (i in 1:length(csv.files.cps)) {
         # Process i-th file
-        nasc.cps <- bind_rows(nasc.cps, extract_csv(csv.files.cps[i]))
+        nasc.cps <- bind_rows(nasc.cps, 
+                              extract_csv(csv.files.cps[i], Sv.max = Sv.max))
         
         # Update the progress bar
         info <- sprintf("%d%% done", round((i / length(csv.files.cps)) * 100))
@@ -830,7 +831,8 @@ if (sampling.acoustics) {
         # Process all .CSV files
         for (i in 1:length(csv.files.krill)) {
           # Process i-th file
-          nasc.krill <- bind_rows(nasc.krill, extract_csv(csv.files.krill[i]))
+          nasc.krill <- bind_rows(nasc.krill, 
+                                  extract_csv(csv.files.krill[i]), Sv.max = Sv.max)
           
           # Update the progress bar
           info <- sprintf("%d%% done", round((i / length(csv.files.krill)) * 100))

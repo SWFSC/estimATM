@@ -214,7 +214,7 @@ The biomasses (metric tons, t), distributions, and demographics for each species
 
 The estimated biomass of the northern subpopulation of Northern Anchovy was `r prettyNum(be.all.summ$Biomass[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Northern"],big.mark=",",digits=3)` t (CI~95%~ = `r prettyNum(be.all.summ$lower.ci.B[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Northern"],big.mark=",",digits=2)` - `r prettyNum(be.all.summ$upper.ci.B[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Northern"],big.mark=",",digits=3)` t, CV = `r prettyNum(be.all.summ$biomass.cv[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Northern"],big.mark=",",digits=1)`%). In the core region, the biomass was `r prettyNum(be.all$Biomass[be.all$Species == 'Engraulis mordax' & be.all$Stock == "Northern"],big.mark=",",digits=4)` t (CI~95%~ = `r prettyNum(be.all$lower.ci.B[be.all$Species == 'Engraulis mordax' & be.all$Stock == "Northern"],big.mark=",",digits=2)` - `r prettyNum(be.all$upper.ci.B[be.all$Species == 'Engraulis mordax' & be.all$Stock == "Northern"],big.mark=",",digits=3)` t, CV = `r prettyNum(be.all$biomass.cv[be.all$Species == 'Engraulis mordax' & be.all$Stock == "Northern"],big.mark=",",digits=1)`%), and in the nearshore region the biomass was `r prettyNum(be.all.ns$Biomass[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Northern"],big.mark=",",digits=3)` t (CI~95%~ = `r prettyNum(be.all.ns$lower.ci.B[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Northern"],big.mark=",",digits=1)` - `r prettyNum(be.all.ns$upper.ci.B[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Northern"],big.mark=",",digits=2)` t, CV = `r prettyNum(be.all.ns$biomass.cv[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Northern"],big.mark=",",digits=1)`%), or `r prettyNum((be.all.ns$Biomass[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Northern"] / (be.all.ns$Biomass[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Northern"] + be.all$Biomass[be.all$Species == 'Engraulis mordax' & be.all$Stock == "Northern"]))*100,big.mark=",",digits=2)`% of the total biomass. The northern subpopulation was sparsely distributed between Astoria and Cape Flattery, and the distribution of standard lengths ($L_S$) ranged from `r length.summ$L.min[length.summ$scientificName == 'Engraulis mordax' & length.summ$stock == "Northern"]` to `r length.summ$L.max[length.summ$scientificName == 'Engraulis mordax' & length.summ$stock == "Northern"]` cm with a mode at 15 cm in both regions.
 
-The estimated biomass of the central subpopulation of Northern Anchovy was `r prettyNum(be.all.summ$Biomass[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Central"],big.mark=",",digits=3)` t (CI~95%~ = `r prettyNum(be.all.summ$lower.ci.B[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Central"],big.mark=",",digits=3)` - `r prettyNum(be.all.summ$upper.ci.B[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Central"],big.mark=",",digits=3)` t, CV = `r prettyNum(be.all.summ$biomass.cv[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Central"],big.mark=",",digits=1)`%). In the core region, the biomass was `r prettyNum(be.all$Biomass[be.all$Species == 'Engraulis mordax' & be.all$Stock == "Central"],big.mark=",",digits=4)` t (CI~95%~ = `r prettyNum(be.all$lower.ci.B[be.all$Species == 'Engraulis mordax' & be.all$Stock == "Central"],big.mark=",",digits=4)` - `r prettyNum(be.all$upper.ci.B[be.all$Species == 'Engraulis mordax' & be.all$Stock == "Central"],big.mark=",",digits=4)` t, CV = `r prettyNum(be.all$biomass.cv[be.all$Species == 'Engraulis mordax' & be.all$Stock == "Central"],big.mark=",",digits=1)`%), and in the nearshore region the biomass was `r prettyNum(be.all.ns$Biomass[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Central"],big.mark=",",digits=3)` t (CI~95%~ = `r prettyNum(be.all.ns$lower.ci.B[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Central"],big.mark=",",digits=3)` - `r prettyNum(be.all.ns$upper.ci.B[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Central"],big.mark=",",digits=3)` t, CV = `r prettyNum(be.all.ns$biomass.cv[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Central"],big.mark=",",digits=1)`%), or `r prettyNum((be.all.ns$Biomass[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Central"] / (be.all.ns$Biomass[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Central"] + be.all$Biomass[be.all$Species == 'Engraulis mordax' & be.all$Stock == "Central"]))*100,big.mark=",",digits=2)`% of the total biomass. The central subpopulation ranged from approximately San Diego to San Francisco, and the distribution of $L_S$ ranged from `r length.summ$L.min[length.summ$scientificName == 'Engraulis mordax' & length.summ$stock == "Central"]` to `r length.summ$L.max[length.summ$scientificName == 'Engraulis mordax' & length.summ$stock == "Central"]` cm with modes at 6 and 13 cm in the core region and at 8 and 13 cm in the nearshore region. The estimated biomass of the central subpopulation of Northern Anchovy, which has comprised the majority of CPS biomass since 2015, decreased `r prettyNum((1-(be.all.summ$Biomass[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Central"]/biomass.pct.anch.c$biomass[biomass.pct.anch.c$year == 2023]))*100,,big.mark=",",digits=2)`% from the `r prettyNum(biomass.pct.anch.c$biomass[biomass.pct.anch.c$year == 2023],big.mark=",",digits=5)` t estimated in summer 2023 [@Stierhoff2024].
+The estimated biomass of the central subpopulation of Northern Anchovy was `r prettyNum(be.all.summ$Biomass[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Central"],big.mark=",",digits=3)` t (CI~95%~ = `r prettyNum(be.all.summ$lower.ci.B[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Central"],big.mark=",",digits=3)` - `r prettyNum(be.all.summ$upper.ci.B[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Central"],big.mark=",",digits=3)` t, CV = `r prettyNum(be.all.summ$biomass.cv[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Central"],big.mark=",",digits=1)`%). In the core region, the biomass was `r prettyNum(be.all$Biomass[be.all$Species == 'Engraulis mordax' & be.all$Stock == "Central"],big.mark=",",digits=4)` t (CI~95%~ = `r prettyNum(be.all$lower.ci.B[be.all$Species == 'Engraulis mordax' & be.all$Stock == "Central"],big.mark=",",digits=4)` - `r prettyNum(be.all$upper.ci.B[be.all$Species == 'Engraulis mordax' & be.all$Stock == "Central"],big.mark=",",digits=4)` t, CV = `r prettyNum(be.all$biomass.cv[be.all$Species == 'Engraulis mordax' & be.all$Stock == "Central"],big.mark=",",digits=1)`%), and in the nearshore region the biomass was `r prettyNum(be.all.ns$Biomass[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Central"],big.mark=",",digits=3)` t (CI~95%~ = `r prettyNum(be.all.ns$lower.ci.B[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Central"],big.mark=",",digits=3)` - `r prettyNum(be.all.ns$upper.ci.B[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Central"],big.mark=",",digits=3)` t, CV = `r prettyNum(be.all.ns$biomass.cv[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Central"],big.mark=",",digits=1)`%), or `r prettyNum((be.all.ns$Biomass[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Central"] / (be.all.ns$Biomass[be.all.ns$Species == 'Engraulis mordax' & be.all.ns$Stock == "Central"] + be.all$Biomass[be.all$Species == 'Engraulis mordax' & be.all$Stock == "Central"]))*100,big.mark=",",digits=2)`% of the total biomass. The central subpopulation ranged from approximately San Diego to San Francisco, and the distribution of $L_S$ ranged from `r length.summ$L.min[length.summ$scientificName == 'Engraulis mordax' & length.summ$stock == "Central"]` to `r length.summ$L.max[length.summ$scientificName == 'Engraulis mordax' & length.summ$stock == "Central"]` cm with modes at 6 and 13 cm in the core region and at 8 and 13 cm in the nearshore region. The estimated biomass of the central subpopulation of Northern Anchovy, which has comprised the majority of CPS biomass since 2015, decreased `r prettyNum((1-(be.all.summ$Biomass[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Central"]/biomass.pct.anch.c$biomass[biomass.pct.anch.c$year == 2023]))*100,big.mark=",",digits=2)`% from the `r prettyNum(biomass.pct.anch.c$biomass[biomass.pct.anch.c$year == 2023],big.mark=",",digits=5)` t estimated in summer 2023 [@Stierhoff2024].
 
 The estimated biomass of the northern subpopulation of Pacific Sardine was `r prettyNum(be.all.summ$Biomass[be.all.summ$Species == 'Sardinops sagax' & be.all.summ$Stock == "Northern"],big.mark=",",digits=3)` t (CI~95%~ = `r prettyNum(be.all.summ$lower.ci.B[be.all.summ$Species == 'Sardinops sagax' & be.all.summ$Stock == "Northern"],big.mark=",",digits=3)` - `r prettyNum(be.all.summ$upper.ci.B[be.all.summ$Species == 'Sardinops sagax' & be.all.summ$Stock == "Northern"],big.mark=",",digits=3)` t, CV = `r prettyNum(be.all.summ$biomass.cv[be.all.summ$Species == 'Sardinops sagax' & be.all.summ$Stock == "Northern"],big.mark=",",digits=1)`%). In the core region, the biomass was `r prettyNum(be.all$Biomass[be.all$Species == 'Sardinops sagax' & be.all$Stock == "Northern"],big.mark=",",digits=3)` t (CI~95%~ = `r prettyNum(be.all$lower.ci.B[be.all$Species == 'Sardinops sagax' & be.all$Stock == "Northern"],big.mark=",",digits=2)` - `r prettyNum(be.all$upper.ci.B[be.all$Species == 'Sardinops sagax' & be.all$Stock == "Northern"],big.mark=",",digits=3)` t, CV = `r prettyNum(be.all$biomass.cv[be.all$Species == 'Sardinops sagax' & be.all$Stock == "Northern"],big.mark=",",digits=1)`%) and in the nearshore region the biomass was `r prettyNum(be.all.ns$Biomass[be.all.ns$Species == 'Sardinops sagax' & be.all.ns$Stock == "Northern"],big.mark=",",digits=3)` t (CI~95%~ = `r prettyNum(be.all.ns$lower.ci.B[be.all.ns$Species == 'Sardinops sagax' & be.all.ns$Stock == "Northern"],big.mark=",",digits=3)` - `r prettyNum(be.all.ns$upper.ci.B[be.all.ns$Species == 'Sardinops sagax' & be.all.ns$Stock == "Northern"],big.mark=",",digits=3)` t, CV = `r prettyNum(be.all.ns$biomass.cv[be.all.ns$Species == 'Sardinops sagax' & be.all.ns$Stock == "Northern"],big.mark=",",digits=1)`%), or `r prettyNum((be.all.ns$Biomass[be.all.ns$Species == 'Sardinops sagax' & be.all.ns$Stock == "Northern"] / (be.all.ns$Biomass[be.all.ns$Species == 'Sardinops sagax' & be.all.ns$Stock == "Northern"] + be.all$Biomass[be.all$Species == 'Sardinops sagax' & be.all$Stock == "Northern"]))*100,big.mark=",",digits=3)`% of the total biomass. The northern subpopulation was observed between Pt. Conception and Monterey, and between Astoria and Cape Flattery in the core region, and in the nearshore region was mostly observed between Pt. Conception and San Francisco. The distribution of $L_S$ ranged from `r length.summ$L.min[length.summ$scientificName == 'Sardinops sagax' & length.summ$stock == "Northern"]` to `r length.summ$L.max[length.summ$scientificName == 'Sardinops sagax' & length.summ$stock == "Northern"]` cm with modes at 9 and 17 cm in the core region and at 19 cm in the nearshore region. These results were included in the update assessment used to provide a biomass estimate for harvest specifications of the northern subpopulation of Pacific Sardine during the 2025-2026 fishing year [@AllenAkselrud2025a]. Japanese Sardine (_Sardinops melanosticta_) were present in the survey area during the survey period [@Longo2025], but all sardine were assumed to be _S. sagax_ for the purpose of estimating biomass. Therefore, biomass estimates for both the northern and southern subpopulations may be subject to change.  
 
@@ -252,7 +252,8 @@ Along transects in the survey area, multi-frequency split-beam echosounders tran
 
 (ref:sardine-distribution) Conceptual spring (shaded region) and summer (hashed region) distributions of potential habitat for the northern subpopulation of Pacific Sardine along the west coasts of Mexico, the United States, and Canada. The dashed and dotted lines represent, respectively, the approximate summer and spring positions of the 0.2 mg m^–3^ chlorophyll-a concentration isoline. This isoline appears to oscillate in synchrony with the transition zone chlorophyll front [TZCF, @Polovina2001] and the offshore limit of the northern subpopulation Pacific Sardine potential habitat [@Zwolinski2011]. Mackerels are found within and on the edge of the same oceanographic  habitat [e.g., @Demer2012; @Zwolinski2012]. The TZCF may delineate the offshore and southern limit of both northern subpopulation Pacific Sardine and Pacific Mackerel distributions, and juveniles may have nursery areas in the SCB, downstream of upwelling regions.
 
-```{r sardine-distribution,fig.cap='(ref:sardine-distribution)',out.height='6in',fig.pos='H'}
+```{r sardine-distribution,fig.cap='(ref:sardine-distribution)',out.width="50%",fig.pos='H'}
+# out.height='6in'
 include_graphics(here("Images/img_survey_region.png"))  
 ```  
 
@@ -282,7 +283,8 @@ To estimate the abundances and biomasses of CPS in the nearshore region between 
 
 (ref:survey-plan) Planned compulsory transects sampled by NOAA Ship _`r survey.vessel`_ (black lines); adaptive transects to be sampled by the FSV when target CPS are present (dashed red lines); and nearshore transects sampled by _Lisa Marie_ and _Long Beach Carnage_ (magenta lines). White points indicate planned UCTD stations. Isobaths (light gray lines) are 50, 200, 500, and 2,000 m.
 
-```{r survey-plan,fig.cap='(ref:survey-plan)',out.height='8in',fig.pos='H'}
+```{r survey-plan,fig.cap='(ref:survey-plan)',out.width="60%",fig.pos='H'}
+# out.height='8in'
 include_graphics(here("Figs/fig_survey_map.png"))  
 ```  
 
@@ -316,13 +318,15 @@ if (survey.vessel.primary == "RL") {
 
 (ref:cb-config-lbc) Transducers (Top-bottom: Simrad ES200-7C, ES120-7C, ES38-12, and ES70-7C, Kongsberg) in a pole-mounted multi-transducer array (MTA4) installed on _Long Beach Carnage_.
 
-```{r cb-config-lbc,fig.cap='(ref:cb-config-lbc)',out.height = '4in',fig.align='center',fig.pos='H'}
+```{r cb-config-lbc,fig.cap='(ref:cb-config-lbc)',out.width="45%",fig.align='center',fig.pos='H'}
+# out.height = '4in'
 include_graphics(here("Images/img_carnage_mta4.jpg"))
 ``` 
 
 (ref:cb-config-lm) Transducers (Simrad `r echo.models["LM"]`; Kongsberg, not visible) mounted in a blister on the hull of _Lisa Marie_. 
 
-```{r cb-config-lm,fig.cap='(ref:cb-config-lm)',out.height = '3.5in',fig.align='center',fig.pos='H'}
+```{r cb-config-lm,fig.cap='(ref:cb-config-lm)',out.width="45%",fig.align='center',fig.pos='H'}
+# out.height = '3.5in'
 include_graphics(here("Images/img_lisa-marie_transducer-blister.png"))
 ``` 
 
@@ -497,7 +501,8 @@ _Lisa Marie_ used an approximately 440-m-long and 40-m-deep purse-seine net with
 
 (ref:trawl-diagram-net) Schematics of the Multifunction Trawl Net System panels as viewed from the a) top, b) bottom, and c) side.
 
-```{r trawl-diagram-net, fig.cap='(ref:trawl-diagram-net)',out.height='5in',fig.pos='H'}
+```{r trawl-diagram-net, fig.cap='(ref:trawl-diagram-net)',out.width='90%',fig.pos='H'}
+# out.height='5in',out.width='8.5in'
 include_graphics(here("Images/img_MFT_trawl.png")) 
 ``` 
 
@@ -506,7 +511,8 @@ include_graphics(here("Images/img_MFT_trawl.png"))
 
 (ref:trawl-diagram-codend) Schematics of the Multifunction Trawl Net System a) rigging and b) cod-end.
 
-```{r trawl-diagram-codend, fig.cap='(ref:trawl-diagram-codend)',out.height='6in',fig.pos='H'}
+```{r trawl-diagram-codend, fig.cap='(ref:trawl-diagram-codend)',out.width='90%',fig.pos='H'}
+# out.height='6in',out.width='6.3in'
 include_graphics(here("Images/img_MFT_rigging_codend.png")) 
 ``` 
 
@@ -515,7 +521,8 @@ include_graphics(here("Images/img_MFT_rigging_codend.png"))
 
 (ref:tv80-example) Example plot illustrating net performance during the net deployment (dashed box) and when actively fishing (shaded region) by combining outputs from the SCS, temperature-depth recorders (TDR), and Simrad PxPos sensors. (Top) The vessel speed over ground (kn, black line), measured using the ship’s GPS, and depths of the trawl kite (purple line) and footrope (blue line), measured using TDRs, and the port (green line) and starboard doors (red line), measured using the PxPos sensors. (Middle) Height of the net opening measured as the difference between the kite and footrope depths. (Bottom) The spread of the doors measured by the PxPos sensors.
 
-```{r tv80-example, fig.cap='(ref:tv80-example)',out.height='5in',fig.align='center',fig.pos='H'}
+```{r tv80-example, fig.cap='(ref:tv80-example)',out.width='80%',fig.align='center',fig.pos='H'}
+# out.height='5in'
 include_graphics(here("Images/img_TV80_example.png")) 
 ```
 
@@ -1071,19 +1078,23 @@ Purse seine catches from _Lisa Marie_ in the nearshore were composed mostly of P
 include_graphics(here("Figs/fig_cluster_distance_cumulative_biomass.png"))
 ```  
 
+\elandscape
 \newpage  
 
 (ref:nasc-trawl) Spatial distributions of: a) 38-kHz vertically integrated backscattering coefficients ($s_A$, m^2^ nmi^-2^;  averaged over 2000-m distance intervals) ascribed to CPS and b) proportion of acoustic backscatter from CPS in trawl clusters sampled by _`r survey.vessel`_.
 
-```{r nasc-trawl, fig.cap='(ref:nasc-trawl)',out.width='8.5in',fig.pos='H'}
+```{r nasc-trawl, fig.cap='(ref:nasc-trawl)',out.width='100%',fig.pos='H'}
+# out.width='8.5in'
 include_graphics(here("Figs/fig_nasc_acoustic_proportion.png"))
 ```  
 
 \newpage
+\blandscape
 
 (ref:nasc-seine-lbc) Nearshore transects sampled by _Long Beach Carnage_ overlaid with the distributions of: a) 38-kHz integrated backscattering coefficients ($s_A$, m^2^ nmi^-2^; averaged over 2000-m distance intervals) ascribed to CPS; and b) the proportions of acoustic backscatter from CPS in each purse-seine catch. Black points indicate purse-seine sets with no CPS present. Species with low catch weights may not be visible at this scale.
 
-```{r nasc-seine-lbc, fig.cap='(ref:nasc-seine-lbc)', out.width='9in', fig.pos='H'}
+```{r nasc-seine-lbc, fig.cap='(ref:nasc-seine-lbc)',out.width='100%',fig.pos='H'}
+# out.width='9in'
 if (file.exists(here("Figs/fig_nasc_seine_proportion_set_wt_LBC.png"))) {
   include_graphics(here("Figs/fig_nasc_seine_proportion_set_wt_LBC.png"))  
 } else {
@@ -1096,7 +1107,8 @@ if (file.exists(here("Figs/fig_nasc_seine_proportion_set_wt_LBC.png"))) {
 
 (ref:nasc-seine-lm) Nearshore survey transects sampled by _Lisa Marie_ overlaid with the distributions of: a) 38-kHz vertically integrated backscattering coefficients ($s_A$, m^2^ nmi^-2^; averaged over 2000-m distance intervals) ascribed to CPS; and b) the proportion of acoustic backscatter from CPS in each purse-seine catch. Black points indicate purse-seine sets with no CPS present. Species with low catch weights may not be visible at this scale.
 
-```{r nasc-seine-lm, fig.cap='(ref:nasc-seine-lm)', out.height='6.5in', fig.pos='H', eval=TRUE}
+```{r nasc-seine-lm, fig.cap='(ref:nasc-seine-lm)',out.width='100%', fig.pos='H', eval=TRUE}
+# out.height='6.5in'
 if (file.exists(here("Figs/fig_nasc_seine_proportion_set_wt_LM.png"))) {
   include_graphics(here("Figs/fig_nasc_seine_proportion_set_wt_LM.png"))  
 } else {
@@ -1331,7 +1343,8 @@ if (combine.regions) {
 
 (ref:l-disagg-anch-n) Abundance estimates versus standard length ($L_S$, upper panels) and biomass (t) versus $L_S$ (lower panels) for the northern subpopulation of Northern Anchovy (_Engraulis mordax_) in the core and nearshore survey regions. Abundance and biomass in the nearshore region is negligible relative to the core region and not visible at this scale.
 
-```{r l-disagg-anch-n,fig.cap='(ref:l-disagg-anch-n)',out.height='7in',fig.pos='H'}
+```{r l-disagg-anch-n,fig.cap='(ref:l-disagg-anch-n)',out.width='6.5in',fig.pos='H'}
+# out.height='7in'
 if (combine.regions) {
   if (file.exists(here("Figs/fig_L_disagg_combo_Engraulis mordax-Northern.png"))) {
     include_graphics(here("Figs/fig_L_disagg_combo_Engraulis mordax-Northern.png"))  
@@ -1482,7 +1495,7 @@ if (combine.regions) {
 
 (ref:l-disagg-anch-c) Abundance estimates versus standard length ($L_S$, upper panels) and biomass (t) versus $L_S$ (lower panels) for the central subpopulation of Northern Anchovy (_Engraulis mordax_) in the core and nearshore survey regions.
 
-```{r l-disagg-anch-c,fig.cap='(ref:l-disagg-anch-c)',out.height='7in',fig.pos='H'}
+```{r l-disagg-anch-c,fig.cap='(ref:l-disagg-anch-c)',out.width='6.5in',fig.pos='H'}
 if (combine.regions) {
   if (file.exists(here("Figs/fig_L_disagg_combo_Engraulis mordax-Central.png"))) {
     include_graphics(here("Figs/fig_L_disagg_combo_Engraulis mordax-Central.png"))  
@@ -1633,7 +1646,7 @@ if (combine.regions) {
 
 (ref:l-disagg-sar-n) Estimated abundance (upper panel) and biomass (lower panel) versus standard length ($L_S$, cm) for the northern subpopulation of Pacific Sardine (_Sardinops sagax_) in the core and nearshore survey regions. Note: the abundance and biomass in the core region are difficult to see at this scale.
 
-```{r l-disagg-sar-n,fig.cap='(ref:l-disagg-sar-n)',out.height='6in',fig.pos='H'}
+```{r l-disagg-sar-n,fig.cap='(ref:l-disagg-sar-n)',out.width='6.5in',fig.pos='H'}
 if (combine.regions) {
   if (file.exists(here("Figs/fig_L_disagg_combo_Sardinops sagax-Northern.png"))) {
     include_graphics(here("Figs/fig_L_disagg_combo_Sardinops sagax-Northern.png"))  
@@ -1783,7 +1796,7 @@ if (combine.regions) {
 
 (ref:l-disagg-sar-s) Estimated abundance (upper panels) and biomass (lower panels) versus standard length ($L_S$, cm) for the southern subpopulation of Pacific Sardine (_Sardinops sagax_)  in the core and nearshore survey regions.
 
-```{r l-disagg-sar-s,fig.cap='(ref:l-disagg-sar-s)',out.height='6in',fig.pos='H'}
+```{r l-disagg-sar-s,fig.cap='(ref:l-disagg-sar-s)',out.width='6.5in',fig.pos='H'}
 if (combine.regions) {
   if (file.exists(here("Figs/fig_L_disagg_combo_Sardinops sagax-Southern.png"))) {
     include_graphics(here("Figs/fig_L_disagg_combo_Sardinops sagax-Southern.png"))  
@@ -1932,7 +1945,7 @@ if (combine.regions) {
 
 (ref:l-disagg-mack) Estimated abundance (upper panels) and biomass (lower panels) versus fork length ($L_F$, cm) for Pacific Mackerel (_Scomber japonicus_)  in the core and nearshore survey regions.
 
-```{r l-disagg-mack,fig.cap='(ref:l-disagg-mack)',out.height='6in',fig.pos='H'}
+```{r l-disagg-mack,fig.cap='(ref:l-disagg-mack)',out.width='6.5in',fig.pos='H'}
 if (combine.regions) {
   if (file.exists(here("Figs/fig_L_disagg_combo_Scomber japonicus-All.png"))) {
     include_graphics(here("Figs/fig_L_disagg_combo_Scomber japonicus-All.png"))  
@@ -2083,7 +2096,7 @@ if (combine.regions) {
 
 (ref:l-disagg-jack) Estimated abundance (upper panel) and biomass (lower panel) versus fork length ($L_F$, cm) for Jack Mackerel (_Trachurus symmetricus_) in the core and nearshore survey regions.
 
-```{r l-disagg-jack,fig.cap='(ref:l-disagg-jack)',out.height='6in',fig.pos='H'}
+```{r l-disagg-jack,fig.cap='(ref:l-disagg-jack)',out.width='6.5in',fig.pos='H'}
 if (combine.regions) {
   if (file.exists(here("Figs/fig_L_disagg_combo_Trachurus symmetricus-All.png"))) {
     include_graphics(here("Figs/fig_L_disagg_combo_Trachurus symmetricus-All.png"))  
@@ -2233,7 +2246,7 @@ if (combine.regions) {
 
 (ref:l-disagg-her) Estimated abundance (upper panel) and biomass (lower panel) versus fork length ($L_F$, cm) for Pacific Herring (_Clupea pallasii_) in the core and nearshore survey regions.
 
-```{r l-disagg-her,fig.cap='(ref:l-disagg-her)',out.height='6in',fig.pos='H'}
+```{r l-disagg-her,fig.cap='(ref:l-disagg-her)',out.width='6.5in',fig.pos='H'}
 if (combine.regions) {
   if (file.exists(here("Figs/fig_L_disagg_combo_Clupea pallasii-All.png"))) {
     include_graphics(here("Figs/fig_L_disagg_combo_Clupea pallasii-All.png"))  
@@ -2386,7 +2399,7 @@ if (combine.regions) {
 
 (ref:l-disagg-rher) Estimated abundance (upper panel) and biomass (lower panel) versus fork length ($L_F$, cm) for Round Herring (_Etrumeus acuminatus_) in the core survey region. No Round Herring were caught in the nearshore region.
 
-```{r l-disagg-rher,eval=TRUE,fig.cap='(ref:l-disagg-rher)',out.height='6in',fig.pos='H'}
+```{r l-disagg-rher,eval=TRUE,fig.cap='(ref:l-disagg-rher)',out.width='6.5in',fig.pos='H'}
 if (combine.regions) {
   if (file.exists(here("Figs/fig_L_disagg_combo_Etrumeus acuminatus-All.png"))) {
     include_graphics(here("Figs/fig_L_disagg_combo_Etrumeus acuminatus-All.png"))  
@@ -2425,7 +2438,7 @@ The estimated biomass of the northern subpopulation of Northern Anchovy in the s
 
 #### Central subpopulation {#discussion-anchovy-biomass-central} 
 
-The estimated biomass of the central subpopulation of Northern Anchovy in the survey region was `r prettyNum(be.all.summ$Biomass[be.all.summ$Species == "Engraulis mordax" & be.all$Stock == "Central"], big.mark=",", digits = 5)` t (CI~95%~ = `r prettyNum(be.all.summ$lower.ci.B[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Central"],big.mark=",",digits=5)` - `r prettyNum(be.all.summ$upper.ci.B[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Central"],big.mark=",",digits=5)` t), making up `r round(be.all.summ$Biomass[be.all$Species == "Engraulis mordax" & be.all$Stock == "Central"]/sum(be.all.summ$Biomass)*100)`% of the total CPS biomass in summer 2024, and has comprised a substantial portion of the CPS biomass in the CCE since approximately 2016. The biomass in 2024 decreased `r prettyNum((1-(be.all.summ$Biomass[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Central"]/biomass.pct.anch.c$biomass[biomass.pct.anch.c$year == 2023]))*100,,big.mark=",",digits=2)`% from the `r prettyNum(biomass.pct.anch.c$biomass[biomass.pct.anch.c$year == 2023],big.mark=",",digits=5)` t estimated in summer 2023 [@Stierhoff2024]. This estimate excludes an unquantified but relatively small amount of biomass attributed to deep Northern Anchovy schools in the nearshore region. Research will continue to better incorporate this biomass in any future revisions. Additional scrutiny of the 2023 survey data identified one acoustic transect near San Francisco with a significant CPS backscatter density that greatly increased both the point estimate and the confidence intervals (see **Fig. \@ref(fig:biomass-ts-combo)a**). For example, removing that transect reduced the 2023 biomass estimate by ~`r prettyNum((2700000-245000-945000)/2700000*100, digits = 2)`%, which would have resulted in a more gradual decrease in the biomass of the central subpopulation of Northern Anchovy over the past three survey years. The decrease in biomass in 2024 may also be due in part to the decreased northern extent of the distribution, which typically extends to Cape Mendocino but ended near San Francisco this year. We will continue exploring additional explanations for the apparent decline in biomass observed since 2022.  
+The estimated biomass of the central subpopulation of Northern Anchovy in the survey region was `r prettyNum(be.all.summ$Biomass[be.all.summ$Species == "Engraulis mordax" & be.all$Stock == "Central"], big.mark=",", digits = 5)` t (CI~95%~ = `r prettyNum(be.all.summ$lower.ci.B[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Central"],big.mark=",",digits=5)` - `r prettyNum(be.all.summ$upper.ci.B[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Central"],big.mark=",",digits=5)` t), making up `r round(be.all.summ$Biomass[be.all$Species == "Engraulis mordax" & be.all$Stock == "Central"]/sum(be.all.summ$Biomass)*100)`% of the total CPS biomass in summer 2024, and has comprised a substantial portion of the CPS biomass in the CCE since approximately 2016. The biomass in 2024 decreased `r prettyNum((1-(be.all.summ$Biomass[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Central"]/biomass.pct.anch.c$biomass[biomass.pct.anch.c$year == 2023]))*100,big.mark=",",digits=2)`% from the `r prettyNum(biomass.pct.anch.c$biomass[biomass.pct.anch.c$year == 2023],big.mark=",",digits=5)` t estimated in summer 2023 [@Stierhoff2024]. This estimate excludes an unquantified but relatively small amount of biomass attributed to deep Northern Anchovy schools in the nearshore region. Research will continue to better incorporate this biomass in any future revisions. Additional scrutiny of the 2023 survey data identified one acoustic transect near San Francisco with a significant CPS backscatter density that greatly increased both the point estimate and the confidence intervals (see **Fig. \@ref(fig:biomass-ts-combo)a**). For example, removing that transect reduced the 2023 biomass estimate by ~`r prettyNum((2700000-245000-945000)/2700000*100, digits = 2)`%, which would have resulted in a more gradual decrease in the biomass of the central subpopulation of Northern Anchovy over the past three survey years. The decrease in biomass in 2024 may also be due in part to the decreased northern extent of the distribution, which typically extends to Cape Mendocino but ended near San Francisco this year. We will continue exploring additional explanations for the apparent decline in biomass observed since 2022.  
 
 <!-- If this transect is removed, the biomass of the central subpopulation of Northern Anchovy in 2023 was approximately 945,000 t (700,000 t in core region and 245,000 t in nearshore region), which is comparable to the biomass estimated in 2024 but approximately 60% less than the biomass estimated in 2022.  -->
 
@@ -2460,11 +2473,9 @@ In summer 2024, the estimated biomass of Round Herring in U.S. and Mexican water
 
 (ref:sardine-stock-allocation) Summary of lengths for Pacific Sardine sampled during the summer 2024 survey:  a) relative length distribution of individuals classified as northern (blue) and southern (red) subpopulations (NSP and SSP, respectively); b) individual length measurements (grey points) and mean lengths (blue and red points for NSP and SSP, respectively) for each trawl cluster versus latitude; and c) locations of trawls clusters with Pacific Sardine assigned to each subpopulation (blue and red points) based on the predicted potential habitat for the NSP [@Zwolinski2024] at the midpoint of the survey (August 1, 2024).
 
-```{r sardine-stock-allocation,fig.cap='(ref:sardine-stock-allocation)',out.height='6.5in',fig.pos='H'}
+```{r sardine-stock-allocation,fig.cap='(ref:sardine-stock-allocation)',out.width='5in',fig.pos='H'}
 include_graphics(here("Images/img_sardine_stock_structure_lengths_summer2024.jpg"))  
 ```
-
-\newpage
 
 ## Ecosystem dynamics: Forage fish community {#discussion-ecosystem-dynamics}  
 
@@ -2635,7 +2646,7 @@ Standard length ($L_S$) frequency distributions of Northern Anchovy (_Engraulis 
 
 (ref:rlf-anchovy) Standard length ($L_S$) frequency distributions of Northern Anchovy (_Engraulis mordax_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum.
 
-```{r rlf-anchovy,out.height='6.5in',fig.pos='H'}
+```{r rlf-anchovy,out.width='6in',fig.pos='H'}
 include_graphics(here("Figs/fig_cluster_relative_length_frequency_Engraulis mordax.png"))
 ```  
 
@@ -2647,7 +2658,7 @@ Standard length ($L_S$) frequency distributions of Pacific Sardine (_Sardinops s
 
 (ref:rlf-sardine) Standard length ($L_S$) frequency distributions of Pacific Sardine (_Sardinops sagax_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum.
 
-```{r rlf-sardine,out.height='6.5in',fig.pos='H'}
+```{r rlf-sardine,out.width='6in',fig.pos='H'}
 include_graphics(here("Figs/fig_cluster_relative_length_frequency_Sardinops sagax.png"))
 ```  
 
@@ -2659,7 +2670,7 @@ Fork length ($L_F$) frequency distributions of Pacific Mackerel (_Scomber japoni
 
 (ref:rlf-mack) Fork length ($L_F$) frequency distributions of Pacific Mackerel (_Scomber japonicus_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum.
 
-```{r rlf-mack,out.height='6.5in',fig.pos='H'}
+```{r rlf-mack,out.width='6in',fig.pos='H'}
 include_graphics(here("Figs/fig_cluster_relative_length_frequency_Scomber japonicus.png"))
 ```  
 
@@ -2671,7 +2682,7 @@ Fork length ($L_F$) frequency distributions of Jack Mackerel (_Trachurus symmetr
 
 (ref:rlf-jack) Fork length ($L_F$) frequency distributions of Jack Mackerel (_Trachurus symmetricus_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum.
 
-```{r rlf-jack,out.height='6.5in',fig.pos='H'}
+```{r rlf-jack,out.width='6in',fig.pos='H'}
 include_graphics(here("Figs/fig_cluster_relative_length_frequency_Trachurus symmetricus.png"))
 ```  
 
@@ -2683,7 +2694,7 @@ Fork length ($L_F$) frequency distributions of Pacific Herring (_Clupea pallasii
 
 (ref:rlf-her) Fork length ($L_F$) frequency distributions of Pacific Herring (_Clupea pallasii_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum.
 
-```{r rlf-her,out.height='6.5in',fig.pos='H'}
+```{r rlf-her,out.width='6in',fig.pos='H'}
 include_graphics(here("Figs/fig_cluster_relative_length_frequency_Clupea pallasii.png"))
 ```  
 
@@ -2695,7 +2706,7 @@ Fork length ($L_F$) frequency distributions of Round Herring (_Etrumeus acuminat
 
 (ref:rlf-rher) Fork length ($L_F$) frequency distributions of Round Herring (_Etrumeus acuminatus_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum.
 
-```{r rlf-rher,out.height='6.5in',fig.pos='H'}
+```{r rlf-rher,out.width='6in',fig.pos='H'}
 include_graphics(here("Figs/fig_cluster_relative_length_frequency_Etrumeus acuminatus.png"))
 ```
 

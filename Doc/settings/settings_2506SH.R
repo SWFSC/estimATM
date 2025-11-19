@@ -105,7 +105,7 @@ survey.start           <- "3 June"        # Survey start date
 survey.end             <- "13 September"  # Survey end date
 survey.year            <- "2025"          # Survey year, for report
 survey.season          <- "Summer"        # Survey season, for report
-survey.das             <- 100             # Days at sea allocated
+survey.das             <- 81              # Days at sea allocated (100 DAS total; 5 for transit remaining for research)
 survey.landmark.n      <- "Cape Flattery, WA" # Landmark - N extent of survey
 survey.landmark.s      <- "San Diego, CA" # Landmark - S extent of survey
 survey.twilight        <- "none"          # Sunset type for computing day/night (none, nautical, civil, astronomical)
@@ -137,7 +137,7 @@ if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {
 
 # Define ERDDAP data variables for primary NOAA vessel
 erddap.url           <- "http://coastwatch.pfeg.noaa.gov/erddap/tabledap/fsuNoaaShip"
-erddap.vessel        <- "WTEDnrt"    # Lasker == WTEG; Shimada == WTED; add "nrt" if survey in progress
+erddap.vessel        <- "WTED"    # Lasker == WTEG; Shimada == WTED; add "nrt" if survey in progress
 erddap.survey.start  <- "2025-06-03" # Start of survey for ERDDAP vessel data query
 erddap.survey.end    <- "2025-09-14" # End of survey for ERDDAP vessel data query
 erddap.vars          <- c("time,latitude,longitude,seaTemperature,platformSpeed,windDirection,windSpeed,flag")
@@ -607,14 +607,14 @@ ctd.dir                <- file.path(survey.dir[survey.vessel.primary],"DATA/CTD/
 ctd.hdr.dir            <- file.path(survey.dir[survey.vessel.primary],"DATA/CTD")
 ctd.hdr.pattern        <- "*.*hdr"
 ctd.cast.pattern       <- ".*_processed.asc"
-ctd.cast.depth         <- 350
+ctd.cast.depth         <- 500
 
 # UCTD data   
 uctd.dir               <- file.path(survey.dir[survey.vessel.primary],"DATA/UCTD/PROCESSED")
 uctd.type              <- "Valeport" # "Valeport" or "Oceansciences"
 uctd.hdr.pattern       <- ".*UCTD\\d{3}-\\d{1}.*.vp2"
 uctd.cast.pattern      <- ".*UCTD\\d{3}-\\d{1}.*.vp2"
-uctd.cast.depth        <- 330
+uctd.cast.depth        <- 350
 
 # RBR TDR data
 tdr.dir.kite           <- here("Data/TDR/Kite")
@@ -798,7 +798,7 @@ raw.log.range.night <- c(SH = "100")  # depth of ER60 logging (m)
 # Echoview settings
 er60.version  <- "v2.4.3" # ER60 version
 ek80.version  <- "v21.15.1" # EK80 version
-ev.version    <- "v14.1" # Echoview version
+ev.version    <- "v15.1" # Echoview version
 int.start        <-    5  # Integration start line depth (m)
 int.stop         <-  350  # Integration start line depth (m)
 cps.depth        <-   70  # Integration depth for CPS (m)
@@ -820,21 +820,22 @@ cufes.threshold.anchovy <- 1   # egg density, eggs per minute
 cufes.threshold.sardine <- 0.3 # egg density, eggs per minute
 
 # # Calibration information ------------------------------------------------
-cal.vessels        <- NA # c("SH","LBC","LM") 
-cal.dir            <- c(SH  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW",
+cal.vessels        <- c("SH","LBC","LM") # c("SH","LBC","LM") 
+cal.vessels.fm     <- c("SH") 
+cal.dir            <- c(SH  = "//swc-astnas1-s/AST-DATA/2506SH/EK80/CALIBRATION/Results/Final-CW",
                         LM  = "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW",
                         LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW")
 # Location of Lasker (or primary vessel) calibration single-target detections (for polar plots)
-single.targets.dir <- c(SH =  "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/EV_PROCESSING/CSV/singleTargets",
+single.targets.dir <- c(SH =  "//swc-astnas1-s/AST-DATA/2506SH/EK80/CALIBRATION/EV_PROCESSING/CSV/singleTargets",
                         LM =  "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS/DATA/EK80/CALIBRATION/POST-SURVEY/EV/singleTargets",
                         LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS/DATA/EK80/CALIBRATION/EV/CSV")
 sphere.TS <- list(SH  = list("18" = -42.41, "38" = -42.40, "70" = -41.64, "120" = -39.80, "200" = -38.82, "333" = -36.78),
                   LM  = list("38" = -42.36, "70" = -41.40, "120" = -39.72, "200" = -41.45),
                   LBC = list("38" = -42.41, "70" = -41.62, "120" = -39.74, "200" = -38.84))
 # Named vector of EK80 FM-mode calibration directories
-cal.dir.fm         <- c(RL  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS/Final-FM") 
-cal.datetime       <- c(SH = "27 June")    # Date/time of calibration
-cal.plot.date      <- c(SH = "2025-06-27") # Date of the calibration, used to plot cal time series
+cal.dir.fm         <- c(SH  = "//swc-astnas1-s/AST-DATA/2506SH/EK80/CALIBRATION/RESULTS/Final-FM") 
+cal.datetime       <- c(SH = "9 June")    # Date/time of calibration
+cal.plot.date      <- c(SH = "2025-06-09") # Date of the calibration, used to plot cal time series
 cal.window         <- c(SH = 75)           # Number of days around calibration date to look for results
 cal.group          <- c(SH = "SWFSC")      # Group conducting the calibration
 cal.personnel      <- c(SH = "A. Beittel, D. Murfin, J. Renfree, and S. Sessions") # Calibration participants
@@ -844,7 +845,8 @@ cal.lon.dd         <- c(SH = -117.15278) # Cal location longitude in decimal deg
 cal.lat            <- dd2decmin(cal.lat.dd)
 cal.lon            <- dd2decmin(cal.lon.dd)
 cal.sphere         <- c(SH = "38.1-mm diameter sphere made from tungsten carbide (WC) with 6% cobalt binder material (WC38.1)") # Cal sphere info
-cal.sphere.name    <- c(SH = "_Lasker_ sphere #1")
+cal.sphere.fm      <- c(SH = "25-mm WC sphere (WC25)") # Cal sphere info for additional FM calibratoins
+cal.sphere.name    <- c(SH = "UPDATE SPHERE NAME")
 cal.sphere.z       <- c(SH = 6) # Nominal depth of calibration sphere below the transducer
 cal.imp.anal       <- c(SH = "Agilent 4294A Precision Impedance Analyzer") # Info about impedance analyzer
 # Other notes about calibration

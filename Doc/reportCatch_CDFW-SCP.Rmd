@@ -64,7 +64,7 @@ source(here("Doc/settings", prj.settings))
 ```{r user-controls}
 # Processing settings
 get.db     <- T
-get.nav    <- T
+get.nav    <- F
 do.spatial <- T
 nav.source <- "ERDDAP" # Navigation data source: ERDDAP or SCS
 save.figs  <- T
@@ -146,8 +146,8 @@ haul.bad <- haul.all %>%
 # Get only hauls from current survey
 haul <- filter(haul.all, cruise %in% cruise.name) %>% 
   filter(!haul %in% haul.bad$haul) %>%
-  mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
-         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) %>%  # Assign cluster
+  mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), 
+         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) %>%
   mutate(leg = cut(as.numeric(date(equilibriumTime)), leg.breaks, 
                    include.lowest = TRUE, labels = FALSE))
 # Get all haul numbers
@@ -383,7 +383,7 @@ catch.ca <- catch.all %>%
   left_join(spp.codes)
 
 catch.table <- catch.ca %>% 
-  left_join(select(haul.all, haul, lat = startLatDecimal, long = startLongDecimal, 
+  left_join(select(haul, haul, lat = startLatDecimal, long = startLongDecimal, 
                    date_time = equilibriumTime)) %>% 
   left_join(select(as.data.frame(haul.mpa), haul, MPA)) %>% 
   mutate(county = NA,

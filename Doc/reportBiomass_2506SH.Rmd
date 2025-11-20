@@ -84,7 +84,7 @@ panderOptions('round', 6); panderOptions('keep.trailing.zeros', T); panderOption
 combine.regions  <- T # Combine core and nearshore biomass plots
 plot.time.series <- T # Plot biomass time series 
 get.db           <- T # Query biomass estimates from AST database
-process.cal      <- F # Process, format, and plot echosounder calibration results
+process.cal      <- T # Process, format, and plot echosounder calibration results
 save.figs        <- T # Save figures
 ```
 
@@ -1006,47 +1006,38 @@ if (exists("sets")) {
 }
 ```
 
-At the beginning of Leg 1, `r num2words(5)` days at sea (DAS) were allocated for drills, training, additional sea trials with the multi-function trawl (MFT) net system, and underway echosounder calibrations (see below).  
-
 The core region of the `r tolower(survey.season)` `r survey.year` survey spanned the continental shelf from the Punta Eugenia, Baja California, Mexico to Cape Scott, Vancouver Island, between `r format(ymd(erddap.survey.start),"%d %B")` and `r format(ymd(erddap.survey.end),"%d %B %Y")`, and included most of the potential habitat for the northern subpopulation of Pacific Sardine at the time of the survey^[https://coastwatch.pfeg.noaa.gov/erddap/griddap/sardine_habitat_modis.html]. In this region, _`r survey.vessel`_ (`r das.fsv-5` DAS) sampled `r nrow(nasc.summ)` east-west transects totaling `r prettyNum(sum(nasc.summ$distance), digits = 1, big.mark = ",")` nmi (**Fig. \@ref(fig:nasc-trawl)**). Catches from a total of `r nrow(haul)` nighttime surface trawls were combined into `r n_distinct(haul$cluster)` trawl clusters. In the core region, one to `r num2words(max(as.numeric(be$Stratum), na.rm = TRUE))` post-survey strata were defined by their transect spacing and the densities of biomass attributed to each species. 
 
 The nearshore region spanned an area from 5-m depth to approximately 5 nmi from the continental coast, or 2.5 nmi from the Santa Cruz and Santa Catalina Islands, between San Diego and Cape Flattery. _Long Beach Carnage_ (`r das.lbc` DAS) surveyed from approximately San Diego to Ragged Point along the Big Sur coast, and around the Santa Cruz and Santa Catalina Islands, with `r nrow(nasc.summ.lbc.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lbc.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LBC"]` purse-seine sets (**Fig. \@ref(fig:nasc-seine-lbc)**). _Lisa Marie_ (`r das.lm` DAS) surveyed from approximately Pacific Grove, CA to Cape Flattery, WA with `r nrow(nasc.summ.lm.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lm.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LM"]` purse-seine sets (**Fig. \@ref(fig:nasc-seine-lm)**). In the nearshore region, one to `r num2words(max(as.numeric(be.ns$Stratum),na.rm = TRUE))` post-survey strata were defined by their transect spacing and the densities of biomass attributed to each species.
 
 Biomasses and abundances were estimated for each species and subpopulation in both the core and nearshore survey regions. The total biomass for each subpopulation within the survey region was estimated as the sum of its biomasses in the core and nearshore regions.  
 
+## Core area survey aboard _`r survey.vessel`_  
+
+<!-- https://docs.google.com/document/d/1brlI4uXMfdw5mfewRfdAoZAE4WgbCdjrjqkhapuuV6U/edit?tab=t.0 -->
+
 **Leg I**
 
-*Multi-Function Trawl (MFT) Net Testing*  
+On 11 June, _`r survey.vessel`_ departed from 10th Avenue Terminal in San Diego, CA at ~2100 (all times UTC), then remained outside San Diego Bay to allow a RAPP Hydema technician to test and evaluate the trawl winch system. At 1447 on 12 June, sampling was initiated on transect 002; at 1809 _`r survey.vessel`_ broke transect to transit back toward San Diego Bay where a small boat transfer was conducted to bring aboard a 2nd cook. Surface trawl sampling was then conducted that evening and acoustic sampling resumed on transect 002 at 1259 on 13 June. At 1259 on 17 June, _`r survey.vessel`_ anchored near Long Beach, CA to recalibrate the EK80 echosounders; at 1759, after an unsuccessful attempt, the anchor was retrieved and acoustic sampling resumed on transect 006. On 20 June, a bearing on the trawl gate broke during the first nighttime surface trawl, precluding further trawl operations. Acoustic sampling resumed as normal on the morning of 21 June while the ship’s crew investigated a repair; at 2300 that evening the trawl gate was fixed and trawling could commence. At 1749 on 24 June, _`r survey.vessel`_ retrieved a bottom lander nearshore off Point Conception, deployed a new bottom lander at 34.4402 N/120.5480 W, then resumed acoustic sampling on transect 011. Acoustic sampling ceased after completion of transect 011 at 0409 on 25 June, followed by two nighttime surface trawls before beginning transit to San Francisco. On 25 June, _`r survey.vessel`_ arrived in San Francisco, CA at ~1700 to complete Leg 1. 
 
-Leg I aboard _`r survey.vessel`_ departed from 10th Avenue Marine Terminal in San Diego, CA at 19:30 (all times UTC) on June 25, 2024. The first day consisted of drills, shipboard Operational Readiness Training (ORT), and equipment setup. Prior to sailing, the ship underwent a refit of its entire network to a new Fortinet solution, as part of OMAO's Ocean Data Lake initiative. The next five days (26-30 June) were spent testing the new Multi-Function Trawl (MFT) net and familiarizing personnel with its operations. On 27 June, the Cetacean Health and Life History Program from SWFSC's Marine Mammal and Turtle Division (MMTD) rendezvoused with _`r survey.vessel`_ outside San Diego Bay to conduct drone footage of the MFT during operations. On 29 June, Greg Shaughnessey (Ocean Gold Seafood, Inc.) and Seamus Melly (Swan Nets) departed _`r survey.vessel`_ via a small boat. On 30 June, another small-boat transfer was conducted to swap personnel for the remainder of Leg 1. During the transfer, _`r survey.vessel`_ conducted a calibration of the EC150-3C ADCP at 32.602 N, 117.287 W following the protocols as prescribed by Kongsberg, which involved the ship moving in multiple clockwise and counterclockwise circles. After completing a successful calibration, _`r survey.vessel`_ then transited to 32.542 N / 117.184 W and dropped anchor in approximately 30-m of water. Once anchored, calibrations of the EC150-3C echosounder and ME70 multibeam sonar were conducted. Upon completion of the calibrations, and after the small boat had returned, _`r survey.vessel`_ pulled up anchor and began its transit south to Baja California, Mexico, where it would begin the ATM survey.
+**Leg II**
 
-*ATM survey*
+**Leg III**
 
-On the morning of 2 July, _`r survey.vessel`_ commenced acoustic sampling on Transect 001 in Sebastián Vizcaíno Bay to officially begin the 2024 survey. Acoustic and trawl sampling in Baja California, MX proceeded northward along the 20-nmi-spaced transects. On 7 July, _`r survey.vessel`_ completed the last transect in Mexico, Transect 027C. Between 7-16 July, _`r survey.vessel`_ continued sampling in the SCB. Due to the long transect lines in the SCB, regional sampling was conducted to ensure adequate biological sampling in both the inshore and offshore regions. On 16 July, _`r survey.vessel`_ completed the final sampling of Leg I off Huntington Beach, CA. In total, Leg I sampled all transects from Transects 001 to 040. At 05:00 on 17 July, after completing a single trawl for the final evening, _`r survey.vessel`_ began its transit back to San Diego, CA, arriving at 10th Avenue Marine Terminal at 14:50.
+**Leg IV**
 
-*Nearshore*
+**Leg V**
+
+## Nearshore survey aboard industry fishing vessels
+### _Long Beach Carnage_
 
 On 8 July, _Long Beach Carnage_ was mobilized with EK80 echosounders at Point Loma Sportfishing in San Diego, CA. From 9 to 18 July, _Long Beach Carnage_ sampled nearshore transects 1 to 36, between San Diego and Point Conception, including around Santa Catalina Island.
 
-**Leg II**  
-
-Leg II aboard _`r survey.vessel`_ departed on Monday, 22 July at 21:30 from 10th Avenue Marine Terminal in San Diego. At around 13:00 on 23 July, _`r survey.vessel`_ resumed acoustic sampling along the nearshore portion of Transect 041 off Huntington Beach. At ~13:00 on 31 July, a lander containing a WBAT and Aural-M2 was recovered off Point Conception, and at ~14:00 a new lander was deployed in the same area (34.439 N / 120.548 W). On 6 August, _`r survey.vessel`_ transited to Santa Cruz, CA to find calm seas and improved visibility for troubleshooting problems with the X-band radar; ET Trevathan successfully replaced the brushes in the radar antenna motor and the survey resumed the following day with minimal impact to sampling. At ~06:00 on 12 August, acoustic sampling was completed along Transect 075 off Bodega Bay, CA, and at 14:30 _`r survey.vessel`_ arrived at Pier 76 in San Francisco, CA to conclude Leg II.
-
-*Nearshore*
-
 From 22 to 25 July, _Long Beach Carnage_ sampled nearshore transects 37 to 48, between Point Conception and Morro Bay, including around Santa Cruz Island. Then, from 2 to 3 August, _Long Beach Carnage_ sampled nearshore transects 49 to 54. On 3 August, _Long Beach Carnage_ docked in Monterey, CA, where the acoustic equipment was demobilized for transport back to San Diego, CA.
 
-**Leg III** 
+### _Lisa Marie_
 
-Leg III aboard _`r survey.vessel`_ departed at 19:30 on Saturday, 17 August from Pier 96 in San Francisco, CA. The first day consisted of drills and shipboard ORT activities, followed by two nighttime trawls in the vicinity of Bodega Canyon. Acoustic sampling then resumed at sunrise on 18 August along Transect 076. On 28 and 29 August, inclement weather precluded trawl sampling.  Moreover, on the evening of 28 August, _`r survey.vessel`_ was requested by the U.S. Coast Guard to watch over the distressed sailboat _Sundance_ until the following morning. On 31 August, _`r survey.vessel`_ commenced regional sampling, in part to obtain both inshore and offshore trawls to enable comparative biosampling with _Lisa Marie_. On 6 September, _`r survey.vessel`_ completed partial acoustic sampling of Transect 124, just outside the mouth of the Columbia River, then conducted a final trawl just north of Tillamook Head. _`r survey.vessel`_ then returned to MOC-P in Newport, OR at 23:00 on 7 September to conclude Leg III.
-
-*Nearshore*
-
-From 7 to 25 August, _Lisa Marie_ sampled nearshore transects 66 to 151, between Monterey, CA and the WA/OR border, returning to port in Westport, WA on 26 August. Then, from 31 August to 6 September, _Lisa Marie_ conducted comparative purse seine sets in close proximity, in both space and time, to _`r survey.vessel`_ nighttime trawls. Finally, from 7 to 11 September, _Lisa Marie_ sampled nearshore transects 152 to 171, between the WA/OR border and Cape Flattery, WA, to conclude the nearshore survey.
-
-**Leg IV** 
-
-Leg IV aboard _`r survey.vessel`_ departed from MOC-P in Newport, OR at 16:30 on 13 September after a one-day delay awaiting arrival of an augmenting steward. The first day included drills followed by transiting to and beginning sampling on Transect 124, which had been partially sampled during Leg III. _`r survey.vessel`_ then continued sampling northward, entering Canadian waters on 21 September to conduct transects off Vancouver Island. Due to time and weather constraints, sampling off Vancouver Island was only conducted on compulsory transects, spaced 20-nmi apart. On 23 September, after acoustically sampling and conducting trawls on Transect 149, _`r survey.vessel`_ transited to the northernmost transect (Transect 155) off Vancouver Island and resumed sampling from north to south. This decision was made due to an impending weather system, and would optimize sampling effort before _`r survey.vessel`_ would need to vacate the region. On 24 September, _`r survey.vessel`_ completed its final transect of the survey, Transect 151, and conducted one last trawl, before transiting to Newport, OR, where _`r survey.vessel`_ arrived at ~17:00 on 26 September.
+From 7 to 25 August, _Lisa Marie_ sampled nearshore transects 66 to 151, between Monterey, CA and the WA/OR border, returning to port in Westport, WA on 26 August. Then, from 31 August to 6 September, _Lisa Marie_ conducted comparative purse seine sets in close proximity, in both space and time, to _`r survey.vessel`_ nighttime trawls. Finally, from 7 to 11 September, _Lisa Marie_ sampled nearshore transects 152 to 171, between the WA/OR border and Cape Flattery, WA, to conclude the nearshore survey.  
 
 ## Acoustic backscatter {#results-backscatter-distribution} 
 
@@ -2586,7 +2577,7 @@ The collection and analysis of the survey data were conducted by members of 1-NO
 \blandscape
 
 # Calibration plots {#appendix-calibration-plots}
-## _Shimada_ {#appendix-calibration-plots-sh}
+## _`r survey.vessel`_ {#appendix-calibration-plots-sh}
 ### CW Mode {#appendix-calibration-plots-sh-cw}
 
 Relative beam-compensated target strength ($TS_{rel}$, dB re 1 m^2^) measurements of a WC38.1 sphere at `r echo.freqs["RL"]` kHz for echosounders aboard _`r survey.vessel`_. $TS_{rel}$ is calculated as the difference between the beam-compensated target strength ($TS_c$) and the theoretical target strength ($TS_{theory}$).

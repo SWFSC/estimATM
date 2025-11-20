@@ -61,8 +61,8 @@ for (i in cal.vessels) {
                    Beamwidth_athwartship,
                    OffsetAngle_alongship, 
                    OffsetAngle_athwartship,
-                   TwoWayBeamAngle) %>% 
-    mutate(RMS = cal.rms[[i]])
+                   TwoWayBeamAngle,
+                   RMS)
   
   # Specify number of significant digits for certain parameters
   bm.res$Temperature             <- formatC(bm.res$Temperature, format="f", digits=1)

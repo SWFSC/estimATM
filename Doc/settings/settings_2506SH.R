@@ -829,9 +829,6 @@ cal.dir            <- c(SH  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IW
 single.targets.dir <- c(SH =  "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW/EV/singleTargets",
                         LM =  "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW/EV/singleTargets",
                         LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW/EV/singleTargets")
-sphere.TS <- list(SH  = list("18" = -42.47, "38" = -42.40, "70" = -41.62, "120" = -39.72, "200" = -38.83),
-                  LM  = list("38" = -42.40, "70" = -41.28, "120" = -39.49, "200" = -39.27),
-                  LBC = list("38" = -42.42, "70" = -41.61, "120" = -39.72, "200" = -38.85))
 # Named vector of EK80 FM-mode calibration directories
 cal.dir.fm         <- c(SH  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS/Final-FM",
                         LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-FM") 
@@ -876,11 +873,15 @@ cal.imp.anal       <- c(SH = "Agilent 4294A Precision Impedance Analyzer") # Inf
 cal.notes          <- c(SH = "Lasker calibration sphere #1")
 
 # Physical conditions during calibration
-# Ambient noise estimates (dB re 1 W) for each vessel; lowest to highest frequency
-cal.noise          <- list(SH  = NA,
-                           LM  = NA,
-                           LBC = NA)
 ## DEPRECATED; use values in calibration ECS files
+## sphere.TS now extracted from ECS files (2025-present)
+# sphere.TS <- list(SH  = list("18" = -42.47, "38" = -42.40, "70" = -41.62, "120" = -39.72, "200" = -38.83),
+#                   LM  = list("38" = -42.40, "70" = -41.28, "120" = -39.49, "200" = -39.27),
+#                   LBC = list("38" = -42.42, "70" = -41.61, "120" = -39.72, "200" = -38.85))
+# Ambient noise estimates (dB re 1 W) for each vessel; lowest to highest frequency
+# cal.noise          <- list(SH  = NA,
+#                            LM  = NA,
+#                            LBC = NA)
 # cal.temp  <- c(SH  = NA,
 #                LM  = NA,
 #                LBC = NA) # enter water temperature at sphere depth

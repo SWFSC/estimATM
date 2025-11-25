@@ -1,53 +1,61 @@
 # Script for processing and plotting EK80 calibration results while in Continuous Wave (CW) mode
 
-# Requires both .xml results from EK80, and an .ecs file from Echoview
-# Parameters are set in the corresponding survey settings file (e.g., Doc/settings/settings_2407RL.R)
+# Requires only .ecs file from Echoview (XML files required pre-2025)
+# File locations are set in the corresponding survey settings file (e.g., Doc/settings/settings_2407RL.R)
 # Results for each vessel saved to .Rdata
 
 # Cycle through each vessel
 for (i in cal.vessels) {
   
-  # Get list of calibration files for that vessel
-  cal.files <- sort(list.files(cal.dir[i], pattern = ".xml", 
-                               full.names = TRUE))
-  
-  # Initialize data frames for storing results
-  cal.res   <- data.frame()
-  cal.pings <- data.frame()
-  
-  # Cycle through each calibration file (frequency)
-  for (j in cal.files) {
-    
-    # Extract calibration info for that frequency
-    cal <- extract_cal(j)
-    
-    # Append to data frames
-    cal.res <- bind_rows(cal.res,   cal$cal.res)
-    cal.pings <- bind_rows(cal.pings, cal$cal.pings)
-  }
-  
-  # Now read calibration results from ECS file
+  # Read calibration parameters and results from ECS file
   cal.ECS <- list.files(cal.dir[i], pattern = ".ecs$", 
                         full.names = TRUE) %>%
     atm::extract_cal_ecs() %>% 
     arrange(Frequency)
   
+  cal.params <- select(cal.ECS,
+                       Frequency, 
+                       Model = TxducerModel,
+                       "Serial Number" = TxducerSerialNumber,
+                       "Transmit Power ($p_\\mathrm{et}$)" = TransmitPower,
+                       "Pulse Duration ($\\tau$)" = PulseDuration)
+  
+  ## Old method, using XML file contents (pre-2025) ------------------------
+  
+  # Get list of calibration files for that vessel
+  # cal.files <- sort(list.files(cal.dir[i], pattern = ".xml", 
+  #                              full.names = TRUE))
+  # 
+  # # Initialize data frames for storing results
+  # cal.res   <- data.frame()
+  # cal.pings <- data.frame()
+  # 
+  # # Cycle through each calibration file (frequency)
+  # for (j in cal.files) {
+  #   
+  #   # Extract calibration info for that frequency
+  #   cal <- extract_cal(j)
+  #   
+  #   # Append to data frames
+  #   cal.res <- bind_rows(cal.res,   cal$cal.res)
+  #   cal.pings <- bind_rows(cal.pings, cal$cal.pings)
+  # }
+  
   # create data frame of important echosounder parameters
-  cal.params <- cal.res %>% 
-    arrange(txdr_freq) %>% 
-    select(txdr_freq,  # Transducer frequency
-           txdr_type,  # Transducer model
-           txdr_sn,    # Transducer serial number
-           gpt_power,  # Transmit power
-           gpt_pd)     # Pulse duration
-  
-  # Specify names for echosounder parameters 
-  names(cal.params) <- c("Frequency",
-                         "Model",
-                         "Serial Number",
-                         "Transmit Power ($p_\\mathrm{et}$)",
-                         "Pulse Duration ($\\tau$)")
-  
+  # cal.params <- cal.res %>% 
+  #   arrange(txdr_freq) %>% 
+  #   select(txdr_freq,  # Transducer frequency
+  #          txdr_type,  # Transducer model
+  #          txdr_sn,    # Transducer serial number
+  #          gpt_power,  # Transmit power
+  #          gpt_pd)     # Pulse duration
+  # 
+  # # Specify names for echosounder parameters 
+  # names(cal.params) <- c("Frequency",
+  #                        "Model",
+  #                        "Serial Number",
+  #                        "Transmit Power ($p_\\mathrm{et}$)",
+  #                        "Pulse Duration ($\\tau$)")
   
   # create data frame of beam model results
   bm.res <- select(cal.ECS,
@@ -163,7 +171,7 @@ for (i in cal.vessels) {
         singleTargets <- read_csv(j) %>%                           # Read entire file
           select(TS_comp, Angle_minor_axis, Angle_major_axis) %>%  # Retain only compensated TS and angles
           mutate(txdr_freq = freq) %>%                             # Add frequency column, for parsing data later on
-          mutate(target_ts = sphere.TS[[i]][[as.character(freq)]])
+          mutate(target_ts = cal.ECS$SphereTS[cal.ECS$Frequency == freq])
         
         # Add to data frame
         cal.pings <- bind_rows(cal.pings, singleTargets)

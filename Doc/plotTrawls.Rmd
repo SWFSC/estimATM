@@ -168,6 +168,8 @@ cluster.mid <- haul.mid %>%
   summarise(
     lat  = mean(lat),
     long = mean(long))
+
+save(haul, file = here("Output/tdr_haul_all.Rdata"))
 ```
 
 ```{r process-tdr-rsk}

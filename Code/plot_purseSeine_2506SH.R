@@ -47,8 +47,10 @@ lbc.sets <- sets.all %>%
          vessel.name = "LBC",
          key.set = paste(vessel.name, date, set))
 
+sets <- bind_rows(lbc.sets, lm.sets)
+
 # Save results
-save(lm.sets, lbc.sets, file = here("Output/purse_seine_sets.Rdata"))
+save(sets, lm.sets, lbc.sets, file = here("Output/purse_seine_sets.Rdata"))
 
 ## Import catch data -----------------------------------------------------------
 ### LM

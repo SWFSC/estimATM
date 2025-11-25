@@ -826,12 +826,12 @@ cal.dir            <- c(SH  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IW
                         LM  = "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW",
                         LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW")
 # Location of Lasker (or primary vessel) calibration single-target detections (for polar plots)
-single.targets.dir <- c(SH =  "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/EV/singleTargets",
-                        LM =  "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS/DATA/EK80/CALIBRATION/POST-SURVEY/EV/singleTargets",
-                        LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS/DATA/EK80/CALIBRATION/EV/CSV")
-sphere.TS <- list(SH  = list("18" = -42.41, "38" = -42.40, "70" = -41.64, "120" = -39.80, "200" = -38.82, "333" = -36.78),
-                  LM  = list("38" = -42.36, "70" = -41.40, "120" = -39.72, "200" = -41.45),
-                  LBC = list("38" = -42.41, "70" = -41.62, "120" = -39.74, "200" = -38.84))
+single.targets.dir <- c(SH =  "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW/EV/singleTargets",
+                        LM =  "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW/EV/singleTargets",
+                        LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW/EV/singleTargets")
+sphere.TS <- list(SH  = list("18" = -42.47, "38" = -42.40, "70" = -41.62, "120" = -39.72, "200" = -38.83),
+                  LM  = list("38" = -42.40, "70" = -41.28, "120" = -39.49, "200" = -39.27),
+                  LBC = list("38" = -42.42, "70" = -41.61, "120" = -39.72, "200" = -38.85))
 # Named vector of EK80 FM-mode calibration directories
 cal.dir.fm         <- c(SH  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS/Final-FM",
                         LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-FM") 

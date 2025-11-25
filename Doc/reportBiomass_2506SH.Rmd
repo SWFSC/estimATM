@@ -977,7 +977,7 @@ if (file.exists(here("Data/Nav/lbc_nav.gpx"))) {
 }
 ```
 
-```{r summarise-seine-catch,eval=TRUE}
+```{r summarise-seine-catch}
 if (exists("set.lengths")) {
   # Summarise Lisa Marie catch
   seine.summ.lm <- set.lengths %>% 
@@ -2567,7 +2567,7 @@ The collection and analysis of the survey data were conducted by members of 1-NO
 **Echosounder Calibrations:**  
 
 * _Reuben Lasker_
-+ `r cal.personnel["RL"]`
++ `r cal.personnel["SH"]`
 * _Long Beach Carnage_
 + `r cal.personnel["LBC"]`
 * _Lisa Marie_
@@ -2582,7 +2582,7 @@ The collection and analysis of the survey data were conducted by members of 1-NO
 
 Relative beam-compensated target strength ($TS_{rel}$, dB re 1 m^2^) measurements of a WC38.1 sphere at `r echo.freqs["RL"]` kHz for echosounders aboard _`r survey.vessel`_. $TS_{rel}$ is calculated as the difference between the beam-compensated target strength ($TS_c$) and the theoretical target strength ($TS_{theory}$).
 
-```{r tsc-plot-rl, out.height='4.5in',fig.align='center',fig.pos='H'}
+```{r tsc-plot-rl, out.width='7in',fig.align='center',fig.pos='H'}
 if (file.exists(here("Figs/fig_cal_TSrel_scatter_SH.png"))) {
   include_graphics(here("Figs/fig_cal_TSrel_scatter_SH.png"))  
 }
@@ -2594,20 +2594,21 @@ if (file.exists(here("Figs/fig_cal_TSrel_scatter_SH.png"))) {
 
 Measurements of on-axis gain ($G_0$, dB); alongship ($\alpha_\mathrm{-3dB}$, cyan) and athwartship ($\beta_\mathrm{-3dB}$, magenta) beamwidths (deg); and alongship ($\alpha_\mathrm{0}$, cyan) and athwartship ($\beta_\mathrm{0}$, magenta) offset angles (deg) measured during calibrations of EK80 wideband transceivers aboard _`r survey.vessel`_ (WBT; 38, 70, 120, 200, and 333 kHz) in frequency modulation (FM, or broadband) mode.
 
-```{r cal-plot-fm,out.height='4.5in',fig.align='center',fig.pos='H'}  
+```{r cal-plot-fm,out.width='7in',fig.align='center',fig.pos='H'}  
 # Plots generated using Code/processCal-FM.R
-if (file.exists(here("Figs/fig_cal_FM_AllFreqs_RL.png"))) {
-  include_graphics(here("Figs/fig_cal_FM_AllFreqs_RL.png"))
+if (file.exists(here("Figs/fig_cal_FM_AllFreqs_SH.png"))) {
+  include_graphics(here("Figs/fig_cal_FM_AllFreqs_SH.png"))
 }
 ```
 
+\elandscape
 \newpage
 
 ## _Lisa Marie_ {#appendix-calibration-plots-lm}
 
 Relative beam-compensated target strength ($TS_{rel}$, dB re 1 m^2^) measurements of a WC38.1 sphere at `r echo.freqs["LM"]` kHz for echosounders aboard _Lisa Marie_. $TS_{rel}$ is calculated as the difference between the beam-compensated target strength ($TS_c$) and the theoretical target strength ($TS_{theory}$). The results shown here are for the post-survey calibration conducted in Gig Harbor, WA.
 
-```{r tsc-plot-lm, out.height='4.5in',fig.align='center',fig.pos='H'}
+```{r tsc-plot-lm, out.width='6.5in',fig.align='center',fig.pos='H'}
 if (file.exists(here("Figs/fig_cal_TSrel_scatter_LM.png"))) {
   include_graphics(here("Figs/fig_cal_TSrel_scatter_LM.png"))  
 }
@@ -2619,13 +2620,12 @@ if (file.exists(here("Figs/fig_cal_TSrel_scatter_LM.png"))) {
 
 Relative beam-compensated target strength ($TS_{rel}$, dB re 1 m^2^) measurements of a WC38.1 sphere at `r echo.freqs["LBC"]` kHz for echosounders aboard _Long Beach Carnage_. $TS_{rel}$ is calculated as the difference between the beam-compensated target strength ($TS_c$) and the theoretical target strength ($TS_{theory}$).
 
-```{r tsc-plot-lbc, out.height='4.5in',fig.align='center',fig.pos='H'}
+```{r tsc-plot-lbc, out.width='6.5in',fig.align='center',fig.pos='H'}
 if (file.exists(here("Figs/fig_cal_TSrel_scatter_LBC.png"))) {
   include_graphics(here("Figs/fig_cal_TSrel_scatter_LBC.png")) 
 }
 ```
 
-\elandscape
 \newpage
 
 # Length distributions and percent biomass by cluster {#appendix-cluster-length-percent}
@@ -2635,7 +2635,7 @@ Standard length ($L_S$) frequency distributions of Northern Anchovy (_Engraulis 
 
 (ref:rlf-anchovy) Standard length ($L_S$) frequency distributions of Northern Anchovy (_Engraulis mordax_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum.
 
-```{r rlf-anchovy,out.width='6in',fig.pos='H'}
+```{r rlf-anchovy,out.width='5.5in',fig.pos='H'}
 include_graphics(here("Figs/fig_cluster_relative_length_frequency_Engraulis mordax.png"))
 ```  
 
@@ -2647,7 +2647,7 @@ Standard length ($L_S$) frequency distributions of Pacific Sardine (_Sardinops s
 
 (ref:rlf-sardine) Standard length ($L_S$) frequency distributions of Pacific Sardine (_Sardinops sagax_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum.
 
-```{r rlf-sardine,out.width='6in',fig.pos='H'}
+```{r rlf-sardine,out.width='5.5in',fig.pos='H'}
 include_graphics(here("Figs/fig_cluster_relative_length_frequency_Sardinops sagax.png"))
 ```  
 
@@ -2659,7 +2659,7 @@ Fork length ($L_F$) frequency distributions of Pacific Mackerel (_Scomber japoni
 
 (ref:rlf-mack) Fork length ($L_F$) frequency distributions of Pacific Mackerel (_Scomber japonicus_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum.
 
-```{r rlf-mack,out.width='6in',fig.pos='H'}
+```{r rlf-mack,out.width='5.5in',fig.pos='H'}
 include_graphics(here("Figs/fig_cluster_relative_length_frequency_Scomber japonicus.png"))
 ```  
 
@@ -2671,7 +2671,7 @@ Fork length ($L_F$) frequency distributions of Jack Mackerel (_Trachurus symmetr
 
 (ref:rlf-jack) Fork length ($L_F$) frequency distributions of Jack Mackerel (_Trachurus symmetricus_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum.
 
-```{r rlf-jack,out.width='6in',fig.pos='H'}
+```{r rlf-jack,out.width='5.5in',fig.pos='H'}
 include_graphics(here("Figs/fig_cluster_relative_length_frequency_Trachurus symmetricus.png"))
 ```  
 
@@ -2683,7 +2683,7 @@ Fork length ($L_F$) frequency distributions of Pacific Herring (_Clupea pallasii
 
 (ref:rlf-her) Fork length ($L_F$) frequency distributions of Pacific Herring (_Clupea pallasii_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum.
 
-```{r rlf-her,out.width='6in',fig.pos='H'}
+```{r rlf-her,out.width='5.5in',fig.pos='H'}
 include_graphics(here("Figs/fig_cluster_relative_length_frequency_Clupea pallasii.png"))
 ```  
 
@@ -2695,8 +2695,17 @@ Fork length ($L_F$) frequency distributions of Round Herring (_Etrumeus acuminat
 
 (ref:rlf-rher) Fork length ($L_F$) frequency distributions of Round Herring (_Etrumeus acuminatus_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum.
 
-```{r rlf-rher,out.width='6in',fig.pos='H'}
+```{r rlf-rher,out.width='5.5in',fig.pos='H'}
 include_graphics(here("Figs/fig_cluster_relative_length_frequency_Etrumeus acuminatus.png"))
 ```
 
 \newpage
+
+# Add station sampling locations
+
+\newpage
+
+# Add trawl tables
+## Locations
+
+## Catch summaries

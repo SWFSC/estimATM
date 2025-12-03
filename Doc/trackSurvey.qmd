@@ -267,7 +267,7 @@ eez_mex <- st_read(here("Data/GIS/eez_mex.shp")) %>%
 
 ```{r create-static-maps}
 # Define manual color palette
-legPalette <- c("#FF0000", "#FFA500", "#FFFF00", "#008000", "#0000FF", "#8A2BE2")
+legPalette <- c("#FF0000", "#FFA500", "#008000", "#0000FF", "#8A2BE2", "#FFFF00")
 
 # Map planned transects
 map.plan <- base.map + 

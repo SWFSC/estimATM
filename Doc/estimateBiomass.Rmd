@@ -502,7 +502,7 @@ if (process.csv) {
         # Process all .CSV files
         for (ii in seq_along(nasc.files)) {
           # Extract vessel nasc
-          nasc.vessel.temp <- extract_csv(nasc.files[ii], Sv.max = Sv.max) %>% 
+          nasc.vessel.temp <- extract_csv(nasc.files[ii], Sv.max = Sv.max) %>%
             mutate(vessel.name = i,
                    sounder = sounder.type[i],
                    transect = str_replace(transect, nasc.pattern.cps[i],""))
@@ -9862,7 +9862,7 @@ if (file.exists(here("Figs/fig_biomass_dens_nse_Etrumeus acuminatus-All.png"))) 
 
 ```{r process-cal-all}
 # Process calibration results from CW- and FM-mode calibrations. Vessel, procedure, and directory info is configured in the settings file for each survey.
-if (!is.na(cal.vessels)) {
+if (sum(!is.na(cal.vessels) > 0)) {
   if (process.cal) {
     # Plot CW calibration results
     source(here("Code/processCal-CW.R"))

@@ -496,7 +496,7 @@ Aboard _`r survey.vessel`_, the MFT was towed at the surface for 30 min at a spe
 
 #### Purse-seine gear {#methods-seine-sampling}  
 
-_Lisa Marie_ used an approximately 440-m-long and 40-m-deep purse-seine net with 17-mm-wide mesh (A. Blair, pers. comm.). _Long Beach Carnage_ used an approximately 200-m-long and 27-m-deep purse-seine net with 17-mm-wide mesh; a small section on the back end of the net had 25-mm-wide mesh (R. Ashley, pers. comm.). Specimens collected by _Lisa Marie_ were processed aboard the vessel by the WA Department of Fish and Wildlife (WDFW; see **Section \@ref(methods-seine-processing-lm)**), and specimens collected aboard _Long Beach Carnage_ were processed ashore by the CA Department of Fish and Wildlife (CDFW; see **Section \@ref(methods-seine-processing-lbc)**)).  
+_Lisa Marie_ used an approximately 440-m-long and 40-m-deep purse-seine net with 17-mm-wide mesh (A. Blair, pers. comm.). _Long Beach Carnage_ used an approximately 283-m-long and 27-m-deep purse-seine net with 17-mm-wide mesh; a small section on the back end of the net had 25-mm-wide mesh (R. Ashley, pers. comm.). Specimens collected by _Lisa Marie_ were processed aboard the vessel by the WA Department of Fish and Wildlife (WDFW; see **Section \@ref(methods-seine-processing-lm)**), and specimens collected aboard _Long Beach Carnage_ were processed ashore by the CA Department of Fish and Wildlife (CDFW; see **Section \@ref(methods-seine-processing-lbc)**)).  
 
 \newpage
 \blandscape

@@ -302,6 +302,17 @@ if (survey.name %in% c("2506SH")) {
     haul.midwater <- left_join(haul.midwater, nav.match.haul.midwater)
   }
   
+  haul.midwater.sf <- haul.midwater %>% 
+    filter(!is.na(lat) & !is.na(long)) %>% 
+    st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
+    mutate(
+      label = paste("Midwater trawl:", haul),
+      popup = paste('<b>Midwater trawl:', haul, '</b><br/>',
+                    'Performance:', performance, '<br/>',
+                    'Status:', perf.code, '<br/>',
+                    'Equlibrium:', eq_date_time, '<br/>',
+                    'Haul back:', hb_date_time, '<br/>'))
+  
   # ggplot(haul.midwater, aes(long, lat, fill = perf.code)) + geom_point(shape = 21) + coord_map()
   
 }
@@ -1345,7 +1356,8 @@ if (sampling.cufes) {
   # Add CUFES data
   if (nrow(cufes.neg.sf) > 0)
     i.map <- i.map %>% 
-      addCircleMarkers(data = cufes.neg.sf, radius = ~bin.level*2, color = "#000414", stroke = FALSE, weight = 1,
+      addCircleMarkers(data = cufes.neg.sf, radius = ~bin.level*2, color = "#000414", 
+                       stroke = FALSE, weight = 1,
                        fillOpacity = 0.50, fillColor =  "#000414", label = ~htmlEscape(SampleNumber),
                        group = "CUFES (Negative)")
   
@@ -1470,7 +1482,15 @@ if (sampling.trawl) {
       addCircleMarkers(data = cluster.catch.sf, radius = 5, color = "#000000", stroke = TRUE, weight = 2,
                        opacity = 0.8, fillOpacity = 1, fillColor =  "white",
                        popup = ~popup, label = ~label,
-                       group =  "Trawls")    
+                       group =  "Trawls")  
+  
+  if (exists("haul.midwater"))
+    i.map <- i.map %>% 
+      # Add trawl catch
+      addCircleMarkers(data = haul.midwater.sf, radius = 5, color = "#000000", stroke = TRUE, weight = 2,
+                       opacity = 0.8, fillOpacity = 1, fillColor =  "blue",
+                       popup = ~popup, label = ~label,
+                       group =  "Trawls")  
 }
 
 # Add CTD casts
@@ -1842,11 +1862,13 @@ if (exists("uctd.summ")|exists("ctd.summ")) {
     }
     
     if (exists("haul.midwater")) {
-      haul.mw.plot <- project_df(ungroup(haul.midwater), to = crs.proj)
+      haul.mw.plot <- ungroup(haul.midwater) %>% 
+        filter(!is.na(lat) & !is.na(long)) %>% 
+        project_df(to = crs.proj)
       
       # Add surface trawls to map
       sample.map <- sample.map +
-        geom_point(data = haul.mw.plot, aes(X, Y), shape = 21, fill = "white") +
+        geom_point(data = haul.mw.plot, aes(X, Y), shape = 24, fill = "white") +
         coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
                  xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
                  ylim = c(map.bounds["ymin"], map.bounds["ymax"]))

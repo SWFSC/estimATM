@@ -270,6 +270,44 @@ if (sampling.trawl) {
 }
 ```  
 
+```{r process-midwater-trawls}
+# Format midwater trawl locations
+if (survey.name %in% c("2506SH")) {
+  haul.midwater <- read_csv(here("Data/Trawl/haul_info_midwater.csv")) %>% 
+    mutate(time.start = mdy_hms(eq_date_time),
+           time.end = mdy_hms(hb_date_time),
+           perf.code = case_when(
+             performance >= 0 ~ "Good",
+             TRUE ~ "Aborted"))
+  
+  # Add lat/long data if missing
+  if (!"lat" %in% names(haul.midwater)) {
+    # Subset nav columns
+    nav.match <- select(nav, time, long, lat)
+    
+    # Data frame for saving matched data
+    nav.match.haul.midwater <- data.frame()
+    
+    # Match haul times to nav data and extract positions  
+    for (i in unique(haul.midwater$haul)) {
+      min.diff.eq       <- which.min(abs(difftime(haul.midwater$time.start[i],
+                                                  nav$time))) 
+      nav.match.df <- nav.match[min.diff.eq, ] %>% 
+        mutate(haul = i)
+      
+      nav.match.haul.midwater <- bind_rows(nav.match.haul.midwater, nav.match.df)
+    }
+    
+    # Add lat/long info to haul.midwater
+    haul.midwater <- left_join(haul.midwater, nav.match.haul.midwater)
+  }
+  
+  # ggplot(haul.midwater, aes(long, lat, fill = perf.code)) + geom_point(shape = 21) + coord_map()
+  
+}
+```
+
+
 ```{r process-ctd-data, message=FALSE, include=FALSE}
 if (file.exists(here("Output/cast_summary_uctd.csv"))) {
   # Load UCTD summary table
@@ -1753,7 +1791,7 @@ if (file.exists(here("Figs/fig_nasc_cufes_haul_wt.png"))) {
 
 # Map station sampling data
 
-A map showing the vessel track (gray lines), acoustic transects (black lines), and the locations of nighttime surface trawls (red), underway CTD (UCTD) casts (blue), and CTD casts (green, if present).  
+A map showing the vessel track (gray lines), acoustic transects (black lines), and the locations of nighttime surface trawls (red), daytime midwater trawls (white), underway CTD (UCTD) casts (blue), and CTD casts (green, if present).  
 
 ```{r map-station-data}
 if (exists("uctd.summ")|exists("ctd.summ")) {
@@ -1795,9 +1833,20 @@ if (exists("uctd.summ")|exists("ctd.summ")) {
     if (exists("haul.mid")) {
       haul.plot <- project_df(ungroup(haul.mid), to = crs.proj)
       
-      # Add CTD casts to map
+      # Add surface trawls to map
       sample.map <- sample.map +
         geom_point(data = haul.plot, aes(X, Y), shape = 21, fill = "red") +
+        coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+                 xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
+                 ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
+    }
+    
+    if (exists("haul.midwater")) {
+      haul.mw.plot <- project_df(ungroup(haul.midwater), to = crs.proj)
+      
+      # Add surface trawls to map
+      sample.map <- sample.map +
+        geom_point(data = haul.mw.plot, aes(X, Y), shape = 21, fill = "white") +
         coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
                  xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
                  ylim = c(map.bounds["ymin"], map.bounds["ymax"]))

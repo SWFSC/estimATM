@@ -66,7 +66,7 @@ resize.map  <- F
 get.nav <- T
 
 # Vessel-specific info
-vessel.name = "LBC"
+vessel.name = "LM"
 # Define nav source
 if(vessel.name %in% c("LBC","LM")) nav.source <- "GPX"
 ```

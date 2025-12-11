@@ -2233,7 +2233,7 @@ Echoes from schooling CPS (**Figs. \@ref(fig:ev-filtering-example)a, d**) were i
 12. Mask the noise-reduced echograms using the CPS Boolean echogram (**Figs. \@ref(fig:ev-filtering-example)c, f**);
 13. Create an integration-start line `r int.start` m below the transducer (~10 m depth);
 14. Create an integration-stop line `r adz.range` m above the estimated seabed [@Demer2009a], or to the maximum logging range (e.g., `r int.stop` m), whichever is shallowest;
-15. Set the minimum $S_v$ threshold to -60 dB (corresponding to a density of approximately three 20-cm-long Pacific Sardine per 100 m^3^);
+15. Set the minimum $S_v$ threshold to -70 dB (corresponding to a density of approximately three 20-cm-long Pacific Sardine per 100 m^3^);
 16. Integrate the volume backscattering coefficients ($s_V$, m^2^ m^-3^) attributed to CPS over 5-m depths and averaged over 100-m distances;
 17. Output the resulting nautical area scattering coefficients ($s_A$; m^2^ nmi^-2^) and associated information from each transect and frequency to comma-delimited text (.csv) files.  
 

@@ -84,7 +84,7 @@ panderOptions('round', 6); panderOptions('keep.trailing.zeros', T); panderOption
 combine.regions  <- T # Combine core and nearshore biomass plots
 plot.time.series <- T # Plot biomass time series 
 get.db           <- T # Query biomass estimates from AST database
-process.cal      <- T # Process, format, and plot echosounder calibration results
+process.cal      <- F # Process, format, and plot echosounder calibration results
 save.figs        <- T # Save figures
 ```
 
@@ -623,7 +623,7 @@ Echoes from schooling CPS (**Figs. \@ref(fig:ev-filtering-example)a, d**) were i
 1. Match geometry of all $S_v$ variables to the 38-kHz $S_v$;
 2. Remove passive-mode pings;
 3. Estimate and subtract background noise using the background noise removal function [@DeRobertis2007] in Echoview (**Figs. \@ref(fig:ev-filtering-example)b, e**);
-4. Average the noise-free $S_v$ echograms using non-overlapping 11-sample by 3-ping bins;
+4. Smooth the noise-free $S_v$ echograms using an 11-sample by 3-ping averaging window;
 5. Expand the averaged, noise-reduced _S~v~_ echograms with a 7 pixel x 7 pixel dilation;
 6. For each pixel, compute: $S_{v,\mathrm{200kHz}}-S_{v,\mathrm{38kHz}}$, $S_{v,\mathrm{120kHz}}-S_{v,\mathrm{38kHz}}$, and $S_{v,\mathrm{70kHz}}-S_{v,\mathrm{38kHz}}$;
 7. Create a Boolean echogram for $S_v$ differences in the CPS range: $-13.85 < S_{v,\mathrm{70kHz}}-S_{v,\mathrm{38kHz}} < 9.89 \text{ and} -13.5 < S_{v,\mathrm{120kHz}}-S_{v,\mathrm{38kHz}} < 9.37 \text{ and} -13.51 < S_{v,\mathrm{200kHz}}-S_{v,\mathrm{38kHz}} < 12.53$;
@@ -1018,15 +1018,23 @@ Biomasses and abundances were estimated for each species and subpopulation in bo
 
 **Leg I**
 
-On 11 June, _`r survey.vessel`_ departed from 10th Avenue Terminal in San Diego, CA at ~2100 (all times UTC), then remained outside San Diego Bay to allow a RAPP Hydema technician to test and evaluate the trawl winch system. At 1447 on 12 June, sampling was initiated on transect 002; at 1809 _`r survey.vessel`_ broke transect to transit back toward San Diego Bay where a small boat transfer was conducted to bring aboard a 2nd cook. Surface trawl sampling was then conducted that evening and acoustic sampling resumed on transect 002 at 1259 on 13 June. At 1259 on 17 June, _`r survey.vessel`_ anchored near Long Beach, CA to recalibrate the EK80 echosounders; at 1759, after an unsuccessful attempt, the anchor was retrieved and acoustic sampling resumed on transect 006. On 20 June, a bearing on the trawl gate broke during the first nighttime surface trawl, precluding further trawl operations. Acoustic sampling resumed as normal on the morning of 21 June while the ship’s crew investigated a repair; at 2300 that evening the trawl gate was fixed and trawling could commence. At 1749 on 24 June, _`r survey.vessel`_ retrieved a bottom lander nearshore off Point Conception, deployed a new bottom lander at 34.4402 N/120.5480 W, then resumed acoustic sampling on transect 011. Acoustic sampling ceased after completion of transect 011 at 0409 on 25 June, followed by two nighttime surface trawls before beginning transit to San Francisco. On 25 June, _`r survey.vessel`_ arrived in San Francisco, CA at ~1700 to complete Leg 1. 
+On 11 June, _`r survey.vessel`_ departed from 10th Avenue Terminal in San Diego, CA at ~2100 (all times UTC), then remained outside San Diego Bay to allow a RAPP Hydema technician to test and evaluate the trawl winch system. At 1447 on 12 June, sampling was initiated on transect 002; at 1809 _`r survey.vessel`_ broke transect to transit back toward San Diego Bay where a small boat transfer was conducted to bring aboard a 2nd cook. Surface trawl sampling was then conducted that evening and acoustic sampling resumed on transect 002 at 1259 on 13 June. At 1259 on 17 June, _`r survey.vessel`_ anchored near Long Beach, CA to recalibrate the EK80 echosounders; at 1759, after an unsuccessful attempt, the anchor was retrieved and acoustic sampling resumed on transect 006. On 20 June, a bearing on the trawl gate broke during the first nighttime surface trawl, precluding further trawl operations. Acoustic sampling resumed as normal on the morning of 21 June while the ship’s crew investigated a repair; at 2300 that evening the trawl gate was fixed and trawling could commence. At 1749 on 24 June, _`r survey.vessel`_ retrieved a bottom lander nearshore off Point Conception, deployed a new bottom lander at 34.4402 N/120.5480 W, then resumed acoustic sampling on transect 011. Acoustic sampling ceased after completion of transect 011 at 0409 on 25 June, followed by two nighttime surface trawls before beginning transit to San Francisco. On 25 June, _`r survey.vessel`_ arrived in San Francisco, CA at ~1700 to complete Leg I. 
 
 **Leg II**
 
+On 2 July, following a three-day delay, _`r survey.vessel`_ departed from Pier 30/32 in San Francisco at ~0800 and transited south toward Pt. Conception. Given a shortage of experienced deck crew, the decision was made to limit trawl operations to 12-h. At ~1300 on 3 July, acoustic sampling was resumed along transect 011 near Lompoc, CA. Transect 016 was randomly selected to skip to regain time lost due to various delays. On 10 July, a member of the science party was put ashore in Monterey, CA after experiencing a medical emergency. Following a brief interruption of survey operations, and thanks to the prompt and strategic response by the ship’s personnel and medical officers, sampling resumed soon afterward. On 15 July, acoustic sampling ceased after the completion of transect 024 off San Francisco. On 15 July, after a night of surface trawling, _`r survey.vessel`_ arrived at Pier 30/32 in San Francisco at ~1500 to complete Leg II.
+
 **Leg III**
+
+On 19 July, _`r survey.vessel`_ departed from Pier 30/32 at ~1600 and resumed sampling along transect 025 just north of San Francisco Bay.  To regain additional time lost during Legs 1 and 2, transect 028 was randomly skipped. At ~0200 on 30 July, _`r survey.vessel`_ completed sampling transect 040 near Crescent City before transiting ~18 h to Newport for a medical emergency among the ship’s crew. At ~1800 on 31 July, the affected crew member was put ashore via small craft. Rather than transiting back to transect 041, or ending the leg early, the decision was made to conduct only CTD and eDNA sampling along transects 051, 053, and 055 just north of Newport, OR. On 2 August, _`r survey.vessel`_ arrived at MOC-P in Newport at ~1600 to complete Leg III.
 
 **Leg IV**
 
+On 11 August, _`r survey.vessel`_ departed from Newport, OR at ~1500 and transited southward. On 12 August, _`r survey.vessel`_ resumed acoustic sampling at ~0715 along transect 041 near Brookings, OR. On 13 August the fog signal failed, and _`r survey.vessel`_ returned to Newport for repair, arriving at MOC-P at ~0700 on August 14. On 18 August at ~1630, _`r survey.vessel`_ departed from Newport, after repairing the fog signal and other personnel-related delays. On 19 August at ~0715, _`r survey.vessel`_ resumed acoustic sampling along transect 043 near Gold Beach, OR. On 21 August, acoustic sampling ceased after the completion of transect 048 off Reedsport, OR and _`r survey.vessel`_ transited to Newport, OR for a personnel exchange. On 22 August, after a failed attempt, _`r survey.vessel`_ departed Newport and resumed acoustic sampling along transect 048 near Reedsport on 22 August at ~1930. On 22 August, at ~2300, trawl sampling ceased on transect 048. On 23 August, _`r survey.vessel`_ arrived at MOC-P in Newport ~1430 to complete Leg IV.  
+
 **Leg V**
+
+
 
 ## Nearshore survey aboard industry fishing vessels
 ### _Long Beach Carnage_

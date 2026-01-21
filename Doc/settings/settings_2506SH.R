@@ -438,6 +438,8 @@ seine.tz        <- "America/Los_Angeles"
 seine.types     <- c("survey", "research", NA)
 seine.gpx.name  <- "nav_nearshore.gpx"
 
+seine.set.rm    <- NA # Individual sets to remove (key_set)
+
 # Survey vessels that collected purse seine data
 seine.vessels          <- c("LBC","LM") 
 seine.vessels.long     <- c("LBC" = "Long Beach Carnage","LM" = "Lisa Marie") 
@@ -448,7 +450,7 @@ adj.deep.nasc <- FALSE
 # Remove deep backscatter, if a correction is not applied? Set to FALSE if adj.deep.nasc = TRUE
 rm.deep.nasc <- TRUE
 # Vessels for which to remove deep backscatter that may be anchovy
-deep.nasc.vessels <- c("LBC", "LM")
+deep.nasc.vessels <- c("LBC","LM")
 
 # Which net data should be used to apportion nearshore backscatter?
 # "Trawl" and/or "Seine"

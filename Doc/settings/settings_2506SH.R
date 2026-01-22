@@ -127,7 +127,7 @@ tx.breaks <- c(0, 12, 28, 45, 59, 68)
 
 # Define nav source depending on location of computer
 ## Options are: SCS (usually on the ship) or ERDDAP (usually on shore; 24h update rate)
-if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {
+if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L","SWC-KSTIERHOFF-")) {
   nav.source    <- "SCS"
   nav.source.ns <- "GPX"
 } else {
@@ -438,7 +438,8 @@ seine.tz        <- "America/Los_Angeles"
 seine.types     <- c("survey", "research", NA)
 seine.gpx.name  <- "nav_nearshore.gpx"
 
-seine.set.rm    <- NA # Individual sets to remove (key_set)
+# List bad sets (e.g., c("LBC 2024-07-16 25",...n)), else NA
+key.set.rm  <- c("LBC 07/03/2025 29") # Set/landing 25/160 had no specimens due to a freezer failure
 
 # Survey vessels that collected purse seine data
 seine.vessels          <- c("LBC","LM") 

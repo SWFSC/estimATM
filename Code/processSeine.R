@@ -3,7 +3,6 @@
 # This script replaces survey-specific versions, and aims to use standardized data inputs. -----
 
 # Import seine data ------------------------------------------------------------------
-#seine.source = "SQL"
 if (get.db) {
   # Source script to collect data from trawl database
   source(here("Code/collect_seine_database.R"))
@@ -13,8 +12,8 @@ if (get.db) {
   load(here("Data/Seine/seine_data_raw.Rdata"))
   
 }
-# Format seine data
 
+# Format seine data -----------------------------------------------
 # Source script to format data from trawl database
 source(here("Code/format_seine_database.R"))
 

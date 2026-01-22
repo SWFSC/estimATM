@@ -145,7 +145,7 @@ overwrite.csv     <- T # Overwrite CSV files (TRUE if files have changed)
 process.csv.all   <- F # Process all acoustic backscatter files (F = new files only)
 process.csv.krill <- T # Process krill backscatter data
 process.cufes     <- F # Process CUFES data (no CUFES sampling post-2023)
-process.cal       <- F # Process calibration results
+process.cal       <- T # Process calibration results
 process.ctd       <- F # Process CTD and UCTD casts
 match.intervals   <- F # Match intervals for comparing EK60 and EK80
 get.bathy         <- F # Extract ETOPO1 bathymetry data in the survey footprint

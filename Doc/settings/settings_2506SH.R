@@ -137,7 +137,7 @@ if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {
 
 # Define ERDDAP data variables for primary NOAA vessel
 erddap.url           <- "http://coastwatch.pfeg.noaa.gov/erddap/tabledap/fsuNoaaShip"
-erddap.vessel        <- "WTEDnrt"    # Lasker == WTEG; Shimada == WTED; add "nrt" if survey in progress
+erddap.vessel        <- "WTED"    # Lasker == WTEG; Shimada == WTED; add "nrt" if survey in progress
 erddap.survey.start  <- "2025-06-03" # Start of survey for ERDDAP vessel data query
 erddap.survey.end    <- "2025-09-14" # End of survey for ERDDAP vessel data query
 erddap.vars          <- c("time,latitude,longitude,seaTemperature,platformSpeed,windDirection,windSpeed,flag")

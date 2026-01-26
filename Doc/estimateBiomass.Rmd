@@ -1329,12 +1329,14 @@ source(here("Code/format_trawl_database.R"))
 ```{r process-trawl-haul-data}
 # Select bad trawls
 haul.bad <- haul.all %>% 
-  filter(trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
+  filter(cruise %in% cruise.name,
+         trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
            haul %in% trawl.haul.rm | # Manually excluded hauls
            # Missing data that will cause errors in nav matching
            is.na(collection) |
            is.na(equilibriumTime) | 
            is.na(haulBackTime))
+
 
 # Get only hauls from current survey
 haul <- filter(haul.all, cruise %in% cruise.name & ship %in% cruise.ship) %>% 

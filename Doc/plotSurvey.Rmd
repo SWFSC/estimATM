@@ -228,6 +228,7 @@ if (sampling.trawl) {
 if (sampling.trawl) {
   # Select bad trawls
   haul.bad <- haul.all %>% 
+    filter(cruise %in% cruise.name & ship %in% cruise.ship) %>% 
     filter(trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
              haul %in% trawl.haul.rm | # Manually excluded hauls
              # Missing data that will cause errors in nav matching

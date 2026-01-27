@@ -755,7 +755,7 @@ if ("SD" %in% nasc.vessels) {
     data.frame(
       scientificName = "Scomber japonicus",
       stratum = 1,
-      transect = 1:3),
+      transect = 1:4),
     data.frame(
       scientificName = "Scomber japonicus",
       stratum = 2,
@@ -763,7 +763,7 @@ if ("SD" %in% nasc.vessels) {
     data.frame(
       scientificName = "Scomber japonicus",
       stratum = 3,
-      transect = 41:47),
+      transect = 41:46),
     data.frame(
       scientificName = "Scomber japonicus",
       stratum = 4,
@@ -771,7 +771,7 @@ if ("SD" %in% nasc.vessels) {
     data.frame(
       scientificName = "Trachurus symmetricus",
       stratum = 1,
-      transect = 1:11),
+      transect = 1:10),
     data.frame(
       scientificName = "Trachurus symmetricus",
       stratum = 2,
@@ -779,7 +779,7 @@ if ("SD" %in% nasc.vessels) {
     data.frame(
       scientificName = "Trachurus symmetricus",
       stratum = 3,
-      transect = 23:53))
+      transect = 20:53))
 }
 
 # Stock boundaries --------------------------------------------------------
@@ -847,8 +847,8 @@ cal.window         <- c(SH  = 75,
 cal.group          <- c(SH  = "SWFSC",
                         LBC = "SWFSC",
                         LM  = "SWFSC") # Group conducting the calibration
-cal.personnel      <- c(SH  = "A. Beittel, D. Murfin, J. Renfree, and S. Sessions",
-                        LBC = "A. Beittel, D. Murfin, J. Renfree, and S. Sessions",
+cal.personnel      <- c(SH  = "D. Murfin, J. Renfree, and S. Sessions",
+                        LBC = "D. Murfin, J. Renfree, and S. Sessions",
                         LM  = "S. Sessions") # Calibration participants
 cal.loc            <- c(SH  = "10th Avenue Marine Terminal, San Diego Bay",
                         LBC = "SWFSC Technology Development Tank",

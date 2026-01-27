@@ -2557,8 +2557,11 @@ The authors greatly appreciate that the ATM surveys require an enormous effort b
 # (APPENDIX) Appendix {-}
 # Appendices {-} 
 
-# Scientific Personnel {#appendix-scientific-personnel}
-The collection and analysis of the survey data used to estimate the biomasses of CPS were conducted by members of 1-NOAA, 2- CIRES, 3-UCSC/CIMEAS, 4-NOAA Teacher at Sea, 5-OAI, 6-volunteer, 7-NWFSC, 9-WDFW, and 10-CWPA. For each leg, ^\*^ denotes the Cruise Leader, and ^+^ the Acoustic and Trawl Leads. The survey on _`r survey.vessel`_ was divided into five legs. **Members of the scientific party from the NWFSC are not listed here. [BUT SHOULD THEY BE?]**  
+# Scientific Personnel {#appendix-scientific-personnel}  
+
+The collection and analysis of the survey data used to estimate the biomasses of CPS were conducted by members of 1-NOAA, 2- CIRES, 3-UCSC/CIMEAS, 4-NOAA Teacher at Sea, 5-OAI, 6-volunteer, 7-NWFSC, 8-AIS, 9-WDFW, and 10-CWPA. For each leg, ^\*^ denotes the Cruise Leader, and ^+^ the Acoustic and Trawl Leads. The survey on _`r survey.vessel`_ was divided into five legs. **Members of the scientific party from the NWFSC are not listed here. [BUT SHOULD THEY BE?]**  
+
+<!-- https://docs.google.com/spreadsheets/d/1HXl-ghdcqVKPGXi9BCHrLA4kaUif0EOB/edit?gid=1997810242#gid=1997810242 -->
 
 **Chief Scientist:**
 
@@ -2576,13 +2579,11 @@ The collection and analysis of the survey data used to estimate the biomasses of
 
 **Trawl Sampling:**
 
-**[Included daytime wet lab folks?]**
-
-* Leg I:    E. Capriles^2^, J. Cloninger^4^, K. James^1+^, M. Liotta^1^, B. Overcash^1^, and Z. Skelton^4^
-* Leg II:   M. Liotta^1^, M. Shak^7^, Z. Skelton^4+^, P. Vavoulis^1^, and C. Wilson^1^ 
-* Leg III:  K. Davis^1^, A. Ostrowski^1^, B. Overcash^1^, M. Rivera^1^, Z. Skelton^4^,  B. Schwartzkopf^1+^ 
-* Leg IV:   B. Erisman^1^, J. Gonzalez^4^, P. Kuriyama^1^, D. Lowry^1^, and L. Vasquez del Mercado^1^ 
-* Leg V:    J. Dunigan^1^, L. Kraatz^1^, B. Overcash^1^, T. Rogers^1^, and J. Stecher^1^
+* Leg I:    D. Bashford^2^, E. Capriles^2^, J. Cloninger^4^, S. de Blois^1^, K. James^1+^, M. Liotta^1^, B. Overcash^1^, Z. Skelton^4^, and A. Vitale^8^
+* Leg II:   S. Beyer^1^, L. Chang^4^, M. Liotta^1^, M. Shak^7^, Z. Skelton^4+^, P. Vavoulis^1^, A. Vitale^8^, and C. Wilson^1^ 
+* Leg III:  J. Crofts^1^, K. Davis^1^, A. Ostrowski^1^, B. Overcash^1^, M. Rivera^1^, Z. Skelton^4^,  B. Schwartzkopf^1+^, S. Van Hofwegen^1^, and A. Vitale^8^
+* Leg IV:   P. Bizzell^1^, B. Erisman^1^, J. Gonzalez^4^, P. Kuriyama^1^, M. Monneedy^1^, D. Lowry^1^, C. Sayre^1^, L. Vasquez del Mercado^1^, and A. Vitale^8^
+* Leg V:    K. Alvstad^1^, J. Dunigan^1^, L. Kraatz^1^, T. Mitchell^1^, L. Ortiz^1^, B. Overcash^1^, T. Rogers^1^, C. Russ^1^, and J. Stecher^1^
 
 **Environmental DNA (eDNA) Sampling:**  
 

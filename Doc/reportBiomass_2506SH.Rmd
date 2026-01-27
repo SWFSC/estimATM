@@ -2584,6 +2584,10 @@ The collection and analysis of the survey data used to estimate the biomasses of
 * Leg IV:   B. Erisman^1^, J. Gonzalez^4^, P. Kuriyama^1^, D. Lowry^1^, and L. Vasquez del Mercado^1^ 
 * Leg V:    J. Dunigan^1^, L. Kraatz^1^, B. Overcash^1^, T. Rogers^1^, and J. Stecher^1^
 
+**Environmental DNA (eDNA) Sampling:**  
+
+**[Include these?]**
+
 **Purse-seine Sampling:**  
 
 * _Lisa Marie_

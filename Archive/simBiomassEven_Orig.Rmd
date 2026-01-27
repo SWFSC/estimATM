@@ -1479,7 +1479,7 @@ haul <- haul.all %>%
   filter(!trawlPerformance %in% trawl.performance) %>%
   filter(!haul %in% trawl.haul.rm) %>%
   # Assign cluster based on yearday
-  mutate(cluster = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) 
+  mutate(cluster = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1) 
 
 if (downsample.data) {
   # Get clusters to retain

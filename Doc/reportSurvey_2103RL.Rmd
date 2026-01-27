@@ -950,7 +950,7 @@ haul <- haul.all %>%
   # Remove bad trawls
   filter(!trawlPerformance %in% trawl.performance) %>% 
   # Assign cluster based on yearday
-  mutate(cluster = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) %>% 
+  mutate(cluster = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1) %>% 
   droplevels() # Remove unused factor levels
 
 # # Get haul starts

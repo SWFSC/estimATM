@@ -868,7 +868,7 @@ haul <- haul.all %>%
   # Remove bad trawls
   filter(!trawlPerformance %in% trawl.performance) %>% 
   # Assign cluster based on yearday
-  mutate(cluster = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) %>% 
+  mutate(cluster = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1) %>% 
   droplevels() # Remove unused factor levels
 
 # For surveys that contain trawls from multiple vessels (e.g., 2021 with the
@@ -894,7 +894,7 @@ if (survey.name %in% c("2107RL")) {
              TRUE ~ "summer"), 
            notes = NA,
            duration = difftime(haulBackTime, equilibriumTime, units = "mins"),
-           cluster = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) %>% 
+           cluster = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1) %>% 
     mutate(haul = haul + max.haul.rl,
            cluster = cluster + max.cluster.rl)  %>% 
     select(cruise, ship, haul, collection, startLatDecimal, startLongDecimal,

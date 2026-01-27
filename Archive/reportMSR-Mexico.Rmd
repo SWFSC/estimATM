@@ -302,7 +302,7 @@ haul.all <- haul.all %>%
     month(equilibriumTime) < 6 ~ "spring",
     TRUE ~ "summer"),
     duration = difftime(haulBackTime, equilibriumTime, units = "mins"), # Calculate duration
-    cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) # Assign cluster
+    cluster  = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1) # Assign cluster
 
 # Find midpoint of each haul as the mean lat/lon
 haul.mid <- haul.all %>% 

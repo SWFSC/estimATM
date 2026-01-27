@@ -162,7 +162,7 @@ haul.bad <- haul.all %>%
 haul <- filter(haul.all, cruise %in% cruise.name) %>% 
   filter(!haul %in% haul.bad$haul) %>%
   mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
-         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) %>%  # Assign cluster
+         cluster  = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1) %>%  # Assign cluster
   mutate(leg = cut(as.numeric(date(equilibriumTime)), leg.breaks, 
                    include.lowest = TRUE, labels = FALSE))
 # Get all haul numbers

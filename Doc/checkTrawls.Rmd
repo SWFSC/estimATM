@@ -1306,6 +1306,40 @@ ggsave(lw.plot.final, filename = here("Figs/fig_LW_plots_final.png"),
 include_graphics(here("Figs/fig_LW_plots_final.png"))
 ```
 
+```{r final-length-weight-log-log, eval=FALSE}
+# Examine length differences by leg
+lw.plot.final.log <- ggplot() +
+  # Plot L/W data for current survey
+  geom_point(data = lengths,
+             aes(log(totalLength_mm + 1), log(weightg + 1), 
+                 group = sex, colour = sex), 
+             alpha = 0.75) +
+  # Plot individuals with missing lengths and weights
+  geom_point(data = filter(lengths, missing.length == TRUE),
+             aes(log(totalLength_mm + 1), log(weightg + 1)),
+             shape = 21, fill = 'red',  size = 2.5) +
+  geom_point(data = filter(lengths, missing.weight == TRUE),
+             aes(log(totalLength_mm + 1), log(weightg + 1)),
+             shape = 21, fill = 'blue', size = 2.5) +
+  # Plot seasonal length models for each species
+  # geom_line(data = lw.df, 
+  #           aes(log(totalLength_mm + 1), log(weightg + 1)), 
+  #           alpha = 0.75, colour = "gray20", linetype = 'dashed') +
+  # Facet by species
+  facet_wrap(~scientificName, scales = "free") +
+  # Format plot
+  xlab("Total length (mm)") + ylab("Mass (g)") +
+  # scale_x_log10() + scale_y_log10() +
+  theme_bw() +
+  theme(strip.background.x = element_blank(),
+        strip.text.x = element_text(face = "bold.italic"))
+
+# Save length/weight plot
+ggsave(lw.plot.final.log, filename = here("Figs/fig_LW_plots_final_log.png"),
+       width = 10, height = 7) 
+
+include_graphics(here("Figs/fig_LW_plots_final_log.png"))
+```
 
 # Data checks
 ## Hauls

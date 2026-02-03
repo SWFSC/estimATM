@@ -126,7 +126,7 @@ for (i in cal.vessels) {
                                    "deg",                  # Alongship offset angle
                                    "deg",                  # Athwartship offset angle
                                    "dB re 1 sr",           # Equivalent two-way beam angle
-                                   "db"))                  # RMS
+                                   "dB"))                  # RMS
   
   # Add units column to parameter data frame
   param.output <- bind_cols(param.output, param.units) %>% 

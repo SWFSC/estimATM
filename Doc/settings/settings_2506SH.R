@@ -617,7 +617,7 @@ uctd.dir               <- file.path(survey.dir[survey.vessel.primary],"DATA/UCTD
 uctd.type              <- "Valeport" # "Valeport" or "Oceansciences"
 uctd.hdr.pattern       <- ".*UCTD\\d{3}-\\d{1}.*.vp2"
 uctd.cast.pattern      <- ".*UCTD\\d{3}-\\d{1}.*.vp2"
-uctd.cast.depth        <- 350
+uctd.cast.depth        <- 320
 
 # RBR TDR data
 tdr.dir.kite           <- here("Data/TDR/Kite")
@@ -800,7 +800,7 @@ raw.log.range.night <- c(SH = "100")  # depth of ER60 logging (m)
 
 # Echoview settings
 er60.version  <- "v2.4.3" # ER60 version
-ek80.version  <- "v21.15.1" # EK80 version
+ek80.version  <- "v24.6.1.0" # EK80 version
 ev.version    <- "v15.1" # Echoview version
 int.start        <-    5  # Integration start line depth (m)
 int.stop         <-  350  # Integration start line depth (m)
@@ -864,7 +864,7 @@ cal.lon            <- dd2decmin(cal.lon.dd)
 cal.sphere         <- c(SH  = "38.1-mm diameter sphere made from tungsten carbide (WC) with 6% cobalt binder material (WC38.1)",
                         LBC = "38.1-mm diameter sphere made from tungsten carbide (WC) with 6% cobalt binder material (WC38.1)",
                         LM  = "38.1-mm diameter sphere made from tungsten carbide (WC) with 6% cobalt binder material (WC38.1)") # Cal sphere info
-cal.sphere.fm      <- c(SH = "25-mm WC sphere (WC25)") # Cal sphere info for additional FM calibratoins
+cal.sphere.fm      <- c(SH = "25-mm WC sphere (WC25)") # Cal sphere info for additional FM calibrations
 cal.sphere.name    <- c(SH  = "SWFSC Sphere #10",
                         LBC = "SWFSC Sphere #10",
                         LM  = "SWFSC Sphere #10")
@@ -921,7 +921,7 @@ echo.freqs.dash <- c(SH  = "18-, 38-, 70-, 120-, and 200-",
 echo.models     <- c(SH  = "ES18-11, ES38B, ES70-7C, ES120-7C, and ES200-7C",
                      RL  = "ES18-11, ES38B, ES70-7C, ES120-7C, ES200-7C, and ES333-7C",
                      LBC = "ES38-12, ES70-7C, ES120-7C and ES200-7C",
-                     LM  = "ES38-12, ES70-7C, ES120-7C and ES200-7C",
+                     LM  = "ES38-7, ES70-7C, ES120-7C and ES200-7C",
                      SD  = "ES38-18|200-18C") # list of echosounder models for Shimada
 
 # nominal centerboard positions

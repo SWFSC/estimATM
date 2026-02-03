@@ -238,9 +238,9 @@ The total estimated biomass of Pacific Herring was `r prettyNum(be.all.summ$Biom
 
 The total estimated biomass of `r num2words(nrow(be.all.summ))` populations or subpopulations of `r num2words(n_distinct(be.all.summ$Species))` coastal pelagic species within the survey area was `r prettyNum(sum(be.all.summ$Biomass), big.mark=",", digits = 5)` t. Of this, `r round(be.all.summ$Biomass[be.all$Species == "Engraulis mordax" & be.all.summ$Stock == "Central"]/sum(be.all.summ$Biomass)*100)`% (`r prettyNum(be.all.summ$Biomass[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Central"], big.mark=",", digits = 5)` t) was from the central subpopulation of Northern Anchovy and `r round(be.all.summ$Biomass[be.all$Species == "Trachurus symmetricus" & be.all.summ$Stock == "All"]/sum(be.all.summ$Biomass)*100)`% (`r prettyNum(be.all.summ$Biomass[be.all.summ$Species == "Trachurus symmetricus" & be.all.summ$Stock == "All"], big.mark=",", digits = 5)` t) was from Jack Mackerel. Proportions of other subpopulations, in decreasing order, were: Pacific Herring (`r round(be.all.summ$Biomass[be.all.summ$Species == "Clupea pallasii" & be.all.summ$Stock == "All"]/sum(be.all.summ$Biomass)*100, 1)`%), northern subpopulation of Pacific Sardine (`r round(be.all.summ$Biomass[be.all.summ$Species == "Sardinops sagax" & be.all.summ$Stock == "Northern"]/sum(be.all.summ$Biomass)*100, 1)`%), southern subpopulation of Pacific Sardine (`r round(be.all.summ$Biomass[be.all.summ$Species == "Sardinops sagax" & be.all.summ$Stock == "Southern"]/sum(be.all.summ$Biomass)*100)`%), Pacific Mackerel (`r round(be.all.summ$Biomass[be.all.summ$Species == "Scomber japonicus" & be.all.summ$Stock == "All"]/sum(be.all.summ$Biomass)*100, 1)`%), and the northern subpopulation of Northern Anchovy (`r round(be.all.summ$Biomass[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Northern"]/sum(be.all.summ$Biomass)*100, 2)`%).  
 
-<!-- , and Round Herring (`r round(be.all.summ$Biomass[be.all.summ$Species == "Etrumeus acuminatus" & be.all.summ$Stock == "All"]/sum(be.all.summ$Biomass)*100, 5)`%) -->
+For additional information about the 2025 Summer IWCPS, see the detailed survey report by Clemons et al. [-@Clemons2026].  
 
-**For additional information about the 2025 Summer IWCPS, see the detailed survey report by de Blois et al. (In prep.).**  
+<!-- , and Round Herring (`r round(be.all.summ$Biomass[be.all.summ$Species == "Etrumeus acuminatus" & be.all.summ$Stock == "All"]/sum(be.all.summ$Biomass)*100, 5)`%) -->
 
 \newpage
 
@@ -248,7 +248,7 @@ The total estimated biomass of `r num2words(nrow(be.all.summ))` populations or s
 
 In the California Current Ecosystem (CCE), multiple coastal pelagic fish species (CPS; i.e.:  Pacific Sardine _Sardinops sagax_, Northern Anchovy _Engraulis mordax_, Jack Mackerel _Trachurus symmetricus_, Pacific Mackerel _Scomber japonicus_, and Pacific Herring _Clupea pallasii_) comprise the bulk of the forage fish assemblage. The term CPS is used here to refer to any of the above-mentioned species, which are a subset of the CPS assemblage listed in the Pacific Fishery Management Council’s CPS Fishery Management Plan^[https://www.pcouncil.org/documents/2023/06/coastal-pelagic-species-fishery-management-plan.pdf/]. These populations, which can change by an order of magnitude within a few years, represent important prey for marine mammals, birds, and larger migratory fishes [@Field2001], and some are targets of commercial fisheries.  
 
-The current assumption is that during summer and fall, the northern subpopulation of Pacific Sardine typically migrates north to feed in the productive coastal upwelling off OR, WA, and Vancouver Island [@Zwolinski2012, and references therein, **Fig. \@ref(fig:sardine-distribution)**]. In synchrony, but separately, the southern subpopulation of Pacific Sardine migrates from Northern Baja CA, Mexico to the Southern CA Bight (SCB) [@Smith2005]. The predominantly piscivorous adult Pacific and Jack Mackerels also migrate north in summer, but go farther offshore to feed [@Zwolinski2014 and references therein]. In the winter and spring, the northern subpopulation of Pacific Sardine typically migrates south  to its spawning grounds, generally off Central and Southern CA [@Demer2012] and occasionally off OR and WA [@Lo2011]. These migrations vary in extent with population size, fish age and length, and oceanographic conditions [@Zwolinski2012]. The transition zone chlorophyll front [TZCF, @Polovina2001] may delineate the offshore and southern limit of both northern subpopulation Pacific Sardine and Pacific Mackerel habitat [e.g., @Demer2012; @Zwolinski2012], and juveniles may have nursery areas in the SCB, downstream of upwelling regions. In contrast, Northern Anchovy spawn predominantly during winter and closer to the coast where seasonal down-welling increases retention of their eggs and larvae [@Bakun1982]. Pacific Herring spawn during spring and early summer in intertidal beach areas [@Love1996]. The northern subpopulation of Northern Anchovy is located off WA and OR and the central subpopulation is located off Central and Southern CA and northern Baja CA. Whether a species migrates or remains in an area depends on its reproductive and feeding behaviors, affinity to certain oceanographic or seabed habitats, and its population size.  
+The current assumption is that, during summer and fall, the northern subpopulation of Pacific Sardine typically migrates north to feed in the productive coastal upwelling off OR, WA, and Vancouver Island [@Zwolinski2012, and references therein, **Fig. \@ref(fig:sardine-distribution)**]. In synchrony, but separately, the southern subpopulation of Pacific Sardine migrates from Northern Baja CA, Mexico to the Southern CA Bight (SCB) [@Smith2005]. The rationale for the separation of subpopulations when estimating their biomasses is described in detail in **Appendix \@ref(appendix-sardine-subpopulations)**. The predominantly piscivorous adult Pacific and Jack Mackerels also migrate north in summer, but go farther offshore to feed [@Zwolinski2014 and references therein]. In the winter and spring, the northern subpopulation of Pacific Sardine typically migrates south  to its spawning grounds, generally off Central and Southern CA [@Demer2012] and occasionally off OR and WA [@Lo2011]. These migrations vary in extent with population size, fish age and length, and oceanographic conditions [@Zwolinski2012]. The transition zone chlorophyll front [TZCF, @Polovina2001] may delineate the offshore and southern limit of both northern subpopulation Pacific Sardine and Pacific Mackerel habitat [e.g., @Demer2012; @Zwolinski2012], and juveniles may have nursery areas in the SCB, downstream of upwelling regions. In contrast, Northern Anchovy spawn predominantly during winter and closer to the coast where seasonal down-welling increases retention of their eggs and larvae [@Bakun1982]. Pacific Herring spawn during spring and early summer in intertidal beach areas [@Love1996]. The northern subpopulation of Northern Anchovy is located off WA and OR and the central subpopulation is located off Central and Southern CA and northern Baja CA. Whether a species migrates or remains in an area depends on its reproductive and feeding behaviors, affinity to certain oceanographic or seabed habitats, and its population size.  
 
 Acoustic-trawl method (ATM) surveys, which combine information collected with echosounders and nets, were introduced to the CCE more than 50 years ago to survey CPS off the west coast of the United States (U.S.) [@Mais1974;@Mais1977;@Smith1978]. Following a two-decade hiatus, the ATM was reintroduced in the CCE in spring 2006 to sample the then-abundant Pacific Sardine population [@Cutter2008]. Since then, this sampling effort has continued and expanded through annual or semi-annual surveys [@Zwolinski2014; @Demer2012]. Beginning in 2011, the ATM estimates of Pacific Sardine abundance, age structure, and distribution have been incorporated in the annual assessments of the northern subpopulation [@Hill2017; @Kuriyama2020; @Kuriyama2022b]. ATM estimates are also used in assessments of Pacific Mackerel [@Crone2015; @Crone2019] and the central subpopulation of Northern Anchovy [@Kuriyama2022a]. Additionally, ATM survey results have yielded estimated abundances, demographics, and distributions of epipelagic and semi-demersal fishes [e.g., @Swartzman1997; @Williams2013; @Zwolinski2014] and zooplankton [@Hewitt2000].  
 
@@ -269,11 +269,11 @@ Echoes from marine organisms are a function of their body composition, shape, an
 
 Animal densities are estimated by dividing the vertically summed area-backscattering coefficients attributed to a species by their average echo intensity, i.e., the mean backscattering cross-section, from animals of that species [e.g., @Demer2012]. Transects with similar densities and transect spacings are grouped into post-sampling strata that mimic the natural patchiness of the target species [e.g., @Zwolinski2014]. Estimates of abundance are obtained by multiplying the mean densities in the stratum by the respective stratum areas [@Demer2012]. The associated sampling variance is calculated using non-parametric bootstrap of the mean transect densities. The total abundance estimate in the survey area is the sum of abundances in all strata. Similarly, the total variance estimate is the sum of the variance in each stratum.  
 
-The primary objectives of the SWFSC’s ATM surveys are to survey the distributions, abundances, and demographics of CPS, and their abiotic environments in the CCE. Typically, summer surveys are conducted during 50-90 days-at-sea (DAS) between June and October. In summer, the ATM surveys also include the northern subpopulation of Northern Anchovy and Pacific Herring. When they occur, spring surveys are conducted during 25-40 DAS between March and May and focus primarily on the northern subpopulation of Pacific Sardine and the central subpopulation of Northern Anchovy. During spring and summer, biomasses are also estimated for other CPS (e.g., Pacific Mackerel, Jack Mackerel, and Round Herring) present in the survey area. In summer 2025, the ATM surveys for CPS and Pacific Hake (_Merluccius productus_) were combined on the same ship and named the Integrated West Coast Pelagics Survey (IWCPS), similar to the sardine-hake (SaKe) surveys conducted in 2012, 2013, and 2015 [@JTC2014, Taylor2015, @Stierhoff2021a, @Stierhoff2018c]. **[Remove JTC ref?]**  
+The primary objectives of the SWFSC’s ATM surveys are to survey the distributions, abundances, and demographics of CPS, and their abiotic environments in the CCE. Typically, summer surveys are conducted during 50-90 days-at-sea (DAS) between June and October. In summer, the ATM surveys also include the northern subpopulation of Northern Anchovy and Pacific Herring. When they occur, spring surveys are conducted during 25-40 DAS between March and May and focus primarily on the northern subpopulation of Pacific Sardine and the central subpopulation of Northern Anchovy. During spring and summer, biomasses are also estimated for other CPS (e.g., Pacific Mackerel, Jack Mackerel, and Round Herring) present in the survey area. In summer 2025, the ATM surveys for CPS and Pacific Hake (_Merluccius productus_) were combined on the same ship and named the Integrated West Coast Pelagics Survey (IWCPS), similar to the sardine-hake (SaKe) surveys conducted in 2012, 2013, and 2015 [@JTC2014; @Taylor2015; @Stierhoff2021a; @Stierhoff2018c]. **[Remove JTC ref?]**  
 
 In `r tolower(survey.season)` `r survey.year`, the ATM survey was conducted in the core area by _`r survey.vessel`_, and in the nearshore region by fishing vessels _Lisa Marie_ and _Long Beach Carnage_, from `r survey.landmark.s` to `r survey.landmark.n`.  
 
-Presented here are:  1) a detailed description of the ATM used to survey CPS in the California Current Ecosystem (CCE) off the west coast of the U.S., including changes related to the IWCPS; and 2) estimates of the abundances, biomasses, spatial distributions, and demographics of CPS, specifically the northern and southern subpopulations of Pacific Sardine, the central and northern subpopulations of Northern Anchovy, Pacific Mackerel, Jack Mackerel, and Pacific Herring for the core and nearshore survey regions in which they were sampled. **For additional information about the 2025 Summer IWCPS, see the detailed survey report by de Blois et al. (In prep.).**  
+Presented here are:  1) a detailed description of the ATM used to survey CPS in the California Current Ecosystem (CCE) off the west coast of the U.S., including changes related to the IWCPS; and 2) estimates of the abundances, biomasses, spatial distributions, and demographics of CPS, specifically the northern and southern subpopulations of Pacific Sardine, the central and northern subpopulations of Northern Anchovy, Pacific Mackerel, Jack Mackerel, and Pacific Herring for the core and nearshore survey regions in which they were sampled. For additional information about the 2025 Summer IWCPS, see the detailed survey report by Clemons et al. [-@Clemons2026].  
 
 \newpage
 
@@ -696,7 +696,7 @@ TS = 10\,\log_{10}(\sigma_{bs}) = m\,\log_{10}(L) + b\text{.}
 (\#eq:ts-sigma-bs-equation)
 \end{equation}
 
-$TS$ has units of dB re 1 m^2^ if defined for an individual, or dB re 1 m^2^ kg^-1^ if defined by weight. The following equations for $TS_{38\mathrm{kHz}}$ were used in this analysis **[double-check these equations]**:  
+$TS$ has units of dB re 1 m^2^ if defined for an individual, or dB re 1 m^2^ kg^-1^ if defined by weight. The following equations for $TS_{38\mathrm{kHz}}$ were used in this analysis:  
 
 \begin{equation}
 TS_{\mathrm{38kHz}} = -14.90 \times \log_{10} (L_T) - 13.21 \text{, for Pacific Sardine;}
@@ -797,7 +797,7 @@ In some areas, dense backscatter was observed deeper than the upper mixed layer 
 
 \newpage
 
-(ref:tx-biom-dens) Log-transformed biomass density + 1 ($t\,\mathrm{nmi}^{-2}$) by transect versus latitude (easternmost portion of each transect) and strata (shaded regions; outline indicates stratum number) used to estimate biomass and abundance for each species in the core region surveyed by _`r survey.vessel`_. Data labels (blue numbers) correspond to transects with positive biomass ($\log_{e}(t+1)$ > 0). Transect spacing (nmi; point color), and subpopulation breaks for Northern Anchovy and Pacific Sardine (red dashed lines and text) are indicated. **Update landmark labels to remove overlap with Sardine boundary.**  
+(ref:tx-biom-dens) Log-transformed biomass density + 1 ($t\,\mathrm{nmi}^{-2}$) by transect versus latitude (easternmost portion of each transect) and strata (shaded regions; outline indicates stratum number) used to estimate biomass and abundance for each species in the core region surveyed by _`r survey.vessel`_. Data labels (blue numbers) correspond to transects with positive biomass ($\log_{e}(t+1)$ > 0). Transect spacing (nmi; point color), and subpopulation breaks for Northern Anchovy and Pacific Sardine (red dashed lines and text) are indicated. **[Update landmark labels to remove overlap with Sardine boundary]**  
 
 ```{r tx-biom-dens,fig.cap='(ref:tx-biom-dens)',out.width='7in',fig.pos='H'}
 include_graphics(here("Figs/fig_biomass_density_transect_lat.png"))
@@ -2431,11 +2431,11 @@ Despite the losses of DAS, the `r tolower(survey.season)` `r survey.year` survey
 ### Northern Anchovy {#discussion-anchovy-biomass} 
 #### Northern subpopulation {#discussion-anchovy-biomass-northern} 
 
-The estimated biomass of the northern subpopulation of Northern Anchovy in the survey region north of Astoria was `r prettyNum(be.all.summ$Biomass[be.all.summ$Species == "Engraulis mordax" & be.all$Stock == "Northern"], big.mark=",", digits = 1)` t (CI~95%~ = `r prettyNum(be.all.summ$lower.ci.B[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Northern"],big.mark=",",digits=1)` - `r prettyNum(be.all.summ$upper.ci.B[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Northern"],big.mark=",",digits=2)` t) in summer 2025. The northern subpopulation biomass has comprised a small fraction (`r round(min(biomass.pct.anch.n$biomass.pct),1)` to `r round(max(biomass.pct.anch.n$biomass.pct),1)`%) of the total CPS biomass in the CCE since at least 2015 [@Stierhoff2021a], and was slightly higher than the `r prettyNum(biomass.pct.anch.n$biomass[biomass.pct.anch.c$year == 2024],big.mark=",",digits=5)` t observed in summer 2024 [@Stierhoff2025].  
+The estimated biomass of the northern subpopulation of Northern Anchovy in the survey region north of Astoria was `r prettyNum(be.all.summ$Biomass[be.all.summ$Species == "Engraulis mordax" & be.all$Stock == "Northern"], big.mark=",", digits = 1)` t (CI~95%~ = `r prettyNum(be.all.summ$lower.ci.B[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Northern"],big.mark=",",digits=1)` - `r prettyNum(be.all.summ$upper.ci.B[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Northern"],big.mark=",",digits=2)` t) in summer 2025. The northern subpopulation biomass has comprised a small fraction (`r round(min(biomass.pct.anch.n$biomass.pct),1)` to `r round(max(biomass.pct.anch.n$biomass.pct),1)`%) of the total CPS biomass in the CCE since at least 2015 [@Stierhoff2021a], and the 2025 point estimate is higher than the `r prettyNum(biomass.pct.anch.n$biomass[biomass.pct.anch.c$year == 2024],big.mark=",",digits=5)` t observed in summer 2024 [@Stierhoff2025].  
 
 #### Central subpopulation {#discussion-anchovy-biomass-central} 
 
-The estimated biomass of the central subpopulation of Northern Anchovy in the survey region was `r prettyNum(be.all.summ$Biomass[be.all.summ$Species == "Engraulis mordax" & be.all$Stock == "Central"], big.mark=",", digits = 5)` t (CI~95%~ = `r prettyNum(be.all.summ$lower.ci.B[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Central"],big.mark=",",digits=5)` - `r prettyNum(be.all.summ$upper.ci.B[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Central"],big.mark=",",digits=5)` t), making up `r round(be.all.summ$Biomass[be.all$Species == "Engraulis mordax" & be.all$Stock == "Central"]/sum(be.all.summ$Biomass)*100)`% of the total CPS biomass in summer 2025, and has comprised a substantial portion of the CPS biomass in the CCE since approximately 2016. The biomass in 2025 increased `r prettyNum(((be.all.summ$Biomass[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Central"]-biomass.pct.anch.c$biomass[biomass.pct.anch.c$year == 2024])/biomass.pct.anch.c$biomass[biomass.pct.anch.c$year == 2024])*100,big.mark=",",digits=2)`% from the `r prettyNum(biomass.pct.anch.c$biomass[biomass.pct.anch.c$year == 2024],big.mark=",",digits=5)` t estimated in summer 2024 [@Stierhoff2025]. This estimate excludes an unquantified but relatively small amount of biomass attributed to deep (i.e., $\ge$ 30 m) Northern Anchovy schools in the nearshore region. Research will continue to better incorporate this biomass in any future revisions.
+The estimated biomass of the central subpopulation of Northern Anchovy in the survey region was `r prettyNum(be.all.summ$Biomass[be.all.summ$Species == "Engraulis mordax" & be.all$Stock == "Central"], big.mark=",", digits = 5)` t (CI~95%~ = `r prettyNum(be.all.summ$lower.ci.B[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Central"],big.mark=",",digits=5)` - `r prettyNum(be.all.summ$upper.ci.B[be.all.summ$Species == "Engraulis mordax" & be.all.summ$Stock == "Central"],big.mark=",",digits=5)` t), making up `r round(be.all.summ$Biomass[be.all$Species == "Engraulis mordax" & be.all$Stock == "Central"]/sum(be.all.summ$Biomass)*100)`% of the total CPS biomass in summer 2025, and has comprised a substantial portion of the CPS biomass in the CCE since approximately 2016. The biomass point estimate in 2025 increased `r prettyNum(((be.all.summ$Biomass[be.all.summ$Species == 'Engraulis mordax' & be.all.summ$Stock == "Central"]-biomass.pct.anch.c$biomass[biomass.pct.anch.c$year == 2024])/biomass.pct.anch.c$biomass[biomass.pct.anch.c$year == 2024])*100,big.mark=",",digits=2)`% from the `r prettyNum(biomass.pct.anch.c$biomass[biomass.pct.anch.c$year == 2024],big.mark=",",digits=5)` t estimated in summer 2024 [@Stierhoff2025]. This estimate excludes an unquantified but relatively small amount of biomass attributed to deep (i.e., $\ge$ 30 m) Northern Anchovy schools in the nearshore region. Research will continue to better incorporate this biomass in any future revisions.
 
 <!-- **The decrease in biomass in 2024 may also be due in part to the decreased northern extent of the distribution, which typically extends to Cape Mendocino but ended near San Francisco this year. We will continue exploring additional explanations for the apparent decline in biomass observed since 2022.**   -->
 
@@ -2448,13 +2448,13 @@ The estimated biomass of the central subpopulation of Northern Anchovy in the su
 ### Pacific Sardine {#discussion-sardine}     
 #### Northern subpopulation {#discussion-sardine-biomass-northern} 
 
-The southern extent of northern subpopulation Pacific Sardine habitat was `r names(stock.break.sar)`, based on the potential habitat model [@Zwolinski2024] and corroborated by both the geographic separation of biomass density north and south of Point Conception (**Fig. \@ref(fig:tx-biom-dens)**) and visual differences in length compositions (**Fig. \@ref(fig:sardine-stock-allocation)**). The estimated biomass of `r prettyNum(be.all.summ$Biomass[be.all.summ$Species == "Sardinops sagax" & be.all$Stock == "Northern"], big.mark=",", digits = 5)` t (CI~95%~ = `r prettyNum(be.all.summ$lower.ci.B[be.all.summ$Species == "Sardinops sagax" & be.all.summ$Stock == "Northern"], big.mark=",",digits=5)` - `r prettyNum(be.all.summ$upper.ci.B[be.all.summ$Species == "Sardinops sagax" & be.all.summ$Stock == "Northern"], big.mark=",",digits=5)` t) in the survey region was **virtually unchanged [or slightly higher?]** from the `r prettyNum(biomass.pct.sar.n$biomass[biomass.pct.sar.n$year == 2024],big.mark=",", digits = 5)` t estimated in summer 2024 [@Stierhoff2025]. However, unlike in 2024, the biomass attributed to the northern subpopulation was split approximately evenly between the core and nearshore survey regions. There is no stock assessment planned for spring 2026, so biomass estimates from the surveys conducted in the summers of 2024 and 2025 will be included in the next benchmark assessment planned for spring 2027. Since 2014, the ATM biomass of the northern subpopulation of Pacific Sardine has remained less than the 150,000 t rebuilding target adopted by the Pacific Fishery Management Council in 2020^[https://www.pcouncil.org/documents/2020/08/g-1-attachment-1-pacific-sardine-rebuilding-plan-preliminary-environmental-analysis.pdf/] (**Figs. \@ref(fig:biomass-ts-combo)**). **Japanese Sardine (_Sardinops melanosticta_) are sometimes present in the survey area during the survey period [see @Longo2025],** but all sardine present in 2025 were assumed to be _S. sagax_ for the purpose of estimating biomass. Therefore, biomass estimates for both the northern and southern subpopulations may be subject to change. **[Check with Hyde/Craig/Longo about any new results before publication]**  
+The southern extent of northern subpopulation Pacific Sardine habitat was `r names(stock.break.sar)`, based on the potential habitat model [@Zwolinski2024]. The northern extent based on the biological samples is southern Oregon. Unlike previous years, there was not a clear separation in the biomass density (**Fig. \@ref(fig:tx-biom-dens)**) or length composition around the habitat break (**Fig. \@ref(fig:tx-biom-dens)**) and visual differences in length compositions (**Fig. \@ref(fig:sardine-stock-allocation)**). The estimated biomass of `r prettyNum(be.all.summ$Biomass[be.all.summ$Species == "Sardinops sagax" & be.all$Stock == "Northern"], big.mark=",", digits = 5)` t (CI~95%~ = `r prettyNum(be.all.summ$lower.ci.B[be.all.summ$Species == "Sardinops sagax" & be.all.summ$Stock == "Northern"], big.mark=",",digits=5)` - `r prettyNum(be.all.summ$upper.ci.B[be.all.summ$Species == "Sardinops sagax" & be.all.summ$Stock == "Northern"], big.mark=",",digits=5)` t) in the survey region was virtually unchanged from the `r prettyNum(biomass.pct.sar.n$biomass[biomass.pct.sar.n$year == 2024],big.mark=",", digits = 5)` t estimated in summer 2024 [@Stierhoff2025]. However, unlike in 2024 when 99.7% of the biomass was in the nearshore region, the 2025 biomass attributed to the northern subpopulation was split approximately evenly between the core and nearshore survey regions. There is no stock assessment planned for spring 2026, so biomass estimates from the surveys conducted in the summers of 2024 and 2025 will be included in the next benchmark assessment planned for spring 2027. Since 2014, the ATM biomass of the northern subpopulation of Pacific Sardine has remained less than the 150,000 t rebuilding target adopted by the Pacific Fishery Management Council in 2020^[https://www.pcouncil.org/documents/2020/08/g-1-attachment-1-pacific-sardine-rebuilding-plan-preliminary-environmental-analysis.pdf/] (**Figs. \@ref(fig:biomass-ts-combo)**). Japanese Sardine (_Sardinops melanosticta_) have been present in the survey area during prior years [see @Longo2025], and are likely to contribute to the biomass estimate Pacific Sardine. Therefore, biomass estimates for both the northern and southern subpopulations may be subject to change. Since 2024, the length composition of the sardine complex in the NSP habitat has shown a decrease in the proportion of large sardine (200 mm and over) that were common in the Pacific Northwest (PNW) even after the closure of the fishery, but before the appearance of Japanese Sardine [see @Stierhoff2025, and references therein]. **[Check with Hyde/Craig/Longo about any new results before publication]**  
 
 #### Southern subpopulation {#discussion-sardine-biomass-southern}  
 
 The estimated biomass of the southern subpopulation of Pacific Sardine was `r prettyNum(be.all.summ$Biomass[be.all.summ$Species == "Sardinops sagax" & be.all.summ$Stock == "Southern"], big.mark=",", digits = 5)` t (CI~95%~ = `r prettyNum(be.all.summ$lower.ci.B[be.all.summ$Species == "Sardinops sagax" & be.all.summ$Stock == "Southern"], big.mark=",",digits=5)` - `r prettyNum(be.all.summ$upper.ci.B[be.all.summ$Species == "Sardinops sagax" & be.all.summ$Stock == "Southern"],big.mark=",",digits=5)` t), of which `r prettyNum(be.all.ns$Biomass[be.all.ns$Species == "Sardinops sagax" & be.all.ns$Stock == "Southern"], big.mark=",", digits = 5)` t (`r prettyNum(be.all.ns$Biomass[be.all.ns$Species == "Sardinops sagax" & be.all.ns$Stock == "Southern"]/be.all.summ$Biomass[be.all.summ$Species == "Sardinops sagax" & be.all.summ$Stock == "Southern"]*100, big.mark=",", digits = 1)`%) occurred in the nearshore region in the SCB. The southern subpopulation was first observed in U.S. waters by the SWFSC's ATM surveys in 2016 [`r prettyNum(biomass.pct.sar.s$biomass[biomass.pct.sar.s$year == 2016],big.mark=",", digits = 1)` t, @Stierhoff2021b]. Since then, the southern subpopulation biomass in U.S. waters has persisted. The biomass estimated in 2025 (`r prettyNum(biomass.pct.sar.s$biomass[biomass.pct.sar.s$year == 2025],big.mark=",", digits = 3)` t) is within the range of biomasses from `r prettyNum(biomass.pct.sar.s$biomass[biomass.pct.sar.s$year == 2019],big.mark=",", digits = 3)` t estimated in summer 2019 [@Stierhoff2020b] to `r prettyNum(biomass.pct.sar.s$biomass[biomass.pct.sar.s$year == 2021],big.mark=",", digits = 3)` t in summer 2021 [@Stierhoff2023a]. In 2017, the summer survey did not extend into the SCB [@Zwolinski2019a], and no summer survey was conducted in 2020 due to the COVID-19 pandemic. Unlike prior years, no contemporaneous survey of CPS was conducted by Mexico off Baja CA in summer 2025. 
 
-#### Combined northern and southern subpopulation
+#### Combined northern and southern subpopulation {#discussion-all-sar-subpopulations}  
 
 **[AY: Shall we add a sentence or two about the combined biomass of the NSP and SSP in U.S. waters?]**
 
@@ -2504,7 +2504,7 @@ if (file.exists(here("Images/img_nearshore_sampling_bias_2025.png"))) {
 
 During the day, Pacific Sardine and Northern Anchovy form well-defined epipelagic schools. From 2008-2013, when Pacific Sardine dominated the CPS community, the majority of echosounder detected CPS schools occurred in the upper mixed layer. As the central subpopulation of Northern Anchovy (CSNA) rebounded and began to dominate the CPS community off California, their schools were observed over a wider range of depths and often closer to the bottom than Pacific Sardine. Based on our experience and conversations with the operators of the purse-seine vessels, Northern Anchovy schools are often more well-defined, denser, and deeper than those of Pacific Sardine, making them more likely to escape the purse seine sets in clear, deep water. That understanding led us to adapt a nearest neighbor approach for only using the nearest purse-seine or trawl catch to apportion nearshore backscatter from the upper mixed layer - approximately between the surface and 30 m depth. Below the thermocline, CPS schools are classified as Northern Anchovy.   
 
-Unbiased classification of CPS in the epipelagic region still requires random or representative sampling of all schools observed along the transects. In the presence of a strong inshore-offshore gradient of the species distribution (**Fig. \@ref(fig:nearshore-sampling-bias-2025)**), the preferential sampling in the nearshore region (**Fig. \@ref(fig:nearshore-sampling-bias-2025)**) introduces an unquantified bias. Specifically, the preferential sampling of the Pacific Sardine-dominated region very close to the shore (i.e., less than 1 nmi in most cases; **Fig. \@ref(fig:nearshore-sampling-bias-2025)**), is poor at characterizing the transition to areas inhabited by Northern Anchovy. Using our standard approach, dense, unsampled CPS schools observed up to 5 nmi from the central coast of California were classified as Pacific Sardine based on purse-seine sets conducted very close to shore (**Figs. \@ref(fig:species-proportion-inshore-offshore-2025)** and **\@ref(fig:nearshore-sampling-bias-2025)**). As a result, estimates of Pacific Sardine biomass may be positively biased by the inclusion of Northern Anchovy backscatter. In 2026, we plan to shift the timing of purse-seine sampling for the nearshore survey towards the evening, which is expected to allow for more representative biological sampling of CPS community.  
+Unbiased classification of CPS in the epipelagic region still requires random or representative sampling of all schools observed along the transects. In the presence of a strong inshore-offshore gradient of the species distribution (**Fig. \@ref(fig:nearshore-sampling-bias-2025)**), the preferential sampling in the nearshore region (**Fig. \@ref(fig:nearshore-sampling-bias-2025)**) introduces an unquantified bias. Specifically, the preferential sampling of the Pacific Sardine-dominated region very close to the shore (i.e., less than 1 nmi in most cases; **Fig. \@ref(fig:nearshore-sampling-bias-2025)**), is poor at characterizing the transition to areas inhabited by Northern Anchovy. Using our standard approach, dense, unsampled CPS schools observed up to 5 nmi from the central coast of California were classified as Pacific Sardine based on purse-seine sets conducted very close to shore (**Figs. \@ref(fig:species-proportion-inshore-offshore-2025)** and **\@ref(fig:nearshore-sampling-bias-2025)**). As a result, estimates of Pacific Sardine biomass may be positively biased by the inclusion of Northern Anchovy backscatter. In 2026, we plan to shift the timing of purse-seine sampling for the nearshore survey towards the evening, which is expected to allow for more representative biological sampling of CPS community. 
 
 (ref:species-proportion-inshore-offshore-2025) Relative species composition (by weight) of Northern Anchovy (green), Pacific Sardine (red) and Jack Mackerel (blue) in purse-seine (black border) and trawl (blue border) samples collected off the central coast of California. The region between 1 to 4 nmi from the coast (gray-shaded region) would have benefited from additional biological sampling.
 
@@ -2515,10 +2515,6 @@ if (file.exists(here("Images/img_species_proportion_alongshore_2025.png"))) {
   print("No time series plot available.")
 } 
 ```
-
-Unbiased classification of CPS in the epipelagic region still requires random or representative sampling of all schools observed along the transects. In the presence of a strong inshore-offshore gradient of the species distribution (**Figs. \@ref(fig:species-proportion-inshore-offshore-2025)**), the preferential sampling in the nearshore region (Figure x) introduces an unquantified bias. Specifically, the preferential sampling of the Pacific Sardine-dominated region very close to the shore (i.e., less than 1 nmi in most cases; **Figs. \@ref(fig:species-proportion-inshore-offshore-2025)**), is poor at characterizing the transition to areas inhabited by Northern Anchovy. Using our standard approach, dense, unsampled CPS schools observed up to 5 nmi from the central coast of California were classified as Pacific Sardine based on purse-seine sets conducted very close to shore (**Figs. \@ref(fig:nearshore-sampling-bias-2025)** and **\@ref(fig:species-proportion-inshore-offshore-2025)**). As a result, estimates of Pacific Sardine biomass may be positively biased by the inclusion of Northern Anchovy backscatter. In 2026, we plan to shift the timing of purse-seine sampling for the nearshore survey towards the evening, which is expected to allow for more representative biological sampling of CPS community.  
-
-\newpage
 
 ## Ecosystem dynamics: Forage fish community {#discussion-ecosystem-dynamics}  
 
@@ -2564,7 +2560,7 @@ if (file.exists(here("Figs/fig_biomass_ts_bar.png"))) {
 
 (ref:biomass-ts-combo) a) Estimated and b) cumulative estimated biomasses ($t$) of the `r num2words(n_distinct(biomass.ts$group))` most abundant CPS populations or subpopulations of `r num2words(n_distinct(biomass.ts$species))` species in the CCE during summer since 2008. Surveys typically span the area between Cape Flattery and San Diego, but in some years also include Vancouver Island, Canada (2015-2019, 2024) and portions of Baja CA (2021-2022, 2024).
 
-```{r biomass-ts-combo,fig.cap='(ref:biomass-ts-combo)', out.width='7in',fig.pos='H'}
+```{r biomass-ts-combo,fig.cap='(ref:biomass-ts-combo)', out.width='6.5in',fig.pos='H'}
 if (file.exists(here("Figs/fig_biomass_ts_combo.png"))) {
   include_graphics(here("Figs/fig_biomass_ts_combo.png"))  
 } else {
@@ -2591,53 +2587,9 @@ The authors greatly appreciate that the ATM surveys require an enormous effort b
 # (APPENDIX) Appendix {-}
 # Appendices {-} 
 
-# Scientific Personnel {#appendix-scientific-personnel}  
+# Separation of Pacific Sardine subpopulations {#appendix-sardine-subpopulations}  
 
-The collection and analysis of the survey data used to estimate the biomasses of CPS were conducted by members of 1-NOAA, 2- CU Boulder/CIRES, 3-UCSC/CIMEAS, 4-NOAA Teacher at Sea, 5-OAI, 6-volunteer, 7-NWFSC, 8-AIS, 9-WDFW, and 10-CWPA. For each leg, ^\*^ denotes the Cruise Leader, and ^+^ the Acoustic and Trawl Leads. The survey on _`r survey.vessel`_ was divided into five legs. **Members of the scientific party from the NWFSC are not listed here. [BUT SHOULD THEY BE?]**  
-
-<!-- https://docs.google.com/spreadsheets/d/1HXl-ghdcqVKPGXi9BCHrLA4kaUif0EOB/edit?gid=1997810242#gid=1997810242 -->
-
-**Chief Scientist:**
-
-* K. Stierhoff^1^
-
-**Acoustic Data Collection and Processing:**  
-
-**[Included NWFSC acousticians]**
-
-* Leg I:   J. Renfree^1\*+^
-* Leg II:  D. Murfin^1^
-* Leg III: K. Stierhoff^1\*+^
-* Leg IV:  S. Sessions^1^
-* Leg V:   S. Mau^1^
-
-**Trawl Sampling:**
-
-* Leg I:    D. Bashford^2^, E. Capriles^2^, J. Cloninger^4^, S. de Blois^1^, K. James^1+^, M. Liotta^1^, B. Overcash^1^, Z. Skelton^4^, and A. Vitale^8^
-* Leg II:   S. Beyer^1^, L. Chang^4^, M. Liotta^1^, M. Shak^7^, Z. Skelton^4+^, P. Vavoulis^1^, A. Vitale^8^, and C. Wilson^1^ 
-* Leg III:  J. Crofts^1^, K. Davis^1^, A. Ostrowski^1^, B. Overcash^1^, M. Rivera^1^, Z. Skelton^4^,  B. Schwartzkopf^1+^, S. Van Hofwegen^1^, and A. Vitale^8^
-* Leg IV:   P. Bizzell^1^, B. Erisman^1^, J. Gonzalez^4^, P. Kuriyama^1^, M. Monneedy^1^, D. Lowry^1^, C. Sayre^1^, L. Vasquez del Mercado^1^, and A. Vitale^8^
-* Leg V:    K. Alvstad^1^, J. Dunigan^1^, L. Kraatz^1^, T. Mitchell^1^, L. Ortiz^1^, B. Overcash^1^, T. Rogers^1^, C. Russ^1^, and J. Stecher^1^
-
-**Environmental DNA (eDNA) Sampling:**  
-
-**[Include these?]**
-
-**Purse-seine Sampling:**  
-
-* _Lisa Marie_
-+ A. Cravens ^9^ and K. Hinton^9^
-* _Long Beach Carnage_
-+ J. van Noord^10^
-
-**Echosounder Calibrations:**  
-
-* _Reuben Lasker_
-+ `r cal.personnel["SH"]`
-* _Long Beach Carnage_
-+ `r cal.personnel["LBC"]`
-* _Lisa Marie_
-+ `r cal.personnel["LM"]`
+The literature of Pacific and other sardines often uses the terms subpopulation and stock interchangeably [@Ahlstrom1970; @Javor2011; @Smith1995; @Wolf2001]. In doing so, stocks or subpopulations implicitly refer to self-sustaining biological populations of randomly mating individuals, quasi separated from other subpopulations and with a distinct population dynamic, in the sense of Cadrin et al. [-@Cadrin2014]. Marr [-@Marr1957] used the term subpopulation as a “fraction of a population that is itself genetically self-sustaining”. Genetic heterogeneity is no longer a requirement to distinguish subpopulations, nor is it a definitional characteristic [see @Blackhart2006 and @Cadrin2014 for modern definitions]. The practical separation at ecological scales for the existence of subpopulations occurs at much shorter time scales than those required for genetic drift to be perceptible [@Waples1998]. As part of a metapopulation, subpopulations reside in different habitats or geographic regions [@Linner2022], have life cycles adapted to local hydrological conditions [@Begg1999], often demonstrate phenotypic heterogeneity [@Cadrin2010], but can overlap at times and mix sufficiently to negate genetic heterogeneity [@Begg1999; @McBride2014]. The purported separation between the NSP and SSP might not be permanent, but the proto-separation at ecological scales appears to be maintained by discontinuities in preferred habitat association [@Jacobson1995; @Felix-Uraga2004; @Baumgartner2005; @Zwolinski2024]. This explains the persistent and consistent phenotypical and life history traits reported for the Pacific Sardine in different environments [@Anon1952; @Felin1954; @Murphy1967]. Such differences can occur due to phenotypical plasticity under a common genotype [@Hedgecock1989; @McBride2014], but their persistence reflect the existence of quasi-separate groups at temporal scales compatible for fisheries management [@Cope2009; @Begg2016].  
 
 \newpage
 \blandscape
@@ -2658,7 +2610,7 @@ if (file.exists(here("Figs/fig_cal_TSrel_scatter_SH.png"))) {
 
 ### FM Mode {#appendix-calibration-plots-sh-fm}
 
-Measurements of on-axis gain ($G_0$, dB); alongship ($\alpha_\mathrm{-3dB}$, cyan) and athwartship ($\beta_\mathrm{-3dB}$, magenta) beamwidths (deg); and alongship ($\alpha_\mathrm{0}$, cyan) and athwartship ($\beta_\mathrm{0}$, magenta) offset angles (deg) measured during calibrations of EK80 wideband transceivers aboard _`r survey.vessel`_ (WBT; `r echo.freqs["SH"]` kHz) in frequency modulation (FM, or broadband) mode.
+Measurements of on-axis gain ($G_0$, dB); alongship ($\alpha_\mathrm{-3dB}$, cyan) and athwartship ($\beta_\mathrm{-3dB}$, magenta) beamwidths (deg); and alongship ($\alpha_\mathrm{0}$, cyan) and athwartship ($\beta_\mathrm{0}$, magenta) offset angles (deg) measured during calibrations of EK80 wideband transceivers aboard _`r survey.vessel`_ (WBT; 70, 120, and 200 kHz) in frequency modulation (FM, or broadband) mode.
 
 ```{r cal-plot-fm,out.width='7in',fig.align='center',fig.pos='H'}  
 # Plots generated using Code/processCal-FM.R
@@ -2672,7 +2624,7 @@ if (file.exists(here("Figs/fig_cal_FM_AllFreqs_SH.png"))) {
 
 ## _Lisa Marie_ {#appendix-calibration-plots-lm}
 
-Relative beam-compensated target strength ($TS_{rel}$, dB re 1 m^2^) measurements of a WC38.1 sphere at `r echo.freqs["LM"]` kHz for echosounders aboard _Lisa Marie_. $TS_{rel}$ is calculated as the difference between the beam-compensated target strength ($TS_c$) and the theoretical target strength ($TS_{theory}$). The results shown here are for the post-survey calibration conducted in Gig Harbor, WA.
+Relative beam-compensated target strength ($TS_{rel}$, dB re 1 m^2^) measurements of a WC38.1 sphere at `r echo.freqs["LM"]` kHz for echosounders aboard _Lisa Marie_. $TS_{rel}$ is calculated as the difference between the beam-compensated target strength ($TS_c$) and the theoretical target strength ($TS_{theory}$). The results shown here are for the post-survey calibration conducted off Sunrise Beach near Gig Harbor, WA.
 
 ```{r tsc-plot-lm, out.width='6.5in',fig.align='center',fig.pos='H'}
 if (file.exists(here("Figs/fig_cal_TSrel_scatter_LM.png"))) {
@@ -2709,7 +2661,7 @@ include_graphics(here("Figs/fig_cluster_relative_length_frequency_Engraulis mord
 
 ## Pacific Sardine {#appendix-cluster-length-percent-sardine}  
 
-Standard length ($L_S$) frequency distributions of Pacific Sardine (_Sardinops sagax_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum. The southern subpopulation are comprised of stratum 1 and 2, while the northern subpopulation are stratum 3, 4, and 5.  
+Standard length ($L_S$) frequency distributions of Pacific Sardine (_Sardinops sagax_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum. The southern subpopulation was sampled in stratum 1 and the northern subpopulation was sampled in strata 2 through 6.  
 
 (ref:rlf-sardine) Standard length ($L_S$) frequency distributions of Pacific Sardine (_Sardinops sagax_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum.
 
@@ -2775,3 +2727,53 @@ include_graphics(here("Figs/fig_cluster_relative_length_frequency_Etrumeus acumi
 ## Locations
 
 ## Catch summaries
+
+\newpage
+
+# Scientific Personnel {#appendix-scientific-personnel}  
+
+The collection and analysis of the survey data used to estimate the biomasses of CPS were conducted by members of 1-NOAA, 2- CU Boulder/CIRES, 3-UCSC/CIMEAS, 4-NOAA Teacher at Sea, 5-OAI, 6-volunteer, 7-NWFSC, 8-AIS, 9-WDFW, and 10-CWPA. For each leg, ^\*^ denotes the Cruise Leader, and ^+^ the Acoustic and Trawl Leads. The survey on _`r survey.vessel`_ was divided into five legs. **Members of the scientific party from the NWFSC are not listed here. [BUT SHOULD THEY BE?]**  
+
+<!-- https://docs.google.com/spreadsheets/d/1HXl-ghdcqVKPGXi9BCHrLA4kaUif0EOB/edit?gid=1997810242#gid=1997810242 -->
+
+**Chief Scientist:**
+
+* K. Stierhoff^1^
+
+**Acoustic Data Collection and Processing:**  
+
+**[Included NWFSC acousticians]**
+
+* Leg I:   J. Renfree^1\*+^
+* Leg II:  D. Murfin^1^
+* Leg III: K. Stierhoff^1\*+^
+* Leg IV:  S. Sessions^1^
+* Leg V:   S. Mau^1^
+
+**Trawl Sampling:**
+
+* Leg I:    D. Bashford^2^, E. Capriles^2^, J. Cloninger^4^, S. de Blois^1^, K. James^1+^, M. Liotta^1^, B. Overcash^1^, Z. Skelton^4^, and A. Vitale^8^
+* Leg II:   S. Beyer^1^, L. Chang^4^, M. Liotta^1^, M. Shak^7^, Z. Skelton^4+^, P. Vavoulis^1^, A. Vitale^8^, and C. Wilson^1^ 
+* Leg III:  J. Crofts^1^, K. Davis^1^, A. Ostrowski^1^, B. Overcash^1^, M. Rivera^1^, Z. Skelton^4^,  B. Schwartzkopf^1+^, S. Van Hofwegen^1^, and A. Vitale^8^
+* Leg IV:   P. Bizzell^1^, B. Erisman^1^, J. Gonzalez^4^, P. Kuriyama^1^, M. Monneedy^1^, D. Lowry^1^, C. Sayre^1^, L. Vasquez del Mercado^1^, and A. Vitale^8^
+* Leg V:    K. Alvstad^1^, J. Dunigan^1^, L. Kraatz^1^, T. Mitchell^1^, L. Ortiz^1^, B. Overcash^1^, T. Rogers^1^, C. Russ^1^, and J. Stecher^1^
+
+**Environmental DNA (eDNA) Sampling:**  
+
+**[Include these?]**
+
+**Purse-seine Sampling:**  
+
+* _Lisa Marie_
++ A. Cravens ^9^ and K. Hinton^9^
+* _Long Beach Carnage_
++ J. van Noord^10^
+
+**Echosounder Calibrations:**  
+
+* _Reuben Lasker_
++ `r cal.personnel["SH"]`
+* _Long Beach Carnage_
++ `r cal.personnel["LBC"]`
+* _Lisa Marie_
++ `r cal.personnel["LM"]`

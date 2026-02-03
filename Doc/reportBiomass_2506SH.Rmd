@@ -498,7 +498,7 @@ On _Lisa Marie_ and _Long Beach Carnage_, the EK80 was set to "auto-range" mode 
 ### Oceanographic {#methods-oceanographic-sampling}
 #### Conductivity and temperature versus depth (CTD) {#methods-ctd-sampling}  
 \
-Conductivity and temperature were measured versus depth using calibrated sensors on a CTD rosette (Model SBE911+, Seabird) or underway probe [RapidPro Plus (UCTD); Valeport] cast from the vessel. Cast depths were `r ctd.cast.depth` m or `r uctd.cast.depth` m (or to within ~10 m of the seabed if shallower than the cast depth) for CTDs and UCTDs, respectively. These data were used to calculate the harmonic mean sound speed [@Demer2015] for estimating ranges to the sound scatterers, and frequency-specific sound absorption coefficients for compensating signal attenuation of the sound pulse between the transducer and scatterers [@Simmonds2005] (see **Section \@ref(methods-sound-calcs)**).  
+Conductivity and temperature were measured versus depth using calibrated sensors on a CTD rosette (Model SBE911+, Seabird) or underway probe [RapidPro Plus (UCTD); Valeport] cast from the vessel. Cast depths were `r ctd.cast.depth` m or `r uctd.cast.depth` m (or to within ~10 m of the seabed if shallower than the cast depth) for CTDs and UCTDs, respectively. Cast locations are available in **Appendix \@ref(appendix-ctd-sampling)**. These data were used to calculate the harmonic mean sound speed [@Demer2015] for estimating ranges to the sound scatterers, and frequency-specific sound absorption coefficients for compensating signal attenuation of the sound pulse between the transducer and scatterers [@Simmonds2005] (see **Section \@ref(methods-sound-calcs)**).  
 
 #### Scientific Computer System {#methods-scs-sampling}  
 \
@@ -972,17 +972,17 @@ if (file.exists(here("Data/Nav/lm_nav.gpx"))) {
   nav.lm <- read_GPX(here("Data/Nav/lm_nav.gpx"))$track_points %>% 
     project_sf(crs = 4326) %>% 
     select(time, lat = Y, long = X)
-
+  
   das.lm <- n_distinct(date(nav.lm$time))
 }
 
 # Summarize Long Beach Carnage days at sea
 if (file.exists(here("Data/Nav/lbc_nav.gpx"))) {
-    # Extract trackline points from GPX file
+  # Extract trackline points from GPX file
   nav.lbc <- read_GPX(here("Data/Nav/lbc_nav.gpx"))$track_points %>% 
     project_sf(crs = 4326) %>% 
     select(time, lat = Y, long = X)
-
+  
   das.lbc <- n_distinct(date(nav.lbc$time))
 }
 ```
@@ -1063,16 +1063,16 @@ Acoustic backscatter ascribed to CPS was also observed throughout the nearshore 
 
 ## Trawl catch {#results-trawl-catch}  
 
-Trawl catches from _`r survey.vessel`_ were composed of mostly Northern Anchovy between San Diego and Bodega Bay, Jack Mackerel between Fort Bragg and Newport, and Pacific Herring between Newport and Cape Flattery (**Fig. \@ref(fig:nasc-trawl)b**). Some Pacific Sardine were present in trawl clusters near Fort Bragg, while Pacific Mackerel were scarce throughout the survey area. Overall, the `r nrow(haul)` trawls captured a combined `r prettyNum(sum(cluster.summ.wt$AllCPS),big.mark=",",digits=3)` kg of CPS (`r prettyNum(sum(cluster.summ.wt$'Anchovy'),big.mark=",",digits=3)` kg of Northern Anchovy, `r prettyNum(sum(cluster.summ.wt$'JackMack'),big.mark=",",digits=3)` kg of Jack Mackerel, `r prettyNum(sum(cluster.summ.wt$'Sardine'),big.mark=",",digits=3)` kg of Pacific Sardine, `r prettyNum(sum(cluster.summ.wt$'PacHerring'),big.mark=",",digits=3)` kg of Pacific Herring, and `r prettyNum(sum(cluster.summ.wt$'PacMack'),big.mark=",",digits=3)` kg of Pacific Mackerel.  
+Trawl catches from _`r survey.vessel`_ were composed of mostly Northern Anchovy between San Diego and Bodega Bay, Jack Mackerel between Fort Bragg and Newport, and Pacific Herring between Newport and Cape Flattery (**Fig. \@ref(fig:nasc-trawl)b**). Some Pacific Sardine were present in trawl clusters near Fort Bragg, while Pacific Mackerel were scarce throughout the survey area. Overall, the `r nrow(haul)` trawls captured a combined `r prettyNum(sum(cluster.summ.wt$AllCPS),big.mark=",",digits=3)` kg of CPS (`r prettyNum(sum(cluster.summ.wt$'Anchovy'),big.mark=",",digits=3)` kg of Northern Anchovy, `r prettyNum(sum(cluster.summ.wt$'JackMack'),big.mark=",",digits=3)` kg of Jack Mackerel, `r prettyNum(sum(cluster.summ.wt$'Sardine'),big.mark=",",digits=3)` kg of Pacific Sardine, `r prettyNum(sum(cluster.summ.wt$'PacHerring'),big.mark=",",digits=3)` kg of Pacific Herring, and `r prettyNum(sum(cluster.summ.wt$'PacMack'),big.mark=",",digits=3)` kg of Pacific Mackerel (**Appendix \@ref(appendix-trawl-sampling)**).  
 
 ## Purse-seine catch {#results-seine-catch}  
 ### _Long Beach Carnage_  
 
-Purse-seine catches from _Long Beach Carnage_ in the nearshore region were composed mostly of Pacific Sardine and Northern Anchovy collected along the mainland coast (**Fig. \@ref(fig:nasc-seine-lbc)b**). Relatively few Pacific Mackerel, and Jack Mackerel were present in purse-seine samples collected by _Long Beach Carnage_ (**Fig. \@ref(fig:nasc-seine-lbc)b**). Overall, dip-net samples from `r set.summ$n[set.summ$vessel.name == "LBC"]` seines totaled `r prettyNum(sum(seine.summ.lbc$total.wt),big.mark=",",digits=3)` kg of CPS (`r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Sardinops sagax"],big.mark=",",digits=3)` kg of Pacific Sardine, `r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Scomber japonicus"],big.mark=",",digits=3)` kg of Pacific Mackerel, `r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Engraulis mordax"],big.mark=",",digits=2)` kg of Northern Anchovy, and `r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Trachurus symmetricus"],big.mark=",",digits=2)` kg of Jack Mackerel).  
+Purse-seine catches from _Long Beach Carnage_ in the nearshore region were composed mostly of Pacific Sardine and Northern Anchovy collected along the mainland coast (**Fig. \@ref(fig:nasc-seine-lbc)b**). Relatively few Pacific Mackerel, and Jack Mackerel were present in purse-seine samples collected by _Long Beach Carnage_ (**Fig. \@ref(fig:nasc-seine-lbc)b**). Overall, dip-net samples from `r set.summ$n[set.summ$vessel.name == "LBC"]` seines totaled `r prettyNum(sum(seine.summ.lbc$total.wt),big.mark=",",digits=3)` kg of CPS (`r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Sardinops sagax"],big.mark=",",digits=3)` kg of Pacific Sardine, `r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Scomber japonicus"],big.mark=",",digits=3)` kg of Pacific Mackerel, `r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Engraulis mordax"],big.mark=",",digits=2)` kg of Northern Anchovy, and `r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Trachurus symmetricus"],big.mark=",",digits=2)` kg of Jack Mackerel, **Appendix \@ref(appendix-seine-sampling-lbc)**).  
 
 ### _Lisa Marie_ {#results-seine-catch-lm}  
 
-Purse seine catches from _Lisa Marie_ in the nearshore were composed mostly of Pacific Herring, except Northern Anchovy collected between Half Moon Bay and Bodega Bay, several catches of Pacific Sardine between Pt. Arena and Eureka, CA, and a few catches of Jack Mackerel near Crescent City and north of Tillamook, OR (**Fig. \@ref(fig:nasc-seine-lm)b**). Purse seine sampling between Cape Mendocino and Tillamook was sparse due to few CPS targets, the presence of marine mammals that did not permit the deployment of the purse seine gear, or both. Many of the purse seine sets north of Cape Mendocino contained no CPS (**Fig. \@ref(fig:nasc-seine-lm)b**). Overall, the dip-net samples from `r set.summ$n[set.summ$vessel.name == "LM"]` purse-seine sets totaled `r prettyNum(sum(seine.summ.lm$total.wt),big.mark=",",digits=3)` kg of CPS (`r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Trachurus symmetricus"],big.mark=",",digits=3)` kg of Jack Mackerel, `r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Sardinops sagax"],big.mark=",",digits=3)` kg of Pacific Sardine, `r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Clupea pallasii"],big.mark=",",digits=3)` kg of Pacific Herring, and `r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Engraulis mordax"],big.mark=",",digits=3)` kg of Northern Anchovy).  
+Purse seine catches from _Lisa Marie_ in the nearshore were composed mostly of Pacific Herring, except Northern Anchovy collected between Half Moon Bay and Bodega Bay, several catches of Pacific Sardine between Pt. Arena and Eureka, CA, and a few catches of Jack Mackerel near Crescent City and north of Tillamook, OR (**Fig. \@ref(fig:nasc-seine-lm)b**). Purse seine sampling between Cape Mendocino and Tillamook was sparse due to few CPS targets, the presence of marine mammals that did not permit the deployment of the purse seine gear, or both. Many of the purse seine sets north of Cape Mendocino contained no CPS (**Fig. \@ref(fig:nasc-seine-lm)b**). Overall, the dip-net samples from `r set.summ$n[set.summ$vessel.name == "LM"]` purse-seine sets totaled `r prettyNum(sum(seine.summ.lm$total.wt),big.mark=",",digits=3)` kg of CPS (`r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Trachurus symmetricus"],big.mark=",",digits=3)` kg of Jack Mackerel, `r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Sardinops sagax"],big.mark=",",digits=3)` kg of Pacific Sardine, `r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Clupea pallasii"],big.mark=",",digits=3)` kg of Pacific Herring, and `r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Engraulis mordax"],big.mark=",",digits=3)` kg of Northern Anchovy, **Appendix \@ref(appendix-seine-sampling-lm)**).  
 
 \newpage
 
@@ -2589,7 +2589,7 @@ The authors greatly appreciate that the ATM surveys require an enormous effort b
 
 # Separation of Pacific Sardine subpopulations {#appendix-sardine-subpopulations}  
 
-The literature of Pacific and other sardines often uses the terms subpopulation and stock interchangeably [@Ahlstrom1970; @Javor2011; @Smith1995; @Wolf2001]. In doing so, stocks or subpopulations implicitly refer to self-sustaining biological populations of randomly mating individuals, quasi separated from other subpopulations and with a distinct population dynamic, in the sense of Cadrin et al. [-@Cadrin2014]. Marr [-@Marr1957] used the term subpopulation as a “fraction of a population that is itself genetically self-sustaining”. Genetic heterogeneity is no longer a requirement to distinguish subpopulations, nor is it a definitional characteristic [see, @Blackhart2006; @Cadrin2014, for modern definitions]. The practical separation at ecological scales for the existence of subpopulations occurs at much shorter time scales than those required for genetic drift to be perceptible [@Waples1998]. As part of a metapopulation, subpopulations reside in different habitats or geographic regions [@Linner2022], have life cycles adapted to local hydrological conditions [@Begg1999], often demonstrate phenotypic heterogeneity [@Cadrin2010], but can overlap at times and mix sufficiently to negate genetic heterogeneity [@Begg1999; @McBride2014]. The purported separation between the NSP and SSP might not be permanent, but the proto-separation at ecological scales appears to be maintained by discontinuities in preferred habitat association [@Jacobson1995; @Felix-Uraga2004; @Baumgartner2005; @Zwolinski2024]. This explains the persistent and consistent phenotypical and life history traits reported for the Pacific Sardine in different environments [@Anon1952; @Felin1954; @Murphy1967]. Such differences can occur due to phenotypical plasticity under a common genotype [@Hedgecock1989; @McBride2014], but their persistence reflect the existence of quasi-separate groups at temporal scales compatible for fisheries management [@Cope2009; @Begg2016].  
+The literature of Pacific and other sardines often uses the terms subpopulation and stock interchangeably [e.g., @Ahlstrom1970; @Javor2011; @Smith1995; @Wolf2001]. In doing so, stocks or subpopulations implicitly refer to self-sustaining biological populations of randomly mating individuals, quasi-separated from other subpopulations and with a distinct population dynamic, in the sense of the subpopulation definition of Cadrin et al. [-@Cadrin2014]: "A single, mostly self-sustaining unit within a metapopulation" and Blackhart et al. [-@Blackhart2006]: "Subpopulations are defined as geographically or otherwise distinct groups in the population between which there is little exchange." While Marr [-@Marr1957] used the term subpopulation as a "fraction of a population that is itself genetically self-sustaining", genetic heterogeneity is no longer a requirement to distinguish subpopulations, nor is it a defining characteristic because the practical separation of subpopulations at ecological scales occurs at much shorter time scales than those required for genetic drift to be perceptible [@Waples1998]. As part of a metapopulation, subpopulations reside in different habitats or geographic regions [@Linner2022], have life cycles adapted to local hydrological conditions [@Begg1999], often demonstrate phenotypic heterogeneity [@Cadrin2010], but can overlap at times and mix sufficiently to negate genetic heterogeneity [@Begg1999; @McBride2014]. The purported separation between the NSP and SSP might not be permanent, but the proto-separation at ecological scales appears to be maintained by discontinuities in preferred habitat association [@Jacobson1995; @Felix-Uraga2004; @Baumgartner2005; @Zwolinski2024]. This explains the persistent and consistent phenotypical and life history traits reported for the Pacific Sardine in different environments [@Anon1952; @Felin1954; @Murphy1967]. Such differences can occur due to phenotypical plasticity under a common genotype [@Hedgecock1989; @McBride2014], but their persistence reflect the existence of quasi-separate groups at temporal scales compatible for fisheries management [@Cope2009; @Begg2016].
 
 \newpage
 \blandscape
@@ -2643,6 +2643,41 @@ if (file.exists(here("Figs/fig_cal_TSrel_scatter_LBC.png"))) {
   include_graphics(here("Figs/fig_cal_TSrel_scatter_LBC.png")) 
 }
 ```
+
+\newpage
+
+# CTD and UCTD sampling locations {#appendix-ctd-sampling}
+
+Times and locations of conductivity and temperature versus depth casts while on station (CTD) and underway (UCTD) from _`r survey.vessel`_ (`r survey.vessel.primary`).
+
+```{r process-ctd-stations, results='asis'}
+# Read and format CTD and UCTD station info; generated from plotCTD
+ctd.table <- read_csv(here("Output/ctd_summary_table.csv")) %>% mutate(cast.type = "CTD")
+uctd.table <- read_csv(here("Output/uctd_summary_table.csv")) %>% mutate(cast.type = "UCTD")
+
+# Combine and format for printing
+all.ctds.table <- bind_rows(ctd.table, uctd.table) %>% 
+  arrange(mdy_hms(`Date/time`)) %>% 
+  select("Date time" = "Date/time", "Type" = cast.type, Latitude = Lat, Longitude = Lon) 
+
+# all.ctds.table <- bind_rows(ctd.table, uctd.table) %>% 
+#   arrange(mdy_hms(`Date/time`)) %>% 
+#   select("Date/time", "Cast Type" = cast.type, Latitude = Lat, Longitude = Lon, Filename) 
+
+if (doc.type == "docx") {
+  # create flextable object (for Word)
+  pander(all.ctds.table)
+} else {
+  # print LaTeX table for HTML or PDF
+  kable(all.ctds.table,
+        align = c("l","l","c","c"), 
+        digits = c(0,0,4,4),
+        escape = FALSE, longtable = TRUE, 
+        booktabs = TRUE) %>% 
+    kable_styling(position = "center", 
+                  latex_options = c("repeat_header","hold_position"))
+}
+```  
 
 \newpage
 
@@ -2718,16 +2753,163 @@ include_graphics(here("Figs/fig_cluster_relative_length_frequency_Etrumeus acumi
 ```
 
 \newpage
+\blandscape
 
-# Add station sampling locations
+# Trawl sample summary {#appendix-trawl-sampling}
+
+Date, time, and location at the start of trawling (i.e., at net equilibrium, when the net is fully deployed and begins fishing), and biomasses (kg) of CPS collected for each trawl haul aboard _`r survey.vessel`_.
+
+```{r trawl-catch-summary,results='asis'}
+# Summarize trawl haul data
+trawl.summ <- haul.summ.wt %>%
+  # Combine individual catch data with corresponding haul information
+  left_join(select(haul, haul, Date = equilibriumTime, Latitude = startLatDecimal,
+                   Longitude = startLongDecimal)) %>%
+  # Format column names
+  select(Haul = haul, Date, Latitude, Longitude, "N. Anchovy" = Anchovy, "P. Sardine" = Sardine, 
+         "P. Mackerel" = PacMack, "J. Mackerel" = JackMack, "P. Herring" = PacHerring, 
+         "R. Herring" = RndHerring, 
+         Jacksmelt, "All CPS" = AllCPS) %>% 
+  # Reformat the date
+  mutate(Date = format(Date, "%m/%d/%Y %H:%M")) %>% 
+  # Order by haul number
+  arrange(Haul)
+
+# Summarize catch by species, used to subset columns
+pos.cps <- trawl.summ %>% 
+  select(-Haul, -Date, -Latitude, -Longitude, -"All CPS") %>% 
+  gather(key = "scientificName", value = "weight") %>% 
+  group_by(scientificName) %>% 
+  summarise(weight = sum(weight, na.rm = T)) %>% 
+  filter(weight != 0) %>% 
+  pull(scientificName)
+
+# Select only species with positive catch weight
+trawl.summ <- trawl.summ %>% 
+  select(Haul, `Date Time` = Date, `Latitude` = Latitude, 
+         `Longitude` = Longitude,
+         all_of(pos.cps), "All CPS") %>% 
+  arrange(Haul)
+
+# Replace zeros with NA
+trawl.summ[trawl.summ == 0] <- NA
+
+if (doc.type == "docx") {
+  # create kable object (for Word)
+  pander(trawl.summ)
+} else {
+  # print LaTeX table for HTML or PDF
+  kable(trawl.summ, escape = FALSE,longtable = TRUE,booktabs = TRUE,
+        align = c("r","c",rep("r",ncol(trawl.summ) - 2)),
+        digits = c(0,0,4,4,rep(2, ncol(trawl.summ) - 4))) %>% 
+    kable_styling(position = "center", 
+                  latex_options = c("repeat_header","hold_position"))
+}
+``` 
 
 \newpage
 
-# Add trawl tables
-## Locations
+# Seine sample summary {#appendix-seine-sampling}
+## _Long Beach Carnage_ {#appendix-seine-sampling-lbc}
 
-## Catch summaries
+Date, time (UTC), location, and biomasses (kg) of CPS collected for each purse seine set by _Long Beach Carnage_.
 
+```{r seine-catch-summary-lbc,results='asis'}
+# Summarize trawl haul data
+seine.summ <- set.summ.wt %>%
+  group_by(key.set) %>% 
+  mutate(
+    Vessel = unlist(str_split(key.set, " "))[1],
+    Set = as.numeric(unlist(str_split(key.set, " "))[3]),
+    Date = ymd_hms(datetime)) %>% 
+  # Reformat the date
+  mutate(Date = format(Date, "%m/%d/%Y %H:%M")) %>% 
+  ungroup() %>% 
+  # Format column names
+  select(Vessel, Set, Date, Latitude = lat, Longitude = long, 
+         "N. Anchovy" = Anchovy, "P. Sardine" = Sardine, 
+         "P. Mackerel" = PacMack, "J. Mackerel" = JackMack, "P. Herring" = PacHerring, 
+         "R. Herring" = RndHerring, 
+         Jacksmelt, "All CPS" = AllCPS) %>% 
+  # Order by haul number
+  arrange(Vessel, Set)
+
+# Summarize catch by species, used to subset columns
+pos.cps.lbc <- seine.summ %>% 
+  filter(Vessel == "LBC") %>% 
+  select(-Vessel, -Set, -Date, -Latitude, -Longitude, -"All CPS") %>% 
+  gather(key = "scientificName", value = "weight") %>% 
+  group_by(scientificName) %>% 
+  summarise(weight = sum(weight, na.rm = T)) %>% 
+  filter(weight != 0) %>% 
+  pull(scientificName)
+
+# Select only species with positive catch weight
+seine.summ.lbc <- seine.summ %>% 
+  filter(Vessel == "LBC") %>% 
+  # mutate(Set = seq_along(Vessel)) %>% 
+  select(Set, `Date Time` = Date, Latitude, Longitude,
+         all_of(pos.cps.lbc), "All CPS") %>% 
+  arrange(Set)
+
+# Replace zeros with NA
+seine.summ.lbc[seine.summ.lbc == 0] <- NA
+
+if (doc.type == "docx") {
+  # create kable object (for Word)
+  pander(seine.summ.lbc)
+} else {
+  # print LaTeX table for HTML or PDF
+  kable(seine.summ.lbc,escape = F,longtable = T,booktabs = T,
+        align = c("c","c",rep("r",ncol(seine.summ.lbc) - 2)),
+        digits = c(0,0,4,4,rep(2, ncol(seine.summ.lbc) - 4))) %>% 
+    kable_styling(position = "center", 
+                  latex_options = c("repeat_header","hold_position"))
+}
+``` 
+
+\newpage
+
+## _Lisa Marie_ {#appendix-seine-sampling-lm}
+
+Date, time (UTC), location, and biomasses (kg) of CPS collected for each purse seine set by _Lisa Marie_.
+
+```{r seine-catch-summary-lm,results='asis'}
+# Summarize catch by species, used to subset columns
+pos.cps.lm <- seine.summ %>% 
+  filter(Vessel == "LM") %>% 
+  select(-Vessel, -Set, -Date, -Latitude, -Longitude, -"All CPS") %>% 
+  gather(key = "scientificName", value = "weight") %>% 
+  group_by(scientificName) %>% 
+  summarise(weight = sum(weight, na.rm = T)) %>% 
+  filter(weight != 0) %>% 
+  pull(scientificName)
+
+# Select only species with positive catch weight
+seine.summ.lm <- seine.summ %>% 
+  filter(Vessel == "LM") %>% 
+  # mutate(Set = seq_along(Vessel)) %>% 
+  select(Set, `Date Time` = Date, Latitude, Longitude,
+         all_of(pos.cps.lm), "All CPS") %>% 
+  arrange(Set)
+
+# Replace zeros with NA
+seine.summ.lm[seine.summ.lm == 0] <- NA
+
+if (doc.type == "docx") {
+  # create kable object (for Word)
+  pander(seine.summ.lm)
+} else {
+  # print LaTeX table for HTML or PDF
+  kable(seine.summ.lm,escape = F,longtable = T,booktabs = T,
+        align = c("c","c",rep("r",ncol(seine.summ.lm) - 2)),
+        digits = c(0,0,4,4,rep(2, ncol(seine.summ.lm) - 4))) %>% 
+    kable_styling(position = "center", 
+                  latex_options = c("repeat_header","hold_position"))
+}
+``` 
+
+\elandscape
 \newpage
 
 # Scientific Personnel {#appendix-scientific-personnel}  

@@ -8207,7 +8207,7 @@ for (i in unique(abund.summ$Species)) {
     L.biomass <- ggplot(filter(abund.summ, Species == i, Stock == j), aes(TL, biomass)) + 
       geom_bar(stat = 'identity', fill = 'gray50', colour = 'gray20') + 
       scale_x_continuous("Length (cm)", breaks = x.breaks) + 
-      scale_y_continuous('Biomass (t)', limits = c(0, y.max.biomass),
+      scale_y_continuous('Biomass (kg)', limits = c(0, y.max.biomass),
                          expand = c(0,0)) + #, labels = fancy_sci
       # facet_wrap(~Stock, nrow = 1) +
       theme_bw() + 
@@ -8498,7 +8498,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-anch-n) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for the northern stock of Northern Anchovy (_Engraulis mordax_) in the survey area.
+(ref:l-disagg-anch-n) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for the northern stock of Northern Anchovy (_Engraulis mordax_) in the survey area.
 
 ```{r l-disagg-anch-n,fig.cap='(ref:l-disagg-anch-n)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for anchovy
@@ -8650,7 +8650,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-anch-c) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for the central stock of Northern Anchovy (_Engraulis mordax_) in the survey area.
+(ref:l-disagg-anch-c) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for the central stock of Northern Anchovy (_Engraulis mordax_) in the survey area.
 
 ```{r l-disagg-anch-c,fig.cap='(ref:l-disagg-anch-c)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for anchovy
@@ -8817,7 +8817,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-sar-n) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for the northern stock of Pacific Sardine (_Sardinops sagax_) in the survey area.
+(ref:l-disagg-sar-n) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for the northern stock of Pacific Sardine (_Sardinops sagax_) in the survey area.
 
 ```{r l-disagg-sar-n,fig.cap='(ref:l-disagg-sar-n)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for sardine
@@ -8968,7 +8968,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-sar-s) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for the southern stock of Pacific Sardine (_Sardinops sagax_) in the survey area.
+(ref:l-disagg-sar-s) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for the southern stock of Pacific Sardine (_Sardinops sagax_) in the survey area.
 
 ```{r l-disagg-sar-s,fig.cap='(ref:l-disagg-sar-s)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for sardine
@@ -9134,7 +9134,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-mack) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for Pacific mackerel (_Scomber japonicus_) in the survey area.
+(ref:l-disagg-mack) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for Pacific mackerel (_Scomber japonicus_) in the survey area.
 
 ```{r l-disagg-mack,fig.cap='(ref:l-disagg-mack)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for P. mackerel
@@ -9299,7 +9299,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-jack) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for Jack Mackerel (_Trachurus symmetricus_) in the survey area.
+(ref:l-disagg-jack) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for Jack Mackerel (_Trachurus symmetricus_) in the survey area.
 
 ```{r l-disagg-jack,fig.cap='(ref:l-disagg-jack)',out.height='100%',fig.pos='H'}
 if (combine.regions) {
@@ -9462,7 +9462,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-her) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for Pacific herring (_Clupea pallasii_) in the survey area.
+(ref:l-disagg-her) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for Pacific herring (_Clupea pallasii_) in the survey area.
 
 ```{r l-disagg-her,fig.cap='(ref:l-disagg-her)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for herring
@@ -9626,7 +9626,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-rher) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for round herring (_Etrumeus acuminatus_) in the survey area.
+(ref:l-disagg-rher) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for round herring (_Etrumeus acuminatus_) in the survey area.
 
 ```{r l-disagg-rher,fig.cap='(ref:l-disagg-rher)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for herring

@@ -64,6 +64,9 @@ load(here("Output/haul_info.Rdata"))
 load(here("Output/catch_info.Rdata"))
 # load(here("Output/species_codes.Rdata"))
 
+# Load seine information
+load(here("Output/catch_info_seine.Rdata"))
+
 # Load NASC summaries
 ## SH
 load(here("Output/nasc_summ_tx.Rdata"))

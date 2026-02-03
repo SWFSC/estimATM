@@ -347,6 +347,10 @@ seine.summ.deep <- set.summ.wt.deep %>%
   # mutate(Date = format(Date, "%m/%d/%Y %H:%M")) %>%
   arrange(desc(Vessel), Set)
 
+# Save seine summary data
+save(set.summ.wt, set.pie, set.zero, seine.summ, seine.summ.deep,
+     file = here("Output/catch_info_seine.Rdata"))
+
 # Select positive clusters
 super.clusters.ns <- filter(set.clusters, cluster %in% unique(set.pos$cluster)) %>% 
   select(-key.set, -vessel.name)

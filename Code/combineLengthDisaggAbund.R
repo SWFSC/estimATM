@@ -46,7 +46,7 @@ if (L.disagg.scales == "fixed") {
                    stat = 'identity',fill = 'gray50',colour = 'gray20') +
           facet_wrap(~Region, nrow = 1) +
           scale_x_continuous("Length (cm)", breaks = x.breaks) +
-          scale_y_continuous('Biomass (t)', limits = c(0, y.max.biomass),
+          scale_y_continuous('Biomass (kg)', limits = c(0, y.max.biomass),
                              expand = c(0,0), labels = fancy_sci) +
           theme_bw() +
           theme(strip.background.x = element_blank(),
@@ -99,7 +99,7 @@ if (L.disagg.scales == "fixed") {
                    stat = 'identity',fill = 'gray50',colour = 'gray20') +
           facet_wrap(~Region, nrow = 1, scales = "free_y") +
           scale_x_continuous("Length (cm)", breaks = x.breaks) +
-          scale_y_continuous('Biomass (t)', 
+          scale_y_continuous('Biomass (kg)', 
                              expand = c(0, 0), labels = fancy_sci) +
           theme_bw() +
           theme(strip.background.x = element_blank(),

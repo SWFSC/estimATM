@@ -743,14 +743,18 @@ if ("SD" %in% nasc.vessels) {
     data.frame(
       scientificName = "Sardinops sagax",
       stratum = 4,
-      transect = 25:29),
+      transect = 22:24),
     data.frame(
       scientificName = "Sardinops sagax",
       stratum = 5,
-      transect = 32:36),
+      transect = 25:29),
     data.frame(
       scientificName = "Sardinops sagax",
       stratum = 6,
+      transect = 32:36),
+    data.frame(
+      scientificName = "Sardinops sagax",
+      stratum = 7,
       transect = 40:45),
     data.frame(
       scientificName = "Scomber japonicus",

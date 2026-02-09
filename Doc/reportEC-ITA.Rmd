@@ -102,7 +102,7 @@ wpts <- read_csv(here("Data/Nav", wpt.filename))
 
 # Convert planned transects to sf; CRS = crs.geog
 wpts.sf <- wpts %>% 
-  filter(Type %in% wpt.types) %>% 
+  filter(Type %in% wpt.types, Region %in% wpt.regions) %>% 
   st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
   mutate(
     label    = paste("Transect", Transect),

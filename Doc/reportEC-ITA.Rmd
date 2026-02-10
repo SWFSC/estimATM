@@ -68,10 +68,10 @@ source(here("Doc/settings", prj.settings))
 save.figs     <- T # Create new figures
 get.db        <- T # Download data from databases (fast; generally TRUE)
 get.nav       <- T # Download Lasker nav data from ERDDAP
-nav.source    <- "ERDDAP" # Navigation data source: ERDDAP or SCS
+nav.source    <- "SCS" # Navigation data source: ERDDAP or SCS
 get.nav.sh    <- F # Download Shimada nav data from ERDDAP
 get.nav.sd    <- F # Download Saildrone nav data from ERDDAP
-get.nav.ns    <- F # Process data from nearshore vessels
+get.nav.ns    <- T # Process data from nearshore vessels
 get.bathy     <- F # Download ETOPO1 bathymetry data in the survey footprint
 extract.bathy <- T # Extract bathymetry for each nav point
 resize.map    <- F # Resize map during survey; if T, uses anticipated bounds of survey area

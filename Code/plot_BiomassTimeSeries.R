@@ -52,7 +52,9 @@ biomass.ts.sar.rm <- biomass.ts %>%
   filter(species == "Sardinops sagax") %>% 
   filter(us_waters != TRUE) %>% 
   group_by(survey, stock) %>% 
-  summarise(biomass.rm = sum(biomass))
+  summarise(biomass.rm = sum(biomass),
+            cil.rm = sum(biomass_ci_lower),
+            ciu.rm = sum(biomass_ci_upper))
 
 # biomass.ts.sar <- biomass.ts.sar %>% 
 #   left_join(biomass.ts.sar.rm)
@@ -123,8 +125,10 @@ biomass.ts.sar <- biomass.ts.sar %>%
            TRUE ~ "Summer")) %>% 
   # Combine with df to remove biomass
   left_join(select(biomass.ts.sar.rm, -stock)) %>%
-  replace_na(list(biomass.rm = 0)) %>% 
-  mutate(biomass = biomass - biomass.rm) %>% 
+  replace_na(list(biomass.rm = 0, cil.rm = 0, ciu.rm = 0)) %>% 
+  mutate(biomass = biomass - biomass.rm,
+         biomass_ci_lower = biomass_ci_lower - cil.rm,
+         biomass_ci_upper = biomass_ci_upper - ciu.rm) %>% 
   # filter(!group %in% c("Sardinops sagax-Southern","Engraulis mordax-Northern")) %>% 
   filter(!biomass == 0) 
 
@@ -184,8 +188,10 @@ biomass.ts.stock <- biomass.ts %>%
   filter(species == "Sardinops sagax", year >= 2015) %>% 
   left_join(biomass.ts.sar.rm) %>% 
   # Remove non-US biomass from NSP and SSP
-  replace_na(list(biomass.rm = 0)) %>% 
-  mutate(biomass = biomass - biomass.rm)
+  replace_na(list(biomass.rm = 0, cil.rm = 0, ciu.rm = 0)) %>% 
+  mutate(biomass = biomass - biomass.rm,
+         biomass_ci_lower = biomass_ci_lower - cil.rm,
+         biomass_ci_upper = biomass_ci_upper - ciu.rm) 
 
 biomass.ts.sar <- biomass.ts.sar %>% 
   bind_rows(filter(biomass.ts.stock, species == "Sardinops sagax", year >= 2015)) %>% 

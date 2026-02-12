@@ -134,7 +134,7 @@ be.rher <- be %>%
 
 ```{r process-biomass-ts}
 if (plot.time.series) {
-  source(here("Code/plot_BiomassTimeSeries.R"))
+  source(here("Code/plot_BiomassTimeSeries-rev.R"))
 } else {
   if (file.exists(here("Output/biomass_timeseries_final.Rdata"))) {
     load(here("Output/biomass_timeseries_final.Rdata"))  
@@ -2468,7 +2468,19 @@ The estimated biomass of the southern subpopulation of Pacific Sardine was `r pr
 
 #### Pacific Sardines in U.S. waters {#discussion-all-sar-subpopulations}  
 
-The estimated biomass of all Pacific Sardine in U.S. waters was `r prettyNum(be.sar.all.summ$Biomass[be.sar.all.summ$Species == 'Sardinops sagax'],big.mark=",",digits=4)` t (CI~95%~ = `r prettyNum(be.sar.all.summ$lower.ci.B[be.sar.all.summ$Species == 'Sardinops sagax'],big.mark=",",digits=3)` - `r prettyNum(be.sar.all.summ$upper.ci.B[be.sar.all.summ$Species == 'Sardinops sagax'],big.mark=",",digits=3)` t, CV = `r prettyNum(be.sar.all.summ$biomass.cv[be.sar.all.summ$Species == 'Sardinops sagax'],big.mark=",",digits=1)`%).  
+The estimated biomass of all Pacific Sardine in U.S. waters was `r prettyNum(be.sar.all.summ$Biomass[be.sar.all.summ$Species == 'Sardinops sagax'],big.mark=",",digits=4)` t (CI~95%~ = `r prettyNum(be.sar.all.summ$lower.ci.B[be.sar.all.summ$Species == 'Sardinops sagax'],big.mark=",",digits=3)` - `r prettyNum(be.sar.all.summ$upper.ci.B[be.sar.all.summ$Species == 'Sardinops sagax'],big.mark=",",digits=3)` t, CV = `r prettyNum(be.sar.all.summ$biomass.cv[be.sar.all.summ$Species == 'Sardinops sagax'],big.mark=",",digits=1)`%, **Fig. \@ref(fig:biomass-ts-sar-us)**). The biomass of the southern subpopulation was first estimated in the summer of 2015, prior to which all biomass was attributed to the northern subpopulation. The combined biomass peaked in summer 2022, and has remained lower since. **[Review this paragraph, and the newly included figure/caption.]**  
+
+(ref:biomass-ts-sar-us) Estimated biomasses ($t$) of the northern, southern, and combined subpopulations of Pacific Sardine (_Sardinops sagax_) in U.S. waters since 2008. Error bars are approximate 95% confidence intervals based on `r boot.num` bootstrap estimates.
+
+```{r biomass-ts-sar-us,fig.cap='(ref:biomass-ts-sar-us)', out.width='5in',fig.pos='H'}
+if (file.exists(here("Figs/fig_biomass_ts_line_all_US_sardine.png"))) {
+  include_graphics(here("Figs/fig_biomass_ts_line_all_US_sardine.png"))  
+} else {
+  print("No time series combination bar chart available.")
+} 
+```
+
+\newpage
 
 ### Pacific Mackerel {#discussion-mack}
 
@@ -2576,7 +2588,7 @@ if (file.exists(here("Figs/fig_biomass_ts_bar.png"))) {
 } 
 ```
 
-(ref:biomass-ts-combo) a) Estimated and b) cumulative estimated biomasses ($t$) of the `r num2words(n_distinct(biomass.ts$group))` most abundant CPS populations or subpopulations of `r num2words(n_distinct(biomass.ts$species))` species in the CCE during summer since 2008. Surveys typically span the area between Cape Flattery and San Diego, but in some years also include Vancouver Island, Canada (2015-2019, 2024) and portions of Baja CA (2021-2022, 2024).
+(ref:biomass-ts-combo) a) Estimated and b) cumulative estimated biomasses ($t$) of the `r num2words(n_distinct(biomass.ts$group))` most abundant CPS populations or subpopulations of `r num2words(n_distinct(biomass.ts$species))` species in the CCE during summer since 2008. Error bars in panel a) are approximate 95% confidence intervals based on `r boot.num` bootstrap estimates. Surveys typically span the area between Cape Flattery and San Diego, but in some years also include Vancouver Island, Canada (2015-2019, 2024) and portions of Baja CA (2021-2022, 2024).
 
 ```{r biomass-ts-combo,fig.cap='(ref:biomass-ts-combo)', out.width='6.5in',fig.pos='H'}
 if (file.exists(here("Figs/fig_biomass_ts_combo.png"))) {

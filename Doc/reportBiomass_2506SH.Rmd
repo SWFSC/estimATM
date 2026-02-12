@@ -2472,7 +2472,7 @@ The estimated biomass of all Pacific Sardine in U.S. waters was `r prettyNum(be.
 
 (ref:biomass-ts-sar-us) Estimated biomasses ($t$) of the northern, southern, and combined subpopulations of Pacific Sardine (_Sardinops sagax_) in U.S. waters since 2008. Error bars are approximate 95% confidence intervals based on `r boot.num` bootstrap estimates.
 
-```{r biomass-ts-sar-us,fig.cap='(ref:biomass-ts-sar-us)', out.width='5in',fig.pos='H'}
+```{r biomass-ts-sar-us,fig.cap='(ref:biomass-ts-sar-us)', out.width='6in',fig.pos='H'}
 if (file.exists(here("Figs/fig_biomass_ts_line_all_US_sardine.png"))) {
   include_graphics(here("Figs/fig_biomass_ts_line_all_US_sardine.png"))  
 } else {

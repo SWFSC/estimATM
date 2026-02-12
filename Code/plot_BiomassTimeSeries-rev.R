@@ -227,7 +227,17 @@ biomass.ts.line.sar <- ggplot(filter(biomass.ts.summ.sar, biomass != 0),
   scale_x_datetime(name = "Year", date_breaks = "2 years", date_labels = "%Y") +
   scale_y_continuous(expression(Biomass~(italic(t))), labels = scales::comma) +
   theme_bw() +
-  theme(legend.text = element_text(face = "italic"))
+  theme(
+    legend.text = element_text(face = "italic"),
+    # Position the legend inside the plot area
+    legend.position = c(1, 1),
+    # Anchor the legend box's top-right corner to the plot's top-right corner
+    legend.justification = c("right", "top"),
+    # Optional: adjust the background of the legend box
+    legend.background = element_rect(fill = "transparent", color = NA),
+    # Optional: add slight margins so the legend is not exactly on the edge
+    legend.margin = margin(t = 5, r = 5, unit = "pt")
+  )
 
 # Save figure
 ggsave(biomass.ts.line.sar, 

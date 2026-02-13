@@ -130,7 +130,7 @@ biomass.ts.summ.sar <- biomass.ts %>%
             biomass_cv = biomass_sd/biomass*100) %>% 
   # Resume here; need to remove duplicate values in time series
   bind_rows(filter(biomass.ts.single, species == "Sardinops sagax")) %>% 
-  mutate(stock = "All",
+  mutate(stock = "Combined",
          group = paste(species, stock, sep = "-")) %>% 
   bind_rows(filter(biomass.ts.summ.sar.us, species == "Sardinops sagax", year >= 2015)) %>% 
   arrange(species, stock, survey) 
@@ -219,10 +219,10 @@ biomass.ts.line.sar <- ggplot(filter(biomass.ts.summ.sar, biomass != 0),
   geom_path() +
   geom_point(size = 2, fill = "white") +
   scale_colour_manual(name = 'Species',
-                      labels = c("Sardinops sagax (All)", "Sardinops sagax (Northern)", "Sardinops sagax (Southern)"),
+                      labels = c("Sardinops sagax (Combined)", "Sardinops sagax (Northern)", "Sardinops sagax (Southern)"),
                       values = c("purple", sardine.color, "blue")) +
   scale_shape_manual(name = 'Species',
-                     labels = c("Sardinops sagax (All)", "Sardinops sagax (Northern)", "Sardinops sagax (Southern)"),
+                     labels = c("Sardinops sagax (Combined)", "Sardinops sagax (Northern)", "Sardinops sagax (Southern)"),
                      values = c(21, 22, 23)) +
   scale_x_datetime(name = "Year", date_breaks = "2 years", date_labels = "%Y") +
   scale_y_continuous(expression(Biomass~(italic(t))), labels = scales::comma) +

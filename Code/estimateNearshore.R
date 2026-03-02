@@ -104,12 +104,13 @@ if (process.nearshore) {
     nasc.nearshore <- nasc.nearshore %>%
       # Retain original cps.nasc
       mutate(cps.nasc.orig = cps.nasc) %>%
-      # Remove deep backscatter from cps.nasc for deep.nasc.vessels defined in settings
-      # Deep backscatter will be apportioned separately below 30m and species-specific density will
-      # be added back prior to biomass estimation
-      mutate(cps.nasc = case_when(
-        cps.nasc.deep >= cps.nasc & vessel.orig %in% deep.nasc.vessels ~ cps.nasc.deep - cps.nasc,
-        TRUE ~ cps.nasc))
+      # # Remove deep backscatter from cps.nasc for deep.nasc.vessels defined in settings
+      # # Deep backscatter will be apportioned separately below 30m and species-specific density will
+      # # be added back prior to biomass estimation
+      # Set cps.nasc to a fixed depth value (nasc.depth.deep)
+      # mutate(cps.nasc = purrr::pluck(., nasc.depth.deep)) %>% 
+      # Set cps.nasc to a fixed depth value (nasc.depth.deep)
+      mutate(cps.nasc = purrr::pluck(., nasc.depth.deep))
     
     # Compare cps.nasc and deep.cps.nasc to look for potential errors
     check.deep.nasc <- ggplot(nasc.nearshore, aes(cps.nasc, cps.nasc.deep)) + 

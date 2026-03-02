@@ -66,7 +66,7 @@ source(here("Doc/settings", prj.settings))
 ```{r user-input}
 # Set processing controls -------------------------------------------------
 save.figs     <- T # Create new figures
-get.db        <- T # Download data from databases (fast; generally TRUE)
+get.db        <- F # Download data from databases (fast; generally TRUE)
 get.nav       <- T # Download Lasker nav data from ERDDAP
 nav.source    <- "SCS" # Navigation data source: ERDDAP or SCS
 get.nav.sh    <- F # Download Shimada nav data from ERDDAP

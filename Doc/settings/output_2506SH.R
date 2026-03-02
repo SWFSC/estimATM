@@ -34,6 +34,31 @@ be.all.summ <- be.all %>%
   left_join(be.all.var) %>% 
   mutate(biomass.cv = biomass.sd/Biomass*100)
 
+# Combine NSP and SSP estimates
+## Get survey estimates for all strata
+be.sar.all <- be.all %>% 
+  filter(Species == "Sardinops sagax")
+
+be.sar.all.ns <- be.all.ns %>% 
+  filter(Species == "Sardinops sagax")
+
+## Summarise biomass for all regions included in the final estimates
+be.sar.all.var <- be.all %>% 
+  bind_rows(be.all.ns) %>%
+  filter(Species == "Sardinops sagax") %>% 
+  select(Species, Stock, biomass.sd) %>% 
+  group_by(Species) %>%
+  summarise(biomass.sd = sqrt(sum(biomass.sd^2)))
+
+# Combine NSP and SSP biomass
+be.sar.all.summ <- be.sar.all %>% 
+  bind_rows(be.sar.all.ns) %>%
+  group_by(Species) %>% 
+  select(-Stock, -Region, -Stratum, -biomass.sd, -biomass.cv) %>% 
+  summarise_all(list(sum)) %>% 
+  left_join(be.sar.all.var) %>% 
+  mutate(biomass.cv = biomass.sd/Biomass*100)
+
 # Load abundance and length summaries
 load(here("Output/length_summary_all.Rdata")) # Length and weight ranges
 load(here("Output/length_frequency_summary.Rdata"))
@@ -64,6 +89,9 @@ load(here("Output/haul_info.Rdata"))
 load(here("Output/catch_info.Rdata"))
 # load(here("Output/species_codes.Rdata"))
 
+# Load seine information
+load(here("Output/catch_info_seine.Rdata"))
+
 # Load NASC summaries
 ## SH
 load(here("Output/nasc_summ_tx.Rdata"))
@@ -86,7 +114,7 @@ load(here("Output/transect_spacing.Rdata"))
 # # Load calibration results
 # load(here("Output/cal_output_table.Rdata"))
 # 
-# # Load purse seine data
-# load(here("Output/purse_seine_lengths.Rdata"))
-# load(here("Output/purse_seine_sets.Rdata"))
+# Load purse seine data
+load(here("Output/purse_seine_lengths.Rdata"))
+load(here("Output/purse_seine_sets.Rdata"))
 

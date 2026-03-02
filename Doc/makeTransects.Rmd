@@ -18,7 +18,7 @@ if (!require("pak")) install.packages("pak")
 pacman::p_load(tidyverse,swfscMisc,sf,mapview,lubridate,here,
                tcltk,knitr,leaflet,htmltools,leafem,
                pgirmess,bookdown,fs,rnaturalearth,
-               fs,concaveman,gt)
+               fs,concaveman,gt,lwgeom)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")

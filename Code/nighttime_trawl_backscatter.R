@@ -45,7 +45,7 @@ haul <- haul.all %>%
   filter(!trawlPerformance %in% trawl.performance) %>% 
   arrange(haul) %>% 
   mutate(duration = difftime(haulBackTime, equilibriumTime, units = "mins"), # Calculate duration
-         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1,
+         cluster  = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1,
          sample.type = "Trawl")  
 
 # Find midpoint of each haul as the mean lat/long
@@ -156,7 +156,7 @@ if (process.csv) {
     # Process all .CSV files
     for (i in 1:length(csv.files)) {
       # Process i-th file
-      nasc.cps <- bind_rows(nasc.cps, extract_csv(csv.files[i]))
+      nasc.cps <- bind_rows(nasc.cps, extract_csv(csv.files[i]), Sv.max = Sv.max)
       
       # Update the progress bar
       info <- sprintf("%d%% done", round((i / length(csv.files)) * 100))

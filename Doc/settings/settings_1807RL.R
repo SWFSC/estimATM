@@ -277,6 +277,7 @@ nasc.pattern.transit   <- c(RL  = "Transit",
 nasc.recurse           <- c(RL = FALSE)
 # Max NASC value for removing outliers
 nasc.max               <- 10000*19
+Sv.max                 <- NULL # Max Sv value (dB); Set to -14 after testing is completed
 
 # If T, read cps.nasc from file; else use NASC.50 
 source.cps.nasc        <- c(RL  = FALSE,

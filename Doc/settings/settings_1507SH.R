@@ -274,6 +274,7 @@ nasc.pattern.transit   <- c(SH  = "\\d{3}T")
 nasc.recurse           <- c(SH = TRUE)
 # Max NASC value for removing outliers
 nasc.max               <- 10000*19
+Sv.max                 <- NULL # Max Sv value (dB); Set to -14 after testing is completed
 
 # If T, read cps.nasc from file; else use NASC.50 
 source.cps.nasc        <- c(SH  = TRUE) # in the nearshore strata

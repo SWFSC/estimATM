@@ -267,7 +267,7 @@ eez_mex <- st_read(here("Data/GIS/eez_mex.shp")) %>%
 
 ```{r create-static-maps}
 # Define manual color palette
-legPalette <- c("#FF0000", "#FFA500", "#FFFF00", "#008000", "#0000FF", "#8A2BE2")
+legPalette <- c("#FF0000", "#FFA500", "#008000", "#0000FF", "#8A2BE2", "#FFFF00")
 
 # Map planned transects
 map.plan <- base.map + 
@@ -736,6 +736,8 @@ das.summary %>%
                 full_width = FALSE) 
 ```
 
+According to our calculations, a total of **`r sum(das.summary$das.actual)`** DAS were accomplished of the `r sum(das.summary$das.planned)` DAS planned, resulting in a loss of **`r sum(das.summary$delta.das)` DAS**.  
+
 ## Planned vs. actual **survey** days at sea (DAS)
 
 How many days has the ship been conducting acoustic transect sampling versus how many days were planned? This is derived from the acoustic data collected along planned transects, and excludes transits between transects and to/from ports of call. Red cells indicate differences between actual and planned dates or values. These values allow for **`r das.survey.transit`** DAS for transit at the beginning and end of each survey leg, when acoustic transect sampling may not actually be conducted. Values in [**red**]{style="color:red"} below are a possible reason for concern.
@@ -763,5 +765,7 @@ das.summary %>%
   kable_styling(bootstrap_options = c("striped","hover","condensed"), 
                 full_width = FALSE) 
 ```
+
+According to our calculations, a total of **`r sum(das.summary$das.survey)`** DAS were accomplished of the `r sum(das.summary$das.planned)` DAS planned, resulting in a loss of **`r sum(das.summary$delta.survey)` DAS**.
 
 For questions about this page, please contact Kevin Stierhoff ([kevin.stierhoff\@noaa.gov](mailto:kevin.stierhoff@noaa.gov)).

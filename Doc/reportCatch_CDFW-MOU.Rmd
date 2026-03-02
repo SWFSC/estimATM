@@ -99,7 +99,7 @@ haul.all <- haul.all %>%
   # Remove trawls from other surveys
   filter(cruise %in% cruise.name & ship %in% cruise.ship) %>% 
   mutate(duration = difftime(haulBackTime, equilibriumTime, units = "mins"), # Calculate duration
-         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) # Assign cluster
+         cluster  = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1) # Assign cluster
 
 # Filter catch and specimen data -------------------------------------
 catch.all   <- filter(catch.all, cruise %in% haul.all$cruise)

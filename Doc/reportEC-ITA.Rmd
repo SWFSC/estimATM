@@ -66,13 +66,13 @@ source(here("Doc/settings", prj.settings))
 ```{r user-input}
 # Set processing controls -------------------------------------------------
 save.figs     <- T # Create new figures
-get.db        <- T # Download data from databases (fast; generally TRUE)
+get.db        <- F # Download data from databases (fast; generally TRUE)
 get.nav       <- T # Download Lasker nav data from ERDDAP
-nav.source    <- "ERDDAP" # Navigation data source: ERDDAP or SCS
+nav.source    <- "SCS" # Navigation data source: ERDDAP or SCS
 get.nav.sh    <- F # Download Shimada nav data from ERDDAP
 get.nav.sd    <- F # Download Saildrone nav data from ERDDAP
 get.nav.ns    <- T # Process data from nearshore vessels
-get.bathy     <- T # Download ETOPO1 bathymetry data in the survey footprint
+get.bathy     <- F # Download ETOPO1 bathymetry data in the survey footprint
 extract.bathy <- T # Extract bathymetry for each nav point
 resize.map    <- F # Resize map during survey; if T, uses anticipated bounds of survey area
 ```
@@ -102,7 +102,7 @@ wpts <- read_csv(here("Data/Nav", wpt.filename))
 
 # Convert planned transects to sf; CRS = crs.geog
 wpts.sf <- wpts %>% 
-  filter(Type %in% wpt.types) %>% 
+  filter(Type %in% wpt.types, Region %in% wpt.regions) %>% 
   st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
   mutate(
     label    = paste("Transect", Transect),
@@ -983,7 +983,7 @@ haul.bad <- haul.all %>%
 haul <- filter(haul.all, cruise %in% cruise.name) %>% 
   filter(!haul %in% haul.bad$haul) %>%
   mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
-         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) %>%  # Assign cluster
+         cluster  = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1) %>%  # Assign cluster
   mutate(leg = cut(as.numeric(date(equilibriumTime)), leg.breaks, 
                    include.lowest = TRUE, labels = FALSE))
 # Get all haul numbers

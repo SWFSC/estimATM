@@ -350,6 +350,7 @@ nasc.recurse           <- c(RL  = TRUE,
                             LBC = FALSE)
 # Max NASC value for removing outliers
 nasc.max               <- NA # 10000*19
+Sv.max                 <- NULL # Max Sv value (dB); Set to -14 after testing is completed
 
 # If T, read cps.nasc from file; else use NASC.50 
 source.cps.nasc        <- c(RL  = FALSE,

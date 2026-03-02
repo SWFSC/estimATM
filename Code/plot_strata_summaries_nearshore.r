@@ -2,6 +2,8 @@
 # and includes the results of the stratification. 
 
 if (nrow(strata.summ.rm) > 0) {
+  # & unique(strata.summ.rm$vessel.name) %in% c("LBC", "LM")
+  
   # If strata were removed
   # Biomass density by species and transect, showing stratum breaks
   biomass.dens.plot.lat.ns <- ggplot(strata.summ.plot.ns) + 

@@ -26,13 +26,18 @@ load(here("Output/biomass_timeseries_export.Rdata"))
 
 # Add missing columns
 be.db.export <- be.db.export %>% 
-  mutate(us_waters  = TRUE,
-         country = "USA")
+  mutate(us_waters = TRUE,
+         country   = "USA") %>% 
+  filter(region %in% estimate.regions)
 
 # Combine with current survey results
-biomass.ts <- biomass.ts %>% 
+biomass.ts <- biomass.ts %>%
+  # Remove unwanted strata (e.g., offshore)
+  filter(include_ts == TRUE) %>% 
+  # Remove any estimates from the current survey
   filter(!survey %in% unique(be.db.export$survey)) %>%
-  bind_rows(filter(be.db.export, region %in% estimate.regions))
+  # Add results from current survey
+  bind_rows(be.db.export)
 
 # # Check results
 # biomass.ts %>%
@@ -40,97 +45,100 @@ biomass.ts <- biomass.ts %>%
 #   filter(species == "Sardinops sagax") %>%
 #   View()
 # 
-# biomass.ts %>% group_by(species, country) %>% tally()
+# biomass.ts %>% group_by(species, country) %>% tally() %>% View()
 
-# All sardine biomass estimates, in US waters only
-biomass.ts.sar <- biomass.ts %>% 
-  filter(species == "Sardinops sagax") %>% 
-  filter(us_waters == TRUE)
+# Identify surveys with individual strata in the time series
+multi.estimates <- biomass.ts %>% 
+  filter_out(stratum == "All") %>% 
+  pull(survey) %>% unique()
 
-# Compute portion of sardine to remove from total estimate
-biomass.ts.sar.rm <- biomass.ts %>% 
-  filter(species == "Sardinops sagax") %>% 
-  filter(us_waters != TRUE) %>% 
-  group_by(survey, stock) %>% 
-  summarise(biomass.rm = sum(biomass),
-            cil.rm = sum(biomass_ci_lower),
-            ciu.rm = sum(biomass_ci_upper))
-
-# biomass.ts.sar <- biomass.ts.sar %>% 
-#   left_join(biomass.ts.sar.rm)
-
-# Summarise results across regions
-biomass.ts.var <- biomass.ts %>% 
-  filter(stratum == "All") %>% 
-  select(survey, species, stock, biomass_sd) %>% 
-  group_by(survey, species, stock) %>%
-  summarise(biomass_sd = sqrt(sum(biomass_sd^2)))
-
-# All sardine variances only
-biomass.ts.var.sar <- biomass.ts.sar %>% 
-  filter(stratum == "All") %>%
-  select(survey, species, biomass_sd) %>%
-  group_by(survey, species) %>%
-  summarise(biomass_sd = sqrt(sum(biomass_sd^2))) 
-
-biomass.ts <- biomass.ts %>% 
-  left_join(select(survey.info, survey, date_start)) %>% 
-  mutate(group = paste(species, stock, sep = "-"),
-         year  = year(date_start),
-         season = case_when(
-           month(date_start) < 6 ~ "Spring",
-           TRUE ~ "Summer")) %>%
-  filter(stratum == "All", include_ts == TRUE) %>%
-  filter(season == "Summer", stratum == "All", include_ts == TRUE) %>%
-  select(-season, -region, -stratum, -biomass_sd, -biomass_cv, -date_start, 
-         -group, -year, -include_ts, -us_waters, -country) %>%
-  group_by(survey, species, stock) %>% 
-  summarise_all(list(sum)) %>% 
-  left_join(biomass.ts.var) %>% 
-  mutate(biomass_cv = biomass_sd/biomass*100)
-
-# All sardine results combined
-biomass.ts.sar <- biomass.ts.sar %>% 
-  left_join(select(survey.info, survey, date_start)) %>% 
-  mutate(group = paste(species, stock, sep = "-"),
-         year  = year(date_start),
-         season = case_when(
-           month(date_start) < 6 ~ "Spring",
-           TRUE ~ "Summer")) %>%
-  filter(season == "Summer", stratum == "All", include_ts == TRUE) %>%
-  select(-stock, -season, -region, -stratum, -biomass_sd, -biomass_cv, -date_start, 
-         -group, -year, -include_ts, -us_waters, -country) %>%
-  group_by(survey, species) %>% 
-  summarise_all(list(sum)) %>% 
-  left_join(biomass.ts.var.sar) %>% 
-  mutate(biomass_cv = biomass_sd/biomass*100)
-
-# Format data ------------------------------------------------------------------
-biomass.ts <- biomass.ts %>% 
+# Select surveys where individual strata are not available (i.e., pre-2015, or estimATM)
+biomass.ts.single <- biomass.ts %>% 
+  filter_out(survey %in% multi.estimates) %>% 
   left_join(select(survey.info, survey, date_start)) %>% 
   mutate(group = paste(species, stock, sep = "-"),
          year  = year(date_start),
          season = case_when(
            month(date_start) < 6 ~ "Spring",
            TRUE ~ "Summer")) %>% 
-  # filter(!group %in% c("Sardinops sagax-Southern","Engraulis mordax-Northern")) %>% 
-  filter(!biomass == 0)
+  filter(season == "Summer")
 
-biomass.ts.sar <- biomass.ts.sar %>% 
+# Select summer surveys with individual strata estimates (2015-present)
+## This contains individual strata only (no "All")
+biomass.ts <- biomass.ts %>% 
+  filter(survey %in% multi.estimates) %>% 
   left_join(select(survey.info, survey, date_start)) %>% 
-  mutate(group = paste(species, "All", sep = "-"),
+  mutate(group = paste(species, stock, sep = "-"),
          year  = year(date_start),
          season = case_when(
            month(date_start) < 6 ~ "Spring",
            TRUE ~ "Summer")) %>% 
-  # Combine with df to remove biomass
-  left_join(select(biomass.ts.sar.rm, -stock)) %>%
-  replace_na(list(biomass.rm = 0, cil.rm = 0, ciu.rm = 0)) %>% 
-  mutate(biomass = biomass - biomass.rm,
-         biomass_ci_lower = biomass_ci_lower - cil.rm,
-         biomass_ci_upper = biomass_ci_upper - ciu.rm) %>% 
-  # filter(!group %in% c("Sardinops sagax-Southern","Engraulis mordax-Northern")) %>% 
-  filter(!biomass == 0) 
+  filter(season == "Summer") %>% 
+  filter_out(stratum == "All")
+
+# Summarise results for all CPS across regions
+biomass.ts.summ <- biomass.ts %>% 
+  # select(survey, species, stock, biomass, biomass_sd, biomass_ci_lower, biomass_ci_upper) %>% 
+  group_by(survey, date_start, year, species, stock) %>%
+  summarise(area = sum(area),
+            nStrata = n(),
+            nClusters = sum(nClusters),
+            nIndiv = sum(nIndiv),
+            biomass = sum(biomass),
+            biomass_sd = sqrt(sum(biomass_sd^2)),
+            biomass_ci_lower = sum(biomass_ci_lower),
+            biomass_ci_upper = sum(biomass_ci_upper),
+            biomass_cv = biomass_sd/biomass*100) %>% 
+  mutate(group = paste(species, stock, sep = "-")) %>% 
+  bind_rows(biomass.ts.single) %>% 
+  arrange(species, stock, survey)
+
+# # Plot all species/stocks
+# ggplot(biomass.ts.summ,
+#        aes(date_start, biomass, group = group, colour = group)) +
+#   geom_path() + geom_point()
+
+# Summarise results for all sardine stocks in US waters
+biomass.ts.summ.sar.us <- biomass.ts %>% 
+  filter(species == "Sardinops sagax", us_waters == TRUE) %>%
+  group_by(survey, date_start, year, species, stock) %>%
+  summarise(area = sum(area),
+            nStrata = n(),
+            nClusters = sum(nClusters),
+            nIndiv = sum(nIndiv),
+            biomass = sum(biomass),
+            biomass_sd = sqrt(sum(biomass_sd^2)),
+            biomass_ci_lower = sum(biomass_ci_lower),
+            biomass_ci_upper = sum(biomass_ci_upper),
+            biomass_cv = biomass_sd/biomass*100) %>% 
+  mutate(group = paste(species, stock, sep = "-")) %>% 
+  bind_rows(biomass.ts.single) %>% 
+  arrange(species, stock, survey)
+
+# Summarise all sardine results in US waters, by stock and combined
+biomass.ts.summ.sar <- biomass.ts %>% 
+  filter(species == "Sardinops sagax", us_waters == TRUE) %>% 
+  group_by(survey, date_start, year, species) %>%
+  summarise(area = sum(area),
+            nStrata = n(),
+            nClusters = sum(nClusters),
+            nIndiv = sum(nIndiv),
+            biomass = sum(biomass),
+            biomass_sd = sqrt(sum(biomass_sd^2)),
+            biomass_ci_lower = sum(biomass_ci_lower),
+            biomass_ci_upper = sum(biomass_ci_upper),
+            biomass_cv = biomass_sd/biomass*100) %>% 
+  # Resume here; need to remove duplicate values in time series
+  bind_rows(filter(biomass.ts.single, species == "Sardinops sagax")) %>% 
+  mutate(stock = "Combined",
+         group = paste(species, stock, sep = "-")) %>% 
+  bind_rows(filter(biomass.ts.summ.sar.us, species == "Sardinops sagax", year >= 2015)) %>% 
+  arrange(species, stock, survey) 
+
+## Plot all species/stocks
+# ggplot(biomass.ts.summ.sar,
+#        aes(date_start, biomass, group = group, colour = group)) + 
+#   geom_path() + geom_point()
 
 # Summarize community biomass by year
 biomass.comm.summ <- biomass.ts %>% 
@@ -145,12 +153,13 @@ biomass.spp.summ <- biomass.ts %>%
   left_join(biomass.comm.summ) %>% 
   mutate(biomass.pct = biomass/biomass.total*100)
 
-save(biomass.ts, biomass.comm.summ, biomass.spp.summ, biomass.ts.sar,
+save(biomass.ts, biomass.comm.summ, biomass.spp.summ, biomass.ts.summ.sar,
+     biomass.ts.summ, biomass.ts.summ.sar,
      file = here("Output/biomass_timeseries_final.Rdata"))
 
 # Create plot ------------------------------------------------------------------
 # Create line plot - single
-biomass.ts.line <- ggplot(filter(biomass.ts, biomass != 0), 
+biomass.ts.line <- ggplot(biomass.ts.summ, 
                           aes(x = date_start, y = biomass, 
                               colour = group, shape = group,
                               group = group)) +
@@ -183,18 +192,18 @@ ggsave(biomass.ts.line,
 
 # Combine with data from prior to 2015 (stocks not separated)
 # Add jitter to dates for different stocks
+# 
+# biomass.ts.stock <- biomass.ts %>% 
+#   filter(species == "Sardinops sagax", year >= 2015) %>% 
+#   left_join(biomass.ts.sar.rm) %>% 
+#   # Remove non-US biomass from NSP and SSP
+#   replace_na(list(biomass.rm = 0, cil.rm = 0, ciu.rm = 0)) %>% 
+#   mutate(biomass = biomass - biomass.rm,
+#          biomass_ci_lower = biomass_ci_lower - cil.rm,
+#          biomass_ci_upper = biomass_ci_upper - ciu.rm) 
 
-biomass.ts.stock <- biomass.ts %>% 
-  filter(species == "Sardinops sagax", year >= 2015) %>% 
-  left_join(biomass.ts.sar.rm) %>% 
-  # Remove non-US biomass from NSP and SSP
-  replace_na(list(biomass.rm = 0, cil.rm = 0, ciu.rm = 0)) %>% 
-  mutate(biomass = biomass - biomass.rm,
-         biomass_ci_lower = biomass_ci_lower - cil.rm,
-         biomass_ci_upper = biomass_ci_upper - ciu.rm) 
-
-biomass.ts.sar <- biomass.ts.sar %>% 
-  bind_rows(filter(biomass.ts.stock, species == "Sardinops sagax", year >= 2015)) %>% 
+biomass.ts.summ.sar <- biomass.ts.summ.sar %>% 
+  # bind_rows(filter(biomass.ts.stock, species == "Sardinops sagax", year >= 2015)) %>% 
   # filter(year >= 2015) %>% 
   mutate(date_start = case_when(
     str_detect(group, "Northern") ~ date_start + days(30),
@@ -202,7 +211,7 @@ biomass.ts.sar <- biomass.ts.sar %>%
                TRUE ~ date_start))
 
 # Create line plot - single (All sardine in U.S. waters)
-biomass.ts.line.sar <- ggplot(filter(biomass.ts.sar, biomass != 0), 
+biomass.ts.line.sar <- ggplot(filter(biomass.ts.summ.sar, biomass != 0), 
                           aes(x = date_start, y = biomass, 
                               colour = group, shape = group,
                               group = group)) +
@@ -210,15 +219,25 @@ biomass.ts.line.sar <- ggplot(filter(biomass.ts.sar, biomass != 0),
   geom_path() +
   geom_point(size = 2, fill = "white") +
   scale_colour_manual(name = 'Species',
-                      labels = c("Sardinops sagax (All)", "Sardinops sagax (Northern)", "Sardinops sagax (Southern)"),
+                      labels = c("Sardinops sagax (Combined)", "Sardinops sagax (Northern)", "Sardinops sagax (Southern)"),
                       values = c("purple", sardine.color, "blue")) +
   scale_shape_manual(name = 'Species',
-                     labels = c("Sardinops sagax (All)", "Sardinops sagax (Northern)", "Sardinops sagax (Southern)"),
+                     labels = c("Sardinops sagax (Combined)", "Sardinops sagax (Northern)", "Sardinops sagax (Southern)"),
                      values = c(21, 22, 23)) +
   scale_x_datetime(name = "Year", date_breaks = "2 years", date_labels = "%Y") +
   scale_y_continuous(expression(Biomass~(italic(t))), labels = scales::comma) +
   theme_bw() +
-  theme(legend.text = element_text(face = "italic"))
+  theme(
+    legend.text = element_text(face = "italic"),
+    # Position the legend inside the plot area
+    legend.position = c(1, 1),
+    # Anchor the legend box's top-right corner to the plot's top-right corner
+    legend.justification = c("right", "top"),
+    # Optional: adjust the background of the legend box
+    legend.background = element_rect(fill = "transparent", color = NA),
+    # Optional: add slight margins so the legend is not exactly on the edge
+    legend.margin = margin(t = 5, r = 5, unit = "pt")
+  )
 
 # Save figure
 ggsave(biomass.ts.line.sar, 
@@ -226,7 +245,7 @@ ggsave(biomass.ts.line.sar,
        width = 8, height = 4)
 
 # Create line plot - faceted
-biomass.ts.line.facet <- ggplot(biomass.ts,
+biomass.ts.line.facet <- ggplot(biomass.ts.summ,
                                 aes(x = date_start, y = biomass, 
                                     shape = group, colour = group, group = group)) +
   geom_errorbar(aes(ymin = biomass_ci_lower, ymax = biomass_ci_upper), width = 5000000) +
@@ -261,7 +280,7 @@ ggsave(biomass.ts.line.facet,
        width = 12, height = 7)
 
 # Create stacked bar plot
-biomass.ts.bar <- ggplot(biomass.ts, 
+biomass.ts.bar <- ggplot(biomass.ts.summ, 
                          aes(x = date_start, y = biomass, fill = group)) + 
   geom_bar(colour = "black", position = "stack", stat = "identity") +
   scale_fill_manual(name = 'Species',
@@ -284,7 +303,7 @@ ggsave(biomass.ts.bar,
        width = 8, height = 4)
 
 # Combine plots into one using {patchwork}
-biomass.ts.combo <- biomass.ts.line/biomass.ts.bar +
+biomass.ts.combo <- biomass.ts.line / biomass.ts.bar +
   plot_annotation(tag_levels = 'a', tag_suffix = ')')
 
 # Save figure

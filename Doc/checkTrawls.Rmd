@@ -162,7 +162,7 @@ haul.bad <- haul.all %>%
 haul <- filter(haul.all, cruise %in% cruise.name) %>% 
   filter(!haul %in% haul.bad$haul) %>%
   mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
-         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) %>%  # Assign cluster
+         cluster  = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1) %>%  # Assign cluster
   mutate(leg = cut(as.numeric(date(equilibriumTime)), leg.breaks, 
                    include.lowest = TRUE, labels = FALSE))
 # Get all haul numbers
@@ -195,6 +195,7 @@ catch <- catch.all %>%
   # Removes catch from any bad or manually excluded hauls
   filter(haul %in% haul.good) %>%
   filter(!presenceOnly == "Y") %>%
+  filter(!flaggedData %in% c("excludedFromBiomass")) %>% 
   left_join(select(haul, haul, cluster)) %>% 
   mutate(key = paste(haul, scientificName),
          totalWeight = subSampleWtkg + remainingSubSampleWtkg,
@@ -1305,6 +1306,40 @@ ggsave(lw.plot.final, filename = here("Figs/fig_LW_plots_final.png"),
 include_graphics(here("Figs/fig_LW_plots_final.png"))
 ```
 
+```{r final-length-weight-log-log, eval=FALSE}
+# Examine length differences by leg
+lw.plot.final.log <- ggplot() +
+  # Plot L/W data for current survey
+  geom_point(data = lengths,
+             aes(log(totalLength_mm + 1), log(weightg + 1), 
+                 group = sex, colour = sex), 
+             alpha = 0.75) +
+  # Plot individuals with missing lengths and weights
+  geom_point(data = filter(lengths, missing.length == TRUE),
+             aes(log(totalLength_mm + 1), log(weightg + 1)),
+             shape = 21, fill = 'red',  size = 2.5) +
+  geom_point(data = filter(lengths, missing.weight == TRUE),
+             aes(log(totalLength_mm + 1), log(weightg + 1)),
+             shape = 21, fill = 'blue', size = 2.5) +
+  # Plot seasonal length models for each species
+  # geom_line(data = lw.df, 
+  #           aes(log(totalLength_mm + 1), log(weightg + 1)), 
+  #           alpha = 0.75, colour = "gray20", linetype = 'dashed') +
+  # Facet by species
+  facet_wrap(~scientificName, scales = "free") +
+  # Format plot
+  xlab("Total length (mm)") + ylab("Mass (g)") +
+  # scale_x_log10() + scale_y_log10() +
+  theme_bw() +
+  theme(strip.background.x = element_blank(),
+        strip.text.x = element_text(face = "bold.italic"))
+
+# Save length/weight plot
+ggsave(lw.plot.final.log, filename = here("Figs/fig_LW_plots_final_log.png"),
+       width = 10, height = 7) 
+
+include_graphics(here("Figs/fig_LW_plots_final_log.png"))
+```
 
 # Data checks
 ## Hauls
@@ -1590,6 +1625,8 @@ if (exists("nav.paths.sf")) {
     addScaleBar(position = "bottomright") %>%
     # Add map coordinates
     addMouseCoordinates() %>% 
+    # Add grid lines
+    addGraticule(interval = 1, group = "Graticule") %>%
     # Add measurement tool
     addMeasure(primaryLengthUnit = "miles", secondaryLengthUnit = "km",
                primaryAreaUnit = "sqmiles", secondaryAreaUnit = "sqmeters",
@@ -1599,11 +1636,11 @@ if (exists("nav.paths.sf")) {
       baseGroups = c("Esri.NatGeoWorldMap", "Esri.OceanBasemap",
                      "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
       overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs",
-                        "State Waters", "Exclusive Economic Zones", 
+                        "State Waters", "Exclusive Economic Zones", "Graticule",
                         "Planned Transects (Core)", "Planned Transects (Ancillary)",
                         "Vessel Track", "Vessel Positions", "Trawls-Salmon"),
       options = layersControlOptions(collapsed = FALSE)) %>% 
-    hideGroup(c("Canada MPAs","Mexico MPAs")) %>% 
+    hideGroup(c("Canada MPAs","Mexico MPAs","Graticule")) %>% 
     fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
               imap.bounds$range.lon[2], imap.bounds$range.lat[2])
   

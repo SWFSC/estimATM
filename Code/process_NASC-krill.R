@@ -35,7 +35,7 @@ if (process.csv.krill) {
       # Process all .CSV files
       for (ii in seq_along(nasc.files.krill)) {
         # Extract vessel nasc
-        nasc.vessel.krill.temp <- extract_csv(nasc.files.krill[ii]) %>% 
+        nasc.vessel.krill.temp <- extract_csv(nasc.files.krill[ii], Sv.max = Sv.max) %>% 
           mutate(vessel.name = i,
                  sounder = sounder.type[i],
                  # transect = str_replace(transect, nasc.pattern.krill[i],""),

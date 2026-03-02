@@ -420,6 +420,7 @@ nasc.recurse           <- c(SH  = FALSE,
 
 # Max NASC value for removing outliers
 nasc.max               <- NA
+Sv.max                 <- NULL # Max Sv value (dB); Set to -14 after testing is completed
 
 # Purse seine data info -------------------------------------------------------
 # Use seine data to apportion nearshore backscatter
@@ -898,7 +899,7 @@ echo.freqs.dash <- c(SH  = "18-, 38-, 70-, 120-, and 200-",
 echo.models     <- c(SH  = "ES18-11, ES38B, ES70-7C, ES120-7C, and ES200-7C",
                      RL  = "ES18-11, ES38B, ES70-7C, ES120-7C, ES200-7C, and ES333-7C",
                      LBC = "ES38-12, ES70-7C, ES120-7C and ES200-7C",
-                     LM  = "ES38-12, ES70-7C, ES120-7C and ES200-7C",
+                     LM  = "ES38-7, ES70-7C, ES120-7C and ES200-7C",
                      SD  = "ES38-18|200-18C") # list of echosounder models for Shimada
 
 # nominal centerboard positions

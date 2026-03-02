@@ -34,7 +34,8 @@ pacman::p_load(tidyverse,swfscMisc,reshape2,tcltk,lubridate,sp,readxl,
                rnaturalearth,shadowtext,here,leaflet,leafem,htmltools,
                leaflet.extras,mapview,photobiology,fs,plotly,ggnewscale,
                concaveman,DT,xml2,glue,lwgeom,DBI,odbc,bookdown,sf,ggnewscale,
-               rworldmap,rworldxtra,data.table,stplanr,ggspatial,htmlwidgets)
+               rworldmap,rworldxtra,data.table,stplanr,ggspatial,htmlwidgets,
+               patchwork)
 
 # Newer versions of ggrepel does not work with rotated axes; use this version until CRAN version is fixed
 # install_version("ggrepel", version = "0.9.4", repos = "http://cran.us.r-project.org")
@@ -74,6 +75,9 @@ if (doc.type == "latex") {
 } else {
   knitr.format <- "html" 
 }
+
+# Define global knitr NA display value
+options(knitr.kable.NA = '-')
 ```
 
 ```{r project-info, include=FALSE}
@@ -88,10 +92,39 @@ prj.settings <- settings.files[str_detect(settings.files, paste0("settings_", pr
 source(here("Doc/settings", prj.settings))
 ```
 
+```{r create-dirs}
+dir_create(here(), c("Code","Data", "Doc", "Figs", "Images", "Output", "References", "Simulation"))
+```
+
+# Project information and configuration  
+This report presents results from the **`r survey.name.long` (`r survey.name`)**.  
+
+The results were generated using R and Rstudio:  
+
+* `r sessionInfo()$R.version$version.string`
+* Last run: `r format(Sys.time(), "%F %T", tz = "America/Los_Angeles", usetz = TRUE)`
+
+**Critical analysis settings:**
+
+Remove deep nearshore backscatter: **`r rm.deep.nasc`**  
+Adjust deep nearshore backscatter: **`r adj.deep.nasc`**  
+Deep backscatter depth: **`r nasc.depth.deep`**  
+Nearshore catch source: **`r glue::glue_collapse(catch.source.ns, sep = ", ", last = " and ")`**  
+Nearshore trawl source (if included): **`r unname(cluster.source["NS"])`**  
+Number of bootstrap iterations: **`r boot.num`**  
+
+## Controls and Settings
+
+Processing controls and survey-specific settings are configured here: `here("Doc/settings")`. The settings file is automatically identified based on the name of the directory in which the .Rproj file is stored (in this case, `r here()`). For this analysis, **`r prj.settings`** is used. More information about the settings file is below.  
+
+### Processing loop controls
+
+Options in this section of the settings file control the execution of the various code chunks. All chunks should usually run (i.e., controls  <- `T`) the first time to copy all necessary data files, import data from databases, generate maps and figures, estimate abundance and biomass, etc. Subsequent processing may be sped-up by setting some controls to `F` if source data or analysis code has not changed.
+
 ```{r user-controls, echo = TRUE}
 # Processing controls (T/F) ---------------------------------------------------
 ### Usually TRUE
-get.db            <- T # Download data from databases (fast; generally TRUE)
+get.db            <- F # Download data from databases (fast; generally TRUE)
 get.nav           <- T # Download primary vessel nav data from ERDDAP
 get.nav.sd        <- F # Download Saildrone nav data from ERDDAP
 get.nav.sh        <- F # Download NOAA Ship nav data
@@ -99,7 +132,8 @@ copy.files        <- F # Copy data files to local directory
 process.csv       <- T # Process Echoview files
 save.figs         <- T # Draw new figures and maps
 download.hab      <- F # Download habitat map
-process.scs       <- F # Process SCS data 
+process.scs       <- F # Process SCS data
+plot.time.series  <- T # Plot biomass time series 
 
 do.bootstrap      <- T # Generate bootstrap estimates
 
@@ -111,47 +145,18 @@ overwrite.csv     <- T # Overwrite CSV files (TRUE if files have changed)
 process.csv.all   <- F # Process all acoustic backscatter files (F = new files only)
 process.csv.krill <- T # Process krill backscatter data
 process.cufes     <- F # Process CUFES data (no CUFES sampling post-2023)
-process.cal       <- F # Process calibration results
+process.cal       <- T # Process calibration results
 process.ctd       <- F # Process CTD and UCTD casts
 match.intervals   <- F # Match intervals for comparing EK60 and EK80
 get.bathy         <- F # Extract ETOPO1 bathymetry data in the survey footprint
 resize.map        <- F # Resize map during survey; if T, uses anticipated bounds of survey area
 ```
 
-```{r create-dirs}
-dir_create(here(), c("Code","Data", "Doc", "Figs", "Images", "Output", "References", "Simulation"))
-```
-
-```{r at-methods-overview, child='Background/ATM_Methods.Rmd', eval=FALSE}
-
-```
-
-# Project information and configuration  
-This report presents results from the **`r survey.name.long` (`r survey.name`)**.  
-
-The results were generated using R and Rstudio:  
-
-* `r sessionInfo()$R.version$version.string`
-* Last run: `r format(Sys.time(), "%F %T", tz = "America/Los_Angeles", usetz = TRUE)`
-
-Critical analysis settings:
-
-Remove deep nearshore backscatter: **`r rm.deep.nasc`**
-Adjust deep nearshore backscatter: **`r adj.deep.nasc`**
-
-## Controls and Settings
-
-Processing controls and survey-specific settings are configured here: `here("Doc/settings")`. The settings file is automatically identified based on the name of the directory in which the .Rproj file is stored (in this case, `r here()`). For this analysis, **`r prj.settings`** is used. More information about the settings file is below.  
-
-## Processing loop controls
-
-Options in this section of the settings file control the execution of the various code chunks. All chunks should usually %>% run (i.e., controls  <- `T`) the first time to copy all necessary data files, import data from databases, generate maps and figures, estimate abundance and biomass, etc. Subsequent processing may be sped-up by setting some controls to `F` if source data or analysis code has not changed.
-
 ### Survey-specific settings  
 
-To more easily configure processing for different surveys and distribute updated code, the settings file is also used to configure survey-specific settings for each survey.  There are many settings, all of which should be reviewed at the start of each survey analysis.
+To more easily configure processing for different surveys and distribute updated code, the settings file is also used to configure survey-specific settings for each survey (e.g., **`r prj.settings`**). There are **MANY** settings, all of which can have a bearing on analysis results and should be reviewed at the start of each survey analysis.
 
-## File handling  
+### File handling  
 
 Files are copied locally for processing to avoid slow results when working across the network (especially from remote locations or at sea). Controls in the User Settings section (above) determine whether files are copied locally (usually `TRUE` during the first run) and whether files are overwritten. If files are known to have changed, set `overwrite.files <- TRUE` to overwrite files already present, else files already present will be skipped and only new files copied to the local directory. If files have not changed, set `copy.files <- FALSE` to speed processing (`overwrite.files` will be ignored and may be left set to `TRUE`).
 
@@ -184,6 +189,22 @@ if (copy.files) {
   }
 }
 ```  
+
+# Get habitat map  
+
+Potential sardine habitat maps for the survey period are downloaded and assembled from the SWFSC website [link](http://swfscdata.nmfs.noaa.gov/AST/sardineHabitat).  
+
+```{r download-habitat-maps}
+if (download.hab) {
+  source(here("Code/plot_sardine_habitat.R"))
+}
+
+if(file.exists(here("Figs/fig_habitat_map.png"))) {
+  include_graphics(here("Figs/fig_habitat_map.png"))
+} else {
+  cat("No sardine habitat map available.")
+}
+```
 
 # Process vessel data  
 
@@ -255,22 +276,6 @@ nav.now <- tail(nav, 1) %>%
   mutate(label = paste("Last position:", time, "UTC"),
          popup = paste0('<b>Vessel name: </b>', survey.vessel, '<br/>',
                         '<b>Last position: </b>', time, ' UTC<br/>'))
-```
-
-## Get habitat map  
-
-Potential sardine habitat maps for the survey period are downloaded and assembled from the SWFSC website [link](http://swfscdata.nmfs.noaa.gov/AST/sardineHabitat).  
-
-```{r download-habitat-maps}
-if (download.hab) {
-  source(here("Code/plot_sardine_habitat.R"))
-}
-
-if(file.exists(here("Figs/fig_habitat_map.png"))) {
-  include_graphics(here("Figs/fig_habitat_map.png"))
-} else {
-  cat("No sardine habitat map available.")
-}
 ```
 
 ```{r configure-base-map, include=FALSE}
@@ -497,7 +502,7 @@ if (process.csv) {
         # Process all .CSV files
         for (ii in seq_along(nasc.files)) {
           # Extract vessel nasc
-          nasc.vessel.temp <- extract_csv(nasc.files[ii]) %>% 
+          nasc.vessel.temp <- extract_csv(nasc.files[ii], Sv.max = Sv.max) %>%
             mutate(vessel.name = i,
                    sounder = sounder.type[i],
                    transect = str_replace(transect, nasc.pattern.cps[i],""))
@@ -1031,7 +1036,7 @@ ggplotly(nasc.outlier.plotly)
 
 ## Characterize day/night  
 
-In the event that acoustic data were collected continuously (i.e., during day and night), each interval is characterized as being collected during day or night by estimating sunrise/sunset for each day based on the mean latitude and longitude of acoustic data from that day. If desired, data collected during either the day or night may be removed by changing the values of `r daynight.filter` in the `r prj.settings`. Data included in this analysis were from: `r glue::glue_collapse(daynight.filter, sep = ", ", last = " and ")`. 
+In the event that acoustic data were collected continuously (i.e., during day and night), each interval is characterized as being collected during day or night by estimating sunrise/sunset for each day based on the mean latitude and longitude of acoustic data from that day. If desired, data collected during either the day or night may be removed by changing the values of `daynight.filter` in the `r prj.settings`. Data included in this analysis were from: `r glue::glue_collapse(daynight.filter, sep = ", ", last = " and ")`. 
 
 (ref:plot-day-night) Acoustic intervals characterized by day or night based on local sunrise/sunset times.
 
@@ -1324,12 +1329,14 @@ source(here("Code/format_trawl_database.R"))
 ```{r process-trawl-haul-data}
 # Select bad trawls
 haul.bad <- haul.all %>% 
-  filter(trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
+  filter(cruise %in% cruise.name,
+         trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
            haul %in% trawl.haul.rm | # Manually excluded hauls
            # Missing data that will cause errors in nav matching
            is.na(collection) |
            is.na(equilibriumTime) | 
            is.na(haulBackTime))
+
 
 # Get only hauls from current survey
 haul <- filter(haul.all, cruise %in% cruise.name & ship %in% cruise.ship) %>% 
@@ -1337,7 +1344,7 @@ haul <- filter(haul.all, cruise %in% cruise.name & ship %in% cruise.ship) %>%
   # Manually remove hauls
   filter(!haul %in% trawl.haul.rm) %>% 
   mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
-         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1, # Assign cluster
+         cluster  = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1, # Assign cluster
          sample.type = "Trawl")
 
 # Get all haul numbers
@@ -1366,7 +1373,7 @@ if (survey.name %in% c("2107RL")) {
              TRUE ~ "summer"), 
            notes = NA,
            duration = difftime(haulBackTime, equilibriumTime, units = "mins"),
-           cluster = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) %>% 
+           cluster = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1) %>% 
     mutate(haul = haul + max.haul.rl,
            cluster = cluster + max.cluster.rl)  %>% 
     select(cruise, ship, haul, collection, startLatDecimal, startLongDecimal,
@@ -1416,7 +1423,7 @@ if (survey.name %in% c("2207RL")) {
   #   # Remove hauls south of northernmost RL trawl from 2022
   #   filter(startLatDecimal >= 40.42) %>%
   #   mutate(haul = haul + max.haul.rl,
-  #          cluster = cumsum(c(0, diff(equilibriumTime)) > 12) + 1 + max.cluster.rl)
+  #          cluster = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1 + max.cluster.rl)
   
   # Combine haul data
   haul <- bind_rows(haul, select(haul.lm.2022, -key.set))
@@ -1567,6 +1574,7 @@ catch <- catch.all %>%
   filter(cruise %in% cruise.name & ship %in% cruise.ship & 
            scientificName %in% cps.spp & netSampleType == 'codend') %>% 
   filter(!presenceOnly == "Y") %>%
+  filter(!flaggedData %in% c("excludedFromBiomass")) %>% 
   inner_join(select(haul, haul, cluster)) %>% 
   mutate(key = paste(haul, scientificName),
          sample.type = "Trawl")
@@ -4848,7 +4856,7 @@ tx.c <- tx.c %>%
   arrange(transect, desc(order))
 ```
 
-```{r create-final-strata-polygons}
+```{r create-final-strata-polygons, include=FALSE}
 # Read 20 m isobath points; used to create nearshore stratum polygons
 nearshore.points.sf <- st_read(here("Data/GIS/bathy_20m_points.shp")) 
 
@@ -5269,7 +5277,6 @@ if (save.figs) {
       biomass.dens <- base.map +
         geom_sf(data = filter(strata.primary, scientificName == i, stock == j),
                 aes(colour = factor(stratum)), fill = NA, size = 1) +
-        scale_colour_discrete('Stratum') + 
         # Plot vessel track
         geom_sf(data = nav.paths.sf, colour = 'gray50', size = 0.25, alpha = 0.5) +
         # Plot zero nasc data
@@ -5279,18 +5286,21 @@ if (save.figs) {
         geom_point(data = nasc.density.plot, aes(X, Y, size = bin, fill = bin),
                    shape = 21, alpha = 0.75) +
         # Configure size and colour scales
+        scale_colour_discrete(name = 'Stratum') +
         scale_size_manual(name = bquote(atop(Biomass~density, ~'(t'~'nmi'^-2*')')),
                           values = dens.sizes.all, labels = dens.labels.all) +
         scale_fill_manual(name = bquote(atop(Biomass~density, ~'(t'~'nmi'^-2*')')),
                           values = dens.colors.all, labels = dens.labels.all) +
-        # Plot positive cluster midpoints
-        geom_shadowtext(data = pos.cluster.txt,
-                        aes(X, Y, label = cluster), 
-                        colour = "blue", bg.colour = "white", size = 2, fontface = "bold") +
-        # Configure legend guides
         guides(colour = guide_legend(order = 1),
                fill   = guide_legend(order = 2), 
                size   = guide_legend(order = 2)) +
+        # Configure legend guides
+        new_scale_colour() +
+        # Plot positive cluster midpoints
+        geom_shadowtext(data = pos.cluster.txt,
+                        aes(X, Y, label = cluster), 
+                        colour = "blue", bg.colour = "white", size = 2, fontface = "bold",
+                        show.legend = FALSE) +
         coord_sf(crs = crs.proj, 
                  xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
                  ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
@@ -6241,6 +6251,8 @@ if (do.imap) {
     addScaleBar(position = "bottomright") %>%
     # Add map coordinates
     addMouseCoordinates() %>% 
+    # Add grid lines
+    addGraticule(interval = 1, group = "Graticule") %>% 
     # Add measurement tool
     addMeasure(primaryLengthUnit = "miles", secondaryLengthUnit = "km",
                primaryAreaUnit = "sqmiles", secondaryAreaUnit = "sqmeters",
@@ -6248,7 +6260,7 @@ if (do.imap) {
     # Add layer controls
     addLayersControl(
       overlayGroups = c("MPAs", "State Waters", "Exclusive Economic Zones", 
-                        "Bathymetry Contours",
+                        "Bathymetry Contours","Graticule",
                         "Planned Transects (Core)", "Planned Transects (Ancillary)",
                         "Vessel Track", "Vessel Positions", "Trawls", 
                         "Trawl Cluster Polygons", "CTD Casts",
@@ -6534,7 +6546,7 @@ if (do.imap) {
   # Hide groups
   i.map <- i.map %>% 
     hideGroup(c(
-      "Exclusive Economic Zones",
+      "Exclusive Economic Zones","Graticule",
       "Backscatter (Large)", "Backscatter-Krill", 
       "CUFES Egg Density", "CUFES (Negative)", "CUFES Egg Density-Other",
       "CUFES Egg Density-Squid", "Vessel Positions", "Saildrone Tracks", 
@@ -8185,7 +8197,7 @@ for (i in unique(abund.summ$Species)) {
       geom_bar(stat = 'identity',fill = 'gray50',colour = 'gray20') + 
       scale_x_continuous("Length (cm)", breaks = x.breaks) + 
       scale_y_continuous('Abundance (n)', limits = c(0, y.max.abund),
-                         expand = c(0,0), labels = fancy_sci) +
+                         expand = c(0,0)) + #, labels = fancy_sci
       # facet_wrap(~Stock, nrow = 1) +
       theme_bw() +
       theme(strip.background.x = element_blank(),
@@ -8195,8 +8207,8 @@ for (i in unique(abund.summ$Species)) {
     L.biomass <- ggplot(filter(abund.summ, Species == i, Stock == j), aes(TL, biomass)) + 
       geom_bar(stat = 'identity', fill = 'gray50', colour = 'gray20') + 
       scale_x_continuous("Length (cm)", breaks = x.breaks) + 
-      scale_y_continuous('Biomass (t)', limits = c(0, y.max.biomass),
-                         expand = c(0,0), labels = fancy_sci) +
+      scale_y_continuous('Biomass (kg)', limits = c(0, y.max.biomass),
+                         expand = c(0,0)) + #, labels = fancy_sci
       # facet_wrap(~Stock, nrow = 1) +
       theme_bw() + 
       theme(strip.background.x = element_blank(),
@@ -8254,7 +8266,7 @@ be.all     <- be %>%
   select(Species, Stock, Region, everything()) %>% 
   filter(Stratum == "All")
 
-if (exists("be.all.ns")) {
+if (exists("be.ns")) {
   be.all.ns  <- be.ns %>%
     mutate(Region = "Nearshore") %>%
     select(Species, Stock, Region, everything()) %>%
@@ -8293,21 +8305,21 @@ if (exists("be.all.ns")) {
     mutate(biomass.cv = biomass.sd/Biomass*100)
 }
 
-# # Summarise biomass for all regions included in the final estimates
-# be.all.var <- be.all %>% 
-#   bind_rows(be.all.ns) %>%
-#   select(Species, Stock, biomass.sd) %>% 
-#   group_by(Species, Stock) %>%
-#   summarise(biomass.sd = sqrt(sum(biomass.sd^2)))
-# 
-# # Combine core and nearshore biomass
-# be.all.summ <- be.all %>% 
-#   bind_rows(be.all.ns) %>%
-#   group_by(Species, Stock) %>% 
-#   select(-Region, -Stratum, -biomass.sd, -biomass.cv) %>% 
-#   summarise_all(list(sum)) %>% 
-#   left_join(be.all.var) %>% 
-#   mutate(biomass.cv = biomass.sd/Biomass*100)
+# Summarise biomass for all regions included in the final estimates
+be.all.var <- be.all %>%
+  bind_rows(be.all.ns) %>%
+  select(Species, Stock, biomass.sd) %>%
+  group_by(Species, Stock) %>%
+  summarise(biomass.sd = sqrt(sum(biomass.sd^2)))
+
+# Combine core and nearshore biomass
+be.all.summ <- be.all %>%
+  bind_rows(be.all.ns) %>%
+  group_by(Species, Stock) %>%
+  select(-Region, -Stratum, -biomass.sd, -biomass.cv) %>%
+  summarise_all(list(sum)) %>%
+  left_join(be.all.var) %>%
+  mutate(biomass.cv = biomass.sd/Biomass*100)
 
 be.all.nse <- be.nse %>% 
   mutate(Region = "NSE") %>% 
@@ -8397,7 +8409,6 @@ be.table.summ <- be.all.summ %>%
 (ref:biomass-anch-n) Biomass estimates (metric tons, t) and their precisions (upper and lower 95% confidence intervals, CI~95%~; and coefficients of variation, CVs) for the northern subpopulation of Northern Anchovy (_Engraulis mordax_) in the core and nearshore survey regions. Stratum areas are nmi^2^.
 
 ```{r biomass-anch-n}
-
 be.table.sub.all <- be.table.summ %>% 
   filter(Name == "Engraulis mordax", Stock == "Northern") %>% 
   mutate(Region = "All")
@@ -8487,7 +8498,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-anch-n) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for the northern stock of Northern Anchovy (_Engraulis mordax_) in the survey area.
+(ref:l-disagg-anch-n) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for the northern stock of Northern Anchovy (_Engraulis mordax_) in the survey area.
 
 ```{r l-disagg-anch-n,fig.cap='(ref:l-disagg-anch-n)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for anchovy
@@ -8639,7 +8650,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-anch-c) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for the central stock of Northern Anchovy (_Engraulis mordax_) in the survey area.
+(ref:l-disagg-anch-c) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for the central stock of Northern Anchovy (_Engraulis mordax_) in the survey area.
 
 ```{r l-disagg-anch-c,fig.cap='(ref:l-disagg-anch-c)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for anchovy
@@ -8806,7 +8817,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-sar-n) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for the northern stock of Pacific Sardine (_Sardinops sagax_) in the survey area.
+(ref:l-disagg-sar-n) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for the northern stock of Pacific Sardine (_Sardinops sagax_) in the survey area.
 
 ```{r l-disagg-sar-n,fig.cap='(ref:l-disagg-sar-n)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for sardine
@@ -8957,7 +8968,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-sar-s) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for the southern stock of Pacific Sardine (_Sardinops sagax_) in the survey area.
+(ref:l-disagg-sar-s) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for the southern stock of Pacific Sardine (_Sardinops sagax_) in the survey area.
 
 ```{r l-disagg-sar-s,fig.cap='(ref:l-disagg-sar-s)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for sardine
@@ -9123,7 +9134,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-mack) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for Pacific mackerel (_Scomber japonicus_) in the survey area.
+(ref:l-disagg-mack) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for Pacific mackerel (_Scomber japonicus_) in the survey area.
 
 ```{r l-disagg-mack,fig.cap='(ref:l-disagg-mack)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for P. mackerel
@@ -9288,7 +9299,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-jack) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for Jack Mackerel (_Trachurus symmetricus_) in the survey area.
+(ref:l-disagg-jack) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for Jack Mackerel (_Trachurus symmetricus_) in the survey area.
 
 ```{r l-disagg-jack,fig.cap='(ref:l-disagg-jack)',out.height='100%',fig.pos='H'}
 if (combine.regions) {
@@ -9451,7 +9462,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-her) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for Pacific herring (_Clupea pallasii_) in the survey area.
+(ref:l-disagg-her) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for Pacific herring (_Clupea pallasii_) in the survey area.
 
 ```{r l-disagg-her,fig.cap='(ref:l-disagg-her)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for herring
@@ -9615,7 +9626,7 @@ if (combine.regions) {
 
 #### Length-disaggregated abundance
 
-(ref:l-disagg-rher) Abundance versus standard length (upper panel) and biomass (t) versus standard length (lower panel) for round herring (_Etrumeus acuminatus_) in the survey area.
+(ref:l-disagg-rher) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for round herring (_Etrumeus acuminatus_) in the survey area.
 
 ```{r l-disagg-rher,fig.cap='(ref:l-disagg-rher)',out.height='100%',fig.pos='H'}
 # Insert disaggregated abundance plots for herring
@@ -9682,6 +9693,42 @@ if (file.exists(here("Figs/fig_cluster_relative_length_frequency_Etrumeus acumin
 } else {
   print("No data for this stock.")
 }
+```
+
+```{r process-biomass-ts}
+if (plot.time.series) {
+  source(here("Code/plot_BiomassTimeSeries.R"))
+} else {
+  if (file.exists(here("Output/biomass_timeseries_final.Rdata"))) {
+    load(here("Output/biomass_timeseries_final.Rdata"))  
+  } else {
+    print("No time series data available")
+  }
+}
+```
+
+# Biomass time series plots
+## Per species (free axes)
+
+(ref:biomass-ts-line-facet) Estimated biomasses of the `r num2words(n_distinct(biomass.ts$group))` most abundant CPS populations or subpopulations of `r num2words(n_distinct(biomass.ts$species))` species in the CCE during summer since 2008. Surveys typically span the area between Cape Flattery and San Diego, but in some years also include Vancouver Island, Canada (2015-2019, 2024) and portions of Baja CA (2021-2022, 2024). Error bars are 95% confidence intervals. **Note: different y-axis limits per species.**
+
+```{r biomass-ts-line-facet,fig.cap='(ref:biomass-ts-line-facet)',out.height='100%',fig.pos='H'}
+if (file.exists(here("Figs/fig_biomass_ts_line_facet.png"))) {
+  include_graphics(here("Figs/fig_biomass_ts_line_facet.png"))  
+} else {
+  print("No time series plot available.")
+} 
+```
+
+## Entire community
+(ref:biomass-ts-combo) a) Estimated and b) cumulative estimated biomasses of the `r num2words(n_distinct(biomass.ts$group))` most abundant CPS populations or subpopulations of `r num2words(n_distinct(biomass.ts$species))` species in the CCE during summer since 2008. Surveys typically span the area between Cape Flattery and San Diego, but in some years also include Vancouver Island, Canada (2015-2019, 2024) and portions of Baja CA (2021-2022, 2024).
+
+```{r biomass-ts-combo,fig.cap='(ref:biomass-ts-combo)',out.height='100%',fig.pos='H'}
+if (file.exists(here("Figs/fig_biomass_ts_combo.png"))) {
+  include_graphics(here("Figs/fig_biomass_ts_combo.png"))  
+} else {
+  print("No time series combination bar chart available.")
+} 
 ```
 
 # Map nearshore extrapolation
@@ -9817,7 +9864,7 @@ if (file.exists(here("Figs/fig_biomass_dens_nse_Etrumeus acuminatus-All.png"))) 
 
 ```{r process-cal-all}
 # Process calibration results from CW- and FM-mode calibrations. Vessel, procedure, and directory info is configured in the settings file for each survey.
-if (!is.na(cal.vessels)) {
+if (sum(!is.na(cal.vessels) > 0)) {
   if (process.cal) {
     # Plot CW calibration results
     source(here("Code/processCal-CW.R"))

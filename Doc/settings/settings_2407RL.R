@@ -441,6 +441,7 @@ nasc.recurse           <- c(RL  = FALSE,
                             SH  = FALSE)
 # Max NASC value for removing outliers
 nasc.max               <- NA
+Sv.max                 <- NULL # Max Sv value (dB); Set to -14 after testing is completed
 
 # Purse seine data info -------------------------------------------------------
 # Use seine data to apportion nearshore backscatter
@@ -454,6 +455,9 @@ seine.types     <- c("survey", "research", NA)
 seine.vessels          <- c("LBC","LM")
 seine.vessels.long     <- c("LBC" = "Long Beach Carnage",
                             "LM"  = "Lisa Marie")
+
+# List bad sets (e.g., c("LBC 2024-07-16 25",...n)), else NA
+key.set.rm  <- c("LBC 2024-07-16 25") # Set/landing 25/160 had no specimens due to a freezer failure
 
 # Deep backscatter correction
 # Correct deep backscatter?
@@ -589,9 +593,6 @@ limit.cluster.dist     <- c(OS  = FALSE,
 # Uses either haul or cluster data for a given region (NS or OS)
 cluster.source <- c(OS = "cluster",
                     NS = "cluster")
-
-# List sets (e.g., c("LBC 2024-07-16 25",...n)), else NA
-key.set.rm  <- c("LBC 2024-07-16 25") # Set/landing 25/160 had no specimens due to a freezer failure
 
 # Maximum distance to trawl clusters
 cum.biomass.limit      <- 0.90 # Distance used to compute max.cluster.distance

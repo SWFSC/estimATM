@@ -159,7 +159,7 @@ haul.bad <- haul.all %>%
 haul <- filter(haul.all, cruise %in% cruise.name) %>% 
   filter(!haul %in% haul.bad$haul) %>%
   mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
-         cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1) %>%  # Assign cluster
+         cluster  = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1) %>%  # Assign cluster
   mutate(leg = cut(as.numeric(date(equilibriumTime)), leg.breaks, 
                    include.lowest = TRUE, labels = FALSE))
 # Get all haul numbers
@@ -221,6 +221,10 @@ or_waters_12 <- oregon %>%
   st_buffer(dist = 1852*12) %>% 
   # Transform back to WGS84 for mapping
   st_transform(4326)
+
+# Read OR MPAs shapefile --------------------------------------
+or_mpas <- st_read(here("Data/GIS/or_mpas.shp")) %>% 
+  st_transform(crs.geog)
 
 if (do.spatial) {
   # Find hauls in WA waters
@@ -519,6 +523,11 @@ A map showing all trawl hauls (white points), trawls in OR State waters (within 
 # Create color palette for trawl periods
 trawlPathPal <- colorFactor(c("blue","black","red"), c("Deployment","Fishing","Recovery"))
 
+# Create color palette for MPAs
+all.mpa.types <- as.factor(unique(as.character(or_mpas$Label)))
+
+mpaPal  <- colorFactor(topo.colors(10), all.mpa.types)
+
 # Create leaflet map
 if (nrow(haul.or) > 0 | nrow(haul.or.12) > 0) {
   leaflet() %>% 
@@ -528,6 +537,9 @@ if (nrow(haul.or) > 0 | nrow(haul.or.12) > 0) {
                  label = "EEZ-U.S.") %>% 
     addPolygons(data = or_waters, weight = 2, fillColor = "transparent") %>% 
     addPolygons(data = or_waters_12, weight = 2, fillColor = "transparent") %>% 
+    # Add OR MPAs
+    addPolygons(data = or_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPal(Label),
+                fillOpacity = 0.3, label = ~htmlEscape(Name), group = "MPAs") %>%
     addPolylines(data = haul.paths, color = ~trawlPathPal(period), weight = 5, opacity = 0.8, 
                  popup = ~paste("Haul:", haul), label = ~paste("Haul:", haul)) %>% 
     addCircleMarkers(data = haul.out, radius = 3, color = "#000000", stroke = TRUE, weight = 2,
@@ -558,6 +570,9 @@ if (nrow(haul.or) > 0 | nrow(haul.or.12) > 0) {
                  label = "EEZ-U.S.") %>% 
     addPolygons(data = or_waters, weight = 2, fillColor = "transparent") %>% 
     addPolygons(data = or_waters_12, weight = 2, fillColor = "transparent") %>% 
+    # Add OR MPAs
+    addPolygons(data = or_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPal(Label),
+                fillOpacity = 0.3, label = ~htmlEscape(Name), group = "MPAs") %>%
     addPolylines(data = haul.paths, color = ~trawlPathPal(period), weight = 5, opacity = 0.8, 
                  popup = ~paste("Haul:", haul), label = ~paste("Haul:", haul)) %>% 
     addCircleMarkers(data = haul.out, radius = 3, color = "#000000", stroke = TRUE, weight = 2,
@@ -597,6 +612,9 @@ if (nrow(sets.or) > 0 | nrow(sets.or.12) > 0) {
                  label = "EEZ-U.S.") %>% 
     addPolygons(data = or_waters, weight = 2, fillColor = "transparent") %>% 
     addPolygons(data = or_waters_12, weight = 2, fillColor = "transparent") %>% 
+    # Add OR MPAs
+    addPolygons(data = or_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPal(Label),
+                fillOpacity = 0.3, label = ~htmlEscape(Name), group = "MPAs") %>%
     addCircleMarkers(data = sets.out, radius = 3, color = "#000000", stroke = TRUE, weight = 2,
                      opacity = 0.8, fillOpacity = 1, fillColor =  "white",
                      label = ~paste("Vessel/Set:", key.set),
@@ -625,6 +643,9 @@ if (nrow(sets.or) > 0 | nrow(sets.or.12) > 0) {
                  label = "EEZ-U.S.") %>% 
     addPolygons(data = or_waters, weight = 2, fillColor = "transparent") %>% 
     addPolygons(data = or_waters_12, weight = 2, fillColor = "transparent") %>% 
+    # Add OR MPAs
+    addPolygons(data = or_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPal(Label),
+                fillOpacity = 0.3, label = ~htmlEscape(Name), group = "MPAs") %>%
     addCircleMarkers(data = sets.out, radius = 3, color = "#000000", stroke = TRUE, weight = 2,
                      opacity = 0.8, fillOpacity = 1, fillColor =  "white",
                      label = ~paste("Vessel/Set:", key.set),

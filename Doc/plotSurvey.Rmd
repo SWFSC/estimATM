@@ -228,6 +228,7 @@ if (sampling.trawl) {
 if (sampling.trawl) {
   # Select bad trawls
   haul.bad <- haul.all %>% 
+    filter(cruise %in% cruise.name & ship %in% cruise.ship) %>% 
     filter(trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
              haul %in% trawl.haul.rm | # Manually excluded hauls
              # Missing data that will cause errors in nav matching
@@ -242,7 +243,7 @@ if (sampling.trawl) {
     filter(!haul %in% haul.bad$haul) %>%
     arrange(haul) %>% 
     mutate(duration = difftime(haulBackTime, equilibriumTime, units = "mins"), # Calculate duration
-           cluster  = cumsum(c(0, diff(equilibriumTime)) > 12) + 1,
+           cluster  = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1,
            sample.type = "Trawl")
   
   # Get all haul numbers
@@ -269,6 +270,55 @@ if (sampling.trawl) {
   save(haul, file = here("Output/haul_info.Rdata")) 
 }
 ```  
+
+```{r process-midwater-trawls}
+# Format midwater trawl locations
+if (survey.name %in% c("2506SH")) {
+  haul.midwater <- read_csv(here("Data/Trawl/haul_info_midwater.csv")) %>% 
+    mutate(time.start = mdy_hms(eq_date_time),
+           time.end = mdy_hms(hb_date_time),
+           perf.code = case_when(
+             performance >= 0 ~ "Good",
+             TRUE ~ "Aborted"))
+  
+  # Add lat/long data if missing
+  if (!"lat" %in% names(haul.midwater)) {
+    # Subset nav columns
+    nav.match <- select(nav, time, long, lat)
+    
+    # Data frame for saving matched data
+    nav.match.haul.midwater <- data.frame()
+    
+    # Match haul times to nav data and extract positions  
+    for (i in unique(haul.midwater$haul)) {
+      min.diff.eq       <- which.min(abs(difftime(haul.midwater$time.start[i],
+                                                  nav$time))) 
+      nav.match.df <- nav.match[min.diff.eq, ] %>% 
+        mutate(haul = i)
+      
+      nav.match.haul.midwater <- bind_rows(nav.match.haul.midwater, nav.match.df)
+    }
+    
+    # Add lat/long info to haul.midwater
+    haul.midwater <- left_join(haul.midwater, nav.match.haul.midwater)
+  }
+  
+  haul.midwater.sf <- haul.midwater %>% 
+    filter(!is.na(lat) & !is.na(long)) %>% 
+    st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
+    mutate(
+      label = paste("Midwater trawl:", haul),
+      popup = paste('<b>Midwater trawl:', haul, '</b><br/>',
+                    'Performance:', performance, '<br/>',
+                    'Status:', perf.code, '<br/>',
+                    'Equlibrium:', eq_date_time, '<br/>',
+                    'Haul back:', hb_date_time, '<br/>'))
+  
+  # ggplot(haul.midwater, aes(long, lat, fill = perf.code)) + geom_point(shape = 21) + coord_map()
+  
+}
+```
+
 
 ```{r process-ctd-data, message=FALSE, include=FALSE}
 if (file.exists(here("Output/cast_summary_uctd.csv"))) {
@@ -608,7 +658,8 @@ if (sampling.acoustics) {
       # Process all .CSV files
       for (i in 1:length(csv.files.cps)) {
         # Process i-th file
-        nasc.cps <- bind_rows(nasc.cps, extract_csv(csv.files.cps[i]))
+        nasc.cps <- bind_rows(nasc.cps, 
+                              extract_csv(csv.files.cps[i]), Sv.max = Sv.max)
         
         # Update the progress bar
         info <- sprintf("%d%% done", round((i / length(csv.files.cps)) * 100))
@@ -739,7 +790,8 @@ if (sampling.acoustics) {
         # Process all .CSV files
         for (i in 1:length(csv.files.krill)) {
           # Process i-th file
-          nasc.krill <- bind_rows(nasc.krill, extract_csv(csv.files.krill[i]))
+          nasc.krill <- bind_rows(nasc.krill, 
+                                  extract_csv(csv.files.krill[i], Sv.max = Sv.max))
           
           # Update the progress bar
           info <- sprintf("%d%% done", round((i / length(csv.files.krill)) * 100))
@@ -848,6 +900,7 @@ if (exists("nasc.all")) {
   
   # Save NASC outliers
   save(big.nasc, file = here("Output/nasc_big.Rdata"))  
+  write_csv(big.nasc, file = here("Output/nasc_outliers.csv"))
 }
 ```
 
@@ -1181,114 +1234,116 @@ if(!file.exists(here("Images/oceanIcons.Rdata"))) {
 
 # Create leaflet map
 i.map <- leaflet() %>% 
-# Enable tile caching
-enableTileCaching() %>%
-# Add provider tiles; # http://leaflet-extras.github.io/leaflet-providers/preview/index.html
-addProviderTiles(providers$Esri.NatGeoWorldMap, group = "Esri.NatGeoWorldMap",
-                 options = tileOptions(useCache = useCachedTile,
-                                       crossOrigin = useCrossOrigin)) %>%
-addProviderTiles(providers$Esri.OceanBasemap, group = "Esri.OceanBasemap",
-                 options = tileOptions(useCache = useCachedTile,
-                                       crossOrigin = useCrossOrigin)) %>%
-addProviderTiles(providers$Esri.WorldStreetMap, group = "Esri.WorldStreetMap",
-                 options = tileOptions(useCache = useCachedTile,
-                                       crossOrigin = useCrossOrigin)) %>%
-addProviderTiles(providers$Esri.WorldImagery, group = "Esri.WorldImagery",
-                 options = tileOptions(useCache = useCachedTile,
-                                       crossOrigin = useCrossOrigin)) %>%
-addProviderTiles(providers$OpenStreetMap.Mapnik, group = "OpenStreetMap.Mapnik",
-                 options = tileOptions(useCache = useCachedTile,
-                                       crossOrigin = useCrossOrigin)) %>%
-# Add EEZs
-addPolylines(data = eez_usa, color = "#000414", weight = 3, 
-             label = "EEZ-U.S.", group = "Exclusive Economic Zones") %>% 
-addPolylines(data = eez_can, color = "#000414", weight = 3, 
-             label = "EEZ-Canada", group = "Exclusive Economic Zones") %>% 
-addPolylines(data = eez_mex, color = "#000414", weight = 3, 
-             label = "EEZ-Mexico", group = "Exclusive Economic Zones") %>% 
-# Add bathymetry contours
-addPolylines(data = bathy, color = "white", weight = 2, 
-             label = ~paste(Depth, "m"), group = "Bathymetry Contours") %>% 
-# Add National Marine Sanctuaries
-addPolygons(data = nms_bounds, color = "#000414", weight = 2, fillColor = ~mpaPalNMS(Site_Nm),
-            fillOpacity = 0.25, label = ~htmlEscape(Site_Nm), group = "U.S. MPAs") %>%
-# Add State waters
-addPolygons(data = or_waters, weight = 2, fillColor = "transparent", 
-            opacity = 0.75,
-            label = ~htmlEscape("OR State Waters"),
-            group = "State Waters") %>%
-addPolygons(data = ca_waters, weight = 2, fillColor = "transparent",
-            opacity = 0.75,
-            label = ~htmlEscape("CA State Waters"),
-            group = "State Waters") %>%
-# Add West Coast MPAs
-addPolygons(data = wc_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalWC(Design),
-            fillOpacity = 0.3, label = ~htmlEscape(Site_Nm), group = "State MPAs") %>%
-# Add Canadian MPAs
-addPolygons(data = scott_islands_mpa, color = "#000414", weight = 2, 
-            label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
-addPolygons(data = pacific_rim_mpa, color = "#000414", weight = 2, 
-            label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
-# Add Mexico MPAs
-# Baja
-addPolygons(data = baja_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalMex(NOMBRE),
-            fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
-# All of Mexico
-addPolygons(data = mex_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalMex(NOMBRE),
-            fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
-# Add core planned transects
-addPolylines(data = filter(transects.sf, Type %in% c("Compulsory", "Adaptive")),
-             color = ~txPal(Type), weight = 3, opacity = 0.5,
-             label = ~htmlEscape(paste(Type, Transect)),
-             popup = ~popup,
-             group = "Planned Transects (Core)") %>%
-addCircleMarkers(data = filter(wpts.sf, Type %in% c("Compulsory", "Adaptive")),
-                 radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
-                 fillOpacity = 0.5, fillColor =  ~txPal(Type), 
-                 label = ~htmlEscape(paste(Type, Waypoint)),
-                 popup = ~popup,
-                 group = "Planned Transects (Core)") %>%
-# Add ancillary planned transects
-addPolylines(data = filter(transects.sf, !Type %in% c("Compulsory", "Adaptive")),
-             color = ~txPal(Type), weight = 3, opacity = 0.5,
-             # label = ~htmlEscape(paste(Type, Transect)),
-             popup = ~popup,
-             group = "Planned Transects (Ancillary)") %>%
-addCircleMarkers(data = filter(wpts.sf, !Type %in% c("Compulsory", "Adaptive")),
-                 radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
-                 fillOpacity = 0.5, fillColor =  ~txPal(Type),
-                 # label = ~htmlEscape(paste(Type, Waypoint)),
-                 popup = ~popup,
-                 group = "Planned Transects (Ancillary)") %>%
-# Add scale bar
-addScaleBar(position = "bottomright") %>%
-# Add map coordinates
-addMouseCoordinates() %>% 
-# Add measurement tool
-addMeasure(primaryLengthUnit = "miles", secondaryLengthUnit = "km",
-           primaryAreaUnit = "sqmiles", secondaryAreaUnit = "sqmeters",
-           position = "topleft") %>% 
-# Add layer controls
-addLayersControl(
-  baseGroups = c("Esri.NatGeoWorldMap", "Esri.OceanBasemap",
-                 "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
-  overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs",
-                    "State Waters", "Exclusive Economic Zones", 
-                    "Sardine habitat","Chlorophyll",
-                    "Bathymetry Contours",
-                    "Planned Transects (Core)", "Planned Transects (Ancillary)",
-                    "Vessel Track", "Vessel Positions", "Trawls",
-                    "Backscatter-CPS", "Backscatter-CPS (Small)",
-                    "Backscatter-Krill", "Backscatter-Krill (Small)",
-                    "Backscatter (Large)",
-                    "CTD Casts",
-                    "CUFES Egg Density", "CUFES Egg Density-Hake",
-                    "CUFES Egg Density-Squid", "CUFES Egg Density-Other",
-                    "CUFES (Negative)",
-                    "Saildrone Tracks", "Saildrone Positions"),
-  options = layersControlOptions(collapsed = FALSE)) %>% 
-fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
-          imap.bounds$range.lon[2], imap.bounds$range.lat[2])
+  # Enable tile caching
+  enableTileCaching() %>%
+  # Add provider tiles; # http://leaflet-extras.github.io/leaflet-providers/preview/index.html
+  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "Esri.NatGeoWorldMap",
+                   options = tileOptions(useCache = useCachedTile,
+                                         crossOrigin = useCrossOrigin)) %>%
+  addProviderTiles(providers$Esri.OceanBasemap, group = "Esri.OceanBasemap",
+                   options = tileOptions(useCache = useCachedTile,
+                                         crossOrigin = useCrossOrigin)) %>%
+  addProviderTiles(providers$Esri.WorldStreetMap, group = "Esri.WorldStreetMap",
+                   options = tileOptions(useCache = useCachedTile,
+                                         crossOrigin = useCrossOrigin)) %>%
+  addProviderTiles(providers$Esri.WorldImagery, group = "Esri.WorldImagery",
+                   options = tileOptions(useCache = useCachedTile,
+                                         crossOrigin = useCrossOrigin)) %>%
+  addProviderTiles(providers$OpenStreetMap.Mapnik, group = "OpenStreetMap.Mapnik",
+                   options = tileOptions(useCache = useCachedTile,
+                                         crossOrigin = useCrossOrigin)) %>%
+  # Add EEZs
+  addPolylines(data = eez_usa, color = "#000414", weight = 3, 
+               label = "EEZ-U.S.", group = "Exclusive Economic Zones") %>% 
+  addPolylines(data = eez_can, color = "#000414", weight = 3, 
+               label = "EEZ-Canada", group = "Exclusive Economic Zones") %>% 
+  addPolylines(data = eez_mex, color = "#000414", weight = 3, 
+               label = "EEZ-Mexico", group = "Exclusive Economic Zones") %>% 
+  # Add bathymetry contours
+  addPolylines(data = bathy, color = "white", weight = 2, 
+               label = ~paste(Depth, "m"), group = "Bathymetry Contours") %>% 
+  # Add National Marine Sanctuaries
+  addPolygons(data = nms_bounds, color = "#000414", weight = 2, fillColor = ~mpaPalNMS(Site_Nm),
+              fillOpacity = 0.25, label = ~htmlEscape(Site_Nm), group = "U.S. MPAs") %>%
+  # Add State waters
+  addPolygons(data = or_waters, weight = 2, fillColor = "transparent", 
+              opacity = 0.75,
+              label = ~htmlEscape("OR State Waters"),
+              group = "State Waters") %>%
+  addPolygons(data = ca_waters, weight = 2, fillColor = "transparent",
+              opacity = 0.75,
+              label = ~htmlEscape("CA State Waters"),
+              group = "State Waters") %>%
+  # Add West Coast MPAs
+  addPolygons(data = wc_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalWC(Design),
+              fillOpacity = 0.3, label = ~htmlEscape(Site_Nm), group = "State MPAs") %>%
+  # Add Canadian MPAs
+  addPolygons(data = scott_islands_mpa, color = "#000414", weight = 2, 
+              label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
+  addPolygons(data = pacific_rim_mpa, color = "#000414", weight = 2, 
+              label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
+  # Add Mexico MPAs
+  # Baja
+  addPolygons(data = baja_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalMex(NOMBRE),
+              fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
+  # All of Mexico
+  addPolygons(data = mex_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalMex(NOMBRE),
+              fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
+  # Add core planned transects
+  addPolylines(data = filter(transects.sf, Type %in% c("Compulsory", "Adaptive")),
+               color = ~txPal(Type), weight = 3, opacity = 0.5,
+               label = ~htmlEscape(paste(Type, Transect)),
+               popup = ~popup,
+               group = "Planned Transects (Core)") %>%
+  addCircleMarkers(data = filter(wpts.sf, Type %in% c("Compulsory", "Adaptive")),
+                   radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
+                   fillOpacity = 0.5, fillColor =  ~txPal(Type), 
+                   label = ~htmlEscape(paste(Type, Waypoint)),
+                   popup = ~popup,
+                   group = "Planned Transects (Core)") %>%
+  # Add ancillary planned transects
+  addPolylines(data = filter(transects.sf, !Type %in% c("Compulsory", "Adaptive")),
+               color = ~txPal(Type), weight = 3, opacity = 0.5,
+               # label = ~htmlEscape(paste(Type, Transect)),
+               popup = ~popup,
+               group = "Planned Transects (Ancillary)") %>%
+  addCircleMarkers(data = filter(wpts.sf, !Type %in% c("Compulsory", "Adaptive")),
+                   radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
+                   fillOpacity = 0.5, fillColor =  ~txPal(Type),
+                   # label = ~htmlEscape(paste(Type, Waypoint)),
+                   popup = ~popup,
+                   group = "Planned Transects (Ancillary)") %>%
+  # Add scale bar
+  addScaleBar(position = "bottomright") %>%
+  # Add map coordinates
+  addMouseCoordinates() %>% 
+  # Add grid lines
+  addGraticule(interval = 1, group = "Graticule") %>% 
+  # Add measurement tool
+  addMeasure(primaryLengthUnit = "miles", secondaryLengthUnit = "km",
+             primaryAreaUnit = "sqmiles", secondaryAreaUnit = "sqmeters",
+             position = "topleft") %>% 
+  # Add layer controls
+  addLayersControl(
+    baseGroups = c("Esri.NatGeoWorldMap", "Esri.OceanBasemap",
+                   "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
+    overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs",
+                      "State Waters", "Exclusive Economic Zones", 
+                      "Sardine habitat","Chlorophyll",
+                      "Bathymetry Contours", "Graticule",
+                      "Planned Transects (Core)", "Planned Transects (Ancillary)",
+                      "Vessel Track", "Vessel Positions", "Trawls",
+                      "Backscatter-CPS", "Backscatter-CPS (Small)",
+                      "Backscatter-Krill", "Backscatter-Krill (Small)",
+                      "Backscatter (Large)",
+                      "CTD Casts",
+                      "CUFES Egg Density", "CUFES Egg Density-Hake",
+                      "CUFES Egg Density-Squid", "CUFES Egg Density-Other",
+                      "CUFES (Negative)",
+                      "Saildrone Tracks", "Saildrone Positions"),
+    options = layersControlOptions(collapsed = FALSE)) %>% 
+  fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
+            imap.bounds$range.lon[2], imap.bounds$range.lat[2])
 
 if (exists("nav.paths.sf"))
   i.map <- i.map %>% 
@@ -1302,7 +1357,8 @@ if (sampling.cufes) {
   # Add CUFES data
   if (nrow(cufes.neg.sf) > 0)
     i.map <- i.map %>% 
-      addCircleMarkers(data = cufes.neg.sf, radius = ~bin.level*2, color = "#000414", stroke = FALSE, weight = 1,
+      addCircleMarkers(data = cufes.neg.sf, radius = ~bin.level*2, color = "#000414", 
+                       stroke = FALSE, weight = 1,
                        fillOpacity = 0.50, fillColor =  "#000414", label = ~htmlEscape(SampleNumber),
                        group = "CUFES (Negative)")
   
@@ -1427,67 +1483,75 @@ if (sampling.trawl) {
       addCircleMarkers(data = cluster.catch.sf, radius = 5, color = "#000000", stroke = TRUE, weight = 2,
                        opacity = 0.8, fillOpacity = 1, fillColor =  "white",
                        popup = ~popup, label = ~label,
-                       group =  "Trawls")    
+                       group =  "Trawls")  
+  
+  if (exists("haul.midwater"))
+    i.map <- i.map %>% 
+      # Add trawl catch
+      addCircleMarkers(data = haul.midwater.sf, radius = 5, color = "#000000", stroke = TRUE, weight = 2,
+                       opacity = 0.8, fillOpacity = 1, fillColor =  "blue",
+                       popup = ~popup, label = ~label,
+                       group =  "Trawls")  
 }
 
 # Add CTD casts
 if (exists("uctd.sf"))
   i.map <- i.map %>% 
-# Add trawl catch
-addCircleMarkers(data = uctd.sf, radius = 5, color = "#000000", stroke = TRUE, weight = 2,
-                 opacity = 0.8, fillOpacity = 1, fillColor =  "blue",
-                 popup = ~label, label = ~label,
-                 group =  "CTD Casts")  
+  # Add trawl catch
+  addCircleMarkers(data = uctd.sf, radius = 5, color = "#000000", stroke = TRUE, weight = 2,
+                   opacity = 0.8, fillOpacity = 1, fillColor =  "blue",
+                   popup = ~label, label = ~label,
+                   group =  "CTD Casts")  
 
 if (exists("ctd.sf"))
   i.map <- i.map %>% 
-# Add trawl catch
-addCircleMarkers(data = ctd.sf, radius = 5, color = "#000000", stroke = TRUE, weight = 2,
-                 opacity = 0.8, fillOpacity = 1, fillColor =  "green",
-                 popup = ~label, label = ~label,
-                 group =  "CTD Casts")  
+  # Add trawl catch
+  addCircleMarkers(data = ctd.sf, radius = 5, color = "#000000", stroke = TRUE, weight = 2,
+                   opacity = 0.8, fillOpacity = 1, fillColor =  "green",
+                   popup = ~label, label = ~label,
+                   group =  "CTD Casts")  
 
 # Add raster habitat layers
 ## Potential sardine habitat
 if (exists("sar.hab"))
   i.map <- i.map %>% addTiles() %>%
-addRasterImage(sar.hab, colors = sar.pal, opacity = 0.5,
-               group = "Sardine habitat") %>%
-addLegend(pal = sar.pal, values = values(sar.hab),
-          title = "Sardine habitat",
-          group = "Sardine habitat")
+  addRasterImage(sar.hab, colors = sar.pal, opacity = 0.5,
+                 group = "Sardine habitat") %>%
+  addLegend(pal = sar.pal, values = values(sar.hab),
+            title = "Sardine habitat",
+            group = "Sardine habitat")
 
 ## Chlorophyll a
 if (exists("chl.a"))
   i.map <- i.map %>% addTiles() %>%
-addRasterImage(chl.a, colors = chl.pal, opacity = 0.5,
-               group = "Chlorophyll") %>%
-addLegend(
-  position = "bottomright",
-  pal = chl.pal,
-  values = values(chl.a),
-  title = "Chlorophyll a (mg/m^3)",
-  group = "Chlorophyll")
+  addRasterImage(chl.a, colors = chl.pal, opacity = 0.5,
+                 group = "Chlorophyll") %>%
+  addLegend(
+    position = "bottomright",
+    pal = chl.pal,
+    values = values(chl.a),
+    title = "Chlorophyll a (mg/m^3)",
+    group = "Chlorophyll")
 
 # Add Saildrone data
 if (exists("nav.sd.paths.sf"))
   i.map <- i.map %>% 
-addPolylines(data = nav.sd.paths.sf, color = c("#000414"), weight = 2,
-             label = ~paste("Saildrone", saildrone), group = "Saildrone Tracks")
+  addPolylines(data = nav.sd.paths.sf, color = c("#000414"), weight = 2,
+               label = ~paste("Saildrone", saildrone), group = "Saildrone Tracks")
 if (exists("nav.now.sd"))
   i.map <- i.map %>% 
-addMarkers(data = nav.now.sd, label = ~label, popup = ~popup, 
-           group = "Saildrone Positions")
+  addMarkers(data = nav.now.sd, label = ~label, popup = ~popup, 
+             group = "Saildrone Positions")
 
 # Add Shimada data
 if (exists("nav.paths.sh.sf"))
   i.map <- i.map %>% 
-addPolylines(data = nav.paths.sh.sf, color = c("#000414"), weight = 1,
-             label = ~paste("Leg", leg), group = "Vessel Track")
+  addPolylines(data = nav.paths.sh.sf, color = c("#000414"), weight = 1,
+               label = ~paste("Leg", leg), group = "Vessel Track")
 if (exists("nav.now.sh"))
   i.map <- i.map %>% 
-addMarkers(data = nav.now.sh, label = ~label, popup = ~popup, 
-           group = "Vessel Positions")
+  addMarkers(data = nav.now.sh, label = ~label, popup = ~popup, 
+             group = "Vessel Positions")
 
 # Set visible layers
 i.map <- i.map %>%  
@@ -1495,7 +1559,7 @@ i.map <- i.map %>%
               "CUFES Egg Density", "CUFES Egg Density-Other",
               "CUFES Egg Density-Squid", "CUFES Egg Density-Hake", "CUFES (Negative)",
               "Sardine habitat","Chlorophyll", 
-              "CTD Casts",
+              "CTD Casts","Graticule",
               "Saildrone Tracks", "Saildrone Positions",
               "State Waters", "Exclusive Economic Zones",
               "Canada MPAs","Mexico MPAs"))
@@ -1503,7 +1567,7 @@ i.map <- i.map %>%
 if (save.imap) {
   # Create output directory
   dir_create(here("Output/imap"))
-
+  
   # Save i.map  
   mapshot(i.map, url = here("Output/imap/plotSurvey_explorer.HTML"))
 }
@@ -1748,7 +1812,7 @@ if (file.exists(here("Figs/fig_nasc_cufes_haul_wt.png"))) {
 
 # Map station sampling data
 
-A map showing the vessel track (gray lines), acoustic transects (black lines), and the locations of nighttime surface trawls (red), underway CTD (UCTD) casts (blue), and CTD casts (green, if present).  
+A map showing the vessel track (gray lines), acoustic transects (black lines), and the locations of nighttime surface trawls (red), daytime midwater trawls (white), underway CTD (UCTD) casts (blue), and CTD casts (green, if present).  
 
 ```{r map-station-data}
 if (exists("uctd.summ")|exists("ctd.summ")) {
@@ -1790,9 +1854,22 @@ if (exists("uctd.summ")|exists("ctd.summ")) {
     if (exists("haul.mid")) {
       haul.plot <- project_df(ungroup(haul.mid), to = crs.proj)
       
-      # Add CTD casts to map
+      # Add surface trawls to map
       sample.map <- sample.map +
         geom_point(data = haul.plot, aes(X, Y), shape = 21, fill = "red") +
+        coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+                 xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
+                 ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
+    }
+    
+    if (exists("haul.midwater")) {
+      haul.mw.plot <- ungroup(haul.midwater) %>% 
+        filter(!is.na(lat) & !is.na(long)) %>% 
+        project_df(to = crs.proj)
+      
+      # Add surface trawls to map
+      sample.map <- sample.map +
+        geom_point(data = haul.mw.plot, aes(X, Y), shape = 24, fill = "white") +
         coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
                  xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
                  ylim = c(map.bounds["ymin"], map.bounds["ymax"]))

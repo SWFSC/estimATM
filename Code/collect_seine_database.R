@@ -12,7 +12,7 @@ if (seine.source == "Excel") {
                                                  seine.dir, seine.xlsx.name), sheet = "catch")
   set.lengths.all <- readxl::read_xlsx(file.path(survey.dir[survey.vessel.primary],
                                                  seine.dir, seine.xlsx.name), sheet = "specimen")
-  spp.codes <- readxl::read_xlsx(file.path(survey.dir[survey.vessel.primary],
+  spp.codes       <- readxl::read_xlsx(file.path(survey.dir[survey.vessel.primary],
                                                  seine.dir, seine.xlsx.name), sheet = "species_codes")
 } else {
   

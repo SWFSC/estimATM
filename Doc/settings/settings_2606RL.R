@@ -11,7 +11,7 @@ combine.regions   <- F # Combine nearshore/offshore plots with those from the co
 # Survey planning ---------------------------------------------------------
 ## This section controls and configures settings used by makeTransects and checkTransects for generating and checking survey transects
 ### Transect spacing (nautical miles)
-tx.spacing.fsv  <- 15 # For Lasker 
+tx.spacing.fsv  <- 12.5 # For Lasker 
 tx.spacing.sd   <- 15 # For Saildrone
 tx.break.ns     <- 52 # Northernmost transect sampled by the southern F/V, 64 in 2024, near Carmel
 tx.spacing.ns   <- 5  # c("S" = 7, "N" = 7, "CI" = 2.5) # or NA
@@ -38,14 +38,14 @@ renumber.transects <- TRUE # Renumber transects to start at zero if transect are
 rm.location <- c("north") # c("south")
 
 # Randomize
-do.random <- FALSE
+do.random <- TRUE
 save.csv  <- TRUE
 show.maps <- TRUE
 
 ## Used by processTransects.R -----------
 # GPX file location
 gpx.dir          <- here("Data/Nav")
-gpx.file         <- "2606RL-15-nmi-spacing.gpx" #"IWCPS-planning.gpx"
+gpx.file         <- "2606RL-hybrid-spacing.gpx" #"IWCPS-planning.gpx"
 
 # Define transit and survey speed (kn) for estimating progress
 survey.speed     <- 9

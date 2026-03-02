@@ -28,9 +28,9 @@ min.tx.length <- 0 # nmi
 uctd.spacing   <- 15
 
 ### Transect removal and renumbering
-rm.n.transects     <- 0 # Number of transects to remove from the start (if near Mexico); if none, use zero; 71@10 nmi spacing
-rm.n.transects.ns  <- 99 # Number of transects to remove from the start (if near Mexico); if none, use zero
-rm.n.transects.sd  <- 69 # Number of transects to remove from the start (if near Mexico); if none, use zero
+rm.n.transects     <- 56 # Number of transects to remove from the start (if near Mexico); if none, use zero; 71@10 nmi spacing
+rm.n.transects.ns  <- 138 # Number of transects to remove from the start (if near Mexico); if none, use zero
+rm.n.transects.sd  <- 47 # Number of transects to remove from the start (if near Mexico); if none, use zero
 rm.i.transects     <- NA # Remove specific transects from plan; else NA (for 2007RL: c(paste(90:117, "Nearshore")))
 renumber.transects <- TRUE # Renumber transects to start at zero if transect are removed
 
@@ -45,7 +45,7 @@ show.maps <- TRUE
 ## Used by processTransects.R -----------
 # GPX file location
 gpx.dir          <- here("Data/Nav")
-gpx.file         <- "2606RL-hybrid-spacing.gpx" #"IWCPS-planning.gpx"
+gpx.file         <- "2606RL-12.5-nmi-spacing.gpx" #"IWCPS-planning.gpx"
 
 # Define transit and survey speed (kn) for estimating progress
 survey.speed     <- 9

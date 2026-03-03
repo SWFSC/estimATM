@@ -38,7 +38,7 @@ if (is.null(doc.type)) {doc.type <- "html"}
 
 # Knitr options
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
-                      out.width = "90%")
+                      out.width = "100%")
 
 theme_set(theme_bw())
 
@@ -838,47 +838,47 @@ scientificName.sub <- "Sardinops sagax"
 
 # Subset lengths and models
 lengths.sub     <- filter(lengths, scientificName == scientificName.sub)
-lengths.all.sub <- filter(lengths.all, 
+lengths.all.sub <- filter(lengths.all,
                           scientificName == scientificName.sub,
                           season ==  tolower(survey.season))
 
-lw.df.sub <- filter(lw.df, scientificName == scientificName.sub) %>% 
+lw.df.sub <- filter(lw.df, scientificName == scientificName.sub) %>%
   pivot_longer(totalLength_mm:standardLength_mm, names_to = "length_type", values_to = "length_mm")
 
 if (nrow(lengths.sub) > 0) {
   # Plot L/W data from past and current survey -----------------------------------
-  lw.plot <- ggplot() + 
+  lw.plot <- ggplot() +
     # Plot L/W data from all years/surveys
-    geom_point(data = lengths.all.sub, 
+    geom_point(data = lengths.all.sub,
                aes(standardLength_mm, weightg),
                colour = "gray70", alpha = 0.3) +
     # Plot L/W data for current survey
     geom_point(data = lengths.sub,
-               aes(standardLength_mm, weightg, fill = sex, 
-                   colour = outlier, label = label), 
-               shape = 21, alpha = 0.9) + 
+               aes(standardLength_mm, weightg, fill = sex,
+                   colour = outlier, label = label),
+               shape = 21, alpha = 0.9) +
     scale_fill_manual(name = "Sex", values = c("female" = "pink", "male" = "lightblue",
                                                "unknown" = "#FFC926", "missing" = "purple")) +
     scale_colour_manual(name = "Flagged", values = c("NA" = NA, "TRUE" = "black")) +
     # Plot seasonal length models for each species
-    geom_line(data = lw.df.sub, aes(length_mm, weightg, group = length_type), 
+    geom_line(data = lw.df.sub, aes(length_mm, weightg, group = length_type),
               alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot individuals with missing lengths and weights
-    geom_point(data = filter(lengths.sub, missing.length == TRUE), 
+    geom_point(data = filter(lengths.sub, missing.length == TRUE),
                aes(totalLength_mm, weightg, label = label),
                shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
-    geom_point(data = filter(lengths.sub, missing.weight == TRUE), 
+    geom_point(data = filter(lengths.sub, missing.weight == TRUE),
                aes(nativeLength_mm, weightg, label = label),
                shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
     # Format plot
-    xlab("Length (mm)") + ylab("Mass (g)") 
-  
+    xlab("Length (mm)") + ylab("Mass (g)")
+
   if (do.plotly) {
     ggplotly(lw.plot)
   } else {
     lw.plot
   }
-  
+
 } else {
   print("No specimens present.")
 }
@@ -1553,7 +1553,7 @@ mex_mpas <- st_read(here("Data/GIS/mex_mpas.shp")) %>%
   st_transform(crs.geog)
 ```
 
-```{r map-hauls}
+```{r map-hauls, out.height='9in'}
 # Create color palette for MPAs
 ## CA and OR MPAs
 all.mpa.types <- as.factor(c(unique(as.character(ca_mpas$Type)), 
@@ -1593,7 +1593,7 @@ imap.bounds <- map_bounds(haul$startLatDecimal, haul$startLongDecimal, 0.1)
 
 # Provider tiles info: http://leaflet-extras.github.io/leaflet-providers/preview/index.html
 if (exists("nav.paths.sf")) {
-  i.map <- leaflet() %>% 
+  i.map <- leaflet::leaflet() %>% 
     # Add provider tiles
     addProviderTiles(providers$Esri.NatGeoWorldMap) %>%
     # Add EEZs
@@ -1716,13 +1716,6 @@ if (exists("nav.paths.sf")) {
     # Add map coordinates
     addMouseCoordinates()
 }
-```
-
-### Leaflet test
-
-```{r cars}
-m <- leaflet() %>% addTiles()
-m  # a map with the default OSM tile layer
 ```
 
 ### Haul clusters

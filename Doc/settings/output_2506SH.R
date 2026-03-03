@@ -2,7 +2,7 @@
 # Load biomass estimate tables
 load(here("Output/biomass_bootstrap_estimates_final.Rdata"))
 load(here("Output/biomass_bootstrap_estimates_final_ns.Rdata"))
-load(here("Output/biomass_bootstrap_estimates_final_nse.Rdata"))
+# load(here("Output/biomass_bootstrap_estimates_final_nse.Rdata"))
 
 # Get survey estimates for all strata
 be.all     <- be %>% 
@@ -13,10 +13,10 @@ be.all.ns  <- be.ns %>%
   mutate(Region = "Nearshore") %>%
   select(Species, Stock, Region, everything()) %>%
   filter(Stratum == "All")
-be.all.nse <- be.nse %>% 
-  mutate(Region = "NSE") %>% 
-  select(Species, Stock, Region, everything()) %>% 
-  filter(Stratum == "All")
+# be.all.nse <- be.nse %>% 
+#   mutate(Region = "NSE") %>% 
+#   select(Species, Stock, Region, everything()) %>% 
+#   filter(Stratum == "All")
 
 # Summarise biomass for all regions included in the final estimates
 be.all.var <- be.all %>% 

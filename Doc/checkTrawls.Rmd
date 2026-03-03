@@ -67,11 +67,14 @@ dir_create(here(c("Figs", "Output")))
 
 ```{r user-settings}
 # User-specified settings
-get.db          <- T # Extract data from trawl database (F for testing)
+get.db          <- F # Extract data from trawl database (F for testing)
 get.nav         <- T # Download NOAA Ship nav data
 get.nav.sh      <- F # Download NOAA Ship nav data
 copy.files      <- T # Copy trawl database
 overwrite.files <- T # Overwrite files
+
+# Plotting options
+do.plotly       <- F # Set to F if having issues rendering Leaflet maps
 ```
 
 ```{r get-nav}
@@ -870,7 +873,12 @@ if (nrow(lengths.sub) > 0) {
     # Format plot
     xlab("Length (mm)") + ylab("Mass (g)") 
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.plotly) {
+    ggplotly(lw.plot)
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -921,7 +929,12 @@ if (nrow(lengths.sub) > 0) {
     # Format plot
     xlab("Length (mm)") + ylab("Mass (g)") 
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.plotly) {
+    ggplotly(lw.plot)
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -972,7 +985,12 @@ if (nrow(lengths.sub) > 0) {
     # Format plot
     xlab("Length (mm)") + ylab("Mass (g)") 
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.plotly) {
+    ggplotly(lw.plot)
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -1023,7 +1041,12 @@ if (nrow(lengths.sub) > 0) {
     # Format plot
     xlab("Length (mm)") + ylab("Mass (g)") 
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.plotly) {
+    ggplotly(lw.plot)
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -1074,7 +1097,12 @@ if (nrow(lengths.sub) > 0) {
     # Format plot
     xlab("Length (mm)") + ylab("Mass (g)") 
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.plotly) {
+    ggplotly(lw.plot)
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -1125,7 +1153,12 @@ if (nrow(lengths.sub) > 0) {
     # Format plot
     xlab("Length (mm)") + ylab("Mass (g)") 
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.plotly) {
+    ggplotly(lw.plot)
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -1176,7 +1209,12 @@ if (nrow(lengths.sub) > 0) {
     # Format plot
     xlab("Length (mm)") + ylab("Mass (g)") 
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.plotly) {
+    ggplotly(lw.plot)
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -1223,7 +1261,12 @@ if (nrow(lengths.sub) > 0) {
     # Format plot
     xlab("Mantle length (mm)") + ylab("Mass (g)") 
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.plotly) {
+    ggplotly(lw.plot)
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -1268,7 +1311,11 @@ ggsave(lw.plot.leg, filename = here("Figs/fig_LW_plots_leg.png"),
        width = 10, height = 7) 
 
 # View plot
-ggplotly(lw.plot.leg)
+if (do.plotly) {
+  ggplotly(lw.plot.leg)
+} else {
+  lw.plot.leg
+}
 ```
 
 ## Final length-weight comparison
@@ -1506,7 +1553,7 @@ mex_mpas <- st_read(here("Data/GIS/mex_mpas.shp")) %>%
   st_transform(crs.geog)
 ```
 
-```{r map-hauls,out.height="10in",out.width="100%"}
+```{r map-hauls}
 # Create color palette for MPAs
 ## CA and OR MPAs
 all.mpa.types <- as.factor(c(unique(as.character(ca_mpas$Type)), 
@@ -1669,6 +1716,13 @@ if (exists("nav.paths.sf")) {
     # Add map coordinates
     addMouseCoordinates()
 }
+```
+
+### Leaflet test
+
+```{r cars}
+m <- leaflet() %>% addTiles()
+m  # a map with the default OSM tile layer
 ```
 
 ### Haul clusters

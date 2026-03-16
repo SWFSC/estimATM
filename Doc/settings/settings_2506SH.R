@@ -207,12 +207,6 @@ leaflet.checkTransects.simple <- TRUE # Use a simple Leaflet for checkTransects
 scale.pies <- FALSE   # Scale pie charts (TRUE/FALSE)
 pie.scale  <- 0.0125 # 0.01-0.02 works well for coast-wide survey (i.e., summer), larger values (~0.03) for spring
 
-# Lookup table for renaming columns
-pie.spp <- c("Jacksmelt"  = "Atherinopsis californiensis", "PacHerring" = "Clupea pallasii",
-             "Anchovy"    = "Engraulis mordax", "Sardine"    = "Sardinops sagax",
-             "PacMack"    = "Scomber japonicus", "JackMack"   = "Trachurus symmetricus",
-             "RndHerring" = "Etrumeus acuminatus", "AllCPS" = "AllCPS")
-
 # Map landmarks
 label.list <- c("Monterey Bay","San Francisco","Cape Flattery","Crescent City",
                 "Newport","Point Conception","Cape Mendocino","Columbia River",
@@ -236,6 +230,7 @@ jacksmelt.color    <- '#A020F0'
 pac.mack.color     <- '#00FFFF'
 pac.herring.color  <- '#F5DEB3'
 rnd.herring.color  <- '#F0B81D'
+jap.sardine.color  <- '#F0A6A6'
 other.color        <- 'gray'
 
 # Set gear type colors
@@ -244,12 +239,21 @@ trawl.color <- "black"
 
 # Define species to be analysed -------------------
 ## CPS species
-cps.spp            <- c("Clupea pallasii","Engraulis mordax","Sardinops sagax",
-                        "Scomber japonicus","Trachurus symmetricus", 
+cps.spp            <- c("Clupea pallasii","Engraulis mordax","Sardinops melanosticta",
+                        "Sardinops sagax", "Scomber japonicus","Trachurus symmetricus", 
                         "Etrumeus acuminatus")
 
-## trouts & salmon, Pacific salmon unid, pink, chum, coho, sockeye, Chinook, steelhead, cutthroat trout
+## Estimate biomass of Japanese sardine?
+estimate.sar.japanese <- FALSE
+
+## Trouts & salmon: Pacific salmon (unidentified), pink, chum, coho, sockeye, Chinook, steelhead, cutthroat trout
 salmon.spp <- c(161931, 161974, 161975, 161976, 161977, 161979, 161980, 161989, 161983) 
+
+## Define length types per species
+spp.sl <- c("Sardinops sagax", "Sardinops melanosticta", "Engraulis mordax")
+spp.fl <- c("Scomber japonicus", "Trachurus symmetricus", "Clupea pallasii", 
+            "Etrumeus acuminatus", "Merluccius productus")
+spp.ml <- c("Doryteuthis opalescens")
 
 # CUFES -------------------------------------------------------
 cufes.start        <- NA # Start of survey for CUFES filtering
@@ -276,28 +280,34 @@ trawl.labels       <- c("<1", "1-10", "10-25", "25-50", "50-500", "500-1000", ">
 trawl.sizes        <- c(1, 2, 3, 4, 5, 6, 7) 
 
 # For pie charts; subsetted using pie.spp, which is defined from the catch data
+# Lookup table for renaming columns
+pie.spp <- c("Jacksmelt"  = "Atherinopsis californiensis", "PacHerring" = "Clupea pallasii",
+             "Anchovy"    = "Engraulis mordax", "Sardine"    = "Sardinops sagax", "JapSardine" = "Sardinops melanosticta",
+             "PacMack"    = "Scomber japonicus", "JackMack"   = "Trachurus symmetricus",
+             "RndHerring" = "Etrumeus acuminatus", "AllCPS" = "AllCPS")
+
 # Species columns
 pie.cols <- c("Engraulis mordax" = "Anchovy", "Trachurus symmetricus" = "JackMack", 
               "Atherinopsis californiensis" = "Jacksmelt", "Clupea pallasii" = "PacHerring", 
               "Scomber japonicus" = "PacMack", "Etrumeus acuminatus" = "RndHerring", 
-              "Sardinops sagax" = "Sardine")
+              "Sardinops sagax" = "Sardine", "Sardinops melanosticta" = "JapSardine")
 
 pie.cols.prop <- c("Engraulis mordax" = "prop.anch", "Trachurus symmetricus" = "prop.jack", 
                    "Atherinopsis californiensis" = "prop.jsmelt", "Clupea pallasii" = "prop.her", 
                    "Scomber japonicus" = "prop.mack", "Etrumeus acuminatus" = "prop.rher", 
-                   "Sardinops sagax" = "prop.sar")
+                   "Sardinops sagax" = "prop.sar", "Sardinops melanosticta" = "prop.sar.jap")
 
 # Species labels
 pie.labs <- c("Engraulis mordax" = "Anchovy", "Trachurus symmetricus" = "J. Mackerel", 
               "Atherinopsis californiensis" = "Jacksmelt", "Clupea pallasii" = "P. herring", 
               "Scomber japonicus" = "P. mackerel", "Etrumeus acuminatus" = "R. herring", 
-              "Sardinops sagax" = "Sardine")
+              "Sardinops sagax" = "Sardine", "Sardinops melanosticta" = "J. Sardine")
 
 # Species colors
 pie.colors <- c("Engraulis mordax" = anchovy.color, "Trachurus symmetricus" = jack.mack.color, 
                 "Atherinopsis californiensis" = jacksmelt.color, "Clupea pallasii" = pac.herring.color, 
                 "Scomber japonicus" = pac.mack.color, "Etrumeus acuminatus" = rnd.herring.color,
-                "Sardinops sagax" = sardine.color)
+                "Sardinops sagax" = sardine.color, "Sardinops melanosticta" = jap.sardine.color)
 
 # NASC ------------------------------------------------------------------
 # For legend objects
@@ -677,7 +687,7 @@ bootstrap.est.spp      <- c("Clupea pallasii","Engraulis mordax","Sardinops saga
                             "Scomber japonicus","Trachurus symmetricus")
 
 # Number of bootstrap samples
-boot.num <- 1000 # 1000 during final
+boot.num <- 100 # 1000 during final
 
 # Generate biomass length frequencies
 do.lf    <- TRUE

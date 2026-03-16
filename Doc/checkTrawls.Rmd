@@ -67,7 +67,7 @@ dir_create(here(c("Figs", "Output")))
 
 ```{r user-settings}
 # User-specified settings
-get.db          <- F # Extract data from trawl database (F for testing)
+get.db          <- T # Extract data from trawl database (F for testing)
 get.nav         <- T # Download NOAA Ship nav data
 get.nav.sh      <- F # Download NOAA Ship nav data
 copy.files      <- T # Copy trawl database
@@ -161,6 +161,9 @@ haul.bad <- haul.all %>%
            is.na(equilibriumTime) | 
            is.na(haulBackTime))
 
+haul.all <- haul.all %>% 
+  filter(!trawlPerformance %in% trawl.performance) # Aborted hauls, etc.
+
 # Get only hauls from current survey
 haul <- filter(haul.all, cruise %in% cruise.name) %>% 
   filter(!haul %in% haul.bad$haul) %>%
@@ -213,15 +216,16 @@ if (nrow(catch) > 0) {
   # I think we can delete this section, which is only important for pie charts 
   # and no longer needs to have all species present for plotting to work.
   
-  # Add species with zero total weight
-  if (!has_name(haul.summ.wt, "Engraulis mordax"))      {haul.summ.wt$`Engraulis mordax`      <- 0}
-  if (!has_name(haul.summ.wt, "Sardinops sagax"))       {haul.summ.wt$`Sardinops sagax`       <- 0}
-  if (!has_name(haul.summ.wt, "Scomber japonicus"))     {haul.summ.wt$`Scomber japonicus`     <- 0}
-  if (!has_name(haul.summ.wt, "Trachurus symmetricus")) {haul.summ.wt$`Trachurus symmetricus` <- 0}
-  if (!has_name(haul.summ.wt, "Clupea pallasii"))       {haul.summ.wt$`Clupea pallasii`       <- 0}
-  if (!has_name(haul.summ.wt, "Atherinopsis californiensis")) {haul.summ.wt$`Atherinopsis californiensis` <- 0}
-  if (!has_name(haul.summ.wt, "Etrumeus acuminatus"))   {haul.summ.wt$`Etrumeus acuminatus` <- 0}
-  if (!has_name(haul.summ.wt, "Other"))                 {haul.summ.wt$`Other` <- 0}
+  # # Add species with zero total weight
+  # if (!has_name(haul.summ.wt, "Engraulis mordax"))       {haul.summ.wt$`Engraulis mordax`      <- 0}
+  # if (!has_name(haul.summ.wt, "Sardinops sagax"))        {haul.summ.wt$`Sardinops sagax`       <- 0}
+  # if (!has_name(haul.summ.wt, "Sardinops melanosticta")) {haul.summ.wt$`Sardinops sagax`       <- 0}
+  # if (!has_name(haul.summ.wt, "Scomber japonicus"))      {haul.summ.wt$`Scomber japonicus`     <- 0}
+  # if (!has_name(haul.summ.wt, "Trachurus symmetricus"))  {haul.summ.wt$`Trachurus symmetricus` <- 0}
+  # if (!has_name(haul.summ.wt, "Clupea pallasii"))        {haul.summ.wt$`Clupea pallasii`       <- 0}
+  # if (!has_name(haul.summ.wt, "Atherinopsis californiensis")) {haul.summ.wt$`Atherinopsis californiensis` <- 0}
+  # if (!has_name(haul.summ.wt, "Etrumeus acuminatus"))    {haul.summ.wt$`Etrumeus acuminatus` <- 0}
+  # if (!has_name(haul.summ.wt, "Other"))                  {haul.summ.wt$`Other` <- 0}
   
   # Calculate total weight of all CPS species
   haul.summ.wt <- haul.summ.wt %>% 
@@ -426,32 +430,24 @@ lengths.all <- lengths.all %>%
   # Find missing lengths
   mutate(
     missing.length = case_when(
-      is.na(standardLength_mm) & scientificName %in% c("Sardinops sagax", 
-                                                       "Engraulis mordax") ~ TRUE,
-      is.na(forkLength_mm) & scientificName %in% c("Scomber japonicus", "Trachurus symmetricus", 
-                                                   "Clupea pallasii", "Etrumeus acuminatus",
-                                                   "Merluccius productus") ~ TRUE,
-      is.na(mantleLength_mm) & scientificName %in% c("Doryteuthis opalescens") ~ TRUE,
+      is.na(standardLength_mm) & scientificName %in% spp.sl ~ TRUE,
+      is.na(forkLength_mm) & scientificName %in% spp.fl ~ TRUE,
+      is.na(mantleLength_mm) & scientificName %in% spp.ml ~ TRUE,
       TRUE ~ NA),
     missing.weight = case_when(
       is.na(weightg) ~ TRUE,
       TRUE ~ FALSE)) %>% 
   # Calculate native lengths for each species, for plotting later
   mutate(nativeLength_mm = case_when(
-    scientificName %in% c("Sardinops sagax", "Engraulis mordax") ~ standardLength_mm,
-    scientificName %in% c("Scomber japonicus", "Trachurus symmetricus", 
-                          "Clupea pallasii", "Etrumeus acuminatus",
-                          "Merluccius productus") ~ forkLength_mm,
-    scientificName == "Doryteuthis opalescens" ~ mantleLength_mm,
+    scientificName %in% spp.sl ~ standardLength_mm,
+    scientificName %in% spp.fl ~ forkLength_mm,
+    scientificName %in% spp.ml ~ mantleLength_mm,
     TRUE ~ NA_integer_))
 
 if (exists("lengths.expanded.final")) {
   lengths.all <- lengths.all %>% 
     bind_rows(lengths.expanded.final)
 }
-
-# haul.unique <- haul.all[!which(duplicated(select(haul.all, cruise, ship, haul, season))),]
-# haul.unique <- distinct(haul.all)
 
 lengths.all <- lengths.all %>% 
   # Create unique key and replace unused sex categories
@@ -469,7 +465,6 @@ lengths.all <- lengths.all %>%
 
 # Convert lengths to total length for TS estimates ---------------------------
 lengths.all  <- lengths.all %>%
-  # ungroup() %>% 
   mutate(
     totalLength_mm = case_when(
       scientificName == "Clupea pallasii" ~ 
@@ -478,6 +473,8 @@ lengths.all  <- lengths.all %>%
         convert_length("Engraulis mordax", .$nativeLength_mm, "SL", "TL"),
       scientificName == "Sardinops sagax" ~ 
         convert_length("Sardinops sagax", .$nativeLength_mm, "SL", "TL"),
+      scientificName == "Sardinops melanosticta" ~ 
+        convert_length("Sardinops melanosticta", .$nativeLength_mm, "SL", "TL"),
       scientificName == "Scomber japonicus" ~ 
         convert_length("Scomber japonicus", .$nativeLength_mm, "FL", "TL"),
       scientificName == "Trachurus symmetricus" ~ 
@@ -489,8 +486,6 @@ lengths.all  <- lengths.all %>%
       TRUE ~ totalLength_mm)) %>% 
   mutate(totalLength_mm  = round(totalLength_mm),
          mantleLength_mm = round(mantleLength_mm)) 
-
-# lengths.all$totalLength_mm <- totalLength_mm + 5 
 
 # Get max TL for plotting L/W models
 L.max <- lengths.all %>% 
@@ -669,16 +664,20 @@ lengths %>%
 
 ```{r length-summary-squid}
 # Summarize lengths by species
-lengths %>% 
-  filter(scientificName == "Doryteuthis opalescens") %>% 
-  group_by(scientificName) %>% 
-  summarise(
-    ML.min = round(min(mantleLength_mm, na.rm = TRUE)/10,0),
-    ML.max = round(max(mantleLength_mm, na.rm = TRUE)/10,0),
-    w.min  = round(min(weightg, na.rm = TRUE),1),
-    w.max  = round(max(weightg, na.rm = TRUE),1)) %>%
-  # replace_with_na_all(condition = ~.x %in% c(-Inf, Inf)) %>% 
-  datatable(rownames = FALSE)
+if ("Doryteuthis opalescens" %in% lengths$scientificName) {
+  lengths %>% 
+    filter(scientificName == "Doryteuthis opalescens") %>% 
+    group_by(scientificName) %>% 
+    summarise(
+      ML.min = round(min(mantleLength_mm, na.rm = TRUE)/10,0),
+      ML.max = round(max(mantleLength_mm, na.rm = TRUE)/10,0),
+      w.min  = round(min(weightg, na.rm = TRUE),1),
+      w.max  = round(max(weightg, na.rm = TRUE),1)) %>%
+    # replace_with_na_all(condition = ~.x %in% c(-Inf, Inf)) %>% 
+    datatable(rownames = FALSE)
+} else {
+  print("No market squid present.")
+}
 ```
 
 # Length-frequencies
@@ -829,6 +828,7 @@ The dashed lines represent the season-specific (in this case, `r survey.season`)
 For each species, the native lengths (standard length for Sardine and Anchovy, and fork length for mackerels and Herring) and weights are plotted atop modeled L/W curves. Curves depicting native lengths are dark gray, and the others are light gray. Ideally, the measured values will fall along the darker gray dashed line.  
 
 ## Sardine
+### Pacific
 
 Standard length (mm) vs. weight (g).
 
@@ -884,7 +884,64 @@ if (nrow(lengths.sub) > 0) {
 }
 ```
 
-## Anchovy
+## Sardine
+### Japanese
+
+Standard length (mm) vs. weight (g).
+
+```{r japanese-sardine-data}
+# Select species
+scientificName.sub <- "Sardinops melanosticta"
+
+# Subset lengths and models
+lengths.sub     <- filter(lengths, scientificName == scientificName.sub)
+lengths.all.sub <- filter(lengths.all,
+                          scientificName == scientificName.sub,
+                          season ==  tolower(survey.season))
+
+lw.df.sub <- filter(lw.df, scientificName == scientificName.sub) %>%
+  pivot_longer(totalLength_mm:standardLength_mm, names_to = "length_type", values_to = "length_mm")
+
+if (nrow(lengths.sub) > 0) {
+  # Plot L/W data from past and current survey -----------------------------------
+  lw.plot <- ggplot() +
+    # Plot L/W data from all years/surveys
+    geom_point(data = lengths.all.sub,
+               aes(standardLength_mm, weightg),
+               colour = "gray70", alpha = 0.3) +
+    # Plot L/W data for current survey
+    geom_point(data = lengths.sub,
+               aes(standardLength_mm, weightg, fill = sex,
+                   colour = outlier, label = label),
+               shape = 21, alpha = 0.9) +
+    scale_fill_manual(name = "Sex", values = c("female" = "pink", "male" = "lightblue",
+                                               "unknown" = "#FFC926", "missing" = "purple")) +
+    scale_colour_manual(name = "Flagged", values = c("NA" = NA, "TRUE" = "black")) +
+    # Plot seasonal length models for each species
+    geom_line(data = lw.df.sub, aes(length_mm, weightg, group = length_type),
+              alpha = 0.75, colour = "gray20", linetype = 'dashed') +
+    # Plot individuals with missing lengths and weights
+    geom_point(data = filter(lengths.sub, missing.length == TRUE),
+               aes(totalLength_mm, weightg, label = label),
+               shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point(data = filter(lengths.sub, missing.weight == TRUE),
+               aes(nativeLength_mm, weightg, label = label),
+               shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
+    # Format plot
+    xlab("Length (mm)") + ylab("Mass (g)")
+
+  if (do.plotly) {
+    ggplotly(lw.plot)
+  } else {
+    lw.plot
+  }
+
+} else {
+  print("No specimens present.")
+}
+```
+
+## Northern anchovy
 
 Standard length (mm) vs. weight (g).  
 
@@ -1912,15 +1969,15 @@ catch.bar <- catch.all %>%
 bar.labs <- c("Atherinopsis californiensis" = "Jacksmelt", "Clupea pallasii" = "P. herring",
               "Engraulis mordax" = "Anchovy", "Etrumeus acuminatus" = "R. herring", 
               "Merluccius productus" = "P. hake", "Other" = "Other",
-              "Sardinops sagax" = "Sardine", "Scomber japonicus" = "P. mackerel", 
-              "Trachurus symmetricus" = "J. mackerel")
+              "Sardinops melanosticta" = "J. Sardine", "Sardinops sagax" = "Sardine",
+              "Scomber japonicus" = "P. mackerel", "Trachurus symmetricus" = "J. mackerel")
 
 # Species colors
 bar.colors <- c("Atherinopsis californiensis" = jacksmelt.color, "Clupea pallasii" = pac.herring.color,
                 "Engraulis mordax" = anchovy.color, "Etrumeus acuminatus" = rnd.herring.color,
                 "Merluccius productus" = "purple", "Other" = "gray70",
-                "Sardinops sagax" = sardine.color, "Scomber japonicus" = pac.mack.color, 
-                "Trachurus symmetricus" = jack.mack.color) 
+                "Sardinops melanosticta" = jap.sardine.color, "Sardinops sagax" = sardine.color,
+                "Scomber japonicus" = pac.mack.color, "Trachurus symmetricus" = jack.mack.color) 
 
 bar.spp <- sort(unique(catch.bar$group))
 

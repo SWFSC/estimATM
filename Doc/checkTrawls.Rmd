@@ -213,20 +213,6 @@ if (nrow(catch) > 0) {
     select(haul, cluster, scientificName, totalWeight) %>% 
     pivot_wider(names_from = scientificName, values_from = totalWeight, values_fn = sum, values_fill = 0)
   
-  # I think we can delete this section, which is only important for pie charts 
-  # and no longer needs to have all species present for plotting to work.
-  
-  # # Add species with zero total weight
-  # if (!has_name(haul.summ.wt, "Engraulis mordax"))       {haul.summ.wt$`Engraulis mordax`      <- 0}
-  # if (!has_name(haul.summ.wt, "Sardinops sagax"))        {haul.summ.wt$`Sardinops sagax`       <- 0}
-  # if (!has_name(haul.summ.wt, "Sardinops melanosticta")) {haul.summ.wt$`Sardinops sagax`       <- 0}
-  # if (!has_name(haul.summ.wt, "Scomber japonicus"))      {haul.summ.wt$`Scomber japonicus`     <- 0}
-  # if (!has_name(haul.summ.wt, "Trachurus symmetricus"))  {haul.summ.wt$`Trachurus symmetricus` <- 0}
-  # if (!has_name(haul.summ.wt, "Clupea pallasii"))        {haul.summ.wt$`Clupea pallasii`       <- 0}
-  # if (!has_name(haul.summ.wt, "Atherinopsis californiensis")) {haul.summ.wt$`Atherinopsis californiensis` <- 0}
-  # if (!has_name(haul.summ.wt, "Etrumeus acuminatus"))    {haul.summ.wt$`Etrumeus acuminatus` <- 0}
-  # if (!has_name(haul.summ.wt, "Other"))                  {haul.summ.wt$`Other` <- 0}
-  
   # Calculate total weight of all CPS species
   haul.summ.wt <- haul.summ.wt %>% 
     replace(is.na(.), 0) %>%

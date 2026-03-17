@@ -13,14 +13,6 @@ if (trawl.source == "SQL") {
                               Trusted_Connection= "Yes",
                               SERVER="swc-estrella-s")
   
-  # # Original code, prior to CLAMS integration and errors reading new data
-  # trawl.con  <- DBI::dbConnect(odbc::odbc(), 
-  #                              Driver = "ODBC Driver 18 for SQL Server",
-  #                              # Driver = "SQL Server",
-  #                              Server = "161.55.235.187", 
-  #                              Database = "Trawl", 
-  #                              Trusted_Connection = "Yes")
-  
 } else if (trawl.source == "Access") {
   # Copy trawl Access database
   haul.db <- fs::dir_ls(file.path(survey.dir[survey.vessel.primary],

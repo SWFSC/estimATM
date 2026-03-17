@@ -362,21 +362,3 @@ catch.all <- catch.all %>%
   mutate(
     totalWeight = subSampleWtkg + remainingSubSampleWtkg,
     totalNum    = (subSampleCount/subSampleWtkg)*totalWeight)
-
-# Unused code -----------------------------
-
-# CLAMS
-# Probably don't need; use averages in other tables
-# event.stream <- event.stream %>% 
-#   pivot_wider(names_from = MEASUREMENT_TYPE, values_from = MEASUREMENT_VALUE) %>% 
-#   rename(surfaceTempC = SurfaceTemp, 
-#          windDirection = WindDirection, windSpeedKnots = WindSpeed,
-#          # salinityPPM = TBD, aveBottomDepthMeters = TBD, 
-#          # shipSpeedOverGround = SOG, shipSpeedThroughWater = TBD,
-#          # startLatDecimal = Latitude, startLongDecimal = Longitude,
-#          # stopLatDecimal = Latitude, stopLongDecimal = Longitude,
-#          # doorSpreadMetersEQ = DoorSpread, doorSpreadMeters10 = DoorSpread, 
-#          # doorSpreadMeters20 = DoorSpread, doorSpreadMetersHB = DoorSpread,
-#          # footRopeDepthEQ = Footrope , footRopeDepth10 = Footrope , 
-#          # footRopeDepth20 = Footrope , footRopeDepthHB = Footrope
-#          )

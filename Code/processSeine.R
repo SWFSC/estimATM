@@ -52,6 +52,20 @@ ggsave(set.map,
        filename = here("Figs/fig_seine_sets.png"),
        width = map.width, height = map.height)
 
+if (!estimate.j.sardine) {
+  set.catch.all <- set.catch.all %>% 
+    # Replace J. sardine species code with P. sardine
+    mutate(species = ifelse(species == 551222, 161729, species)) %>% 
+    group_by(cruise, ship, date, set, landing, species, notes, key) %>%
+    summarise_at(vars(totalNum:totalWeight), sum) %>% 
+    ungroup() 
+  
+  # Rename Japanese sardine specimens to P. sardine
+  set.lengths.all <- set.lengths.all %>%
+    # Replace J. sardine species code with P. sardine
+    mutate(species = ifelse(species == 551222, 161729, species))
+}
+
 ## Process catch data ------------------------------------------------
 set.catch <- set.catch.all %>% 
   left_join(select(spp.codes, species, commonName, scientificName)) %>% 
@@ -788,8 +802,14 @@ cluster.final.seine <- list()
 haul.final.seine    <- list()
 lf.final.seine      <- data.frame()
 
+if (!estimate.j.sardine) {
+  cps.spp.ns <- cps.spp[!(cps.spp %in% "Sardinops melanosticta")]
+} else {
+  cps.spp.ns <- cps.spp
+}
+
 # For each species, calculate length frequencies, combine with clf, and write final file
-for (i in cps.spp) {
+for (i in cps.spp.ns) {
   # for (i in unique(lengths.seine$scientificName)) {
   # Create a data frame for results
   lf.df.seine <- data.frame()
@@ -913,7 +933,7 @@ haul.final.seine.deep    <- list()
 lf.final.seine.deep      <- data.frame()
 
 # For each species, calculate length frequencies, combine with clf, and write final file
-for (i in cps.spp) {
+for (i in cps.spp.ns) {
   # for (i in unique(lengths.seine$scientificName)) {
   # Create a data frame for results
   lf.df.seine <- data.frame()

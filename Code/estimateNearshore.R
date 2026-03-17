@@ -108,8 +108,6 @@ if (process.nearshore) {
       # # Deep backscatter will be apportioned separately below 30m and species-specific density will
       # # be added back prior to biomass estimation
       # Set cps.nasc to a fixed depth value (nasc.depth.deep)
-      # mutate(cps.nasc = purrr::pluck(., nasc.depth.deep)) %>% 
-      # Set cps.nasc to a fixed depth value (nasc.depth.deep)
       mutate(cps.nasc = purrr::pluck(., nasc.depth.deep))
     
     # Compare cps.nasc and deep.cps.nasc to look for potential errors
@@ -118,7 +116,14 @@ if (process.nearshore) {
       geom_point(aes(colour = vessel.orig)) + 
       facet_wrap(~vessel.orig)
     
-    ggsave(check.deep.nasc, filename = here("Figs/fig_check_deep_nasc.png"))
+    # Make sure that CPS is not greater than NASC.20 when deep backscatter is removed
+    check.shallow.nasc <- ggplot(nasc.nearshore, aes(cps.nasc, NASC.20)) + 
+      geom_abline(slope = 1, intercept = 0) + 
+      geom_point(aes(colour = vessel.orig)) + 
+      facet_wrap(~vessel.orig)
+    
+    ggsave(check.deep.nasc, filename = here("Figs/fig_check_nasc_deep.png"))
+    ggsave(check.shallow.nasc, filename = here("Figs/fig_check_nasc_shallow.png"))
   }
   
   # Define missing variables in the trawl data

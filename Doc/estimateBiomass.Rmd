@@ -124,7 +124,7 @@ Options in this section of the settings file control the execution of the variou
 ```{r user-controls, echo = TRUE}
 # Processing controls (T/F) ---------------------------------------------------
 ### Usually TRUE
-get.db            <- F # Download data from databases (fast; generally TRUE)
+get.db            <- T # Download data from databases (fast; generally TRUE)
 get.nav           <- T # Download primary vessel nav data from ERDDAP
 get.nav.sd        <- F # Download Saildrone nav data from ERDDAP
 get.nav.sh        <- F # Download NOAA Ship nav data
@@ -1326,6 +1326,25 @@ Haul data are filtered, formatted, and assigned to clusters, where a trawl clust
 source(here("Code/format_trawl_database.R"))
 ```
 
+```{r handle-japanese-sardine-data}
+if (!estimate.j.sardine) {
+  catch.all <- catch.all %>% 
+    # Replace J. sardine species code with P. sardine
+    mutate(species = ifelse(species == 551222, 161729, species)) %>% 
+    group_by(cruise, ship, haul, collection, species, netSampleType,
+             isWtEstimated, hasLF, notes, flaggedData, presenceOnly) %>%
+    summarise_at(vars(subSampleCount:remainingSubSampleWtkg), sum) %>% 
+    ungroup() %>%
+    mutate(totalWeight = subSampleWtkg + remainingSubSampleWtkg,
+           totalNum    = (subSampleCount/subSampleWtkg)*totalWeight)
+  
+  # Rename Japanese sardine specimens to P. sardine
+  lengths.all <- lengths.all %>%
+    # Replace J. sardine species code with P. sardine
+    mutate(species = ifelse(species == 551222, 161729, species))
+}
+```
+
 ```{r process-trawl-haul-data}
 # Select bad trawls
 haul.bad <- haul.all %>% 
@@ -1336,7 +1355,6 @@ haul.bad <- haul.all %>%
            is.na(collection) |
            is.na(equilibriumTime) | 
            is.na(haulBackTime))
-
 
 # Get only hauls from current survey
 haul <- filter(haul.all, cruise %in% cruise.name & ship %in% cruise.ship) %>% 
@@ -1579,6 +1597,7 @@ catch <- catch.all %>%
   mutate(key = paste(haul, scientificName),
          sample.type = "Trawl")
 
+
 if (survey.name %in% c("2107RL")) {
   # Read and process catch data from Carranza
   catch.jcf <- read_csv(here("Data/Trawl/JCFINP2110_catch.csv")) %>% 
@@ -1704,17 +1723,14 @@ if (survey.name %in% c("2207RL")) {
 saveRDS(catch, file = here("Output/catch_info.rds"))
 
 if (nrow(catch) > 0) {
-  haul.summ.wt <- catch %>% 
+  haul.summ.wt <- catch %>%  
     select(haul, cluster, sample.type, scientificName, totalWeight) %>% 
     pivot_wider(names_from = scientificName, values_from = totalWeight, values_fn = sum, values_fill = 0)
-  
-  # haul.summ.wt <- catch %>%
-  #   select(haul, cluster, sample.type, scientificName, totalWeight) %>%
-  #   tidyr::spread(scientificName, totalWeight)
   
   # Add species with zero total weight
   if (!has_name(haul.summ.wt, "Engraulis mordax"))      {haul.summ.wt$`Engraulis mordax`      <- 0}
   if (!has_name(haul.summ.wt, "Sardinops sagax"))       {haul.summ.wt$`Sardinops sagax`       <- 0}
+  # if (!has_name(haul.summ.wt, "Sardinops melanosticta")){haul.summ.wt$`Sardinops melanosticta`<- 0}
   if (!has_name(haul.summ.wt, "Scomber japonicus"))     {haul.summ.wt$`Scomber japonicus`     <- 0}
   if (!has_name(haul.summ.wt, "Trachurus symmetricus")) {haul.summ.wt$`Trachurus symmetricus` <- 0}
   if (!has_name(haul.summ.wt, "Clupea pallasii"))       {haul.summ.wt$`Clupea pallasii`       <- 0}
@@ -1728,19 +1744,6 @@ if (nrow(catch) > 0) {
     ungroup() %>% 
     mutate(AllCPS = rowSums(select(., -haul, -cluster, -sample.type))) %>%
     arrange(haul)
-  
-  # haul.summ.wt <- haul.summ.wt %>%  
-  #   replace(is.na(.), 0) %>% 
-  #   mutate(AllCPS = rowSums(select(., -haul, -cluster, -sample.type))) %>%
-  #   # mutate(AllCPS = rowSums(.[, 3:ncol(.)])) %>%
-  #   rename("Jacksmelt"  = "Atherinopsis californiensis",
-  #          "PacHerring" = "Clupea pallasii",
-  #          "Anchovy"    = "Engraulis mordax",
-  #          "Sardine"    = "Sardinops sagax",
-  #          "PacMack"    = "Scomber japonicus",
-  #          "JackMack"   = "Trachurus symmetricus",
-  #          "RndHerring" = "Etrumeus acuminatus",
-  #          "Other"      = "Other") 
   
   # Summarise catch by cluster
   cluster.summ.wt <- haul.summ.wt %>% 
@@ -1767,6 +1770,7 @@ if (nrow(catch) > 0) {
                               "PacHerring" = rep(0, nrow(haul)),
                               "Anchovy"    = rep(0, nrow(haul)),
                               "Sardine"    = rep(0, nrow(haul)),
+                              # "JapSardine" = rep(0, nrow(haul)),
                               "PacMack"    = rep(0, nrow(haul)),
                               "JackMack"   = rep(0, nrow(haul)),
                               "RndHerring" = rep(0, nrow(haul)),
@@ -1787,9 +1791,6 @@ if (nrow(catch) > 0) {
 # Prepare catch data for plotting ----------------------------------------------
 # Select and rename trawl data for pie charts
 haul.pie <- haul.summ.wt %>% 
-  # select(haul, long, lat, Anchovy, JackMack, 
-  #        Jacksmelt, Other, PacHerring, PacMack, 
-  #        RndHerring, Sardine, AllCPS, sample.type) %>% 
   select(haul, long, lat, any_of(names(pie.spp)), AllCPS, sample.type) %>%
   mutate(bin       = cut(AllCPS, trawl.breaks, include.lowest = TRUE),
          bin.level = as.numeric(bin)) %>% 
@@ -1800,6 +1801,7 @@ haul.pie <- haul.summ.wt %>%
     popup = paste('<b>Cluster:', haul, '</b><br/>',
                   'Anchovy:', Anchovy, 'kg<br/>',
                   'Sardine:', Sardine, 'kg<br/>',
+                  # 'J. Sardine:', JapSardine, 'kg<br/>',
                   'Jack Mackerel:', JackMack, 'kg<br/>',
                   'P. herring:', PacHerring, 'kg<br/>',
                   'P. mackerel:', PacMack, 'kg<br/>',
@@ -1807,9 +1809,6 @@ haul.pie <- haul.summ.wt %>%
                   'All CPS:', AllCPS, 'kg'))
 
 cluster.pie <- cluster.summ.wt %>% 
-  # select(cluster, long, lat, Anchovy, JackMack, 
-  #        Jacksmelt, Other, PacHerring, PacMack, 
-  #        RndHerring, Sardine, AllCPS, sample.type) %>%
   select(cluster, long, lat, any_of(names(pie.spp)), AllCPS, sample.type) %>%
   mutate(bin       = cut(AllCPS, trawl.breaks, include.lowest = TRUE),
          bin.level = as.numeric(bin)) %>% 
@@ -1819,6 +1818,7 @@ cluster.pie <- cluster.summ.wt %>%
     popup = paste('<b>Cluster:', cluster, '</b><br/>',
                   'Anchovy:', Anchovy, 'kg<br/>',
                   'Sardine:', Sardine, 'kg<br/>',
+                  # 'J. Sardine:', JapSardine, 'kg<br/>',
                   'Jack Mackerel:', JackMack, 'kg<br/>',
                   'P. herring:', PacHerring, 'kg<br/>',
                   'P. mackerel:', PacMack, 'kg<br/>',
@@ -1869,6 +1869,7 @@ haul.paths <- haul.paths %>%
     popup    = paste('<b>Haul:', haul, '</b><br/>',
                      'Anchovy:', Anchovy, 'kg<br/>',
                      'Sardine:', Sardine, 'kg<br/>',
+                     # 'J. Sardine:', JapSardine, 'kg<br/>',
                      'Jack Mackerel:', JackMack, 'kg<br/>',
                      'P. herring:', PacHerring, 'kg<br/>',
                      'P. mackerel:', PacMack, 'kg<br/>',
@@ -5167,7 +5168,7 @@ save(strata.primary.points,
 save(strata.nse.points, 
      file = here("Output/strata_points_nearshore.Rdata"))
 
-# Write primary stata points to CSV
+# Write primary strata points to CSV
 write.csv(strata.primary.points,  
           file = here("Output/strata_points_primary.csv"),
           quote = FALSE, row.names = FALSE)
@@ -8323,22 +8324,6 @@ if (exists("be.ns")) {
     left_join(be.all.var) %>% 
     mutate(biomass.cv = biomass.sd/Biomass*100)
 }
-
-# Summarise biomass for all regions included in the final estimates
-be.all.var <- be.all %>%
-  bind_rows(be.all.ns) %>%
-  select(Species, Stock, biomass.sd) %>%
-  group_by(Species, Stock) %>%
-  summarise(biomass.sd = sqrt(sum(biomass.sd^2)))
-
-# Combine core and nearshore biomass
-be.all.summ <- be.all %>%
-  bind_rows(be.all.ns) %>%
-  group_by(Species, Stock) %>%
-  select(-Region, -Stratum, -biomass.sd, -biomass.cv) %>%
-  summarise_all(list(sum)) %>%
-  left_join(be.all.var) %>%
-  mutate(biomass.cv = biomass.sd/Biomass*100)
 
 if (extrapolate.biomass) {
   be.all.nse <- be.nse %>% 

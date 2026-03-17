@@ -244,7 +244,7 @@ cps.spp            <- c("Clupea pallasii","Engraulis mordax","Sardinops melanost
                         "Etrumeus acuminatus")
 
 ## Estimate biomass of Japanese sardine?
-estimate.sar.japanese <- FALSE
+estimate.j.sardine <- FALSE
 
 ## Trouts & salmon: Pacific salmon (unidentified), pink, chum, coho, sockeye, Chinook, steelhead, cutthroat trout
 salmon.spp <- c(161931, 161974, 161975, 161976, 161977, 161979, 161980, 161989, 161983) 
@@ -299,15 +299,15 @@ pie.cols.prop <- c("Engraulis mordax" = "prop.anch", "Trachurus symmetricus" = "
 
 # Species labels
 pie.labs <- c("Engraulis mordax" = "Anchovy", "Trachurus symmetricus" = "J. Mackerel", 
-              "Atherinopsis californiensis" = "Jacksmelt", "Clupea pallasii" = "P. herring", 
-              "Scomber japonicus" = "P. mackerel", "Etrumeus acuminatus" = "R. herring", 
-              "Sardinops sagax" = "Sardine", "Sardinops melanosticta" = "J. Sardine")
+              "Atherinopsis californiensis" = "Jacksmelt", "Sardinops melanosticta" = "J. Sardine",
+              "Clupea pallasii" = "P. herring", "Scomber japonicus" = "P. mackerel", 
+              "Etrumeus acuminatus" = "R. herring", "Sardinops sagax" = "Sardine")
 
 # Species colors
 pie.colors <- c("Engraulis mordax" = anchovy.color, "Trachurus symmetricus" = jack.mack.color, 
-                "Atherinopsis californiensis" = jacksmelt.color, "Clupea pallasii" = pac.herring.color, 
-                "Scomber japonicus" = pac.mack.color, "Etrumeus acuminatus" = rnd.herring.color,
-                "Sardinops sagax" = sardine.color, "Sardinops melanosticta" = jap.sardine.color)
+                "Atherinopsis californiensis" = jacksmelt.color, "Sardinops melanosticta" = jap.sardine.color,
+                "Clupea pallasii" = pac.herring.color, "Scomber japonicus" = pac.mack.color, 
+                "Etrumeus acuminatus" = rnd.herring.color, "Sardinops sagax" = sardine.color)
 
 # NASC ------------------------------------------------------------------
 # For legend objects
@@ -666,7 +666,7 @@ tv80.tz     <- "UTC"
 tv80.offset <- 0 # Offset, in hours
 # TV80 column names
 tv80.cols   <- stringr::str_split("UnixTimeSeconds;DateTime;VES_Latitude;VES_Longitude;VES_Heading;VES_Course_True;VES_Speed;VES_Course_True;VES_Speed;TRAWLEYE_Roll_code;TRAWLEYE_Depth_code;TWL_Depth;TWL_Battery;TWL_Flow1;TWL_Flow1_uncompensated_c;TWL_Geometry_Std;TWL_Pitch;TWL_Geometry_Prt;TWL_Geometry_Dif_c;DOR_Depth_Std;DOR_Temperature_Std;DOR_Battery_Prt;DOR_Roll_Std;DOR_Pitch_Std;DOR_Roll_Prt;DOR_Pitch_Prt;DOR_Depth_Prt;DOR_Depth_Dif_c;DOR_Battery_Prt;DOR_Battery_Std;DOR_Spread;DOR_Battery_Std",
-                                ";")[[1]]
+                                  ";")[[1]]
 # Number of rows to skip when reading TV80 data files
 tv80.skip   <- 0 
 
@@ -713,92 +713,88 @@ stratify.manually.ns <- FALSE
 # Manually define sampling strata for each species
 # Create a new data frame with each species, stratum, and vector containing transects
 
-if ("SD" %in% nasc.vessels) {
-
-} else {
-  strata.manual <- bind_rows( 
-    # If not using Saildrone
-    data.frame(
-      scientificName = "Clupea pallasii",
-      stratum = 1,
-      transect = 30:39),
-    data.frame(
-      scientificName = "Clupea pallasii",
-      stratum = 2,
-      transect = 40:53),
-    data.frame(
-      scientificName = "Engraulis mordax",
-      stratum = 1,
-      transect = 1:26),
-    data.frame(
-      scientificName = "Engraulis mordax",
-      stratum = 2,
-      transect = 40:49),
-    data.frame(
-      scientificName = "Etrumeus acuminatus",
-      stratum = 1,
-      transect = 1:4),
-    data.frame(
-      scientificName = "Sardinops sagax",
-      stratum = 1,
-      transect = 1:4),
-    data.frame(
-      scientificName = "Sardinops sagax",
-      stratum = 2,
-      transect = 11:15),
-    data.frame(
-      scientificName = "Sardinops sagax",
-      stratum = 3,
-      transect = 16:20),
-    data.frame(
-      scientificName = "Sardinops sagax",
-      stratum = 4,
-      transect = 22:24),
-    data.frame(
-      scientificName = "Sardinops sagax",
-      stratum = 5,
-      transect = 25:29),
-    data.frame(
-      scientificName = "Sardinops sagax",
-      stratum = 6,
-      transect = 32:36),
-    data.frame(
-      scientificName = "Sardinops sagax",
-      stratum = 7,
-      transect = 40:45),
-    data.frame(
-      scientificName = "Scomber japonicus",
-      stratum = 1,
-      transect = 1:4),
-    data.frame(
-      scientificName = "Scomber japonicus",
-      stratum = 2,
-      transect = 16:19),
-    data.frame(
-      scientificName = "Scomber japonicus",
-      stratum = 3,
-      transect = 23:25),
-    data.frame(
-      scientificName = "Scomber japonicus",
-      stratum = 4,
-      transect = 41:46),
-    data.frame(
-      scientificName = "Scomber japonicus",
-      stratum = 5,
-      transect = 50:53),
-    data.frame(
-      scientificName = "Trachurus symmetricus",
-      stratum = 1,
-      transect = 1:10),
-    data.frame(
-      scientificName = "Trachurus symmetricus",
-      stratum = 2,
-      transect = 15:19),
-    data.frame(
-      scientificName = "Trachurus symmetricus",
-      stratum = 3,
-      transect = 20:53))
-}
+strata.manual <- bind_rows( 
+  # If not using Saildrone
+  data.frame(
+    scientificName = "Clupea pallasii",
+    stratum = 1,
+    transect = 30:39),
+  data.frame(
+    scientificName = "Clupea pallasii",
+    stratum = 2,
+    transect = 40:53),
+  data.frame(
+    scientificName = "Engraulis mordax",
+    stratum = 1,
+    transect = 1:26),
+  data.frame(
+    scientificName = "Engraulis mordax",
+    stratum = 2,
+    transect = 40:49),
+  data.frame(
+    scientificName = "Etrumeus acuminatus",
+    stratum = 1,
+    transect = 1:4),
+  data.frame(
+    scientificName = "Sardinops sagax",
+    stratum = 1,
+    transect = 1:4),
+  data.frame(
+    scientificName = "Sardinops sagax",
+    stratum = 2,
+    transect = 11:15),
+  data.frame(
+    scientificName = "Sardinops sagax",
+    stratum = 3,
+    transect = 16:20),
+  data.frame(
+    scientificName = "Sardinops sagax",
+    stratum = 4,
+    transect = 22:24),
+  data.frame(
+    scientificName = "Sardinops sagax",
+    stratum = 5,
+    transect = 25:29),
+  data.frame(
+    scientificName = "Sardinops sagax",
+    stratum = 6,
+    transect = 32:36),
+  data.frame(
+    scientificName = "Sardinops sagax",
+    stratum = 7,
+    transect = 41:45),
+  data.frame(
+    scientificName = "Scomber japonicus",
+    stratum = 1,
+    transect = 1:4),
+  data.frame(
+    scientificName = "Scomber japonicus",
+    stratum = 2,
+    transect = 16:19),
+  data.frame(
+    scientificName = "Scomber japonicus",
+    stratum = 3,
+    transect = 23:25),
+  data.frame(
+    scientificName = "Scomber japonicus",
+    stratum = 4,
+    transect = 41:46),
+  data.frame(
+    scientificName = "Scomber japonicus",
+    stratum = 5,
+    transect = 50:53),
+  data.frame(
+    scientificName = "Trachurus symmetricus",
+    stratum = 1,
+    transect = 1:10),
+  data.frame(
+    scientificName = "Trachurus symmetricus",
+    stratum = 2,
+    transect = 15:19),
+  data.frame(
+    scientificName = "Trachurus symmetricus",
+    stratum = 3,
+    transect = 20:53))
 
 # Stock boundaries --------------------------------------------------------
 stock.break.anch <- c("Cape Mendocino" = 40.80)  # Latitude of Cape Mendocino

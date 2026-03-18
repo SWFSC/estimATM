@@ -4107,6 +4107,9 @@ include_graphics(here("Figs/fig_cluster_distance_cumulative_biomass.png"))
 Transect spacing is measured as the shortest distance between the midpoint of each transect and the midpoint of all other transects. Transect spacing is one consideration of the algorithm used to automatically select sampling strata for biomass estimation.  
 
 ```{r estimate-transect-spacing}
+# save.image(file = here("Output/stratum-polygon-testing.Rdata"))
+# load(here("Output/stratum-polygon-testing.Rdata"))
+
 # Get transect spacing for plotting --------------------------
 # Get the midpoint (mean) lat/long of each transect
 tx.mid <- nasc %>% 
@@ -4114,11 +4117,14 @@ tx.mid <- nasc %>%
   summarise(
     lat  = mean(lat, na.rm = TRUE),
     long = mean(long, na.rm = TRUE)) %>% 
-  st_as_sf(coords = c("long","lat"), crs = crs.geog)
+  st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
+  mutate(transect.orig = as.numeric(str_replace(transect.name, "SH ", "")))
 
 # Create a data frame for results
-# tx.nn <- data.frame()
+rm(tx.nn)
 
+# Compute distance to nearest transect
+## Must be improved for variably spaced transects
 for (i in unique(tx.mid$transect)) {
   # Get the mid lat/long for each transect
   tx.i      <- filter(tx.mid, transect == i)
@@ -4141,27 +4147,115 @@ for (i in unique(tx.mid$transect)) {
   } else {
     tx.nn <- tx.i
   }
-  
-  # # Get NASC data for all other transects
-  # nasc.temp <- filter(tx.mid, transect != i, vessel.name %in% tx.i$vessel.name)
-  # # Calculate distance between transect midpoint and all other NASC values
-  # nn.dist   <- swfscMisc::distance(tx.i$lat, tx.i$long,
-  #                                  nasc.temp$lat, nasc.temp$long)
-  # # Get the transect info and spacing based on shortest distance
-  # nn.tx     <- nasc.temp$transect[which.min(nn.dist)]
-  # min.dist  <- nn.dist[which.min(nn.dist)]
-  # nn.lat    <- nasc.temp$lat[which.min(nn.dist)]
-  # nn.long   <- nasc.temp$long[which.min(nn.dist)]
-  # # Add to results
-  # tx.nn     <- bind_rows(tx.nn, 
-  #                        data.frame(tx.i, nn.tx, min.dist, nn.lat, nn.long))
 }
 
+# Remove geometry from tx.nn
+tx.nn <- st_set_geometry(tx.nn, NULL)
+
+# Add transect number and computed spacing 
+tx.sampled <- transects.sf %>% 
+  filter(Type == "Compulsory", Transect %in% tx.mid$transect.orig) %>%
+  left_join(select(tx.nn, Transect = transect.orig, transect, min.dist)) 
+
+if (exists("tx.spacing.manual")) {
+  tx.sampled <- tx.sampled %>% 
+    # Use manually defined transect spacing
+    bind_cols(spacing.nm = tx.spacing.manual$spacing.nm) %>% 
+    mutate(buff.dist = spacing.nm/2)
+} else {
+  tx.sampled <- tx.sampled %>% 
+    # Use computed distance to nearest transect (in nmi)
+    mutate(buff.dist = min.dist/2)
+}
+
+# Extend sampled transects eastward, westward, or both
+rm(tx.sampled.ext)
+
+for (i in unique(tx.sampled$Type)) {
+  for (j in unique(tx.sampled$transect)){
+    # Subset tx.sampled for each transect
+    tx.sub <- filter(tx.sampled, Type == i, transect == j) %>% 
+      st_transform(crs.proj)
+    # Get number of nodes to select proper endpoints
+    n.wpts <- nrow(data.frame(st_coordinates(tx.sub)))
+    
+    # Extend transects
+    if (nrow(tx.sub) > 0) {
+      # Get end points
+      first.point <- st_coordinates(tx.sub)[1, 1:2]
+      last.point  <- st_coordinates(tx.sub)[n.wpts, 1:2]
+      
+      # Calculate bearing
+      direction <- last.point - first.point
+      direction <- direction / sqrt(sum(direction^2))
+      
+      # Define extension distance (e.g., 25% of line length, e.g., 0.25)
+      # and compute new first and last points      
+      ext.dist <- as.numeric(st_length(tx.sub))*tx.ext.pct
+      new.first.point <- first.point - (ext.dist * direction)
+      new.last.point <- last.point   + (ext.dist * direction)
+      
+      # Create new line
+      if (tx.ext.dir == "east") {
+        extended.line <- st_sfc(st_linestring(rbind(new.first.point, last.point))) %>% 
+          st_as_sf()  
+      } else if (tx.ext.dir == "west") {
+        extended.line <- st_sfc(st_linestring(rbind(first.point, new.last.point))) %>% 
+          st_as_sf()
+      } else if (tx.ext.dir == "both") {
+        extended.line <- st_sfc(st_linestring(rbind(new.first.point, new.last.point))) %>% 
+          st_as_sf()
+      }
+      
+      st_crs(extended.line) <- st_crs(tx.sub) # Maintain CRS
+      
+      # Add attributes
+      extended.line <- extended.line %>% 
+        mutate(Type      = tx.sub$Type,
+               Region    = tx.sub$Region,
+               transect  = tx.sub$transect,
+               min.dist  = tx.sub$min.dist,
+               buff.dist = tx.sub$buff.dist)
+      
+      # Combine extended lines
+      if (exists("tx.sampled.ext")) {
+        tx.sampled.ext <- bind_rows(tx.sampled.ext, extended.line)
+      } else {
+        tx.sampled.ext <- extended.line
+      }
+    }
+  }
+}
+
+# Check result
+# mapview(tx.sampled.ext) + mapview(tx.sampled, color = "black")
+
+# Buffer transects
+rm("tx.sampled.buff")
+
+for (iii in unique(tx.sampled.ext$transect)) {
+  tx.sampled.ext.sub <- filter(tx.sampled.ext, transect == iii) 
+  
+  tx.buff.tmp <- tx.sampled.ext.sub %>% 
+    st_buffer(dist = tx.sampled.ext.sub$buff.dist*1852*tx.buff.pct,
+              endCapStyle = "FLAT") %>% 
+    mutate(area = st_area(.))
+  
+  if (exists("tx.sampled.buff")) {
+    tx.sampled.buff <- bind_rows(tx.sampled.buff, tx.buff.tmp)
+  } else {
+    tx.sampled.buff <- tx.buff.tmp
+  }
+}
+
+# # View results of extending and buffering
+# mapview(tx.sampled.buff, zcol = "transect") + mapview(tx.sampled.ext, color = "black") + mapview(tx.sampled)
+
 # Bin transects by spacing
-tx.nn <- tx.nn %>% 
+tx.nn <- tx.nn %>%
   mutate(dist.bin = cut(tx.nn$min.dist, tx.spacing.bins),
          spacing  = tx.spacing.dist[as.numeric(dist.bin)],
-         dist.cum = cumsum(spacing)) %>% 
+         dist.cum = cumsum(spacing)) %>%
   arrange(transect)
 
 # Save nearest neighbor distance info
@@ -4444,9 +4538,13 @@ if (nrow(strata.summ.rm) > 0) {
               aes(lat.start, max.tx.dens.log, label = name), 
               inherit.aes = FALSE, nudge_x = 0.1, hjust = 1, vjust = 0, 
               fontface = "italic", alpha = 0.5) +
-    geom_text(data = stock.breaks,
+    geom_text(data = filter(stock.breaks, scientificName == "Engraulis mordax"),
               aes(lat.start, max.tx.dens.log, label = scientificName, group = scientificName),
               inherit.aes = FALSE, nudge_x = -0.1, hjust = 1, vjust = -1,
+              fontface = "italic", alpha = 0.5, colour = "red") +
+    geom_text(data = filter(stock.breaks, scientificName == "Sardinops sagax"),
+              aes(lat.start, max.tx.dens.log, label = scientificName, group = scientificName),
+              inherit.aes = FALSE, nudge_x = -0.6, hjust = 1, vjust = -1,
               fontface = "italic", alpha = 0.5, colour = "red") +
     geom_path(data = nasc.density.summ,  
               aes(start.lat, log(density + 1), group = scientificName)) +
@@ -4484,9 +4582,13 @@ if (nrow(strata.summ.rm) > 0) {
               aes(lat.start, max.tx.dens, label = name), 
               inherit.aes = FALSE, nudge_x = 0.1, hjust = 1, vjust = 0, 
               fontface = "italic", alpha = 0.5) +
-    geom_text(data = stock.breaks,
-              aes(lat.start, max.tx.dens, label = scientificName, group = scientificName),
+    geom_text(data = filter(stock.breaks, scientificName == "Engraulis mordax"),
+              aes(lat.start, max.tx.dens.log, label = scientificName, group = scientificName),
               inherit.aes = FALSE, nudge_x = -0.1, hjust = 1, vjust = -1,
+              fontface = "italic", alpha = 0.5, colour = "red") +
+    geom_text(data = filter(stock.breaks, scientificName == "Sardinops sagax"),
+              aes(lat.start, max.tx.dens.log, label = scientificName, group = scientificName),
+              inherit.aes = FALSE, nudge_x = -0.6, hjust = 1, vjust = -1,
               fontface = "italic", alpha = 0.5, colour = "red") +
     geom_path(data = nasc.density.summ,  
               aes(start.lat, density, group = scientificName)) +
@@ -4688,7 +4790,7 @@ include_graphics(here("Figs/fig_biomass_density_transect_lat_linear.png"))
 
 For each species, polygons are drawn around backscatter within each strata and the area of each polygon is calculated. The results are stored in a named list (by scientific name) and made available to the point and bootstrap estimate functions below.  
 
-```{r create-pseudo-transects}
+```{r create-pseudo-transects,eval=FALSE}
 # Draw pseudo-transects --------------------------------------------------------
 # Get transect ends, calculate bearing, and add transect spacing
 tx.ends <- nasc %>% 
@@ -4858,28 +4960,44 @@ tx.c <- tx.c %>%
 ```
 
 ```{r create-final-strata-polygons, include=FALSE}
-# Read 20 m isobath points; used to create nearshore stratum polygons
-nearshore.points.sf <- st_read(here("Data/GIS/bathy_20m_points.shp")) 
+# # Read 20 m isobath points; used to create nearshore stratum polygons
+# nearshore.points.sf <- st_read(here("Data/GIS/bathy_20m_points.shp")) 
+# 
+# nearshore.points <- nearshore.points.sf %>% 
+#   mutate(
+#     long = as.data.frame(st_coordinates(.))$X,
+#     lat = as.data.frame(st_coordinates(.))$Y,
+#     order = seq(1, n())) %>% 
+#   select(-Id) %>% 
+#   st_set_geometry(NULL)
 
-nearshore.points <- nearshore.points.sf %>% 
-  mutate(
-    long = as.data.frame(st_coordinates(.))$X,
-    lat = as.data.frame(st_coordinates(.))$Y,
-    order = seq(1, n())) %>% 
-  select(-Id) %>% 
-  st_set_geometry(NULL)
+# Load and modify masking polygons
+# Read North America land mask shapefile
+na_buffer <- st_read(here("Data/GIS/na_landmask_final.shp")) %>% 
+  st_union() %>% 
+  st_transform(crs.proj) %>% 
+  st_buffer(dist = na.buffer.dist*1852)
+
+# Load 5 m bathy and cast as polygon for clipping
+ns_mask <- st_read(here("Data/GIS/bathy_5m_wc_poly.shp")) %>% 
+  st_cast("POLYGON") %>% 
+  st_transform(crs.proj)
 
 # Ensure strata objects do not exist
 if (exists("strata.primary")) rm(strata.primary)
-if (exists("strata.nse.temp")) rm(strata.nse.temp)
-if (exists("strata.inshore")) rm(strata.inshore)
-if (exists("nearshore.clip")) rm(nearshore.clip)
+if (exists("strata.nse")) rm(strata.nse)
+# if (exists("strata.inshore")) rm(strata.inshore)
+# if (exists("nearshore.clip")) rm(nearshore.clip)
 
 # Create final strata and calculate area
 # Create df for transect-level stock info
 nasc.stock <- data.frame()
 
 for (i in unique(strata.final$scientificName)) {
+  # i = "Sardinops sagax"
+  # i = "Engraulis mordax"
+  # i = "Clupea pallasii"
+  
   # Select each strata per species
   strata.sub <- filter(strata.final, scientificName == i) %>% 
     select(transect, stratum)  
@@ -4901,150 +5019,235 @@ for (i in unique(strata.final$scientificName)) {
   # Combine results
   nasc.stock <- bind_rows(nasc.stock, nasc.stock.temp)
   
-  for (j in sort(unique(strata.sub$stratum))) {
-    # Create offshore stratum polygons ----------------------------------------
-    # Add stratum numbers and stock designation to strata.points
-    primary.poly.temp <- strata.points %>% 
-      left_join(strata.sub) %>%
-      left_join(nasc.stock.temp) %>% 
-      filter(stratum == j) %>%
-      mutate(scientificName = i) %>% 
-      ungroup()
-    
-    # Select the southern-most inshore point for j-th stratum
-    primary.poly.j.s <- primary.poly.temp %>%
-      filter(loc == "inshore") %>% 
-      slice(1)
-    
-    # Select the northern-most inshore point for j-th stratum
-    primary.poly.j.n <- primary.poly.temp %>%
-      filter(loc == "inshore") %>% 
-      slice(n())
-    
-    # Select only the original inshore waypoints for j-th stratum
-    primary.poly.j.i <- primary.poly.temp %>% 
-      filter(loc == "inshore", grp == "original") %>% 
-      mutate(scientificName = i)
-    
-    # Create the final polygon
-    primary.poly.j <- primary.poly.temp %>% 
-      filter(loc == "offshore") %>% 
-      bind_rows(primary.poly.j.s) %>%
-      bind_rows(primary.poly.j.i) %>%
-      bind_rows(primary.poly.j.n) %>% 
-      st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-      group_by(stratum, stock) %>% 
-      summarise(do_union = FALSE) %>% 
-      st_cast("POLYGON") %>% 
-      mutate(scientificName = i)
-    
-    # Create nearshore stratum polygons ----------------------------------------
-    # Select the inshore portions of offshore strata
-    nearshore.temp <- primary.poly.j.s %>%
-      bind_rows(primary.poly.j.i) %>%
-      bind_rows(primary.poly.j.n) %>% 
-      select(long, lat, scientificName, stratum, loc, stock)
-    
-    # Create polygon for clipping nearshore strata -----------------------------
-    # Get the points on land
-    clip.temp <- tx.c %>%
-      left_join(strata.sub) %>%
-      left_join(nasc.stock.temp) %>%
-      filter(stratum == j) %>%
-      ungroup()
-    
-    # Combine with offshore points from nearshore polygons
-    clip.poly.j <- nearshore.temp %>%
-      arrange(desc(lat)) %>%
-      mutate(scientificName = i,
-             stratum = j,
-             loc = "nearshore",
-             stock = unique(primary.poly.temp$stock)) %>% 
-      bind_rows(clip.temp) %>% 
-      st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-      group_by(stratum, stock) %>% 
-      summarise(do_union = FALSE) %>% 
-      st_cast("POLYGON") %>% 
-      mutate(scientificName = i) %>% 
-      st_make_valid() %>% 
-      st_difference(bathy_5m_poly)
-    
-    # Find nearest point on the 5 m isobath *change to 20 m isobath
-    ns.bound.lower <- st_as_sf(primary.poly.j.s, coords = c("long","lat"), crs = crs.geog)
-    ns.bound.upper <- st_as_sf(primary.poly.j.n, coords = c("long","lat"), crs = crs.geog)
-    
-    # Get the latitude of the nearest points on the 20 m isobath, +/- 50 points
-    ns.lat.upper <- nearshore.points$lat[st_nearest_feature(ns.bound.upper, nearshore.points.sf)]
-    ns.lat.lower <- nearshore.points$lat[st_nearest_feature(ns.bound.lower, nearshore.points.sf)]
-    
-    # Combine with the points from the 5 m isobath
-    nearshore.poly.j <- nearshore.points %>% 
-      filter(between(lat, ns.lat.lower, ns.lat.upper)) %>%
-      arrange(desc(order)) %>% 
-      select(-order) %>% 
-      mutate(scientificName = i,
-             stratum = j,
-             loc = "nearshore",
-             stock = unique(primary.poly.temp$stock)) %>% 
-      bind_rows(nearshore.temp) %>% 
-      st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-      group_by(stratum, stock) %>% 
-      summarise(do_union = FALSE) %>% 
-      st_cast("POLYGON") %>% 
-      mutate(scientificName = i) %>% 
-      st_make_valid()
-    
-    # Combine with other polygons ----------------------------------------
+  # Create the final polygon for each species, sf-style
+  primary.poly.i <- tx.sampled.buff %>% 
+    left_join(strata.sub) %>% 
+    left_join(nasc.stock.temp) %>%
+    filter(!is.na(stratum)) %>% 
+    group_by(scientificName, stock, stratum) %>% 
+    summarise(geometry = st_union(x)) %>%
+    ungroup() %>%
+    st_difference(na_buffer) %>% 
+    mutate(area = st_area(.))
+  
+  # Create the final nse polygon for each species, sf-style
+  nearshore.poly.i <- tx.sampled.buff %>% 
+    left_join(strata.sub) %>% 
+    left_join(nasc.stock.temp) %>%
+    filter(!is.na(stratum)) %>% 
+    group_by(scientificName, stock, stratum) %>% 
+    summarise(geometry = st_union(x)) %>%
+    ungroup() %>%
+    st_intersection(na_buffer) %>% 
+    st_difference(ns_mask) %>% 
+    mutate(area = st_area(.))
+  
+  # mapview(primary.poly.i, zcol = "stock") + mapview(nearshore.poly.i, zcol = "stock")
+  
+  # mapview(tx.sampled.buff, color = "black", fill = NA) +
+  #   mapview(primary.poly.i, zcol = "stratum") +
+  #   mapview(tx.sampled.ext) + 
+  #   mapview(tx.sampled, color = "black") +
+  #   mapview(na_buffer, color = "black", fill = NA) +
+  #   mapview(ns_mask, color = "red") +
+  #   mapview(filter(transects.sf, Type == "Nearshore"), color = "green")
+  
+  # Combine with other polygons ----------------------------------------
     if (exists("strata.primary")) {
-      strata.primary <- rbind(strata.primary, primary.poly.j)
+      strata.primary <- bind_rows(strata.primary, primary.poly.i)
     } else {
-      strata.primary <- primary.poly.j
+      strata.primary <- primary.poly.i
     }
+  
+    if (exists("strata.nse")) {
+      strata.nse <- bind_rows(strata.nse, nearshore.poly.i)
+    } else {
+      strata.nse <- nearshore.poly.i
+    }
+
+  # Old method for drawing primary polygons ----------------------------------------
     
-    if (exists("strata.nse.temp")) {
-      strata.nse.temp <- rbind(strata.nse.temp, nearshore.poly.j)
-    } else {
-      strata.nse.temp <- nearshore.poly.j
-    }
-    
-    if (exists("nearshore.clip")) {
-      nearshore.clip <- rbind(nearshore.clip, clip.poly.j)
-    } else {
-      nearshore.clip <- clip.poly.j
-    }
-    
-    if (exists("strata.inshore")) {
-      strata.inshore <- bind_rows(strata.inshore, primary.poly.j.i)
-    } else {
-      strata.inshore <- primary.poly.j.i
-    }
-  }
+  # for (j in sort(unique(strata.sub$stratum))) {
+  #   # Create offshore stratum polygons 
+  #   # Add stratum numbers and stock designation to strata.points
+  #   primary.poly.temp <- strata.points %>%
+  #     left_join(strata.sub) %>%
+  #     left_join(nasc.stock.temp) %>%
+  #     filter(stratum == j) %>%
+  #     mutate(scientificName = i) %>%
+  #     ungroup()
+  # 
+  #   # Select the southern-most inshore point for j-th stratum
+  #   primary.poly.j.s <- primary.poly.temp %>%
+  #     filter(loc == "inshore") %>%
+  #     slice(1)
+  # 
+  #   # Select the northern-most inshore point for j-th stratum
+  #   primary.poly.j.n <- primary.poly.temp %>%
+  #     filter(loc == "inshore") %>%
+  #     slice(n())
+  # 
+  #   # Select only the original inshore waypoints for j-th stratum
+  #   primary.poly.j.i <- primary.poly.temp %>%
+  #     filter(loc == "inshore", grp == "original") %>%
+  #     mutate(scientificName = i)
+  # 
+  #   # Create the final polygon
+  #   primary.poly.j <- primary.poly.temp %>%
+  #     filter(loc == "offshore") %>%
+  #     bind_rows(primary.poly.j.s) %>%
+  #     bind_rows(primary.poly.j.i) %>%
+  #     bind_rows(primary.poly.j.n) %>%
+  #     st_as_sf(coords = c("long","lat"), crs = crs.geog) %>%
+  #     group_by(stratum, stock) %>%
+  #     summarise(do_union = FALSE) %>%
+  #     st_cast("POLYGON") %>%
+  #     mutate(scientificName = i)
+  #   
+  #   # Create nearshore stratum polygons 
+  #   # Select the inshore portions of offshore strata
+  #   nearshore.temp <- primary.poly.j.s %>%
+  #     bind_rows(primary.poly.j.i) %>%
+  #     bind_rows(primary.poly.j.n) %>% 
+  #     select(long, lat, scientificName, stratum, loc, stock)
+  #   
+  #   # Create polygon for clipping nearshore strata 
+  #   # Get the points on land
+  #   clip.temp <- tx.c %>%
+  #     left_join(strata.sub) %>%
+  #     left_join(nasc.stock.temp) %>%
+  #     filter(stratum == j) %>%
+  #     ungroup()
+  #   
+  #   # Combine with offshore points from nearshore polygons
+  #   clip.poly.j <- nearshore.temp %>%
+  #     arrange(desc(lat)) %>%
+  #     mutate(scientificName = i,
+  #            stratum = j,
+  #            loc = "nearshore",
+  #            stock = unique(primary.poly.temp$stock)) %>% 
+  #     bind_rows(clip.temp) %>% 
+  #     st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
+  #     group_by(stratum, stock) %>% 
+  #     summarise(do_union = FALSE) %>% 
+  #     st_cast("POLYGON") %>% 
+  #     mutate(scientificName = i) %>% 
+  #     st_make_valid() %>% 
+  #     st_difference(bathy_5m_poly)
+  #   
+  #   # Find nearest point on the 5 m isobath *change to 20 m isobath
+  #   ns.bound.lower <- st_as_sf(primary.poly.j.s, coords = c("long","lat"), crs = crs.geog)
+  #   ns.bound.upper <- st_as_sf(primary.poly.j.n, coords = c("long","lat"), crs = crs.geog)
+  #   
+  #   # Get the latitude of the nearest points on the 20 m isobath, +/- 50 points
+  #   ns.lat.upper <- nearshore.points$lat[st_nearest_feature(ns.bound.upper, nearshore.points.sf)]
+  #   ns.lat.lower <- nearshore.points$lat[st_nearest_feature(ns.bound.lower, nearshore.points.sf)]
+  #   
+  #   # Combine with the points from the 5 m isobath
+  #   nearshore.poly.j <- nearshore.points %>% 
+  #     filter(between(lat, ns.lat.lower, ns.lat.upper)) %>%
+  #     arrange(desc(order)) %>% 
+  #     select(-order) %>% 
+  #     mutate(scientificName = i,
+  #            stratum = j,
+  #            loc = "nearshore",
+  #            stock = unique(primary.poly.temp$stock)) %>% 
+  #     bind_rows(nearshore.temp) %>% 
+  #     st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
+  #     group_by(stratum, stock) %>% 
+  #     summarise(do_union = FALSE) %>% 
+  #     st_cast("POLYGON") %>% 
+  #     mutate(scientificName = i) %>% 
+  #     st_make_valid()
+  #   
+  #   # Combine with other polygons 
+  #   if (exists("strata.primary")) {
+  #     strata.primary <- rbind(strata.primary, primary.poly.j)
+  #   } else {
+  #     strata.primary <- primary.poly.j
+  #   }
+  #   
+  #   if (exists("strata.nse.temp")) {
+  #     strata.nse.temp <- rbind(strata.nse.temp, nearshore.poly.j)
+  #   } else {
+  #     strata.nse.temp <- nearshore.poly.j
+  #   }
+  #   
+  #   if (exists("nearshore.clip")) {
+  #     nearshore.clip <- rbind(nearshore.clip, clip.poly.j)
+  #   } else {
+  #     nearshore.clip <- clip.poly.j
+  #   }
+  #   
+  #   if (exists("strata.inshore")) {
+  #     strata.inshore <- bind_rows(strata.inshore, primary.poly.j.i)
+  #   } else {
+  #     strata.inshore <- primary.poly.j.i
+  #   }
+  # }
 }
+ 
+# # Check results
+# ggplot() +
+#   geom_sf(data = strata.primary, aes(fill = stock)) +
+#   geom_sf(data = strata.nse, aes(fill = stock), colour = "black") +
+#   facet_wrap(~scientificName)
 
-# Save strata polygons
+strata.primary <- strata.primary %>% 
+  left_join(select(strata.summ, 
+                   scientificName, stratum, vessel.name)) %>% 
+  # Ensure that strata are ordered by number
+  arrange(scientificName, stratum)
+
+# Add vessel name to nearshore strata
+strata.nse <- strata.nse %>% 
+  left_join(select(strata.summ, scientificName, stratum, vessel.name))
+
+# Create polygons
+strata.super.polygons <- tx.sampled.buff %>%
+  group_by(Type) %>%
+  summarise(geometry = st_union(x)) %>%
+  ungroup() %>%
+  st_difference(na_buffer) %>% 
+  mutate(area = st_area(.))
+
+# Save final primary polygons
 save(strata.primary, 
-     file = here("Output/strata_primary_raw.Rdata"))
+     file = here("Output/strata_primary_final_newMethod.Rdata"))
 
-save(strata.nse.temp, 
-     file = here("Output/strata_nse_raw.Rdata"))
+# Save final nearshore polygons
+save(strata.nse, 
+     file = here("Output/strata_nse_final_newMethod.Rdata"))
+
+## Write polygons to shapefile
+strata.primary %>% 
+  select(-area) %>% 
+  sf::st_write(here::here("Output/strata_primary_newMethod.shp"),
+               delete_layer = TRUE)
+
+## Write polygons to shapefile
+strata.nse %>% 
+  select(-area) %>% 
+  sf::st_write(here::here("Output/strata_nse_newMethod.shp"),
+               delete_layer = TRUE)
 
 # Create sf used to remove nearshore portions of the core area transects ---------------------------
-# Convert nearshore transect ends to sf
-tx.ends.sf <- tx.ends %>% 
-  st_as_sf(coords = c("long.i","lat.i"), crs = 4326) %>% 
-  st_transform(crs = crs.proj)
-
-# Read North America landmask shapefile
-na_landmask <- st_read(here("Data/GIS/na_landmask_final.shp")) %>% 
-  st_union() %>% 
-  st_transform(crs = crs.proj)
-
-# Compute distances from each transect end to the mainland coastline (in meters)
-dist.to.shore <- mean(as.numeric(st_distance(tx.ends.sf, na_landmask)))
-
-# Buffer land mask by the mean distance from shore 
-na_buffer <- st_buffer(na_landmask, dist = dist.to.shore) %>% 
-  st_transform(crs.geog)
+# # Convert nearshore transect ends to sf
+# tx.ends.sf <- tx.ends %>% 
+#   st_as_sf(coords = c("long.i","lat.i"), crs = 4326) %>% 
+#   st_transform(crs = crs.proj)
+# 
+# # # Read North America landmask shapefile
+# # na_landmask <- st_read(here("Data/GIS/na_landmask_final.shp")) %>% 
+# #   st_union() %>% 
+# #   st_transform(crs = crs.proj)
+# 
+# # Compute distances from each transect end to the mainland coastline (in meters)
+# dist.to.shore <- mean(as.numeric(st_distance(tx.ends.sf, na_landmask)))
+# 
+# # Buffer land mask by the mean distance from shore 
+# na_buffer <- st_buffer(na_landmask, dist = dist.to.shore) %>% 
+#   st_transform(crs.geog)
 
 # Preview results
 # mapview(na_buffer) +
@@ -5053,70 +5256,56 @@ na_buffer <- st_buffer(na_landmask, dist = dist.to.shore) %>%
 #           zcol = "stratum") +
 #   mapview(tx.ends.sf)
 
-# Clip primary polygons using the buffered landmask polygon -------------------------
-strata.primary <- strata.primary %>% 
-  st_make_valid() %>% 
-  st_difference(na_buffer) %>% 
-  ungroup() %>% 
-  mutate(area = st_area(.)) %>% 
-  left_join(select(strata.summ, 
-                   scientificName, stratum, vessel.name)) %>% 
-  # Ensure that strata are ordered by number
-  arrange(scientificName, stratum)
+# # Clip primary polygons using the buffered landmask polygon -------------------------
+# strata.primary <- strata.primary %>% 
+#   st_make_valid() %>% 
+#   st_difference(na_buffer) %>% 
+#   ungroup() %>% 
+#   mutate(area = st_area(.)) %>% 
+#   left_join(select(strata.summ, 
+#                    scientificName, stratum, vessel.name)) %>% 
+#   # Ensure that strata are ordered by number
+#   arrange(scientificName, stratum)
 
-# Create polygons
-strata.super.polygons <- strata.points.sf %>%
-  group_by(vessel.name) %>%
-  summarise(do_union = FALSE) %>%
-  st_cast("POLYGON") %>%
-  st_make_valid() %>%
-  st_difference(st_union(na_buffer)) %>%
-  mutate(area = st_area(.))
 
-# Save clipped primary polygons
-save(strata.primary, 
-     file = here("Output/strata_primary_final.Rdata"))
+# strata.super.polygons <- strata.points.sf %>%
+#   group_by(vessel.name) %>%
+#   summarise(do_union = FALSE) %>%
+#   st_cast("POLYGON") %>%
+#   st_make_valid() %>%
+#   st_difference(st_union(st_transform(ns_mask, crs = crs.geog))) %>%
+#   mutate(area = st_area(.))
 
 # Write final strata to shapefile ---------------------------
-## Remove polygons that are GEOMETRYCOLLECTION
-strata.primary.sub <- strata.primary %>% 
-  filter(!sf::st_geometry_type(.) == "GEOMETRYCOLLECTION") %>% 
-  mutate(area = round(as.numeric(area))) %>% 
-  ungroup() 
+# ## Remove polygons that are GEOMETRYCOLLECTION
+# strata.primary.sub <- strata.primary %>% 
+#   filter(!sf::st_geometry_type(.) == "GEOMETRYCOLLECTION") %>% 
+#   mutate(area = round(as.numeric(area))) %>% 
+#   ungroup() 
 
-## Write polygons to shapefile
-strata.primary.sub %>% 
-  select(-area) %>% 
-  sf::st_write(here::here("Output/strata_primary.shp"),
-               delete_layer = TRUE)
-
-# Clip nearshore polygons using the 5 m isobath polygon -----------------------
-# Remove self-intersecting portions of polygons
-strata.nse.temp <- st_make_valid(strata.nse.temp) %>% 
-  ungroup()
-
-if (exists("strata.nse")) rm(strata.nse)
-
-for (k in unique(strata.nse.temp$scientificName)) {
-  # Clip strata for each species
-  strata.nse.diff <- strata.nse.temp %>% 
-    filter(scientificName == k) %>%
-    ungroup() %>% 
-    st_difference(bathy_20m_poly) %>% 
-    mutate(area = st_area(.))
-  
-  # Combine features
-  if (exists("strata.nse")) {
-    strata.nse <- rbind(strata.nse,
-                        strata.nse.diff)
-  } else {
-    strata.nse <- strata.nse.diff
-  }
-}
-
-# Add vessel name to nearshore strata
-strata.nse <- strata.nse %>% 
-  left_join(select(strata.summ, scientificName, stratum, vessel.name))
+# # Clip nearshore polygons using the 5 m isobath polygon -----------------------
+# # Remove self-intersecting portions of polygons
+# strata.nse.temp <- st_make_valid(strata.nse.temp) %>% 
+#   ungroup()
+# 
+# if (exists("strata.nse")) rm(strata.nse)
+# 
+# for (k in unique(strata.nse.temp$scientificName)) {
+#   # Clip strata for each species
+#   strata.nse.diff <- strata.nse.temp %>% 
+#     filter(scientificName == k) %>%
+#     ungroup() %>% 
+#     st_difference(bathy_20m_poly) %>% 
+#     mutate(area = st_area(.))
+#   
+#   # Combine features
+#   if (exists("strata.nse")) {
+#     strata.nse <- rbind(strata.nse,
+#                         strata.nse.diff)
+#   } else {
+#     strata.nse <- strata.nse.diff
+#   }
+# }
 
 # Exclude nearshore area sampled by Saildrone in 1807RL
 if (prj.name %in% c("1807RL")) {
@@ -5138,12 +5327,13 @@ if (prj.name %in% c("1807RL")) {
   strata.nse <- rbind(strata.nse, strata.nse.sd)
 }
 
-# Save final nearshore polygons
-save(strata.nse, 
-     file = here("Output/strata_nse_final.Rdata"))
+# # Save final nearshore polygons
+# save(strata.nse, 
+#      file = here("Output/strata_nse_final.Rdata"))
 
 # Convert polygons to points and add coordinates -------------------------------
 strata.primary.points  <- strata.primary %>% 
+  st_transform(crs.geog) %>% 
   st_cast("MULTIPOINT") %>%
   st_cast("POINT") %>%
   mutate(
@@ -5152,7 +5342,14 @@ strata.primary.points  <- strata.primary %>%
     grp = paste(scientificName, stock, stratum)) %>% 
   st_set_geometry(NULL)
 
+# Plot polygon points - primary
+# ggplot(strata.primary.points, aes(long, lat, group = stratum, fill = stock)) + 
+#   geom_polygon() + 
+#   facet_wrap(~scientificName) +
+#   coord_map()
+
 strata.nse.points <- strata.nse %>% 
+  st_transform(crs.geog) %>% 
   st_cast("MULTIPOINT") %>%
   st_cast("POINT") %>% 
   mutate(
@@ -5160,6 +5357,12 @@ strata.nse.points <- strata.nse %>%
     lat = as.data.frame(st_coordinates(.))$Y,
     grp = paste(scientificName, stock, stratum)) %>% 
   st_set_geometry(NULL)
+
+# Plot polygon points - nse
+# ggplot(strata.nse.points, aes(long, lat, group = stratum, fill = stock)) +
+#   geom_polygon() +
+#   facet_wrap(~scientificName) +
+#   coord_map()
 
 # Save final strata points
 save(strata.primary.points,  
@@ -5169,9 +5372,8 @@ save(strata.nse.points,
      file = here("Output/strata_points_nearshore.Rdata"))
 
 # Write primary strata points to CSV
-write.csv(strata.primary.points,  
-          file = here("Output/strata_points_primary.csv"),
-          quote = FALSE, row.names = FALSE)
+write_csv(strata.primary.points,  
+          file = here("Output/strata_points_primary.csv"))
 
 # Summarize nasc.strata by stock
 strata.summ.primary <- strata.primary %>% 
@@ -5185,13 +5387,11 @@ strata.summ.nse <- strata.nse %>%
   st_set_geometry(NULL)
 
 # Write stata summaries to CSV
-write.csv(strata.summ.primary,  
-          file = here("Output/strata_summary_primary.csv"),
-          quote = FALSE, row.names = FALSE)
+write_csv(strata.summ.primary,  
+          file = here("Output/strata_summary_primary.csv"))
 
-write.csv(strata.summ.nse,  
-          file = here("Output/strata_summary_nse.csv"),
-          quote = FALSE, row.names = FALSE)
+write_csv(strata.summ.nse,  
+          file = here("Output/strata_summary_nse.csv"))
 ```  
 
 ## Map final stratum polygons  
@@ -5234,6 +5434,8 @@ include_graphics(here("Figs/fig_nasc_acoustic_proportions_strata.png"))
 ```  
 
 ```{r map-biomass-density}
+# RESUME HERE
+
 # Convert nasc.density to sf and project
 nasc.density <- ungroup(nasc.density) %>% 
   project_df(to = crs.proj)

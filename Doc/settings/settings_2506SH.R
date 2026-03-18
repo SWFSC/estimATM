@@ -575,6 +575,26 @@ max.cluster.dist       <- 30
 tx.spacing.bins <- c(0,  6, 15, 35, 70, 100)
 tx.spacing.dist <- c(5, 10, 20, 40, 80)
 
+# Define transect buffering preferences for stratum polygon creation
+na.buffer.dist <- 5 # Distance (nmi) to buffer N. American land mask for core strata masking
+tx.ext.pct     <- 0.35   # Extension percentage constant
+tx.ext.dir     <- "east" # east (toward shore), west (away from shore), or both
+tx.buff.pct    <- 1.025  # Scaling factor for transect buffering
+
+# Manually define transect spacing for variably spaced transects
+tx.spacing.manual <- data.frame(
+  transect = seq(1, 53),
+  spacing.nm = c(rep(20, 9),
+                 rep(15, 4),
+                 rep(30,2),
+                 rep(15, 9),
+                 rep(30, 2),
+                 rep(15, 11),
+                 rep(30, 4),
+                 15,
+                 rep(30, 9),
+                 rep(15,2)))
+
 # SCS data
 scs.source             <- "ELG" # "CSV", "ELG", or "XLSX"
 scs.pattern            <- "MOA*.*xlsx" # regex for MOA files
@@ -722,7 +742,7 @@ strata.manual <- bind_rows(
   data.frame(
     scientificName = "Clupea pallasii",
     stratum = 2,
-    transect = 40:53),
+    transect = 41:53),
   data.frame(
     scientificName = "Engraulis mordax",
     stratum = 1,
@@ -730,7 +750,7 @@ strata.manual <- bind_rows(
   data.frame(
     scientificName = "Engraulis mordax",
     stratum = 2,
-    transect = 40:49),
+    transect = 41:49),
   data.frame(
     scientificName = "Etrumeus acuminatus",
     stratum = 1,

@@ -3,10 +3,10 @@
 ### Biomass estimation
 process.seine     <- T # Process purse seine data, if present
 process.nearshore <- T # Process near backscatter data; typically TRUE
-estimate.ns       <- T # Estimate biomass in the nearshore strata; T if nearshore surveyed
+estimate.ns       <- F # Estimate biomass in the nearshore strata; T if nearshore surveyed
 process.offshore  <- F # Process offshore backscatter data
 estimate.os       <- F # Estimate biomass in the offshore strata; T if offshore surveyed
-combine.regions   <- T # Combine nearshore/offshore plots with those from the core region
+combine.regions   <- F # Combine nearshore/offshore plots with those from the core region
 
 # Survey planning ---------------------------------------------------------
 ## This section controls and configures settings used by makeTransects and checkTransects for generating and checking survey transects
@@ -165,7 +165,8 @@ wpt.types     <- c(Adaptive = "Adaptive", Carranza = "Carranza",
                    Compulsory = "Compulsory", Franklin = "Franklin",
                    Nearshore = "Nearshore", Offshore = "Offshore", 
                    Saildrone = "Saildrone")
-wpt.regions   <- c("Central CA", "S. CA Bight", "WA/OR") # "Vancouver Is."          
+wpt.regions   <- c("Central CA", "S. CA Bight", "WA/OR", 
+                   "Santa Cruz Island", "Santa Catalina Island") # "Vancouver Is."          
 wpt.colors    <- c(Adaptive = "#FF0000", Carranza = "green",
                    Compulsory = "#000000", Franklin = "blue",
                    Nearshore = "#FF33F5", Offshore = "#FFA500", 
@@ -577,9 +578,17 @@ tx.spacing.dist <- c(5, 10, 20, 40, 80)
 
 # Define transect buffering preferences for stratum polygon creation
 na.buffer.dist <- 5 # Distance (nmi) to buffer N. American land mask for core strata masking
+ci.buffer.dist <- 2.5 # Distance (nmi) to buffer Channel Island land mask for nearshore strata masking
+
+## Core area
 tx.ext.pct     <- 0.35   # Extension percentage constant
 tx.ext.dir     <- "east" # east (toward shore), west (away from shore), or both
 tx.buff.pct    <- 1.025  # Scaling factor for transect buffering
+
+## Nearshore area
+tx.ext.pct.ns <- 2.5   # Extension percentage constant
+tx.ext.dir.ns <- "both" # east (toward shore), west (away from shore), or both
+tx.buff.pct.ns <- 1.025  # Scaling factor for transect buffering
 
 # Manually define transect spacing for variably spaced transects
 tx.spacing.manual <- data.frame(
@@ -701,10 +710,10 @@ length.max <- data.frame("species" = c("Clupea pallasii","Engraulis mordax",
 
 # Species to generate point estimates
 point.est.spp          <- c("Clupea pallasii","Engraulis mordax","Sardinops sagax",
-                            "Scomber japonicus","Trachurus symmetricus")
-# Species to generate point estimates
+                            "Scomber japonicus","Trachurus symmetricus","Etrumeus acuminatus")
+# Species to generate bootstrap estimates
 bootstrap.est.spp      <- c("Clupea pallasii","Engraulis mordax","Sardinops sagax",
-                            "Scomber japonicus","Trachurus symmetricus")
+                            "Scomber japonicus","Trachurus symmetricus","Etrumeus acuminatus")
 
 # Number of bootstrap samples
 boot.num <- 100 # 1000 during final

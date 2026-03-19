@@ -212,24 +212,25 @@ if (process.nearshore) {
   
   # Consider adding a variable clip.nearshore.intervals to settings since this is buried in the code.
   if (as.numeric(survey.year) >= 2023) {
-    # Buffer mainland by 7 nmi, which seems to encompass the footprint of the
-    # planned nearshore transects
-    na_buffer_ns <- na_landmask %>% 
-      st_transform(crs = crs.geog) %>% 
-      st_union() %>% 
-      st_buffer(dist = 7/60) %>% 
-      # Remove overlap with core area transects along the mainland
-      st_difference(strata.super.polygons)
+    # # Buffer mainland by 7 nmi, which seems to encompass the footprint of the
+    # # planned nearshore transects
+    # na_buffer_ns <- na_landmask %>% 
+    #   st_transform(crs = crs.geog) %>% 
+    #   st_union() %>% 
+    #   st_buffer(dist = 7/60) %>% 
+    #   # Remove overlap with core area transects along the mainland
+    #   st_difference(strata.super.polygons)
     
     # Buffer Channel Islands by 5 nmi, which should encompass the footprint of the
     # planned nearshore transects that are shorter than mainland transects
     ci_buffer <- st_read(here("Data/GIS/channel_islands.shp")) %>%
       st_union() %>% 
-      st_transform(crs = crs.geog) %>%
-      st_buffer(dist = 3/60)
+      st_transform(crs = crs.proj) %>%
+      st_buffer(dist = ci.buffer.dist * 1852)
     
     # Combine land masks
-    nearshore_mask <- st_union(na_buffer_ns, ci_buffer)
+    nearshore_mask <- st_union(na_buffer, ci_buffer) %>% 
+      st_transform(crs.geog)
     
     # mapview(nearshore_mask) +
     #   mapview(nasc.nearshore.sf) +
@@ -245,6 +246,10 @@ if (process.nearshore) {
     # Convert reduced nearshore backscatter to sf
     nasc.nearshore.sf <- nasc.nearshore %>% 
       st_as_sf(coords = c("long", "lat"), crs = crs.geog)
+    
+    # mapview(nearshore_mask) +
+    #   mapview(nasc.nearshore.sf) +
+    #   mapview(filter(transects.sf, Type == "Nearshore"), color = "red")
   }
   
   # Save after processing nearshore
@@ -342,7 +347,7 @@ nav.paths.ns.sf <- nav.ns.sf %>%
   st_cast("LINESTRING") %>% 
   ungroup()
 
-# mapview(nearshore_mask) + mapview(nav.paths.ns.sf)
+# mapview(nearshore_mask) + mapview(nav.paths.ns.sf, color = "black")
 
 # Summarize nasc for plotting ---------------------------------------------
 nasc.plot.ns <- nasc.nearshore %>% 
@@ -720,6 +725,9 @@ for (i in unique(tx.mid.ns$transect.name)) {
   }
 }
 
+# Remove geometry from tx.nn.ns
+tx.nn.ns <- st_set_geometry(tx.nn.ns, NULL)
+
 # If nearshore transect spacing is manually defined
 if (!is.na("tx.spacing.ns")) {
   tx.nn.ns <- tx.nn.ns %>%
@@ -728,20 +736,20 @@ if (!is.na("tx.spacing.ns")) {
       vessel.name == "LM" ~ tx.spacing.ns["N"],
       vessel.name == "LBC" & transect <= tx.break.ns ~ tx.spacing.ns["S"],
       vessel.name == "LBC" & transect > tx.break.ns ~ tx.spacing.ns["CI"],
-      TRUE ~ NA)) %>% 
+      TRUE ~ NA)) %>%
     mutate(dist.bin = cut(min.dist, tx.spacing.bins),
            spacing  = min.dist,
            dist.cum = cumsum(spacing))
 } else {
   # Bin transects by spacing
-  tx.nn.ns <- tx.nn.ns %>% 
+  tx.nn.ns <- tx.nn.ns %>%
     mutate(dist.bin = cut(min.dist, tx.spacing.bins),
-           spacing  = tx.spacing.dist[as.numeric(dist.bin)]) %>% 
+           spacing  = tx.spacing.dist[as.numeric(dist.bin)]) %>%
     mutate(spacing = case_when(
       spacing > 6 ~ 5,
       TRUE ~ spacing),
-      dist.cum = cumsum(spacing)) %>% 
-    arrange(transect)  
+      dist.cum = cumsum(spacing)) %>%
+    arrange(transect)
 }
 
 # Save nearest neighbor distance info
@@ -791,6 +799,118 @@ if (exists("tx.ends.ns"))       rm(tx.ends.ns)
 if (exists("strata.ns"))        rm(strata.ns) 
 if (exists("strata.points.ns")) rm(strata.points.ns)
 if (exists("nasc.region"))      rm(nasc.region)
+
+# Add transect number and computed spacing 
+tx.sampled.ns <- transects.sf %>% 
+  filter(Type == "Nearshore", Transect %in% tx.mid.ns$transect) %>%
+  mutate(transect = Transect) %>% 
+  left_join(select(tx.nn.ns, transect, min.dist)) 
+
+if (exists("tx.spacing.manual.ns")) {
+  tx.sampled.ns <- tx.sampled.ns %>% 
+    # Use manually defined transect spacing
+    bind_cols(spacing.nm = tx.spacing.manual.ns$spacing.nm) %>% 
+    mutate(buff.dist = spacing.nm/2)
+} else {
+  tx.sampled.ns <- tx.sampled.ns %>% 
+    # Use computed distance to nearest transect (in nmi)
+    mutate(buff.dist = min.dist/2)
+}
+
+# Extend sampled transects eastward, westward, or both
+rm(tx.sampled.ext.ns)
+
+for (i in unique(tx.sampled.ns$Type)) {
+  for (j in unique(tx.sampled.ns$transect)){
+    # Subset tx.sampled for each transect
+    tx.sub <- filter(tx.sampled.ns, Type == i, transect == j) %>% 
+      st_transform(crs.proj)
+    # Get number of nodes to select proper endpoints
+    n.wpts <- nrow(data.frame(st_coordinates(tx.sub)))
+    
+    # Extend transects
+    if (nrow(tx.sub) > 0) {
+      # Get end points
+      first.point <- st_coordinates(tx.sub)[1, 1:2]
+      last.point  <- st_coordinates(tx.sub)[n.wpts, 1:2]
+      
+      # Calculate bearing
+      direction <- last.point - first.point
+      direction <- direction / sqrt(sum(direction^2))
+      
+      # Define extension distance (e.g., 25% of line length, e.g., 0.25)
+      # and compute new first and last points      
+      ext.dist <- as.numeric(st_length(tx.sub))*tx.ext.pct.ns
+      new.first.point <- first.point - (ext.dist * direction)
+      new.last.point  <- last.point  + (ext.dist * direction)
+      
+      # Create new line
+      if (tx.ext.dir.ns == "east") {
+        extended.line <- st_sfc(st_linestring(rbind(new.first.point, last.point))) %>% 
+          st_as_sf()  
+      } else if (tx.ext.dir.ns == "west") {
+        extended.line <- st_sfc(st_linestring(rbind(first.point, new.last.point))) %>% 
+          st_as_sf()
+      } else if (tx.ext.dir.ns == "both") {
+        extended.line <- st_sfc(st_linestring(rbind(new.first.point, new.last.point))) %>% 
+          st_as_sf()
+      }
+      
+      st_crs(extended.line) <- st_crs(tx.sub) # Maintain CRS
+      
+      # Add attributes
+      extended.line <- extended.line %>% 
+        mutate(Type      = tx.sub$Type,
+               Region    = tx.sub$Region,
+               transect  = tx.sub$transect,
+               min.dist  = tx.sub$min.dist,
+               buff.dist = tx.sub$buff.dist)
+      
+      # Combine extended lines
+      if (exists("tx.sampled.ext.ns")) {
+        tx.sampled.ext.ns <- bind_rows(tx.sampled.ext.ns, extended.line)
+      } else {
+        tx.sampled.ext.ns <- extended.line
+      }
+    }
+  }
+}
+
+# Check result
+# mapview(tx.sampled.ext.ns) + mapview(tx.sampled.ns, color = "black")
+
+# Buffer transects
+rm("tx.sampled.buff.ns")
+
+for (iii in unique(tx.sampled.ext.ns$transect)) {
+  tx.sampled.ext.sub <- filter(tx.sampled.ext.ns, transect == iii) 
+  
+  tx.buff.tmp <- tx.sampled.ext.sub %>% 
+    st_buffer(dist = tx.sampled.ext.sub$buff.dist*1852*tx.buff.pct,
+              endCapStyle = "FLAT") %>% 
+    mutate(area = st_area(.))
+  
+  if (exists("tx.sampled.buff.ns")) {
+    tx.sampled.buff.ns <- bind_rows(tx.sampled.buff.ns, tx.buff.tmp)
+  } else {
+    tx.sampled.buff.ns <- tx.buff.tmp
+  }
+}
+
+# View results of extending and buffering
+# mapview(tx.sampled.buff.ns, zcol = "transect") + mapview(tx.sampled.ext.ns, color = "black") + mapview(tx.sampled.ns)
+
+# Bin transects by spacing
+tx.nn.ns <- tx.nn.ns %>%
+  mutate(dist.bin = cut(tx.nn.ns$min.dist, tx.spacing.bins),
+         spacing  = tx.spacing.dist[as.numeric(dist.bin)],
+         dist.cum = cumsum(spacing)) %>%
+  arrange(transect)
+
+# Save nearest neighbor distance info
+save(tx.nn.ns, file = here("Output/transect_spacing_ns.Rdata"))
+
+# RESUME HERE
 
 # Assign transects to region based on latitude
 # Because in some years duplicate transect numbers exist, can't do a straight join

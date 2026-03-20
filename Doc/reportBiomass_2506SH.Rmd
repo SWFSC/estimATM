@@ -5,7 +5,7 @@
 output:
   bookdown::pdf_document2:
     includes:
-      in_header: yaml/header_draft.tex
+      in_header: yaml/header_final.tex
     toc: false
     toc_depth: 3
     number_sections: yes
@@ -1828,6 +1828,76 @@ if (combine.regions) {
 #### Pacific Sardines in U.S. waters {#results-all-sar}  
 
 The estimated biomass of all Pacific Sardine in U.S. waters, including both the northern and southern subpopulations in the core and nearshore areas,  was `r prettyNum(be.sar.all.summ$Biomass[be.sar.all.summ$Species == 'Sardinops sagax'],big.mark=",",digits=4)` t (CI~95%~ = `r prettyNum(be.sar.all.summ$lower.ci.B[be.sar.all.summ$Species == 'Sardinops sagax'],big.mark=",",digits=3)` - `r prettyNum(be.sar.all.summ$upper.ci.B[be.sar.all.summ$Species == 'Sardinops sagax'],big.mark=",",digits=3)` t, CV = `r prettyNum(be.sar.all.summ$biomass.cv[be.sar.all.summ$Species == 'Sardinops sagax'],big.mark=",",digits=1)`%). Additional figures and tables for the distribution and abundances of all Pacific Sardine will be available prior to publication.  
+
+(ref:biomass-sar-all-us) Biomass estimates (metric tons, t) and their precisions (upper and lower 95% confidence intervals, CI~95%~; and coefficients of variation, CVs) for the northern subpopulation of Pacific Sardine (_Sardinops sagax_) in the core and nearshore survey regions. Stratum areas are nmi^2^ and distance covered by transects is in nmi.
+
+```{r biomass-sar-all-us,eval=FALSE}
+be.table.sub.all <- be.table.summ %>% 
+  filter(Name == "Sardinops sagax", Stock == "Northern") %>% 
+  mutate(Region = "All")
+
+be.table.sub <- be.table %>% 
+  filter(Name == "Sardinops sagax", Stock == "Northern") %>% 
+  mutate(Region = "Core") 
+
+if (exists("be.table.ns")) {
+  be.table.sub.ns <- be.table.ns %>%
+    filter(Name == "Sardinops sagax", Stock == "Northern") %>%
+    mutate(Region = "Nearshore")
+  
+  be.table.sub <- be.table %>% 
+    filter(Name == "Sardinops sagax", Stock == "Northern") %>%
+    mutate(Region = "Core") %>% 
+    bind_rows(be.table.sub.ns) %>% 
+    bind_rows(be.table.sub.all) %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+} else {
+  be.table.sub <- be.table %>% 
+    filter(Name == "Sardinops sagax", Stock == "Northern") %>%
+    mutate(Region = "Core") %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+}
+
+# Write results to CSV for stock assessors
+be.table.sub %>% 
+  rename("point_estimate" = "$\\hat{B}$",
+         "ci_lower" = "CI$_{L,95\\%}$",
+         "ci_upper" =	"CI$_{U,95\\%}$") %>%
+  write_csv(file = here("Output/biomass_final_Sardinops_sagax_Northern.csv"),
+            na = "")
+
+if (nrow(be.table.sub) != 0) {
+  if (doc.type == "docx") {
+    regulartable(be.table.sub) %>% 
+      merge_v(j = c("Region")) %>%
+      add_header(Region  = "",
+                 # Stock    = "",
+                 Number   = "Stratum", Area = "Stratum", Transects = "Stratum", Distance = "Stratum",
+                 Clusters = "Trawl", Individuals = "Trawl",
+                 "$\\hat{B}$" = "Biomass", "CI$_{L,95\\%}$" = "Biomass", "CI$_{U,95\\%}$" = "Biomass",
+                 CV = "Biomass") %>% 
+      merge_h(part = "header") %>% 
+      align(align = "center",part = "header") %>% 
+      autofit()
+  } else {
+    kable(be.table.sub, format = knitr.format, booktabs = FALSE, escape = FALSE,
+          align           = c(rep("l", 1), rep("r",ncol(be.table.sub) - 2)),
+          digits          = c(0),
+          format.args     = list(big.mark = ","),
+          caption = '(ref:biomass-sar-all-us)') %>% 
+      kable_styling(latex_options = c("hold_position","scale_down"),
+                    position = "center",
+                    font_size = 8) %>% 
+      row_spec(nrow(be.table.sub), bold = T) %>%
+      collapse_rows(columns = 1, valign = "top") %>%
+      add_header_above(c("Stratum" = 5, "Trawl" = 2, "Biomass" = 4))
+  }
+} else {
+  print("No results for this species/subpopulation.")
+}
+```  
 
 ### Pacific Mackerel {#results-mack}  
 

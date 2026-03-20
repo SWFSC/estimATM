@@ -134,10 +134,11 @@ save.figs         <- T # Draw new figures and maps
 download.hab      <- F # Download habitat map
 process.scs       <- F # Process SCS data
 plot.time.series  <- T # Plot biomass time series 
-do.bootstrap      <- F # Generate bootstrap estimates
+do.bootstrap      <- T # Generate bootstrap estimates
 
 ### Sometimes FALSE
 do.imap             <- T # Create interactive Leaflet map
+do.plotly           <- F # Use plotly figures instead of ggplot 
 save.imap           <- F # Save Leaflet maps
 overwrite.files     <- T # Overwrite files (TRUE if files have changed)
 overwrite.csv       <- T # Overwrite CSV files (TRUE if files have changed)
@@ -455,6 +456,43 @@ if (survey.name %in% c("1707RL")) {
 # Include map
 include_graphics(here("Figs/fig_survey_plan.png"))
 ```
+
+# Configure spatial layers for geoprocessing
+
+```{r configure-spatial-files}
+# Load and modify masking polygons
+# Read North America land mask shapefile and buffer by the distance of nearshore transects from shore
+na_buffer <- st_read(here("Data/GIS/na_landmask_final.shp")) %>% 
+  st_union() %>% 
+  st_transform(crs.proj) %>% 
+  st_buffer(dist = na.buffer.dist*1852)
+
+# Load 5 m bathy and cast as polygon for clipping
+ns_clip <- st_read(here("Data/GIS/bathy_5m_wc_poly.shp")) %>% 
+  st_cast("POLYGON") %>% 
+  st_transform(crs.proj)
+
+# Buffer Channel Islands by 5 nmi, which should encompass the footprint of the
+# planned nearshore transects that are shorter than mainland transects
+ci_clip <- st_read(here("Data/GIS/channel_islands.shp")) %>%
+  filter(name %in% wpt.regions) %>% 
+  st_union() %>% 
+  st_transform(crs = crs.proj) %>%
+  st_buffer(dist = ci.clip.dist * 1852)
+
+ci_buffer <- st_read(here("Data/GIS/channel_islands.shp")) %>%
+  filter(name %in% wpt.regions) %>%
+  st_union() %>% 
+  st_transform(crs = crs.proj) %>%
+  st_buffer(dist = ci.buffer.dist * 1852)
+
+# Combine land masks from buffered land masses to define offshore extent of nearshore polygons
+nearshore_mask <- st_union(na_buffer, ci_buffer) # %>% st_transform(crs.geog)
+
+# Combine the Channel Islands 0.2 nmi buffer and 5m mainland isobath mask to define inshore extent of nearshore polygons
+nearshore_clip <- st_union(ci_clip, ns_clip)
+```
+
 
 # Process backscatter data
 ## Read and summarize CSV files from Echoview  
@@ -1030,8 +1068,11 @@ if (save.figs) {
          height = 3, width = 5)
 }
 
-# include_graphics(here("Figs/fig_nasc_outliers.png"))
-ggplotly(nasc.outlier.plotly)
+if (do.plotly) {
+  ggplotly(nasc.outlier.plotly)
+} else {
+  nasc.outlier.plot
+}
 ```  
 
 ## Characterize day/night  
@@ -1122,6 +1163,21 @@ Acoustic backscatter is averaged over 2,000-m intervals and plotted along each t
 (ref:map-nasc-tx) Survey transects performed aboard _`r survey.vessel`_ overlaid with the distribution of 38-kHz integrated backscattering coefficients (_s_~A~, m^2^ nmi^-2^;  averaged over 2000-m distance intervals and from `r cps.depth` to `r int.start`-m deep) ascribed to CPS. Panels are labeled with a) transect names (from Echoview files) and b) transect numbers (used to define sampling strata).
 
 ```{r map-nasc-tx, fig.cap='(ref:map-nasc-tx)'}  
+## Retain core area intervals that fall outside the nearshore mask ----------
+nasc.sf.sub <- nasc %>% 
+  st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
+  st_transform(crs = crs.proj) %>% 
+  st_difference(nearshore_mask)
+
+# mapview(nasc.sf.sub) + mapview(nearshore_mask)
+
+# Keep core area acoustic intervals that intersect the nearshore mask
+nasc <- filter(nasc, id %in% nasc.sf.sub$id)
+
+# Convert reduced nearshore backscatter to sf
+nasc.sf <- nasc %>% 
+  st_as_sf(coords = c("long", "lat"), crs = crs.geog)
+
 # Create acoustic transect labels for maps
 tx.labels.tmp <- nasc %>% 
   group_by(transect) %>% 
@@ -4960,17 +5016,38 @@ tx.c <- tx.c %>%
 ```
 
 ```{r create-final-strata-polygons, include=FALSE}
-# Load and modify masking polygons
-# Read North America land mask shapefile
-na_buffer <- st_read(here("Data/GIS/na_landmask_final.shp")) %>% 
-  st_union() %>% 
-  st_transform(crs.proj) %>% 
-  st_buffer(dist = na.buffer.dist*1852)
-
-# Load 5 m bathy and cast as polygon for clipping
-ns_mask <- st_read(here("Data/GIS/bathy_5m_wc_poly.shp")) %>% 
-  st_cast("POLYGON") %>% 
-  st_transform(crs.proj)
+# # Load and modify masking polygons
+# # Read North America land mask shapefile
+# na_buffer <- st_read(here("Data/GIS/na_landmask_final.shp")) %>% 
+#   st_union() %>% 
+#   st_transform(crs.proj) %>% 
+#   st_buffer(dist = na.buffer.dist*1852)
+# 
+# # Load 5 m bathy and cast as polygon for clipping
+# ns_mask <- st_read(here("Data/GIS/bathy_5m_wc_poly.shp")) %>% 
+#   st_cast("POLYGON") %>% 
+#   st_transform(crs.proj)
+# 
+# # Buffer Channel Islands by 5 nmi, which should encompass the footprint of the
+# # planned nearshore transects that are shorter than mainland transects
+# ci_clip <- st_read(here("Data/GIS/channel_islands.shp")) %>%
+#   filter(name %in% wpt.regions) %>% 
+#   st_union() %>% 
+#   st_transform(crs = crs.proj) %>%
+#   st_buffer(dist = ci.clip.dist * 1852)
+# 
+# ci_buffer <- st_read(here("Data/GIS/channel_islands.shp")) %>%
+#   filter(name %in% wpt.regions) %>%
+#   st_union() %>% 
+#   st_transform(crs = crs.proj) %>%
+#   st_buffer(dist = ci.buffer.dist * 1852)
+# 
+# # Combine land masks from buffered land masses to define offshore extent of nearshore polygons
+# nearshore_mask <- st_union(na_buffer, ci_buffer) %>% 
+#   st_transform(crs.geog)
+# 
+# # Combine the Channel Islands 0.2 nmi buffer and 5m mainland isobath mask to define inshore extent of nearshore polygons
+# nearshore_clip <- st_union(ci_clip, ns_mask)
 
 # Ensure strata objects do not exist
 if (exists("strata.primary")) rm(strata.primary)
@@ -5022,7 +5099,7 @@ for (i in unique(strata.final$scientificName)) {
     summarise(geometry = st_union(x)) %>%
     ungroup() %>%
     st_intersection(na_buffer) %>% 
-    st_difference(ns_mask) %>% 
+    st_difference(nearshore_mask) %>% 
     mutate(area = st_area(.))
   
   # mapview(primary.poly.i, zcol = "stock") + mapview(nearshore.poly.i, zcol = "stock")
@@ -5036,19 +5113,19 @@ for (i in unique(strata.final$scientificName)) {
   #   mapview(filter(transects.sf, Type == "Nearshore"), color = "green")
   
   # Combine with other polygons ----------------------------------------
-    if (exists("strata.primary")) {
-      strata.primary <- bind_rows(strata.primary, primary.poly.i)
-    } else {
-      strata.primary <- primary.poly.i
-    }
+  if (exists("strata.primary")) {
+    strata.primary <- bind_rows(strata.primary, primary.poly.i)
+  } else {
+    strata.primary <- primary.poly.i
+  }
   
-    if (exists("strata.nse")) {
-      strata.nse <- bind_rows(strata.nse, nearshore.poly.i)
-    } else {
-      strata.nse <- nearshore.poly.i
-    }
+  if (exists("strata.nse")) {
+    strata.nse <- bind_rows(strata.nse, nearshore.poly.i)
+  } else {
+    strata.nse <- nearshore.poly.i
+  }
 }
- 
+
 # # Check results
 # ggplot() +
 #   geom_sf(data = strata.primary, aes(fill = stock)) +
@@ -6614,24 +6691,6 @@ for (i in unique(strata.final$scientificName)) {
     mutate(area = as.numeric(area)) %>%
     st_set_geometry(NULL) 
   
-  stratum.info.nse <- strata.nse %>% 
-    filter(scientificName == i) %>% 
-    select(stratum, area) %>%
-    mutate(area = as.numeric(area)) %>% 
-    st_set_geometry(NULL) 
-  
-  # Get nearshore nasc data
-  nasc.nse <- estimate_inshore(nasc.temp, bathy_5m_df) %>% 
-    mutate(scientificName = i,
-           key            = paste(transect, int)) %>% 
-    filter(stratum %in% stratum.info.nse$stratum)
-  
-  if (exists("nasc.nse.final")) {
-    nasc.nse.final <- bind_rows(nasc.nse.final, nasc.nse)
-  } else {
-    nasc.nse.final <- nasc.nse
-  }
-  
   # Compute point estimates
   # Currently has na.rm = TRUE for calculating biomass
   if (exists("point.estimates")) {
@@ -6643,13 +6702,33 @@ for (i in unique(strata.final$scientificName)) {
                                   estimate_point(nasc.temp, stratum.info, species = i))
   }
   
-  if (exists("point.estimates.nse")) {
-    point.estimates.nse <- bind_rows(point.estimates.nse,
-                                     data.frame(scientificName = i,
-                                                estimate_point(nasc.nse, stratum.info.nse, species = i)))
-  } else {
-    point.estimates.nse <- data.frame(scientificName = i,
-                                      estimate_point(nasc.nse, stratum.info.nse, species = i))
+  if (extrapolate.biomass) {
+    stratum.info.nse <- strata.nse %>% 
+      filter(scientificName == i) %>% 
+      select(stratum, area) %>%
+      mutate(area = as.numeric(area)) %>% 
+      st_set_geometry(NULL) 
+    
+    # Get nearshore nasc data
+    nasc.nse <- estimate_inshore(nasc.temp, bathy_5m_df) %>% 
+      mutate(scientificName = i,
+             key            = paste(transect, int)) %>% 
+      filter(stratum %in% stratum.info.nse$stratum)
+    
+    if (exists("nasc.nse.final")) {
+      nasc.nse.final <- bind_rows(nasc.nse.final, nasc.nse)
+    } else {
+      nasc.nse.final <- nasc.nse
+    }
+    
+    if (exists("point.estimates.nse")) {
+      point.estimates.nse <- bind_rows(point.estimates.nse,
+                                       data.frame(scientificName = i,
+                                                  estimate_point(nasc.nse, stratum.info.nse, species = i)))
+    } else {
+      point.estimates.nse <- data.frame(scientificName = i,
+                                        estimate_point(nasc.nse, stratum.info.nse, species = i))
+    }
   }
 }
 
@@ -6657,15 +6736,11 @@ for (i in unique(strata.final$scientificName)) {
 save(point.estimates, 
      file = here("Output/biomass_point_estimates.Rdata")) 
 
-save(point.estimates.nse, 
-     file = here("Output/biomass_point_estimates_nse.Rdata"))
-
 # Save strata nasc summaries to CSV
 write_csv(nasc.summ.strata, here("Output/nasc_strata_summary.csv"))
 
 # Add stock designations to point estimates
 point.estimates     <- left_join(point.estimates, strata.summ.primary)
-point.estimates.nse <- left_join(point.estimates.nse, strata.summ.nse)
 
 # Summarize point estimates (by stocks)
 pe <- point.estimates %>%
@@ -6706,48 +6781,60 @@ pe %>%
   row_spec(0, align = c("c")) %>%
   collapse_rows(columns = c(1))
 
-save(nasc.nse.final, file = here("Output/nasc_nse_final.Rdata"))
+if (extrapolate.biomass) {
+  save(point.estimates.nse, 
+       file = here("Output/biomass_point_estimates_nse.Rdata"))
+  
+  point.estimates.nse <- left_join(point.estimates.nse, strata.summ.nse)
+  
+  save(nasc.nse.final, file = here("Output/nasc_nse_final.Rdata"))
+}
 ```
 
 ### Nearshore extrapolation
 
 ```{r biomass-point-estimates-inshore}
-# Summarize point estimates (by stocks)
-pe.nse <- point.estimates.nse %>%
-  group_by(scientificName, stock) %>%
-  summarise(
-    area    = sum(area),
-    biomass.total = sum(biomass.total)) %>%
-  bind_rows(point.estimates.nse) %>%
-  mutate(area = area * 2.915533e-07) %>%
-  arrange(scientificName, stock, stratum) %>%
-  mutate(stratum = case_when(
-    is.na(stratum) ~ "All",
-    TRUE ~  as.character(stratum))) %>% 
-  select(scientificName, stock, stratum, area, biomass.total) %>%
-  rename(
-    Species            = scientificName,
-    Stock              = stock,
-    Stratum            = stratum,
-    Area               = area,
-    biomass.mean.point = biomass.total)
+if (extrapolate.biomass) {
+  # Summarize point estimates (by stocks)
+  pe.nse <- point.estimates.nse %>%
+    group_by(scientificName, stock) %>%
+    summarise(
+      area    = sum(area),
+      biomass.total = sum(biomass.total)) %>%
+    bind_rows(point.estimates.nse) %>%
+    mutate(area = area * 2.915533e-07) %>%
+    arrange(scientificName, stock, stratum) %>%
+    mutate(stratum = case_when(
+      is.na(stratum) ~ "All",
+      TRUE ~  as.character(stratum))) %>% 
+    select(scientificName, stock, stratum, area, biomass.total) %>%
+    rename(
+      Species            = scientificName,
+      Stock              = stock,
+      Stratum            = stratum,
+      Area               = area,
+      biomass.mean.point = biomass.total)
+  
+  # Save point estimates
+  save(pe.nse, file = here("Output/biomass_point_estimates_nse_final.Rdata"))
+  write_csv(pe.nse, here("Output/biomass_point_estimates_nse_final.csv"))
+  
+  # Format point estimates table
+  pe.nse %>%
+    rename(Biomass = biomass.mean.point) %>% 
+    kable(format = knitr.format, booktabs = TRUE, escape = FALSE,
+          align = c("l","c","r","r","r"),
+          digits = c(0),
+          format.args = list(big.mark = ",")) %>% 
+    kable_styling(bootstrap_options = c("striped","hover","condensed"), full_width = FALSE) %>%
+    column_spec(1, italic = TRUE) %>% 
+    row_spec(0, align = c("c")) %>%
+    # row_spec(pe.stratum.all, bold = TRUE, color = c("#000000"),background = "#8B8C94") %>%
+    collapse_rows(columns = c(1))
+} else {
+  print("No nearshore extrapolation estimates computed.")
+}
 
-# Save point estimates
-save(pe.nse, file = here("Output/biomass_point_estimates_nse_final.Rdata"))
-write_csv(pe.nse, here("Output/biomass_point_estimates_nse_final.csv"))
-
-# Format point estimates table
-pe.nse %>%
-  rename(Biomass = biomass.mean.point) %>% 
-  kable(format = knitr.format, booktabs = TRUE, escape = FALSE,
-        align = c("l","c","r","r","r"),
-        digits = c(0),
-        format.args = list(big.mark = ",")) %>% 
-  kable_styling(bootstrap_options = c("striped","hover","condensed"), full_width = FALSE) %>%
-  column_spec(1, italic = TRUE) %>% 
-  row_spec(0, align = c("c")) %>%
-  # row_spec(pe.stratum.all, bold = TRUE, color = c("#000000"),background = "#8B8C94") %>%
-  collapse_rows(columns = c(1))
 ```
 
 ## Calculate biomass - Bootstrap estimates  
@@ -7725,7 +7812,11 @@ if (estimate.ns) {
 if (estimate.ns) {
   if (exists("lw.plot.ns")) {
     # Create interactive plot of nearshore specimen L/W
-    ggplotly(lw.plot.ns)
+    if (do.plotly) {
+      ggplotly(lw.plot.ns)
+    } else {
+      lw.plot.ns
+    }
   } else {
     print("No purse seine length/weight plot.")
   }  
@@ -7772,7 +7863,7 @@ if (exists("pe.ns")) {
 
 #### Bootstrap estimates  
 
-Estimates of biomass (metric tons (t); mean, lower and upper 95% confidence intervals, CV, and percent of total biomass; n = `r boot.num` bootstrap samples) for all CPS in the nearshore survey area, by stratum and within the entire area (Stratum = "All"). Stratum distances are in nmi, and stratum areas are nmi^2^. A total of `r nrow(nasc.nse)` acoustic intervals were included in this analysis. 
+Estimates of biomass (metric tons (t); mean, lower and upper 95% confidence intervals, CV, and percent of total biomass; n = `r boot.num` bootstrap samples) for all CPS in the nearshore survey area, by stratum and within the entire area (Stratum = "All"). Stratum distances are in nmi, and stratum areas are nmi^2^. A total of `r nrow(nasc.nearshore)` acoustic intervals were included in this analysis. 
 
 ```{r biomass-bootstrap-estimates-ns-final}
 if (exists("be.ns")) {

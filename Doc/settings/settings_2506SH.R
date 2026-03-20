@@ -3,10 +3,10 @@
 ### Biomass estimation
 process.seine     <- T # Process purse seine data, if present
 process.nearshore <- T # Process near backscatter data; typically TRUE
-estimate.ns       <- F # Estimate biomass in the nearshore strata; T if nearshore surveyed
+estimate.ns       <- T # Estimate biomass in the nearshore strata; T if nearshore surveyed
 process.offshore  <- F # Process offshore backscatter data
 estimate.os       <- F # Estimate biomass in the offshore strata; T if offshore surveyed
-combine.regions   <- F # Combine nearshore/offshore plots with those from the core region
+combine.regions   <- T # Combine nearshore/offshore plots with those from the core region
 
 # Survey planning ---------------------------------------------------------
 ## This section controls and configures settings used by makeTransects and checkTransects for generating and checking survey transects
@@ -577,8 +577,9 @@ tx.spacing.bins <- c(0,  6, 15, 35, 70, 100)
 tx.spacing.dist <- c(5, 10, 20, 40, 80)
 
 # Define transect buffering preferences for stratum polygon creation
-na.buffer.dist <- 5 # Distance (nmi) to buffer N. American land mask for core strata masking
+na.buffer.dist <- 4 # Distance (nmi) to buffer N. American land mask for core strata masking
 ci.buffer.dist <- 2.5 # Distance (nmi) to buffer Channel Island land mask for nearshore strata masking
+ci.clip.dist   <- 0.1 # Distance (nmi) to buffer Channel Island land mask for nearshore strata clipping
 
 ## Core area
 tx.ext.pct     <- 0.35   # Extension percentage constant
@@ -586,9 +587,10 @@ tx.ext.dir     <- "east" # east (toward shore), west (away from shore), or both
 tx.buff.pct    <- 1.025  # Scaling factor for transect buffering
 
 ## Nearshore area
-tx.ext.pct.ns <- 2.5   # Extension percentage constant
-tx.ext.dir.ns <- "both" # east (toward shore), west (away from shore), or both
-tx.buff.pct.ns <- 1.025  # Scaling factor for transect buffering
+tx.ext.pct.ns    <- 2.25      # Extension percentage constant
+tx.ext.pct.ns.ci <- 0.25   # Extension percentage scaling for Channel Island transects
+tx.ext.dir.ns    <- "both" # east (toward shore), west (away from shore), or both
+tx.buff.pct.ns   <- 1.1   # Scaling factor for transect buffering
 
 # Manually define transect spacing for variably spaced transects
 tx.spacing.manual <- data.frame(
@@ -716,7 +718,7 @@ bootstrap.est.spp      <- c("Clupea pallasii","Engraulis mordax","Sardinops saga
                             "Scomber japonicus","Trachurus symmetricus","Etrumeus acuminatus")
 
 # Number of bootstrap samples
-boot.num <- 100 # 1000 during final
+boot.num <- 1000 # 1000 during final
 
 # Generate biomass length frequencies
 do.lf    <- TRUE
@@ -751,7 +753,15 @@ strata.manual <- bind_rows(
   data.frame(
     scientificName = "Clupea pallasii",
     stratum = 2,
-    transect = 41:53),
+    transect = 41:43),
+  data.frame(
+    scientificName = "Clupea pallasii",
+    stratum = 3,
+    transect = 44:50),
+  data.frame(
+    scientificName = "Clupea pallasii",
+    stratum = 4,
+    transect = 51:53),
   data.frame(
     scientificName = "Engraulis mordax",
     stratum = 1,
@@ -771,26 +781,18 @@ strata.manual <- bind_rows(
   data.frame(
     scientificName = "Sardinops sagax",
     stratum = 2,
-    transect = 11:15),
+    transect = 11:20),
   data.frame(
     scientificName = "Sardinops sagax",
     stratum = 3,
-    transect = 16:20),
+    transect = 22:29),
   data.frame(
     scientificName = "Sardinops sagax",
     stratum = 4,
-    transect = 22:24),
-  data.frame(
-    scientificName = "Sardinops sagax",
-    stratum = 5,
-    transect = 25:29),
-  data.frame(
-    scientificName = "Sardinops sagax",
-    stratum = 6,
     transect = 32:36),
   data.frame(
     scientificName = "Sardinops sagax",
-    stratum = 7,
+    stratum = 5,
     transect = 41:45),
   data.frame(
     scientificName = "Scomber japonicus",
@@ -823,7 +825,11 @@ strata.manual <- bind_rows(
   data.frame(
     scientificName = "Trachurus symmetricus",
     stratum = 3,
-    transect = 20:53))
+    transect = 20:38),
+  data.frame(
+    scientificName = "Trachurus symmetricus",
+    stratum = 4,
+    transect = 39:53))
 
 # Stock boundaries --------------------------------------------------------
 stock.break.anch <- c("Cape Mendocino" = 40.80)  # Latitude of Cape Mendocino

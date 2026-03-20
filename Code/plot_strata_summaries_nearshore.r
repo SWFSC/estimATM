@@ -142,7 +142,7 @@ if (nrow(strata.summ.rm) > 0) {
 if (diff(range(nasc.density.summ.ns$start.lat)) > 6) {
   ggsave(biomass.dens.plot.lat.ns, 
          filename = here("Figs/fig_biomass_density_transect_lat_ns.png"),
-         height = 12, width = 12*n_distinct(strata.summ.nearshore$vessel.name))
+         height = 12, width = 12)
   
   ggsave(biomass.dens.plot.tx.ns, 
          filename = here("Figs/fig_biomass_density_transect_tx_ns.png"),

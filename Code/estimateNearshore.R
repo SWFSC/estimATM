@@ -353,17 +353,27 @@ nav.paths.ns.sf <- nav.ns.sf %>%
 
 # Summarize nasc for plotting ---------------------------------------------
 nasc.plot.ns <- nasc.nearshore %>% 
-  select(filename, vessel.name, transect, transect.name, int, lat, long, cps.nasc) %>% 
+  select(filename, vessel.name, transect, transect.name, int, dist_m, datetime, lat, long, cps.nasc) %>% 
   group_by(filename, vessel.name, transect.name, transect, int) %>% 
   summarise(
     lat  = lat[1],
     long = long[1],
-    NASC = mean(cps.nasc)) %>% 
+    NASC = mean(cps.nasc),
+    label = paste0('Transect: ', transect[1], "; ",
+                   'Distance: ', round(min(dist_m)), "-", round(max(dist_m)), ' m'),
+    popup = paste0('<b>Transect: </b>', transect[1], '<br/>',
+                   '<b>Time: </b>', min(datetime), " - ", max(datetime), ' UTC<br/>',
+                   '<b>Distance: </b>', round(min(dist_m)), "-", round(max(dist_m)), ' m<br/>',
+                   '<b>NASC: </b>', round(mean(NASC)), ' m<sup>2</sup> nmi<sup>-2</sup>')) %>% 
   # Create bins for defining point size in NASC plots%>% 
   mutate(bin       = cut(NASC, nasc.breaks, include.lowest = TRUE),
          bin.level =  as.numeric(bin)) %>% 
   ungroup() %>% 
   project_df(to = crs.proj)
+
+# Convert to sf
+nasc.plot.ns.sf <- nasc.plot.ns %>% 
+  st_as_sf(coords = c("long","lat"), crs = crs.geog) 
 
 # Plot data coverage
 # ggplot(nasc.plot.ns, aes(long, lat, colour = vessel.name, size = NASC)) + geom_point() + facet_wrap(~vessel.name) + coord_map()

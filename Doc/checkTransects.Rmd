@@ -375,7 +375,7 @@ if (leaflet.checkTransects.simple) {
                      popup = ~popup,
                      group = "Planned Transects") %>%
     addMarkers(data = locations.sf, label = ~name, popup = ~name,
-               group = "Locations") %>% 
+               group = "Landmarks") %>% 
     # Add scale bar
     addScaleBar(position = "bottomright") %>%
     # Add map coordinates
@@ -388,7 +388,7 @@ if (leaflet.checkTransects.simple) {
     addLayersControl(
       baseGroups = c("Esri.OceanBasemap", "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
       overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs", 
-                        "State Waters", "Exclusive Economic Zones", "Locations",
+                        "State Waters", "Exclusive Economic Zones", "Landmarks",
                         "Bathymetry Contours", "Nearshore buffer", "Planned Transects", 
                         "CTD Stations","UCTD Stations", "eDNA Stations"),
       options = layersControlOptions(collapsed = FALSE)) %>%  

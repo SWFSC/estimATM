@@ -18,12 +18,13 @@ if (!require("pak")) install.packages("pak")
 pacman::p_load(tidyverse,sf,mapview,lubridate,here,knitr,DT,bookdown,
                rnaturalearth,swfscMisc,fs,photobiology,ggspatial,glue,
                leaflet,leaflet.extras,leafem,htmltools,marmap,mapproj,gt,
-               shadowtext,stplanr,tmaptools)
+               shadowtext,stplanr,tmaptools,patchwork)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
 if (!require("surveyR")) pkg_install("SWFSC/surveyR")
 pacman::p_load_gh("SWFSC/atm")
+pacman::p_load_gh("SWFSC/atmData")
 pacman::p_load_gh("SWFSC/surveyR")
 
 # rnaturalearth data
@@ -45,6 +46,7 @@ process.transects  <- T # Usually T; Process GPX file using processTransects.R
 update.routes      <- T # Re-write route files after processing
 get.bathy          <- T # Get NOAA bathymetry (used to extract bathymetry)
 extract.bathy      <- T # Extract bathymetry profile along each transect
+load.data          <- F # Load CPS density data from {atmData}
 
 # Create output directories, in case they don't exist from makeTransects.Rmd
 dir_create(here("Output", c("routes","tables","waypoints")))
@@ -596,6 +598,113 @@ Leg progress was calculated based on the total number of days at sea (`r as.nume
 
 ```{r map-survey-plan-all-leg}
 include_graphics(here("Figs/fig_survey_map_leg.png"))
+```
+
+## Historic CPS biomass densities
+
+Plot the historic distribution of CPS density (2015-present) relative to planned transects.
+
+```{r map-historic-cps-biomass-dens}
+if (load.data) {
+  # List biomass data sets
+  atmDataPackage <- "atmData"
+  dataset_names <- data.frame(data(package = atmDataPackage)$results) %>% 
+    filter(str_detect(Item, "nasc_density*")) %>% 
+    pull(Item)
+  
+  # Load biomass densities from all years
+  data(list = dataset_names, package = atmDataPackage)
+  
+  # Combine all data frames into one for plotting
+  nasc.dens.all <- mget(ls(pattern = "nasc_density*")) %>%
+    bind_rows() %>% 
+    mutate(year = year(datetime)) 
+  
+  # Save data to speed processing
+  save(nasc.dens.all, file = here("Output/nasc_density_atmData.Rdata"))
+} else {
+  # Load processed data
+  load(here("Output/nasc_density_atmData.Rdata"))
+}
+
+# Subset data to warm years
+# nasc.dens.all <- filter(nasc.dens.all, year <= 2021)
+
+# Plot CPS density relative to planned transects
+## Sardine density
+dens.plot.sar <- base.map +
+  geom_point(data = filter(nasc.dens.all, sar.dens > 0), 
+             aes(X, Y),
+             # aes(X, Y, size = sar.dens),
+             colour = sardine.color, alpha = 0.2, size = 0.5,
+             show.legend = FALSE) +
+  scale_colour_viridis_c() +
+  guides(colour = guide_legend(), 
+         size = guide_legend()) +
+  geom_sf(data = filter(transects, Type == "Compulsory"), colour = "black") +
+  labs(title = "P. sardine") +
+  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+           xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
+           ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
+
+## P. mack density
+dens.plot.mack <- base.map +
+  geom_point(data = filter(nasc.dens.all, mack.dens > 0), 
+             aes(X, Y),
+             # aes(X, Y, size = mack.dens),
+             colour = pac.mack.color, alpha = 0.2, size = 0.5,
+             show.legend = FALSE) +
+  scale_colour_viridis_c() +
+  guides(colour = guide_legend(), 
+         size = guide_legend()) +
+  geom_sf(data = filter(transects, Type == "Compulsory"), colour = "black") +
+  labs(title = "P. mackerel") +
+  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+           xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
+           ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
+
+## P. mack density
+dens.plot.jack <- base.map +
+  geom_point(data = filter(nasc.dens.all, jack.dens > 0), 
+             aes(X, Y),
+             # aes(X, Y, size = jack.dens),
+             colour = jack.mack.color, alpha = 0.2, size = 0.5,
+             show.legend = FALSE) +
+  scale_colour_viridis_c() +
+  guides(colour = guide_legend(), 
+         size = guide_legend()) +
+  geom_sf(data = filter(transects, Type == "Compulsory"), colour = "black") +
+  labs(title = "J. mackerel") +
+  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+           xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
+           ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
+
+## P. mack density
+dens.plot.anch <- base.map +
+  geom_point(data = filter(nasc.dens.all, anch.dens > 0), 
+             aes(X, Y),
+             # aes(X, Y, size = anch.dens),
+             colour = anchovy.color, alpha = 0.2, size = 0.5,
+             show.legend = FALSE) +
+  scale_colour_viridis_c() +
+  guides(colour = guide_legend(), 
+         size = guide_legend()) +
+  geom_sf(data = filter(transects, Type == "Compulsory"), colour = "black") +
+  labs(title = "N. anchovy") +
+  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+           xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
+           ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
+
+# Combine plots
+dens.plot.all <- dens.plot.jack + dens.plot.anch + dens.plot.mack + dens.plot.sar + 
+  plot_layout(nrow = 1)
+
+# Save plots
+ggsave(dens.plot.all, file = here("Figs/fig_survey_plan_cps_distribution.png"),
+       height = 8, width = 14)
+
+# Display map
+include_graphics(here("Figs/fig_survey_plan_cps_distribution.png"))
 ```
 
 # Data tables

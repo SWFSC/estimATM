@@ -125,6 +125,21 @@ eez_can <- st_read(here("Data/GIS/eez_canada.shp")) %>%
 eez_mex <- st_read(here("Data/GIS/eez_mex.shp")) %>% 
   st_transform(crs.geog)
 
+# Read 5m bathymetry points shapefile
+bathy_5m_points <- st_read(here("Data/GIS/isobath_5m_final.shp"))
+
+# Read 5m bathymetry polygon
+bathy_5m_poly <- bathy_5m_points %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("POLYGON") %>% 
+  st_make_valid()
+
+# Read 20m bathymetry polygon
+bathy_20m_poly <- st_read(here("Data/GIS/bathy_20m_polygon.shp"))
+
+# Buffer nearshore (nmi)
+nearshore_buffer <- st_buffer(bathy_5m_poly, dist = na.buffer.dist/60)
+
 # Make transects sf and add labels and pop-ups
 transects <- transects %>% 
   st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
@@ -242,7 +257,9 @@ Finally, those waypoints are exported to GPX format, which can be plotted and ch
 
 Repeat this process of editing in Coastal Explorer, exporting to GPX, and checking using `checkTransects.Rmd` to achieve a final transect plan.  
 
-If happy with the results, comma-separated value (.csv) files containing waypoints that can be copied to project instructions, etc., can be found at `r here("Output/tables_updated")`.
+If happy with the results, comma-separated value (.csv) files containing waypoints that can be copied to project instructions, etc., can be found at `r here("Output/tables_updated")`.  
+
+This output was generated using waypoints saved in: **`r file.path(gpx.dir, gpx.file)`**.
 
 # Visually inspect maps
 ## Interactive map  
@@ -319,6 +336,11 @@ if (leaflet.checkTransects.simple) {
                 opacity = 0.75,
                 label = ~htmlEscape("CA State Waters"),
                 group = "State Waters") %>%
+    addPolygons(data = nearshore_buffer, weight = 2, 
+                color = "blue", fillColor = "transparent",
+                opacity = 0.75,
+                label = ~htmlEscape("CA State Waters"),
+                group = "Nearshore buffer") %>%
     # Add Canadian MPAs
     addPolygons(data = scott_islands_mpa, color = "#000414", weight = 2, 
                 label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
@@ -352,6 +374,7 @@ if (leaflet.checkTransects.simple) {
                      label = ~htmlEscape(paste(Type, Waypoint)),
                      popup = ~popup,
                      group = "Planned Transects") %>%
+    addMarkers(data = locations.sf, label = ~name, popup = ~name) %>% 
     # Add scale bar
     addScaleBar(position = "bottomright") %>%
     # Add map coordinates
@@ -365,10 +388,10 @@ if (leaflet.checkTransects.simple) {
       baseGroups = c("Esri.OceanBasemap", "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
       overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs", 
                         "State Waters", "Exclusive Economic Zones", 
-                        "Bathymetry Contours", "Planned Transects", 
+                        "Bathymetry Contours", "Nearshore buffer", "Planned Transects", 
                         "CTD Stations","UCTD Stations", "eDNA Stations"),
       options = layersControlOptions(collapsed = FALSE)) %>%  
-    # hideGroup(c("CTD Stations","UCTD Stations", "State Waters", "MPAs")) %>% 
+    hideGroup(c("CTD Stations","UCTD Stations", "State Waters")) %>%
     fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
               imap.bounds$range.lon[2], imap.bounds$range.lat[2])
   
@@ -566,7 +589,7 @@ include_graphics(here("Figs/fig_survey_map.png"))
 
 ## Static map - By leg  
 
-Leg progress was calculated based on the total number of days at sea (`r as.numeric(total.das)` DAS), leg durations of `r glue::glue_collapse(leg.days-leg.waste, sep = ", ", last = ", and ")` DAS after subtracting days lost to transits (`r glue::glue_collapse(leg.waste, sep = ",", last = " and ")` DAS, respectively), daytime trawling (`r mean(day.trawl.waste)` h/day), daytime CTD casts (`r mean(day.ctd.waste)` h/day), and the cumulative distance traveled along and between transects.
+Leg progress was calculated based on the total number of days at sea (`r as.numeric(total.das)` DAS), leg durations of `r glue::glue_collapse(leg.days-leg.waste-wx.days, sep = ", ", last = ", and ")` DAS after subtracting days lost to transits (`r glue::glue_collapse(leg.waste, sep = ",", last = " and ")` DAS, respectively), daytime trawling (`r mean(day.trawl.waste)` h/day), daytime CTD casts (`r mean(day.ctd.waste)` h/day), weather days (`r glue::glue_collapse(wx.days, sep = ",", last = " and ")` DAS, respectively), and the cumulative distance traveled along and between transects.
 
 <!-- [Original legend text] Leg progress was calculated based on the total number of days at sea (`r as.numeric(total.das)` DAS), leg durations of `r glue::glue_collapse(leg.days-leg.waste, sep = ", ", last = ", and ")` DAS after subtracting days lost to transits and other causes (`r glue::glue_collapse(leg.waste, sep = ",", last = " and ")` DAS, respectively), and the cumulative distance traveled along and between transects. -->
 
@@ -575,6 +598,28 @@ include_graphics(here("Figs/fig_survey_map_leg.png"))
 ```
 
 # Data tables
+## Time play
+### Core area
+
+Summarise survey progress by survey leg. For each leg, includes the first and last transects surveyed, start and stop latitudes, number of cumulative survey days, and maximum day length (h) used to compute the amount of time to conduct acoustic sampling per day.  
+
+This scenario assumes `r sum(leg.waste)` transit days (total) and `r sum(wx.days)` weather days (total), an average vessel speed of `r survey.speed` knots. This scenario requires `r round(max(route.fsv$time_cum), 2)` DAS of the `r as.numeric(sum(leg.length[1:n.survey.legs]))` DAS available, with `r round(as.numeric(sum(leg.length[1:n.survey.legs])) - max(route.fsv$time_cum),2)` DAS remaining.
+
+```{r time-play-table}
+route.fsv %>%
+  filter(Type %in% c("Compulsory", "Adaptive")) %>% 
+  group_by(Leg = leg) %>% 
+  summarise(txFirst = min(Transect),
+            txEnd   = max(Transect),
+            latStart = round(lat[which.min(Waypoint)], 3),
+            latEnd   = round(lat[which.max(Waypoint)], 3),
+            minDays  = round(min(time_cum), 2),
+            maxDays  = round(max(time_cum), 2),
+            # daylengthMin = round(min(daylength), 1),
+            daylengthMax = round(max(daylength), 1)) %>% 
+  datatable(rownames = FALSE)
+```
+
 ## Compulsory and Adaptive Transects
 
 ```{r acoustic-wpts-table}

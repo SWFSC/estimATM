@@ -14,7 +14,7 @@ combine.regions   <- F # Combine nearshore/offshore plots with those from the co
 tx.spacing.fsv  <- 12.5 # For Lasker 
 tx.spacing.sd   <- 15 # For Saildrone
 tx.break.ns     <- 52 # Northernmost transect sampled by the southern F/V, 64 in 2024, near Carmel
-tx.spacing.ns   <- 5  # c("S" = 7, "N" = 7, "CI" = 2.5) # or NA
+tx.spacing.ns   <- 7  # c("S" = 7, "N" = 7, "CI" = 2.5) # or NA
 tx.spacing.os   <- 40 # Nearshore transect spacing, in nmi; set NA if calculating programatically
 
 # Mainland buffer distance for FSV and Saildrone transects
@@ -32,7 +32,9 @@ rm.n.transects     <- 56 # Number of transects to remove from the start (if near
 rm.n.transects.ns  <- 138 # Number of transects to remove from the start (if near Mexico); if none, use zero
 rm.n.transects.sd  <- 47 # Number of transects to remove from the start (if near Mexico); if none, use zero
 rm.i.transects     <- NA # Remove specific transects from plan; else NA (for 2007RL: c(paste(90:117, "Nearshore")))
-renumber.transects <- TRUE # Renumber transects to start at zero if transect are removed
+# Renumber transects to start at zero if transect are removed
+renumber.transects <- c("Compulsory" = TRUE, 
+                        "Nearshore" = FALSE) 
 
 # Locations to remove from planning (e.g., north, central, or south)
 rm.location <- c("north") # c("south")
@@ -45,7 +47,7 @@ show.maps <- TRUE
 ## Used by processTransects.R -----------
 # GPX file location
 gpx.dir          <- here("Data/Nav")
-gpx.file         <- "2606RL-12.5-nmi-spacing.gpx" #"IWCPS-planning.gpx"
+gpx.file         <- "2606RL-12.5-nmi-spacing.gpx" # "2606RL-hybrid-spacing.gpx" "2606RL-12.5-nmi-spacing.gpx"
 
 # Define transit and survey speed (kn) for estimating progress
 survey.speed     <- 9
@@ -53,27 +55,28 @@ transit.speed    <- 9
 survey.direction <- "Northward" # Southward or Northward; to compute day lengths
 
 # Beginning transit length (d)
-transit.distance <- 0 # beginning in San Diego 2025
-transit.duration <- ceiling(transit.distance/transit.speed/24)
+transit.distance <- 0 # beginning in San Diego 2026
+transit.duration <- ceiling(transit.distance / transit.speed / 24)
 
 # Leg waste (d) due to transit, late departures, and early arrivals
-leg.waste <- c(0, 2, 2, 2, 2)
+leg.waste <- c(1, 2, 2, 2, 2)
+wx.days   <- c(2, 2, 2, 2, 2)
 
 # Time required for daytime trawling and CTD casts
-day.trawl.duration <- 2.5 # duration of daytime trawls (h)
+day.trawl.duration <- 0 # duration of daytime trawls (h)
 day.trawl.waste    <- c(0.5, 2.3, 2.3, 2.3, 2.3)*day.trawl.duration
-day.ctd.waste      <- c(0, 2, 2, 2, 2)
+day.ctd.waste      <- c(0, 0, 0, 0, 0)
 
 # Remove transects to adjust survey progress
 transects.rm <- NA # Numbered transects to remove
 
 # Compute leg durations and breaks ----------------------------------------
 # Define leg ends
-leg.ends <- c(ymd("2026-06-19"), ymd("2026-07-06"),
-              ymd("2026-07-09"), ymd("2026-07-26"),
-              ymd("2026-07-30"), ymd("2026-08-16"),
-              ymd("2026-08-20"), ymd("2026-09-06"),
-              ymd("2026-09-10"), ymd("2026-09-27"))
+leg.ends <- c(ymd("2026-06-17"), ymd("2026-07-02"),
+              ymd("2026-07-06"), ymd("2026-07-21"),
+              ymd("2026-07-26"), ymd("2026-08-10"),
+              ymd("2026-08-14"), ymd("2026-08-29"),
+              ymd("2026-09-03"), ymd("2026-09-22"))
 
 # Compute days per leg
 leg.days <- (leg.ends[seq(2, length(leg.ends), 2)] - leg.ends[seq(1,length(leg.ends) - 1, 2)]) + 1
@@ -81,11 +84,12 @@ leg.days <- (leg.ends[seq(2, length(leg.ends), 2)] - leg.ends[seq(1,length(leg.e
 # Calculate total days at sea (DAS)
 total.das <- sum(leg.days)
 
-# Leg durations used to split transects 
-leg.length <- c(0, leg.days - leg.waste)
+# Leg durations used to split transects
+n.survey.legs <- 4 # Number of legs available for survey planning (not counting research)
+leg.length <- c(leg.days - leg.waste - wx.days)
 
 # Leg breaks
-leg.breaks.gpx <- cumsum(as.numeric(leg.length))
+leg.breaks.gpx <- c(0, cumsum(as.numeric(leg.length)))
 
 # Region vector used to break transects for waypoint files
 region.vec <- c(0, 32.5353, 34.7, 41.99, 48.490, 55)
@@ -558,6 +562,22 @@ max.cluster.dist       <- 30
 # Define transect spacing bins and values (nmi) used to characterize transect spacing
 tx.spacing.bins <- c(0,  6, 15, 35, 70, 100)
 tx.spacing.dist <- c(5, 10, 20, 40, 80)
+
+# Define transect buffering preferences for stratum polygon creation
+na.buffer.dist <- 4 # Distance (nmi) to buffer N. American land mask for core strata masking
+ci.buffer.dist <- 2.5 # Distance (nmi) to buffer Channel Island land mask for nearshore strata masking
+ci.clip.dist   <- 0.1 # Distance (nmi) to buffer Channel Island land mask for nearshore strata clipping
+
+## Core area
+tx.ext.pct     <- 0.35   # Extension percentage constant
+tx.ext.dir     <- "east" # east (toward shore), west (away from shore), or both
+tx.buff.pct    <- 1.025  # Scaling factor for transect buffering
+
+## Nearshore area
+tx.ext.pct.ns    <- 2.25      # Extension percentage constant
+tx.ext.pct.ns.ci <- 0.25   # Extension percentage scaling for Channel Island transects
+tx.ext.dir.ns    <- "both" # east (toward shore), west (away from shore), or both
+tx.buff.pct.ns   <- 1.1   # Scaling factor for transect buffering
 
 # SCS data
 scs.source             <- "ELG" # "CSV", "ELG", or "XLSX"

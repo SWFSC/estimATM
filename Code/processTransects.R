@@ -21,7 +21,7 @@ transects <- wpts %>%
   filter(!str_detect(name, "^eDNA")) %>%
   filter(!str_detect(name, "Pairovet")) %>% 
   mutate(
-    type = case_when(
+    Type = case_when(
       str_detect(name, "A+$") ~ "Adaptive",
       str_detect(name, "C+$") ~ "Compulsory",
       str_detect(name, "S+$") ~ "Saildrone",
@@ -34,67 +34,78 @@ transects <- wpts %>%
       str_detect(name, "FR+$") ~ "Franklin",
       TRUE ~ "Unknown"),
     Waypoint = as.numeric(str_extract(name,"\\d{1,3}\\.\\d{1,3}"))) %>% 
-  arrange(type, Waypoint)
+  arrange(Type, Waypoint)
 
 # Extract transect waypoints
-if (!exists("renumber.transects")|renumber.transects == FALSE) {
+if (exists("renumber.transects")) {
   # Process normally
-  transects <- transects %>% 
+  transects.tmp <- transects %>% 
     # filter(!str_detect(name, "UCTD")) %>%
     # filter(!str_detect(name, "Pairovet")) %>% 
     mutate(Transect = floor(Waypoint)) %>%
-    mutate(group = paste(Transect, type)) %>% 
-    arrange(type, Transect, Waypoint) %>% 
-    select(Transect, Waypoint, Latitude = lat, Longitude = lon, Type = type, group, name) %>% 
+    mutate(group = paste(Transect, Type)) %>% 
+    arrange(Type, Transect, Waypoint) %>% 
+    select(Transect, Waypoint, Type, Latitude = lat, Longitude = lon, group, name) %>% 
     filter(!is.na(Type), !is.na(Transect))  
   
-} else if (renumber.transects == TRUE) {
   # Renumber transects
   transects.adjusted <- data.frame()
   
-  for (kk in unique(transects$type)) {
-    if (kk %in% c("Adaptive", "Compulsory")) {
-      # Calculate waypoint adjustment
-      adjust.tx.n <- transects %>% 
-        filter(type %in% c("Adaptive","Compulsory")) %>% 
-        summarise(minTx = min(floor(Waypoint)) - 1) %>% 
-        pull()
+  for (kk in unique(transects.tmp$Type)) {
+    if (renumber.transects[kk]) {
+      # Rank transects; handles non-consecutive transect numbers
+      tx.ranks <- transects.tmp %>% 
+        filter(Type == kk) %>% 
+        mutate(transect.orig = floor(Waypoint)) %>% 
+        group_by(transect.orig) %>% 
+        slice(1) %>% 
+        ungroup() %>% 
+        mutate(transect.new = rank(transect.orig)) %>% 
+        select(Type, transect.orig, transect.new)
+      
+      # Compute adjusted transect numbers
+      transects.adj <- transects.tmp %>% 
+        filter(Type == kk) %>%
+        mutate(transect.orig = floor(Waypoint)) %>% 
+        left_join(tx.ranks) %>% 
+        mutate(wpt.sub = str_extract(Waypoint, "\\.\\d*"),
+               wpt.new = as.numeric(paste0(transect.new, wpt.sub))) %>% 
+        select(name, transect.new, wpt.new)
+      
+      # Finish formatting transects
+      tx.kk <- transects.tmp %>%
+        filter(Type == kk) %>% 
+        left_join(transects.adj) %>% 
+        mutate(Waypoint = wpt.new) %>% 
+        mutate(
+          # Waypoint = case_when(
+          #   renumber.transects ~ Waypoint - adjust.tx.n,
+          #   TRUE ~ Waypoint),
+          Transect = as.integer(floor(Waypoint)),
+          wpt.tmp = paste0(sprintf("%03d", Transect), trimws(str_extract(.$Waypoint,"\\.\\d{1,3}$"))),
+          name = case_when(
+            str_detect(name, "A+$") ~ paste0(wpt.tmp, "A"),
+            str_detect(name, "C+$") ~ paste0(wpt.tmp, "C"),
+            str_detect(name, "S+$") ~ paste0(wpt.tmp, "S"),
+            str_detect(name, "M+$") ~ paste0(wpt.tmp, "M"),
+            str_detect(name, "E+$") ~ paste0(wpt.tmp, "E"),
+            str_detect(name, "T+$") ~ paste0(wpt.tmp, "T"),
+            str_detect(name, "N+$") ~ paste0(wpt.tmp, "N"),
+            str_detect(name, "O+$") ~ paste0(wpt.tmp, "O"),
+            str_detect(name, "JCF+$") ~ paste0(wpt.tmp, "JCF"),
+            str_detect(name, "FR+$") ~ paste0(wpt.tmp, "FR"),
+            TRUE ~ "Unknown")) %>%
+        mutate(group = paste(Transect, Type)) %>% 
+        arrange(Type, Transect, Waypoint) %>% 
+        select(Transect, Waypoint, Latitude, Longitude, Type, group, name) %>% 
+        filter(!is.na(Type), !is.na(Transect)) 
+      
+      transects.adjusted <- bind_rows(transects.adjusted, tx.kk)
     } else {
-      adjust.tx.n <- transects %>% 
-        filter(type == kk) %>% 
-        summarise(minTx = min(floor(Waypoint)) - 1) %>% 
-        pull()
+      transects.adjusted <- bind_rows(transects.adjusted, filter(transects.tmp, Type == kk))
     }
-    
-    # Finish formatting transects
-    tx.kk <- transects %>%
-      filter(type == kk) %>% 
-      mutate(
-        Waypoint = case_when(
-          renumber.transects ~ Waypoint - adjust.tx.n,
-          TRUE ~ Waypoint),
-        Transect = as.integer(floor(Waypoint)),
-        wpt.tmp = paste0(sprintf("%03d", Transect), trimws(str_extract(.$Waypoint,"\\.\\d{1,3}$"))),
-        name = case_when(
-          str_detect(name, "A+$") ~ paste0(wpt.tmp, "A"),
-          str_detect(name, "C+$") ~ paste0(wpt.tmp, "C"),
-          str_detect(name, "S+$") ~ paste0(wpt.tmp, "S"),
-          str_detect(name, "M+$") ~ paste0(wpt.tmp, "M"),
-          str_detect(name, "E+$") ~ paste0(wpt.tmp, "E"),
-          str_detect(name, "T+$") ~ paste0(wpt.tmp, "T"),
-          str_detect(name, "N+$") ~ paste0(wpt.tmp, "N"),
-          str_detect(name, "O+$") ~ paste0(wpt.tmp, "O"),
-          str_detect(name, "JCF+$") ~ paste0(wpt.tmp, "JCF"),
-          str_detect(name, "FR+$") ~ paste0(wpt.tmp, "FR"),
-          TRUE ~ "Unknown")) %>%
-      mutate(group = paste(Transect, type)) %>% 
-      arrange(type, Transect, Waypoint) %>% 
-      select(Transect, Waypoint, Latitude = lat, Longitude = lon, Type = type, group, name) %>% 
-      filter(!is.na(Type), !is.na(Transect)) 
-    
-    # Combine results
-    transects.adjusted <- bind_rows(transects.adjusted, tx.kk)
   }
+  
   # Replace existing data frame with new values
   transects <- transects.adjusted %>%
     arrange(Type, Transect, Waypoint)
@@ -162,7 +173,7 @@ transect.regions <- transects %>%
          Region = fct_reorder(Region, loc)) %>% 
   ungroup()
 
-# add leg designations to transects
+# add Region designations to transects
 transects <- left_join(transects, select(starts, group)) %>% 
   left_join(select(transect.regions, group, Region)) %>% 
   arrange(Type, Transect, Waypoint) 
@@ -251,6 +262,8 @@ pairovets <- wpts %>%
 # Import landmarks
 locations <- filter(read.csv(here("Data/Map/locations.csv")), name %in% label.list) %>% 
   project_df(to = crs.proj)
+
+locations.sf <- st_as_sf(locations, coords = c("long","lat"), crs = crs.geog)
 
 # Get 1000 fm isobath
 bathy <- st_read(here("Data/GIS/bathy_contours.shp"))

@@ -46,7 +46,7 @@ process.transects  <- T # Usually T; Process GPX file using processTransects.R
 update.routes      <- T # Re-write route files after processing
 get.bathy          <- T # Get NOAA bathymetry (used to extract bathymetry)
 extract.bathy      <- T # Extract bathymetry profile along each transect
-load.data          <- F # Load CPS density data from {atmData}
+load.data          <- T # Load CPS density data from {atmData}
 
 # Create output directories, in case they don't exist from makeTransects.Rmd
 dir_create(here("Output", c("routes","tables","waypoints")))
@@ -704,7 +704,11 @@ ggsave(dens.plot.all, file = here("Figs/fig_survey_plan_cps_distribution.png"),
        height = 8, width = 14)
 
 # Display map
-include_graphics(here("Figs/fig_survey_plan_cps_distribution.png"))
+if (here("Figs/fig_survey_plan_cps_distribution.png")) {
+  include_graphics(here("Figs/fig_survey_plan_cps_distribution.png"))
+} else {
+  print("No sampling planned for this region.")
+}
 ```
 
 # Data tables

@@ -450,7 +450,7 @@ seine.types     <- c("survey", "research", NA)
 seine.gpx.name  <- "nav_nearshore.gpx"
 
 # List bad sets (e.g., c("LBC 2024-07-16 25",...n)), else NA
-key.set.rm  <- c("LBC 07/03/2025 29") # Set/landing 25/160 had no specimens due to a freezer failure
+key.set.rm  <- c("LBC 07/03/2025 29") # Set/landing 29/201 was not representative of nearby CPS observed in acoustics.
 
 # Survey vessels that collected purse seine data
 seine.vessels          <- c("LBC","LM") 

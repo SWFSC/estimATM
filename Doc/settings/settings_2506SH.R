@@ -884,9 +884,9 @@ single.targets.dir <- c(SH =  "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IW
 # Named vector of EK80 FM-mode calibration directories
 cal.dir.fm         <- c(SH  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS/Final-FM",
                         LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-FM") 
-cal.datetime       <- c(SH  = "9 June",
-                        LBC = "15 April",
-                        LM  = "3 July")    # Date/time of calibration
+cal.datetime       <- c(SH  = "9 June, 2025",
+                        LBC = "15 April, 2025",
+                        LM  = "3 July, 2025")    # Date/time of calibration
 cal.plot.date      <- c(SH  = "2025-06-09",
                         LBC = "2025-04-15",
                         LM  = "2025-07-03") # Date of the calibration, used to plot cal time series

@@ -25,7 +25,8 @@ fsv.buffer <- 80 #limits offshore portion of lines (SCB)
 min.tx.length <- 0 # nmi
 
 # UCTD spacing (nautical miles)
-uctd.spacing   <- 15
+edna.spacing   <- 10 # Surface eDNA samples
+uctd.spacing   <- 15 # UCTD
 
 ### Transect removal and renumbering
 rm.n.transects     <- 56 # Number of transects to remove from the start (if near Mexico); if none, use zero; 71@10 nmi spacing

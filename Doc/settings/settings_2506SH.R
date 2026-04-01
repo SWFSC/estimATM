@@ -165,7 +165,8 @@ wpt.types     <- c(Adaptive = "Adaptive", Carranza = "Carranza",
                    Compulsory = "Compulsory", Franklin = "Franklin",
                    Nearshore = "Nearshore", Offshore = "Offshore", 
                    Saildrone = "Saildrone")
-wpt.regions   <- c("Central CA", "S. CA Bight", "WA/OR") # "Vancouver Is."          
+wpt.regions   <- c("Central CA", "S. CA Bight", "WA/OR", 
+                   "Santa Cruz Island", "Santa Catalina Island") # "Vancouver Is."          
 wpt.colors    <- c(Adaptive = "#FF0000", Carranza = "green",
                    Compulsory = "#000000", Franklin = "blue",
                    Nearshore = "#FF33F5", Offshore = "#FFA500", 
@@ -449,7 +450,7 @@ seine.types     <- c("survey", "research", NA)
 seine.gpx.name  <- "nav_nearshore.gpx"
 
 # List bad sets (e.g., c("LBC 2024-07-16 25",...n)), else NA
-key.set.rm  <- c("LBC 07/03/2025 29") # Set/landing 25/160 had no specimens due to a freezer failure
+key.set.rm  <- c("LBC 07/03/2025 29") # Set/landing 29/201 was not representative of nearby CPS observed in acoustics.
 
 # Survey vessels that collected purse seine data
 seine.vessels          <- c("LBC","LM") 
@@ -575,6 +576,36 @@ max.cluster.dist       <- 30
 tx.spacing.bins <- c(0,  6, 15, 35, 70, 100)
 tx.spacing.dist <- c(5, 10, 20, 40, 80)
 
+# Define transect buffering preferences for stratum polygon creation
+na.buffer.dist <- 4 # Distance (nmi) to buffer N. American land mask for core strata masking
+ci.buffer.dist <- 2.5 # Distance (nmi) to buffer Channel Island land mask for nearshore strata masking
+ci.clip.dist   <- 0.1 # Distance (nmi) to buffer Channel Island land mask for nearshore strata clipping
+
+## Core area
+tx.ext.pct     <- 0.35   # Extension percentage constant
+tx.ext.dir     <- "east" # east (toward shore), west (away from shore), or both
+tx.buff.pct    <- 1.025  # Scaling factor for transect buffering
+
+## Nearshore area
+tx.ext.pct.ns    <- 2.25      # Extension percentage constant
+tx.ext.pct.ns.ci <- 0.25   # Extension percentage scaling for Channel Island transects
+tx.ext.dir.ns    <- "both" # east (toward shore), west (away from shore), or both
+tx.buff.pct.ns   <- 1.1   # Scaling factor for transect buffering
+
+# Manually define transect spacing for variably spaced transects
+tx.spacing.manual <- data.frame(
+  transect = seq(1, 53),
+  spacing.nm = c(rep(20, 9),
+                 rep(15, 4),
+                 rep(30,2),
+                 rep(15, 9),
+                 rep(30, 2),
+                 rep(15, 11),
+                 rep(30, 4),
+                 15,
+                 rep(30, 9),
+                 rep(15,2)))
+
 # SCS data
 scs.source             <- "ELG" # "CSV", "ELG", or "XLSX"
 scs.pattern            <- "MOA*.*xlsx" # regex for MOA files
@@ -681,13 +712,13 @@ length.max <- data.frame("species" = c("Clupea pallasii","Engraulis mordax",
 
 # Species to generate point estimates
 point.est.spp          <- c("Clupea pallasii","Engraulis mordax","Sardinops sagax",
-                            "Scomber japonicus","Trachurus symmetricus")
-# Species to generate point estimates
+                            "Scomber japonicus","Trachurus symmetricus","Etrumeus acuminatus")
+# Species to generate bootstrap estimates
 bootstrap.est.spp      <- c("Clupea pallasii","Engraulis mordax","Sardinops sagax",
-                            "Scomber japonicus","Trachurus symmetricus")
+                            "Scomber japonicus","Trachurus symmetricus","Etrumeus acuminatus")
 
 # Number of bootstrap samples
-boot.num <- 100 # 1000 during final
+boot.num <- 1000 # 1000 during final
 
 # Generate biomass length frequencies
 do.lf    <- TRUE
@@ -722,7 +753,15 @@ strata.manual <- bind_rows(
   data.frame(
     scientificName = "Clupea pallasii",
     stratum = 2,
-    transect = 40:53),
+    transect = 41:43),
+  data.frame(
+    scientificName = "Clupea pallasii",
+    stratum = 3,
+    transect = 44:50),
+  data.frame(
+    scientificName = "Clupea pallasii",
+    stratum = 4,
+    transect = 51:53),
   data.frame(
     scientificName = "Engraulis mordax",
     stratum = 1,
@@ -730,7 +769,7 @@ strata.manual <- bind_rows(
   data.frame(
     scientificName = "Engraulis mordax",
     stratum = 2,
-    transect = 40:49),
+    transect = 41:49),
   data.frame(
     scientificName = "Etrumeus acuminatus",
     stratum = 1,
@@ -742,26 +781,18 @@ strata.manual <- bind_rows(
   data.frame(
     scientificName = "Sardinops sagax",
     stratum = 2,
-    transect = 11:15),
+    transect = 11:20),
   data.frame(
     scientificName = "Sardinops sagax",
     stratum = 3,
-    transect = 16:20),
+    transect = 22:29),
   data.frame(
     scientificName = "Sardinops sagax",
     stratum = 4,
-    transect = 22:24),
-  data.frame(
-    scientificName = "Sardinops sagax",
-    stratum = 5,
-    transect = 25:29),
-  data.frame(
-    scientificName = "Sardinops sagax",
-    stratum = 6,
     transect = 32:36),
   data.frame(
     scientificName = "Sardinops sagax",
-    stratum = 7,
+    stratum = 5,
     transect = 41:45),
   data.frame(
     scientificName = "Scomber japonicus",
@@ -794,7 +825,11 @@ strata.manual <- bind_rows(
   data.frame(
     scientificName = "Trachurus symmetricus",
     stratum = 3,
-    transect = 20:53))
+    transect = 20:38),
+  data.frame(
+    scientificName = "Trachurus symmetricus",
+    stratum = 4,
+    transect = 39:53))
 
 # Stock boundaries --------------------------------------------------------
 stock.break.anch <- c("Cape Mendocino" = 40.80)  # Latitude of Cape Mendocino
@@ -849,9 +884,9 @@ single.targets.dir <- c(SH =  "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IW
 # Named vector of EK80 FM-mode calibration directories
 cal.dir.fm         <- c(SH  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS/Final-FM",
                         LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-FM") 
-cal.datetime       <- c(SH  = "9 June",
-                        LBC = "15 April",
-                        LM  = "3 July")    # Date/time of calibration
+cal.datetime       <- c(SH  = "9 June, 2025",
+                        LBC = "15 April, 2025",
+                        LM  = "3 July, 2025")    # Date/time of calibration
 cal.plot.date      <- c(SH  = "2025-06-09",
                         LBC = "2025-04-15",
                         LM  = "2025-07-03") # Date of the calibration, used to plot cal time series

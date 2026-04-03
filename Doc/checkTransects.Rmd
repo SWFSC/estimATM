@@ -79,6 +79,49 @@ if (process.transects) {
 } else {
   load(here("Output/process_transects_output.Rdata"))
 }
+
+# Format waypoints and transects
+## Add labels and pop-ups to waypoints
+wpts <- wpt.export %>% 
+  st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
+  mutate(
+    long = as.data.frame(st_coordinates(.))$X,
+    lat = as.data.frame(st_coordinates(.))$Y,
+    label    = paste("Transect", Transect),
+    popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
+                     '<b>Latitude:</b>', lat, '<br/>',
+                     '<b>Longitude:</b>', long, '<br/>')
+  ) 
+
+## Make transects sf and add labels and pop-ups
+transects <- transects %>% 
+  st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
+  group_by(Type, Transect, Region) %>% 
+  summarise(do_union = F) %>% 
+  st_cast("LINESTRING") %>% 
+  ungroup() %>% 
+  mutate(distance = round(as.numeric(st_length(.))/1852,1),
+         brg      = 360 + stplanr::line_bearing(.),
+         label    = paste("Transect", Transect),
+         popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
+                          'Distance:', distance, 'nmi<br/>'))
+
+## Get bearing for each transect; used to create new pseudo-transects
+transect.brg <- transects %>% 
+  filter(Type %in% c("Adaptive","Compulsory")) %>% 
+  select(Transect, Type, brg) %>% 
+  mutate(key = paste(Transect, Type, sep = "-")) %>% 
+  st_set_geometry(NULL)
+
+## Write transect summary to CSV
+transects.sf %>% 
+  st_set_geometry(NULL) %>% 
+  left_join(daylength.df) %>% 
+  # select(Type:brg) %>% 
+  write_csv(here("Output/transect_summary.csv"))
+
+# Create station waypoints
+source(here("Code/createStations.R"))
 ```
 
 ```{r read-tables, include = FALSE}
@@ -142,38 +185,6 @@ bathy_20m_poly <- st_read(here("Data/GIS/bathy_20m_polygon.shp"))
 # Buffer nearshore (nmi)
 nearshore_buffer <- st_buffer(bathy_5m_poly, dist = na.buffer.dist/60)
 
-# Make transects sf and add labels and pop-ups
-transects <- transects %>% 
-  st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
-  group_by(Type, Transect, Region) %>% 
-  summarise(do_union = F) %>% 
-  st_cast("LINESTRING") %>% 
-  ungroup() %>% 
-  mutate(distance = round(as.numeric(st_length(.))/1852,1),
-         brg      = 360 + stplanr::line_bearing(.),
-         label    = paste("Transect", Transect),
-         popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
-                          'Distance:', distance, 'nmi<br/>'))
-
-# Add labels and pop-ups to waypoints
-wpts <- wpt.export %>% 
-  st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
-  mutate(
-    long = as.data.frame(st_coordinates(.))$X,
-    lat = as.data.frame(st_coordinates(.))$Y,
-    label    = paste("Transect", Transect),
-    popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
-                     '<b>Latitude:</b>', lat, '<br/>',
-                     '<b>Longitude:</b>', long, '<br/>')
-  ) 
-
-# Get bearing for each transect; used to create new pseudo-transects
-transect.brg <- transects %>% 
-  filter(Type %in% c("Adaptive","Compulsory")) %>% 
-  select(Transect, Type, brg) %>% 
-  mutate(key = paste(Transect, Type, sep = "-")) %>% 
-  st_set_geometry(NULL)
-
 # Create sampling regions
 reg.30 <- wpts %>% 
   filter(Type %in% c("Compulsory", "Adaptive")) %>% 
@@ -224,29 +235,23 @@ ctds.sf <- ctds %>%
   as_tibble() %>% 
   st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
 
-uctds.sf <- uctds %>% 
-  as_tibble() %>% 
-  st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
+uctds.sf <- uctd #%>%
+  # as_tibble() %>%
+  # st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
 
-eDNA.sf <- eDNA %>% 
-  as_tibble() %>% 
-  st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
-
-pairovets.sf <- pairovets %>% 
-  as_tibble() %>% 
-  st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
+eDNA.sf <- eDNA #%>%
+  # as_tibble() %>%
+  # st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
+# 
+# pairovets.sf <- pairovets %>% 
+#   as_tibble() %>% 
+#   st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
 
 # Write objects to shapefile
 dir_create(here("Output/shapefiles"))
 
 st_write(transects.sf, here("Output/shapefiles/transects.shp"), delete_layer = TRUE)
 st_write(wpts, here("Output/shapefiles/waypoints.shp"), delete_layer = TRUE)
-
-transects.sf %>% 
-  st_set_geometry(NULL) %>% 
-  left_join(daylength.df) %>% 
-  # select(Type:brg) %>% 
-  write_csv(here("Output/transect_summary.csv"))
 ```
 
 # Overview  

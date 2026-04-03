@@ -24,8 +24,9 @@ fsv.buffer <- 80 #limits offshore portion of lines (SCB)
 # Minimum transect length
 min.tx.length <- 0 # nmi
 
-# UCTD spacing (nautical miles)
+# eDNA and UCTD spacing (nautical miles)
 edna.spacing   <- 10 # Surface eDNA samples
+edna.tx.max    <- 15 # Max. transect to include eDNA stations
 uctd.spacing   <- 15 # UCTD
 
 ### Transect removal and renumbering

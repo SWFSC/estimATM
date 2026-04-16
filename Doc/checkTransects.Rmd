@@ -276,6 +276,8 @@ This output was generated using waypoints saved in: **`r file.path(gpx.dir, gpx.
 # Visually inspect maps
 ## Interactive map  
 
+Map of the survey area, showing planned acoustic FSV transects (black), nearshore transects (magenta), CTD stations (blue), surface eDNA stations (green circles), and UCTD stations (orange triangles).  
+
 ```{r create-leaflet-map, out.width="100%", out.height="8in"}
 # Leaflet options
 # https://rstudio.github.io/leaflet/
@@ -598,7 +600,7 @@ i.map
 
 ## Static map  
 
-Orange points represent UCTD stations. Blue points represent CTD stations. Green stations represent surface eDNA stations.
+Map of the survey area, showing planned acoustic FSV transects (black), nearshore transects (magenta), CTD stations (blue), surface eDNA stations (green circles), and UCTD stations (orange triangles).
 
 ```{r map-survey-plan-all}
 include_graphics(here("Figs/fig_survey_map.png"))
@@ -641,6 +643,9 @@ if (load.data) {
   load(here("Output/nasc_density_atmData.Rdata"))
 }
 
+# Get most recent survey year
+last.year <- max(year(nasc.dens.all$datetime))
+
 # Subset data to warm years
 # nasc.dens.all <- filter(nasc.dens.all, year <= 2021)
 
@@ -649,8 +654,12 @@ if (load.data) {
 dens.plot.sar <- base.map +
   geom_point(data = filter(nasc.dens.all, sar.dens > 0), 
              aes(X, Y),
-             # aes(X, Y, size = sar.dens),
-             colour = sardine.color, alpha = 0.2, size = 0.5,
+             colour = "gray50", alpha = 0.2, size = 0.5,
+             show.legend = FALSE) +
+  geom_point(data = filter(nasc.dens.all, 
+                           sar.dens > 0, year(nasc.dens.all$datetime) == last.year), 
+             aes(X, Y),
+             colour = sardine.color, alpha = 0.7, size = 0.7,
              show.legend = FALSE) +
   scale_colour_viridis_c() +
   guides(colour = guide_legend(), 
@@ -665,8 +674,12 @@ dens.plot.sar <- base.map +
 dens.plot.mack <- base.map +
   geom_point(data = filter(nasc.dens.all, mack.dens > 0), 
              aes(X, Y),
-             # aes(X, Y, size = mack.dens),
-             colour = pac.mack.color, alpha = 0.2, size = 0.5,
+             colour = "gray50", alpha = 0.2, size = 0.5,
+             show.legend = FALSE) +
+  geom_point(data = filter(nasc.dens.all, 
+                           mack.dens > 0, year(nasc.dens.all$datetime) == last.year), 
+             aes(X, Y),
+             colour = pac.mack.color, alpha = 0.7, size = 0.7,
              show.legend = FALSE) +
   scale_colour_viridis_c() +
   guides(colour = guide_legend(), 
@@ -681,8 +694,12 @@ dens.plot.mack <- base.map +
 dens.plot.jack <- base.map +
   geom_point(data = filter(nasc.dens.all, jack.dens > 0), 
              aes(X, Y),
-             # aes(X, Y, size = jack.dens),
-             colour = jack.mack.color, alpha = 0.2, size = 0.5,
+             colour = "gray50", alpha = 0.2, size = 0.5,
+             show.legend = FALSE) +
+  geom_point(data = filter(nasc.dens.all, 
+                           jack.dens > 0, year(nasc.dens.all$datetime) == last.year), 
+             aes(X, Y),
+             colour = jack.mack.color, alpha = 0.7, size = 0.7,
              show.legend = FALSE) +
   scale_colour_viridis_c() +
   guides(colour = guide_legend(), 
@@ -697,8 +714,12 @@ dens.plot.jack <- base.map +
 dens.plot.anch <- base.map +
   geom_point(data = filter(nasc.dens.all, anch.dens > 0), 
              aes(X, Y),
-             # aes(X, Y, size = anch.dens),
-             colour = anchovy.color, alpha = 0.2, size = 0.5,
+             colour = "gray50", alpha = 0.2, size = 0.5,
+             show.legend = FALSE) +
+  geom_point(data = filter(nasc.dens.all, 
+                           anch.dens > 0, year(nasc.dens.all$datetime) == last.year), 
+             aes(X, Y),
+             colour = anchovy.color, alpha = 0.7, size = 0.7,
              show.legend = FALSE) +
   scale_colour_viridis_c() +
   guides(colour = guide_legend(), 

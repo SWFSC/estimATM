@@ -24,10 +24,12 @@ fsv.buffer <- 80 #limits offshore portion of lines (SCB)
 # Minimum transect length
 min.tx.length <- 0 # nmi
 
-# eDNA and UCTD spacing (nautical miles)
-edna.spacing   <- 10 # Surface eDNA samples
-edna.tx.max    <- 15 # Max. transect to include eDNA stations
-uctd.spacing   <- 15 # UCTD
+# eDNA, CTD, and UCTD station preferences
+ctd.tx.range   <- seq(15, 100) # Range of transects to include eDNA stations
+edna.spacing   <- 10 # Surface eDNA sample spacing (nmi)
+edna.tx.range  <- seq(1, 15) # Range of transects to include eDNA stations
+uctd.spacing   <- 15 # UCTD spacing (nmi)
+uctd.tx.range  <- seq(1, 100) # Range of transects to include eDNA stations
 
 ### Transect removal and renumbering
 rm.n.transects     <- 56 # Number of transects to remove from the start (if near Mexico); if none, use zero; 71@10 nmi spacing
@@ -49,7 +51,7 @@ show.maps <- TRUE
 ## Used by processTransects.R -----------
 # GPX file location
 gpx.dir          <- here("Data/Nav")
-gpx.file         <- "2606RL-12.5-nmi-spacing.gpx" # "2606RL-hybrid-spacing.gpx" "2606RL-12.5-nmi-spacing.gpx"
+gpx.file         <- "2606RL-12.5-nmi-spacing_20260416.gpx" # "2606RL-hybrid-spacing.gpx" "2606RL-12.5-nmi-spacing.gpx"
 
 # Define transit and survey speed (kn) for estimating progress
 survey.speed     <- 9

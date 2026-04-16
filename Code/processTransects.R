@@ -182,7 +182,7 @@ wpts.sf <- transects %>%
   st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
 
 # extract CTD stations
-ctds <- wpts %>% 
+ctd <- wpts %>% 
   filter(str_detect(name, "^CTD")) %>% 
   mutate(station = name,
          loc = cut(lat, region.vec, labels = FALSE),
@@ -199,7 +199,7 @@ ctds <- wpts %>%
   arrange(station) 
 
 # extract UCTD stations
-uctds <- wpts %>% 
+uctd <- wpts %>% 
   filter(str_detect(name, "UCTD")) %>% 
   mutate(station = name,
          loc = cut(lat, region.vec, labels = FALSE),
@@ -515,13 +515,13 @@ if (get.bathy) {
 transects$Depth <- round(get.depth(noaa.bathy, transects$Longitude, transects$Latitude, 
                                    locator = FALSE, distance = TRUE)$depth)
 
-if (nrow(ctds) > 0) {
-  ctds$Depth <- round(get.depth(noaa.bathy, ctds$Longitude, ctds$Latitude, 
+if (nrow(ctd) > 0) {
+  ctd$Depth <- round(get.depth(noaa.bathy, ctd$Longitude, ctd$Latitude, 
                                 locator = FALSE, distance = TRUE)$depth)
 }
 
-if (nrow(uctds) > 0) {
-  uctds$Depth <- round(get.depth(noaa.bathy, uctds$Longitude, uctds$Latitude, 
+if (nrow(uctd) > 0) {
+  uctd$Depth <- round(get.depth(noaa.bathy, uctd$Longitude, uctd$Latitude, 
                                  locator = FALSE, distance = TRUE)$depth)
 }
 
@@ -635,9 +635,9 @@ wpt.plan <- wpt.export %>%
   # mutate(type = tolower(type)) %>% 
   write_csv(here("Output/tables_updated/waypoint_plan.csv"))
 
-if (nrow(ctds) > 0) {
+if (nrow(ctd) > 0) {
   # format UCTD stations for export
-  ctd.export <- ctds %>% 
+  ctd.export <- ctd %>% 
     select(Name = name, Latitude, Longitude, Region, Depth)
   
   # export to csv
@@ -647,9 +647,9 @@ if (nrow(ctds) > 0) {
   }  
 }
 
-if (nrow(uctds) > 0) {
+if (nrow(uctd) > 0) {
   # format UCTD stations for export
-  uctd.export <- uctds %>% 
+  uctd.export <- uctd %>% 
     select(Name = name, Latitude, Longitude, Region, Depth)
   
   # export to csv
@@ -684,8 +684,8 @@ if (nrow(pairovets) > 0) {
 }
 
 # Convert stations to sf
-ctds.sf      <- st_as_sf(ctds, coords = c("Longitude","Latitude"), crs = crs.geog)
-uctds.sf     <- st_as_sf(uctds, coords = c("Longitude","Latitude"), crs = crs.geog)
+ctd.sf      <- st_as_sf(ctd, coords = c("Longitude","Latitude"), crs = crs.geog)
+uctd.sf     <- st_as_sf(uctd, coords = c("Longitude","Latitude"), crs = crs.geog)
 eDNA.sf      <- st_as_sf(eDNA, coords = c("Longitude","Latitude"), crs = crs.geog)
 pairovets.sf <- st_as_sf(pairovets, coords = c("Longitude","Latitude"), crs = crs.geog)
 
@@ -701,17 +701,17 @@ survey.map <- base.map +
            xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
            ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
 
-if (nrow(ctds.sf) > 0) {
+if (nrow(ctd.sf) > 0) {
   survey.map <- survey.map +
-    geom_sf(data = ctds.sf, shape = 21, size = 1, fill = "blue") +
+    geom_sf(data = ctd.sf, shape = 21, size = 1, fill = "blue") +
     coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
              xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
              ylim = c(map.bounds["ymin"], map.bounds["ymax"]))  
 }
 
-if (nrow(uctds.sf) > 0) {
+if (nrow(uctd.sf) > 0) {
   survey.map <- survey.map +
-    geom_sf(data = uctds.sf, shape = 24, size = 1.5, fill = "orange") +
+    geom_sf(data = uctd.sf, shape = 24, size = 1.5, fill = "orange") +
     coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
              xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
              ylim = c(map.bounds["ymin"], map.bounds["ymax"]))  
@@ -738,7 +738,7 @@ ggsave(survey.map, filename = here("Figs/fig_survey_map.png"),
        height = map.height, width = map.width)
 
 # Save results for use with checkTransects.Rmd
-save(transects, tx.labels, wpts, ctds, uctds, eDNA, wpt.export, pairovets,
+save(transects, tx.labels, wpts, ctd, uctd, eDNA, wpt.export, pairovets,
      file = (here("Output/process_transects_output.Rdata")))
 
 # Create the map with all transects --------------------------------------------
@@ -755,8 +755,8 @@ survey.map.leg = base.map +
                       angle = brg),
                   size = 1.25, fontface = 'bold.italic',
                   colour = "black", bg.colour = "white") +
-  # geom_sf(data = ctds.sf, shape = 21, size = 1, fill = "blue") +
-  # geom_sf(data = uctds.sf, shape = 24, size = 1.5, fill = "orange") +
+  # geom_sf(data = ctd.sf, shape = 21, size = 1, fill = "blue") +
+  # geom_sf(data = uctd.sf, shape = 24, size = 1.5, fill = "orange") +
   # geom_sf(data = eDNA.sf, shape = 21, size = 1, fill = "green") +
   scale_linetype_manual(name = "Type", values = wpt.linetypes) +
   scale_colour_discrete("Leg") +
@@ -777,8 +777,8 @@ survey.map.region = base.map +
   geom_sf(data = filter(transects.sf, Type %in% c("Adaptive", "Compulsory", "Nearshore", 
                                                   "Carranza","Franklin","Offshore", "Saildrone")),
           aes(linetype = Type, colour = factor(Region)), show.legend = "line") +
-  geom_sf(data = ctds.sf,  shape = 21, size = 1, fill = "blue") +
-  geom_sf(data = uctds.sf, shape = 24, size = 1.5, fill = "orange") +
+  geom_sf(data = ctd.sf,  shape = 21, size = 1, fill = "blue") +
+  geom_sf(data = uctd.sf, shape = 24, size = 1.5, fill = "orange") +
   geom_sf(data = eDNA.sf, shape = 21, size = 1, fill = "green") +
   scale_linetype_manual(name = "Type", values = wpt.linetypes) +
   scale_colour_discrete("Leg") +
@@ -809,8 +809,8 @@ ggsave(route.plot.fsv, filename = here("Figs/fig_route_plan.png"),
 if (update.routes) {
   # Recombine acoustic transects and sampling stations
   updated.route <- transects %>% 
-    bind_rows(ctds) %>%
-    bind_rows(uctds) %>% 
+    bind_rows(ctd) %>%
+    bind_rows(uctd) %>% 
     bind_rows(eDNA) %>% 
     bind_rows(pairovets) %>% 
     mutate(

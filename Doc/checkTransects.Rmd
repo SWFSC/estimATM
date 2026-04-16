@@ -43,10 +43,11 @@ theme_set(theme_bw())
 # User input --------------------------------------------------------------
 copy.gpx           <- F # Copy GPX file from AST server
 process.transects  <- T # Usually T; Process GPX file using processTransects.R
+create.stations    <- F # Create U/CTD, eDNA, and/or Pairovet stations
 update.routes      <- T # Re-write route files after processing
 get.bathy          <- T # Get NOAA bathymetry (used to extract bathymetry)
 extract.bathy      <- T # Extract bathymetry profile along each transect
-load.data          <- T # Load CPS density data from {atmData}
+load.data          <- F # Load CPS density data from {atmData}
 
 # Create output directories, in case they don't exist from makeTransects.Rmd
 dir_create(here("Output", c("routes","tables","waypoints")))
@@ -120,13 +121,17 @@ transects.sf %>%
   # select(Type:brg) %>% 
   write_csv(here("Output/transect_summary.csv"))
 
-# Create station waypoints
-source(here("Code/createStations.R"))
+if (create.stations) {
+  # Create station waypoints
+  source(here("Code/createStations.R")) 
+}
 ```
 
 ```{r read-tables, include = FALSE}
 # Read bathymetry shapefile -----------------------------------------
 if (!exists("bathy")) {bathy <- st_read(here("Data/GIS/bathy_contours.shp"))}
+if (!exists("bathy.ctd")) bathy.ctd <- st_read(here("Data/GIS/bathy_us_wc_50m.shp")) %>% 
+  st_transform(crs.geog)
 
 # Read MPA shapefiles  -----------------------------------------
 # Canada
@@ -231,17 +236,17 @@ write_csv(select(ungroup(reg.90), Transect, lat, long),
           file = here("Output", paste0("region_lines_90.csv")),
           col_names = FALSE)
 
-ctds.sf <- ctds %>% 
+ctd.sf <- ctd %>% 
   as_tibble() %>% 
   st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
 
-uctds.sf <- uctd #%>%
-  # as_tibble() %>%
-  # st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
+uctd.sf <- uctd %>%
+  as_tibble() %>%
+  st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
 
-eDNA.sf <- eDNA #%>%
-  # as_tibble() %>%
-  # st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
+eDNA.sf <- eDNA %>%
+  as_tibble() %>%
+  st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog)
 # 
 # pairovets.sf <- pairovets %>% 
 #   as_tibble() %>% 
@@ -334,6 +339,8 @@ if (leaflet.checkTransects.simple) {
     # Add bathymetry contours
     addPolylines(data = bathy, color = "white", weight = 2, 
                  label = ~paste(Depth, "m"), group = "Bathymetry Contours") %>% 
+    addPolylines(data = bathy.ctd, color = "black", weight = 2, 
+                 label = ~paste(CONTOUR, "m"), group = "Bathymetry Contours") %>% 
     # Add State waters
     addPolygons(data = or_waters, weight = 2, fillColor = "transparent", 
                 opacity = 0.75,
@@ -399,7 +406,7 @@ if (leaflet.checkTransects.simple) {
                         "Bathymetry Contours", "Nearshore buffer", "Planned Transects", 
                         "CTD Stations","UCTD Stations", "eDNA Stations"),
       options = layersControlOptions(collapsed = FALSE)) %>%  
-    hideGroup(c("CTD Stations","UCTD Stations", "State Waters")) %>%
+    hideGroup(c("State Waters")) %>%
     fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
               imap.bounds$range.lon[2], imap.bounds$range.lat[2])
   
@@ -431,6 +438,8 @@ if (leaflet.checkTransects.simple) {
     # Add bathymetry contours
     addPolylines(data = bathy, color = "white", weight = 2, 
                  label = ~paste(Depth, "m"), group = "Bathymetry Contours") %>% 
+    addPolylines(data = bathy.ctd, color = "black", weight = 2, 
+                 label = ~paste(CONTOUR, "m"), group = "Bathymetry Contours") %>% 
     # Add State waters
     addPolygons(data = or_waters, weight = 2, fillColor = "transparent", 
                 opacity = 0.75,
@@ -534,15 +543,15 @@ if (leaflet.checkTransects.simple) {
                         "Planned Transects (Transits)", 
                         "CTD Stations","UCTD Stations", "eDNA Stations"),
       options = layersControlOptions(collapsed = FALSE)) %>%  
-    # hideGroup(c("CTD Stations","UCTD Stations", "State Waters", "MPAs")) %>% 
+    hideGroup(c("State Waters")) %>%
     fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
               imap.bounds$range.lon[2], imap.bounds$range.lat[2]) 
 }
 
-if (nrow(ctds.sf) > 0) {
+if (nrow(ctd.sf) > 0) {
   i.map <- i.map %>% 
     # Add CTD stations
-    addCircleMarkers(data = ctds.sf,
+    addCircleMarkers(data = ctd.sf,
                      radius = 3, color = "#000000", stroke = TRUE, weight = 2,
                      fillOpacity = 1, fillColor =  "blue",
                      label = ~htmlEscape(name),
@@ -550,10 +559,10 @@ if (nrow(ctds.sf) > 0) {
                      group = "CTD Stations")   
 }
 
-if (nrow(uctds.sf) > 0) {
+if (nrow(uctd.sf) > 0) {
   i.map <- i.map %>% 
     # Add UCTD stations
-    addCircleMarkers(data = uctds.sf,
+    addCircleMarkers(data = uctd.sf,
                      radius = 3, color = "#000000", stroke = TRUE, weight = 2,
                      fillOpacity = 1, fillColor =  "orange",
                      label = ~htmlEscape(name),
@@ -709,7 +718,7 @@ ggsave(dens.plot.all, file = here("Figs/fig_survey_plan_cps_distribution.png"),
        height = 8, width = 14)
 
 # Display map
-if (here("Figs/fig_survey_plan_cps_distribution.png")) {
+if (file.exists(here("Figs/fig_survey_plan_cps_distribution.png"))) {
   include_graphics(here("Figs/fig_survey_plan_cps_distribution.png"))
 } else {
   print("No sampling planned for this region.")
@@ -826,8 +835,8 @@ wpts %>%
 ## CTD Stations
 
 ```{r ctd-wpts-table}
-if (nrow(ctds) > 0) {
-  ctds %>% 
+if (nrow(ctd) > 0) {
+  ctd %>% 
     select(Station = station, Region, Depth) %>% 
     arrange(Station) %>%
     # mutate(
@@ -843,8 +852,8 @@ if (nrow(ctds) > 0) {
 ## UCTD Stations
 
 ```{r uctd-wpts-table}
-if (nrow(uctds) > 0) {
-  uctds %>% 
+if (nrow(uctd) > 0) {
+  uctd %>% 
     select(Station = station, Region, Depth) %>% 
     arrange(Station) %>%
     # mutate(
@@ -1045,8 +1054,8 @@ survey.plan <- base.map +
                       values = wpt.colors) +
   scale_linetype_manual("Type", 
                         values = wpt.linetypes) +
-  geom_sf(data = ctds.sf, shape = 21, size = 1, fill = "blue") +
-  geom_sf(data = uctds.sf, shape = 24, size = 1.5, fill = "orange") +
+  geom_sf(data = ctd.sf, shape = 21, size = 1, fill = "blue") +
+  geom_sf(data = uctd.sf, shape = 24, size = 1.5, fill = "orange") +
   geom_sf(data = eDNA.sf, shape = 21, size = 1, fill = "green") +
   geom_sf(data = pairovets.sf, aes(fill = type), shape = 21, size = 1) +
   coord_sf(crs = crs.proj, # CA Albers Equal Area Projection

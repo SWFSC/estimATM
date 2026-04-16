@@ -1,7 +1,27 @@
+# Load bathymetry contours for creating eE stations
+bathy.ctd <- st_read(here("Data/GIS/bathy_us_wc_50m.shp"))
+transects.ctd <- transects %>% 
+  filter(Type %in% c("Adaptive","Compulsory"))
+# mapview::mapview(bathy.eE, zcol = "CONTOUR")
+
+# Create eE stations as intersection between transects and isobaths
+ctd <- st_intersection(st_transform(bathy.ctd, crs.geog), 
+                       st_transform(transects.ctd, crs.geog)) %>% 
+  st_cast("POINT") %>% 
+  mutate(Transect = sprintf("%03d", Transect),
+         depth = abs(CONTOUR),
+         name = paste0("CTD", Transect,"_", sprintf("%04d", depth)),
+         lon = as.data.frame(st_coordinates(.))$X,
+         lat  = as.data.frame(st_coordinates(.))$Y) %>% 
+  select(Transect, name, Region, lon, lat, depth, CONTOUR) %>% 
+  filter(as.numeric(Transect) %in% ctd.tx.range)
+
+# mapview(bathy.ctd, zcol = "CONTOUR") + mapview(transects, color = "black") + mapview(ctd, zcol = "CONTOUR")
+
 # Get first waypoint for each transect
 eDNA.starts <- wpts %>% 
   filter(Type %in% c("Compulsory","Adaptive"),
-         Transect <= edna.tx.max) %>%
+         Transect %in% edna.tx.range) %>%
   group_by(Transect) %>% 
   slice(1) %>% 
   mutate(id = 0) %>% 
@@ -10,7 +30,7 @@ eDNA.starts <- wpts %>%
 # Create stations along each transect
 eDNA <- transects %>%
   filter(Type %in% c("Compulsory","Adaptive"),
-         Transect <= edna.tx.max) %>%
+         Transect %in% edna.tx.range) %>%
   st_transform(crs.proj) %>%
   st_line_sample(density = 1/units::set_units(edna.spacing * 1852, m)) %>%
   st_cast("POINT") %>% st_as_sf() %>% st_transform(crs.geog) %>% 
@@ -20,7 +40,8 @@ eDNA <- transects %>%
   rename(geometry = x)
 
 uctd <- transects %>%
-  filter(Type %in% c("Compulsory","Adaptive")) %>%
+  filter(Type %in% c("Compulsory","Adaptive"),
+         Transect %in% uctd.tx.range) %>%
   st_transform(crs.proj) %>%
   st_line_sample(density = 1/units::set_units(uctd.spacing * 1852, m)) %>%
   st_cast("POINT") %>% st_as_sf() %>% st_transform(crs.geog) %>% 
@@ -56,7 +77,7 @@ uctd <- uctd %>%
   mutate(Station = rank(id)) %>% 
   ungroup() %>% 
   mutate(Transect = sprintf("%03d", Transect),
-         name = paste0(Transect,"_", sprintf("%03d", Station), "UCTD")) %>% 
+         name = paste0("UCTD", Transect,"_", sprintf("%03d", Station))) %>% 
   select(Transect, name, Type, lon, lat, everything())
 
 # eDNA.buff <- st_buffer(eDNA, units::set_units(edna.spacing * 1852, m)/2)
@@ -71,3 +92,7 @@ eDNA %>%
 uctd %>% 
   select(name) %>% 
   st_write(dsn = "Output/waypoints_updated/uctd_waypoints.gpx", driver = "GPX", delete_layer = TRUE)
+
+ctd %>% 
+  select(name) %>% 
+  st_write(dsn = "Output/waypoints_updated/ctd_waypoints.gpx", driver = "GPX", delete_layer = TRUE)

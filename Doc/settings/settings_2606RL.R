@@ -49,9 +49,12 @@ save.csv  <- TRUE
 show.maps <- TRUE
 
 ## Used by processTransects.R -----------
-# GPX file location
+### GPX file location
 gpx.dir          <- here("Data/Nav")
-gpx.file         <- "2606RL-12.5-nmi-spacing_20260416.gpx" # "2606RL-hybrid-spacing.gpx" "2606RL-12.5-nmi-spacing.gpx"
+gpx.file         <- "2606RL-12.5-nmi-spacing_20260420.gpx" # "2606RL-hybrid-spacing.gpx" "2606RL-12.5-nmi-spacing.gpx"
+### Coastal (.nob)X file location
+nob.dir          <- here("Data/Nav")
+nob.file         <- "2606RL-12.5-nmi-spacing_20260420.nob"
 
 # Define transit and survey speed (kn) for estimating progress
 survey.speed     <- 9

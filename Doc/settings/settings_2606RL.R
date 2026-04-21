@@ -52,12 +52,10 @@ show.maps <- TRUE
 ### GPX file location
 gpx.dir          <- here("Data/Nav")
 gpx.file         <- "2606RL-12.5-nmi-spacing_20260420.gpx" # "2606RL-hybrid-spacing.gpx" "2606RL-12.5-nmi-spacing.gpx"
-### Coastal (.nob)X file location
-nob.dir          <- here("Data/Nav")
-nob.file         <- "2606RL-12.5-nmi-spacing_20260420.nob"
 
 # Define transit and survey speed (kn) for estimating progress
-survey.speed     <- 9
+survey.speed     <- 9 # FSV
+survey.speed.ns  <- 8 # Nearshore vessels
 transit.speed    <- 9
 survey.direction <- "Northward" # Southward or Northward; to compute day lengths
 
@@ -100,6 +98,19 @@ leg.breaks.gpx <- c(0, cumsum(as.numeric(leg.length)))
 
 # Region vector used to break transects for waypoint files
 region.vec <- c(0, 32.5353, 34.7, 41.99, 48.490, 55)
+
+## Used by formatCoastalExplorerNotebook.R ------
+### Coastal (.nob)X file location
+nob.dir          <- here("Data/Nav")
+nob.file         <- "2606RL-12.5-nmi-spacing_20260421.nob"
+nob.file.final   <- "2606RL-12.5-nmi-spacing_final.nob"
+
+### Waypoint preferences
+rangeCircleRadius <- c(ctd = "1 NM", uctd = "1 NM", eDNA = "1 NM")
+rangeCircleCount  <- c(ctd = "1", uctd = "1", eDNA = "1")
+rangeCircleFill   <- c(ctd = "true", uctd = "true", eDNA = "true")
+rangeCircleColor  <- c(ctd = "rgb(0, 0, 1)", uctd = "rgb(1, 0.4901961, 0)", eDNA = "rgb(0, 1, 0)")
+waypointIcon      <- c(ctd = "Blue Box", uctd = "White Box", eDNA = "Green Box")
 
 ## Used by estimateAcousticKm.Rmd ------
 # Get nearshore vessels

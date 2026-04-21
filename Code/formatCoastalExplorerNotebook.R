@@ -28,7 +28,7 @@ compulsory_routes <- xml_find_all(nob, "//Route[substring(Name, string-length(Na
 
 ### Add the new child nodes and update the values
 xml_add_child(compulsory_routes, "DisplayLegRangeBearing", "true")
-xml_add_child(compulsory_routes, "PlannedSpeed", "9.00 kn")
+xml_add_child(compulsory_routes, "PlannedSpeed", paste(sprintf("%.2f", survey.speed), "kn"))
 xml_add_child(compulsory_routes, "Color", "rgb(0, 0, 1)")
 
 ## Format adaptive routes
@@ -37,7 +37,7 @@ adaptive_routes <- xml_find_all(nob, "//Route[substring(Name, string-length(Name
 
 ### Add the new child nodes and update the values
 xml_add_child(adaptive_routes, "DisplayLegRangeBearing", "true")
-xml_add_child(adaptive_routes, "PlannedSpeed", "9.00 kn")
+xml_add_child(adaptive_routes, "PlannedSpeed", paste(sprintf("%.2f", survey.speed), "kn"))
 xml_add_child(adaptive_routes, "Color", "rgb(1, 0, 0)")
 
 ## Format nearshore routes
@@ -46,8 +46,21 @@ nearshore_routes <- xml_find_all(nob, "//Route[substring(Name, string-length(Nam
 
 ### Add the new child nodes and update the values
 xml_add_child(nearshore_routes, "DisplayLegRangeBearing", "true")
-xml_add_child(nearshore_routes, "PlannedSpeed", "9.00 kn")
+xml_add_child(nearshore_routes, "PlannedSpeed", paste(sprintf("%.2f", survey.speed.ns), "kn"))
 xml_add_child(nearshore_routes, "Color", "rgb(1, 0, 1)")
+
+## Update all planned speeds
+### Compulsory routes (typically 9 kn speed for planning)
+speed_nodes_compulsory <- xml_find_all(nob, "//Route[substring(Name, string-length(Name)) = 'C']/RouteLeg[PlannedSpeed]")
+xml_add_child(speed_nodes_compulsory, "PlannedSpeed", paste(sprintf("%.2f", survey.speed), "kn"))
+
+### Adaptive routes (typically 9 kn speed for planning)
+speed_nodes_adaptive <- xml_find_all(nob, "//Route[substring(Name, string-length(Name)) = 'A']/RouteLeg[PlannedSpeed]")
+xml_add_child(speed_nodes_adaptive, "PlannedSpeed", paste(sprintf("%.2f", survey.speed), "kn"))
+
+### Nearshore routes (typically 8 kn speed for planning)
+speed_nodes_nearshore <- xml_find_all(nob, "//Route[substring(Name, string-length(Name)) = 'N']/RouteLeg[PlannedSpeed]")
+xml_add_child(speed_nodes_nearshore, "PlannedSpeed", paste(sprintf("%.2f", survey.speed.ns), "kn"))
 
 # Format waypoints ----------------------------------------
 ## Format UCTD waypoints
@@ -55,32 +68,33 @@ xml_add_child(nearshore_routes, "Color", "rgb(1, 0, 1)")
 uctd_marks <- xml_find_all(nob, "//Mark[starts-with(Name, 'UCTD')]")
 
 ### Add the new child nodes and update the values
-xml_add_child(uctd_marks, "RangeCircleRadius", "1 NM")
-xml_add_child(uctd_marks, "RangeCircleDisplayCount", "1")
-xml_add_child(uctd_marks, "RangeCircleFill", "true")
-xml_add_child(uctd_marks, "RangeCircleColor", "rgb(1, 0.4901961, 0)") # Blue
+xml_add_child(uctd_marks, "RangeCircleRadius", rangeCircleRadius["uctd"])
+xml_add_child(uctd_marks, "RangeCircleDisplayCount", rangeCircleCount["uctd"])
+xml_add_child(uctd_marks, "RangeCircleFill", rangeCircleFill["uctd"])
+xml_add_child(uctd_marks, "RangeCircleColor", rangeCircleColor["uctd"])
+xml_add_child(uctd_marks, "Icon", waypointIcon["uctd"])
 
 ## Format CTD waypoints
 ### Find all Mark nodes where the Name contains "CTD"
 ctd_marks <- xml_find_all(nob, "//Mark[starts-with(Name, 'CTD')]")
 
 ### Add the new child nodes and update the values
-xml_add_child(ctd_marks, "RangeCircleRadius", "1 NM")
-xml_add_child(ctd_marks, "RangeCircleDisplayCount", "1")
-xml_add_child(ctd_marks, "RangeCircleFill", "true")
-xml_add_child(ctd_marks, "RangeCircleColor", "rgb(0, 0, 1)")
-xml_add_child(ctd_marks, "Icon", "Blue Box")
+xml_add_child(ctd_marks, "RangeCircleRadius", rangeCircleRadius["ctd"])
+xml_add_child(ctd_marks, "RangeCircleDisplayCount", rangeCircleCount["ctd"])
+xml_add_child(ctd_marks, "RangeCircleFill", rangeCircleFill["ctd"])
+xml_add_child(ctd_marks, "RangeCircleColor", rangeCircleColor["ctd"])
+xml_add_child(ctd_marks, "Icon", waypointIcon["ctd"])
 
 ## Format surface eDNA waypoints
 ### Find all Mark nodes where the Name contains "eDNA"
 eDNA_marks <- xml_find_all(nob, "//Mark[starts-with(Name, 'eDNA')]")
 
 ### Add the new child nodes and update the values
-xml_add_child(eDNA_marks, "RangeCircleRadius", "1 NM")
-xml_add_child(eDNA_marks, "RangeCircleDisplayCount", "1")
-xml_add_child(eDNA_marks, "RangeCircleFill", "true")
-xml_add_child(eDNA_marks, "RangeCircleColor", "rgb(0, 1, 0)")
-xml_add_child(eDNA_marks, "Icon", "Green Box")
+xml_add_child(eDNA_marks, "RangeCircleRadius", rangeCircleRadius["eDNA"])
+xml_add_child(eDNA_marks, "RangeCircleDisplayCount", rangeCircleCount["eDNA"])
+xml_add_child(eDNA_marks, "RangeCircleFill", rangeCircleFill["eDNA"])
+xml_add_child(eDNA_marks, "RangeCircleColor", rangeCircleColor["eDNA"])
+xml_add_child(eDNA_marks, "Icon", waypointIcon["eDNA"])
 
 # Save the modified XML to a new file ----------------------
-xml2::write_xml(nob, file.path(nob.dir, nob.file))
+xml2::write_xml(nob, file.path(nob.dir, nob.file.final))

@@ -55,7 +55,7 @@ gpx.file         <- "2606RL-12.5-nmi-spacing_20260420.gpx" # "2606RL-hybrid-spac
 
 # Define transit and survey speed (kn) for estimating progress
 survey.speed     <- 9 # FSV
-survey.speed.ns  <- 8 # Nearshore vessels
+survey.speed.ns  <- 7 # Nearshore vessels
 transit.speed    <- 9
 survey.direction <- "Northward" # Southward or Northward; to compute day lengths
 

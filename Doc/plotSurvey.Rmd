@@ -76,8 +76,8 @@ process.csv.krill  <- T # Process krill backscatter files
 process.csv.all    <- F # Process all CSV files (F = new files only)
 
 # Are we sampling? If no, F. Skips data processing steps.
-sampling.acoustics <- T 
-sampling.trawl     <- T 
+sampling.acoustics <- F 
+sampling.trawl     <- F 
 sampling.cufes     <- F 
 
 # Get environmental layers from ERDDAP (e.g., sardine potential habitat, Chl a, etc.)
@@ -1677,11 +1677,15 @@ if (file.exists(here("Output/nasc_backscatter_plotly.Rdata"))) {
 Hauls removed due to trawl performance issues (e.g., aborted, bad, poor, etc.) or missing data.
 
 ```{r bad-hauls}
-haul.bad %>% 
-  filter(cruise %in% cruise.name) %>%
-  mutate(trawlDate = date(equilibriumTime)) %>% 
-  select(haul, trawlDate, orderOcc, trawlPerformance) %>% 
-  datatable(rownames = FALSE)
+if (exists("haul.bad")) {
+  haul.bad %>% 
+    filter(cruise %in% cruise.name) %>%
+    mutate(trawlDate = date(equilibriumTime)) %>% 
+    select(haul, trawlDate, orderOcc, trawlPerformance) %>% 
+    datatable(rownames = FALSE)
+} else {
+  print("No trawl data yet.")
+}
 ```
 
 # Acoustic backscatter 

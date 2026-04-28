@@ -220,7 +220,7 @@ map.label.size <- c(central = 1.5, mexico = 4, north = 2, south = 4)
 
 # Leaflet tile options; set both to T if caching
 useCachedTile  <- F # Use cached tiles
-useCrossOrigin <- F # Use cross origin
+useCrossOrigin <- T # Use cross origin
 leaflet.checkTransects.simple <- TRUE # Use a simple Leaflet for checkTransects
 
 # Trawl proportion plots
@@ -234,12 +234,12 @@ pie.spp <- c("Jacksmelt"  = "Atherinopsis californiensis", "PacHerring" = "Clupe
              "RndHerring" = "Etrumeus acuminatus", "AllCPS" = "AllCPS")
 
 # Map landmarks
-label.list <- c("Monterey Bay","San Francisco","Cape Flattery","Crescent City",
+label.list <- c("Monterey","San Francisco","Cape Flattery","Crescent City",
                 "Newport","Point Conception","Cape Mendocino","Columbia River",
-                "Cape Blanco","Bodega Bay","Westport","Fort Bragg",
+                "Cape Blanco","Bodega Bay","Westport","Fort Bragg","Coos Bay",
                 "Morro Bay","Long Beach","Cape Scott","San Diego",
                 "Ensenada","Punta Eugenia","El Rosario","Cabo San Lucas",
-                "Punta Abreojos","San Carlos")
+                "Punta Abreojos","San Carlos", "Santa Barbara", "Point Arena")
 
 # Species, stock and strata for nearshore biomass plots -------------------
 spp.common.ns <- "Northern Anchovy"

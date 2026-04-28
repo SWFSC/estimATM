@@ -181,9 +181,11 @@ write_csv(nav.gps, here("Output/nav.gps.csv"))
 
 # Get most recent vessel position for plotting
 nav.now <- tail(nav.sf, 1) %>% 
-  mutate(label = paste("Last position:", time, "UTC"),
+  mutate(time_local = with_tz(time, tzone = "America/Los_Angeles")) %>% 
+  mutate(label = paste("Last position:", time, "UTC; ", time_local, "PT"),
          popup = paste0('<b>Vessel name: </b>', survey.vessel, '<br/>',
-                        '<b>Last position: </b>', time, ' UTC<br/>'))
+                        '<b>Last position (UTC): </b>', time, ' UTC<br/>',
+                        '<b>Last position (Local): </b>', time_local, ' PT<br/>'))
 
 # Set padding around data  
 if (resize.map) {
@@ -910,6 +912,8 @@ if (exists("nasc.all")) {
 locations <- filter(read.csv(here("Data/Map/locations.csv")), name %in% label.list) %>%
   project_df(to = crs.proj)
 
+locations.sf <- st_as_sf(locations, coords = c("long","lat"), crs = crs.geog)
+
 # Get state data
 states <- ne_states(country = 'United States of America', returnclass = 'sf')
 ca     <- filter(states, name == "California")
@@ -1237,10 +1241,10 @@ i.map <- leaflet() %>%
   # Enable tile caching
   enableTileCaching() %>%
   # Add provider tiles; # http://leaflet-extras.github.io/leaflet-providers/preview/index.html
-  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "Esri.NatGeoWorldMap",
+  addProviderTiles(providers$Esri.OceanBasemap, group = "Esri.OceanBasemap",
                    options = tileOptions(useCache = useCachedTile,
                                          crossOrigin = useCrossOrigin)) %>%
-  addProviderTiles(providers$Esri.OceanBasemap, group = "Esri.OceanBasemap",
+  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "Esri.NatGeoWorldMap",
                    options = tileOptions(useCache = useCachedTile,
                                          crossOrigin = useCrossOrigin)) %>%
   addProviderTiles(providers$Esri.WorldStreetMap, group = "Esri.WorldStreetMap",
@@ -1289,6 +1293,8 @@ i.map <- leaflet() %>%
   # All of Mexico
   addPolygons(data = mex_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalMex(NOMBRE),
               fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
+  addMarkers(data = locations.sf, label = ~name, popup = ~name,
+               group = "Landmarks") %>%
   # Add core planned transects
   addPolylines(data = filter(transects.sf, Type %in% c("Compulsory", "Adaptive")),
                color = ~txPal(Type), weight = 3, opacity = 0.5,
@@ -1328,7 +1334,7 @@ i.map <- leaflet() %>%
     baseGroups = c("Esri.NatGeoWorldMap", "Esri.OceanBasemap",
                    "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
     overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs",
-                      "State Waters", "Exclusive Economic Zones", 
+                      "State Waters", "Exclusive Economic Zones", "Landmarks",
                       "Sardine habitat","Chlorophyll",
                       "Bathymetry Contours", "Graticule",
                       "Planned Transects (Core)", "Planned Transects (Ancillary)",

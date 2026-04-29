@@ -2,10 +2,13 @@
 
 # library(terra)
 # library(leaflet)
-# library(ncdf4) 
+# library(ncdf4)
 # library(httr)
 # library(lubridate)
 # library(cmocean)
+# library(fs)
+# library(here)
+# library(rerddap)
 
 # See leaflet example here
 # https://rstudio.github.io/leaflet/articles/raster.html
@@ -45,21 +48,26 @@ if (exists("sar.hab.info")) {
   tcoord.sar <- as.character(c(date(sar.hab.date), date(sar.hab.date)))
 
   # Download netCDF files
-  sar.dat <- griddap(sar.hab.info,
+  sar.dat <- rerddap::griddap(sar.hab.info,
                      latitude  = ycoord, 
                      longitude = xcoord, 
                      time      = tcoord.sar) 
   
-  # Read netCDF files with rast()
-  sar.hab <- rast(sar.dat$summary$filename, subds = "potential_habitat_probability")
+  sar.dat.bin <- sar.dat$data %>%
+    mutate(potential_habitat_class = cut(potential_habitat_probability, c(sar.hab.breaks), labels = FALSE))  
+    
   
+  # Read netCDF files with rast()
+  sar.hab <- terra::rast(sar.dat$summary$filename, subds = "potential_habitat_probability")
+  sar.hab.class <- terra::rast(sar.dat$summary$filename, subds = "potential_habitat_classification")
+    
   # Define color palettes
-  sar.pal <- colorNumeric(c("#0000ff", "#ff9900"), values(sar.hab), ##0000ff(blue), #ff9900 (orange)
+  sar.pal <- colorNumeric(c("#030303", "#CCCCCC"), values(sar.hab),
                           na.color = "transparent")
   
   # Save files
   save(sar.hab, sar.pal, 
-       file = here("Data/Raster/hab_data_erddap.Rdata"))
+       file = here::here("Data/Raster/hab_data_erddap.Rdata"))
 }
 
 # Get dataset info and extract latest date 
@@ -88,25 +96,45 @@ if (exists("chl.info")) {
   # Date ranges
   tcoord.chl <- as.character(c(date(chl.date), date(chl.date)))
 
-  chl.dat <- griddap(chl.info,
+  chl.dat <- rerddap::griddap(chl.info,
                      latitude  = ycoord, 
                      longitude = xcoord, 
                      time      = tcoord.chl)
   
-  # Read netCDF files with rast()
-  chl.a   <- rast(chl.dat$summary$filename, subds = "chlor_a")
+  # hist(chl.dat$data$chlor_a)
+  # hist(chl.dat$data$log_chlor_a)
+  
+  chl.dat.log <- chl.dat
+  
+  # Log-transform chl values
+  chl.dat.log$data$chlor_a <- log(chl.dat.log$data$chlor_a + 1)
+  
+    # Read netCDF files with rast()
+  chl.a     <- terra::rast(chl.dat$summary$filename, subds = "chlor_a")
+  chl.a.log <- terra::rast(chl.dat.log$summary$filename, subds = "chlor_a")
 
+  # ggplot() + geom_raster(data = chl.dat$data, aes(x=longitude, y=latitude, fill = chlor_a)) + 
+  #   scale_fill_viridis_c(option = "magma") + coord_map()
+  # ggplot() + geom_raster(data = chl.dat$data, aes(x=longitude, y=latitude, fill = log(chlor_a+1))) + 
+  #   scale_fill_viridis_c(option = "magma") + coord_map()
+  # ggplot() + geom_raster(data = chl.dat$data, aes(x=longitude, y=latitude, fill = log(chlor_a+1))) + 
+  #   scale_fill_cmocean(name = "algae") + coord_map()
+  # ggplot() + geom_raster(data = chl.dat.log$data, aes(x=longitude, y=latitude, fill = chlor_a)) +
+  #   scale_fill_cmocean(name = "algae") + coord_map()
+  
   # Define color palettes
   chl.pal <- colorNumeric("viridis", values(chl.a), ##0000ff(blue), #ff9900 (orange)
                           na.color = "transparent")
   
+  chl.pal.log <- colorNumeric(c("#FFFFFF", "#2FED15"), values(chl.a.log), ##0000ff(blue), #ff9900 (orange)
+                          na.color = "transparent")
   # Save 
-  save(chl.a, chl.pal,
-       file = here("Data/Raster/chl_data_erddap.Rdata"))
+  save(chl.a, chl.pal, chl.pal.log,
+       file = here::here("Data/Raster/chl_data_erddap.Rdata"))
   }
 
 # Example code for testing script
-
+# 
 # leaflet() %>% addTiles() %>%
 #   addRasterImage(sar.hab, colors = sar.pal, opacity = 0.5,
 #                  group = "Sardine habitat") %>%
@@ -120,34 +148,12 @@ if (exists("chl.info")) {
 #   addLegend(pal = chl.pal, values = values(chl.a),
 #             title = "Chlorophyll a",
 #             group = "Chlorophyll a")
-
-# Relic code from first attempt at data extraction and visualization ----------------------------------
-# Generate the habitat model URL
-# example working URL
-# sar.url <- "https://coastwatch.pfeg.noaa.gov/erddap/griddap/sardine_habitat_modis_v2.nc?potential_habitat_probability%5B(2025-07-14T12:00:00Z)%5D%5B(27.0):(51.0)%5D%5B(-130.0):(-113.0)%5D&.draw=surface&.vars=longitude%7Clatitude%7Cpotential_habitat_probability&.colorBar=%7CD%7C%7C0.17%7C0.184%7C2&.bgColor=0xffccccff"
-# chl.url <- "https://coastwatch.noaa.gov/erddap/griddap/noaacwNPPN20VIIRSDINEOFDaily.nc?chlor_a%5B(2025-07-01T12:00:00Z)%5D%5B(0.0)%5D%5B(39.125):(34.125)%5D%5B(-124.375):(-120.375)%5D&.draw=surface&.vars=longitude%7Clatitude%7Cchlor_a&.colorBar=%7C%7CLog%7C0.03%7C30%7C&.bgColor=0xffccccff"
-
-# sar.url <- URLencode(paste0(
-#   "https://coastwatch.pfeg.noaa.gov/erddap/griddap/sardine_habitat_modis_v2.nc?potential_habitat_probability%5B(",
-#   "last", #sar.hab.date, # "2025-07-25T12:00:00Z",
-#   # format(ymd_hms(paste(Sys.Date(), "12:00:00")) - days(3), format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"), # "2025-07-25T12:00:00Z",
-#   ")%5D%5B(",27.0,"):(",51.0,
-#   ")%5D%5B(",-130.0,"):(",-113.0,
-#   ")%5D&.draw=surface&.vars=longitude%7Clatitude%7Cpotential_habitat_probability&.colorBar=%7CD%7C%7C0.17%7C0.184%7C2&.bgColor=0xffccccff"
-# ))
 # 
-# chl.url <- URLencode(paste0(
-#   "https://coastwatch.noaa.gov/erddap/griddap/noaacwNPPN20VIIRSDINEOFDaily.nc?chlor_a%5B(",
-#   "last", #chl.date,
-#   # format(ymd_hms(paste(Sys.Date(), "12:00:00")) - days(10), format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"), # "2025-07-01T12:00:00Z",
-#   ")%5D%5B(",0.0,")%5D%5B(",27.0,"):(", 51.0,
-#   ")%5D%5B(",-130.0,"):(",-113.0,
-#   ")%5D&.draw=surface&.vars=longitude%7Clatitude%7Cchlor_a&.colorBar=%7C%7CLog%7C0.03%7C30%7C&.bgColor=0xffccccff"
-# ))
-# 
-# # Download netCDF files
-# sar.dat <- httr::GET(sar.url, write_disk(here::here("Data/Raster/sar_hab.nc"), overwrite = TRUE))
-# chl.dat <- httr::GET(chl.url, write_disk(here::here("Data/Raster/chl_a.nc"), overwrite = TRUE))
+# leaflet() %>% addTiles() %>%
+#   addRasterImage(chl.a.log, colors = chl.pal.log, opacity = 0.5,
+#                  group = "Chlorophyll a") %>%
+#   addLegend(pal = chl.pal.log, values = values(chl.a.log),
+#             title = "log(Chlorophyll a)",
+#             group = "Chlorophyll a-Log")
 
-# sar.hab <- rast(here::here("Data/Raster/sar_hab.nc"))
-# chl.a   <- rast(here::here("Data/Raster/chl_a.nc"))
+

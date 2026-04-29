@@ -1207,6 +1207,11 @@ cufesPal <- colorFactor(cufes.colors, cufes.plot.spp)
 # Create color palette for seep types
 seepPal <- colorFactor(c("red","blue"), c("Seep","Uncertain"))
 
+# Create color palette for sardine habitat
+sarHabPal <- colorFactor(sar.hab.colors, 
+                         domain = c("3", "5", "7"),
+                         na.color = "transparent")
+
 # Create color palette for planned transects
 txPal    <- colorFactor(wpt.colors, wpt.types)
 trawlPal <- c('#00CD66', '#0000FF', '#A020F0',
@@ -1335,7 +1340,8 @@ i.map <- leaflet() %>%
                    "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
     overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs",
                       "State Waters", "Exclusive Economic Zones", "Landmarks",
-                      "Sardine habitat","Chlorophyll",
+                      "Sardine habitat-Probability", "Sardine habitat-Classification",
+                      "Chlorophyll","Chlorophyll-Log",
                       "Bathymetry Contours", "Graticule",
                       "Planned Transects (Core)", "Planned Transects (Ancillary)",
                       "Vessel Track", "Vessel Positions", "Trawls",
@@ -1522,10 +1528,20 @@ if (exists("ctd.sf"))
 if (exists("sar.hab"))
   i.map <- i.map %>% addTiles() %>%
   addRasterImage(sar.hab, colors = sar.pal, opacity = 0.5,
-                 group = "Sardine habitat") %>%
+                 group = "Sardine habitat-Probability") %>%
   addLegend(pal = sar.pal, values = values(sar.hab),
-            title = "Sardine habitat",
-            group = "Sardine habitat")
+            title = "Sardine habitat-Probability",
+            group = "Sardine habitat-Probability")
+
+if (exists("sar.hab.class"))
+  i.map <- i.map %>% addTiles() %>%
+  addRasterImage(sar.hab.class, colors = sarHabPal, opacity = 0.5,
+                 group = "Sardine habitat-Classification") %>%
+  addLegend(position = "bottomleft", 
+            pal = sarHabPal, 
+            values = values(sar.hab.class),
+            title = "Sardine habitat-Classification",
+            group = "Sardine habitat-Classification")
 
 ## Chlorophyll a
 if (exists("chl.a"))
@@ -1533,11 +1549,22 @@ if (exists("chl.a"))
   addRasterImage(chl.a, colors = chl.pal, opacity = 0.5,
                  group = "Chlorophyll") %>%
   addLegend(
-    position = "bottomright",
+    position = "bottomleft",
     pal = chl.pal,
     values = values(chl.a),
     title = "Chlorophyll a (mg/m^3)",
     group = "Chlorophyll")
+
+if (exists("chl.a.log"))
+  i.map <- i.map %>% addTiles() %>%
+  addRasterImage(chl.a.log, colors = chl.pal.log, opacity = 0.5,
+                 group = "Chlorophyll-Log") %>%
+  addLegend(
+    position = "bottomleft",
+    pal = chl.pal,
+    values = values(chl.a),
+    title = "log(Chlorophyll a + 1) (mg/m^3)",
+    group = "Chlorophyll-Log")
 
 # Add Saildrone data
 if (exists("nav.sd.paths.sf"))
@@ -1564,7 +1591,8 @@ i.map <- i.map %>%
   hideGroup(c("Backscatter (Large)", "Backscatter-Krill", "Backscatter-Krill (Small)", 
               "CUFES Egg Density", "CUFES Egg Density-Other",
               "CUFES Egg Density-Squid", "CUFES Egg Density-Hake", "CUFES (Negative)",
-              "Sardine habitat","Chlorophyll", 
+              "Sardine habitat-Probability", "Sardine habitat-Classification", 
+              "Chlorophyll","Chlorophyll-Log", 
               "CTD Casts","Graticule",
               "Saildrone Tracks", "Saildrone Positions",
               "State Waters", "Exclusive Economic Zones",

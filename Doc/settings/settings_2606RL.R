@@ -337,6 +337,12 @@ dens.colors        <- c("#000000", "#1E90FF", "#FFFF00", "#FF8C00",
                         "#FF0000", "#FFC0CB", "#FFFFFF", "#00FF00") # for legend colors
 dens.sizes         <- c(0.25, 1, 2.25, 3, 4.25, 5.5, 6.5, 7.5) # for legend sizes
 
+# Raster settings ------------------------------------------------------------------
+# Sardine habitat
+sar.hab.breaks       <- c(0, 0.18, 0.29, 1) 
+sar.hab.colors       <- c("black", "#595959", "#CCCCCC")
+sar.hab.labels       <- c("0", "0.18", "0.29", "1") 
+
 # Catch map
 # For legend objects
 catch.breaks       <- c(0, 10, 100, 500, 1000)

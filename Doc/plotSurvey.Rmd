@@ -1336,12 +1336,12 @@ i.map <- leaflet() %>%
              position = "topleft") %>% 
   # Add layer controls
   addLayersControl(
-    baseGroups = c("Esri.NatGeoWorldMap", "Esri.OceanBasemap",
+    baseGroups = c("Esri.OceanBasemap","Esri.NatGeoWorldMap", 
                    "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
     overlayGroups = c("Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs",
                       "State Waters", "Exclusive Economic Zones", "Landmarks",
                       "Sardine habitat-Probability", "Sardine habitat-Classification",
-                      "Chlorophyll","Chlorophyll-Log",
+                      "Chlorophyll",
                       "Bathymetry Contours", "Graticule",
                       "Planned Transects (Core)", "Planned Transects (Ancillary)",
                       "Vessel Track", "Vessel Positions", "Trawls",
@@ -1543,28 +1543,18 @@ if (exists("sar.hab.class"))
             title = "Sardine habitat-Classification",
             group = "Sardine habitat-Classification")
 
+
 ## Chlorophyll a
-if (exists("chl.a"))
+if (exists("chl.a.log"))
   i.map <- i.map %>% addTiles() %>%
-  addRasterImage(chl.a, colors = chl.pal, opacity = 0.5,
+  addRasterImage(chl.a.log, colors = chl.pal.log, opacity = 0.75,
                  group = "Chlorophyll") %>%
   addLegend(
     position = "bottomleft",
-    pal = chl.pal,
-    values = values(chl.a),
-    title = "Chlorophyll a (mg/m^3)",
+    pal = chl.pal.log,
+    values = values(chl.a.log),
+    title = "log10(Chlorophyll a) (mg/m^3)",
     group = "Chlorophyll")
-
-if (exists("chl.a.log"))
-  i.map <- i.map %>% addTiles() %>%
-  addRasterImage(chl.a.log, colors = chl.pal.log, opacity = 0.5,
-                 group = "Chlorophyll-Log") %>%
-  addLegend(
-    position = "bottomleft",
-    pal = chl.pal,
-    values = values(chl.a),
-    title = "log(Chlorophyll a + 1) (mg/m^3)",
-    group = "Chlorophyll-Log")
 
 # Add Saildrone data
 if (exists("nav.sd.paths.sf"))
@@ -1592,7 +1582,7 @@ i.map <- i.map %>%
               "CUFES Egg Density", "CUFES Egg Density-Other",
               "CUFES Egg Density-Squid", "CUFES Egg Density-Hake", "CUFES (Negative)",
               "Sardine habitat-Probability", "Sardine habitat-Classification", 
-              "Chlorophyll","Chlorophyll-Log", 
+              "Chlorophyll", 
               "CTD Casts","Graticule",
               "Saildrone Tracks", "Saildrone Positions",
               "State Waters", "Exclusive Economic Zones",

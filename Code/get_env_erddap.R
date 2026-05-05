@@ -45,7 +45,7 @@ if (exists("sar.hab.info")) {
   sar.hab.date <- sar.hab.info$alldata$NC_GLOBAL[sar.hab.info$alldata$NC_GLOBAL$attribute_name == "time_coverage_end", "value"]  
   
   # Date ranges
-  tcoord.sar <- as.character(c(date(sar.hab.date), date(sar.hab.date)))
+  tcoord.sar <-c(sar.hab.date, sar.hab.date)
 
   # Download netCDF files
   sar.dat <- rerddap::griddap(sar.hab.info,
@@ -94,39 +94,22 @@ if (exists("chl.info")) {
   chl.date <- chl.info$alldata$NC_GLOBAL[chl.info$alldata$NC_GLOBAL$attribute_name == "time_coverage_end", "value"]
   
   # Date ranges
-  tcoord.chl <- as.character(c(date(chl.date), date(chl.date)))
+  tcoord.chl <- c(chl.date, chl.date)
 
   chl.dat <- rerddap::griddap(chl.info,
                      latitude  = ycoord, 
                      longitude = xcoord, 
                      time      = tcoord.chl)
-  
-  # hist(chl.dat$data$chlor_a)
-  # hist(chl.dat$data$log_chlor_a)
-  
-  chl.dat.log <- chl.dat
-  
-  # Log-transform chl values
-  chl.dat.log$data$chlor_a <- log(chl.dat.log$data$chlor_a + 1)
-  
+
     # Read netCDF files with rast()
   chl.a     <- terra::rast(chl.dat$summary$filename, subds = "chlor_a")
-  chl.a.log <- terra::rast(chl.dat.log$summary$filename, subds = "chlor_a")
+  chl.a.log <- log10(chl.a)
 
-  # ggplot() + geom_raster(data = chl.dat$data, aes(x=longitude, y=latitude, fill = chlor_a)) + 
-  #   scale_fill_viridis_c(option = "magma") + coord_map()
-  # ggplot() + geom_raster(data = chl.dat$data, aes(x=longitude, y=latitude, fill = log(chlor_a+1))) + 
-  #   scale_fill_viridis_c(option = "magma") + coord_map()
-  # ggplot() + geom_raster(data = chl.dat$data, aes(x=longitude, y=latitude, fill = log(chlor_a+1))) + 
-  #   scale_fill_cmocean(name = "algae") + coord_map()
-  # ggplot() + geom_raster(data = chl.dat.log$data, aes(x=longitude, y=latitude, fill = chlor_a)) +
-  #   scale_fill_cmocean(name = "algae") + coord_map()
-  
   # Define color palettes
-  chl.pal <- colorNumeric("viridis", values(chl.a), ##0000ff(blue), #ff9900 (orange)
+  chl.pal <- colorNumeric(c("#FFFFFF", "#2FED15"), values(chl.a),
                           na.color = "transparent")
   
-  chl.pal.log <- colorNumeric(c("#FFFFFF", "#2FED15"), values(chl.a.log), ##0000ff(blue), #ff9900 (orange)
+  chl.pal.log <- colorNumeric(c("#FFFFFF", "#2FED15"), values(chl.a.log),
                           na.color = "transparent")
   # Save 
   save(chl.a, chl.pal, chl.pal.log,

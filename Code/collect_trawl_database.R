@@ -11,7 +11,7 @@ if (trawl.source == "SQL") {
                               Encrypt = "Optional",
                               DATABASE="Trawl",
                               Trusted_Connection= "Yes",
-                              SERVER="swc-estrella-s")
+                              SERVER="swc-estrella-g")
   
 } else if (trawl.source == "Access") {
   # Copy trawl Access database

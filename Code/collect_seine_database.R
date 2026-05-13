@@ -21,7 +21,7 @@ if (seine.source == "Excel") {
     # Configure ODBC connection to TRAWL database
     seine.con  <- DBI::dbConnect(odbc::odbc(), 
                                  Driver = "SQL Server", 
-                                 Server = "161.55.235.187", 
+                                 Server = trawl.db.ip, 
                                  Database = "Trawl", 
                                  Trusted_Connection = "True")
   } else if (seine.source == "Access") {

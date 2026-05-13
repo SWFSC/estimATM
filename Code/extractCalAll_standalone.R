@@ -14,7 +14,7 @@ vessel.list <- c("Reuben Lasker","Bell M. Shimada")
 # Configure ODBC connection
 cal.con  <- dbConnect(odbc(), 
                       Driver = "SQL Server", 
-                      Server = "161.55.235.187", 
+                      Server = trawl.db.ip, 
                       Database = "AST", 
                       Trusted_Connection = "True")
 # Collect table

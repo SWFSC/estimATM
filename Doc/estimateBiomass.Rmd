@@ -2899,7 +2899,7 @@ if (process.cufes) {
     } else if (cufes.source == "SQL") {
       cufes.con  <- dbConnect(odbc::odbc(), 
                               Driver = "SQL Server", 
-                              Server = "161.55.235.187", 
+                              Server = trawl.db.ip, 
                               Database = "CUFES", 
                               Trusted_Connection = "True")
       # Create the pointer to the CUFES table

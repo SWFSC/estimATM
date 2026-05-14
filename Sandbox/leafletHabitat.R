@@ -7,8 +7,8 @@ chl <- read_csv(here("Data/Habitat/sardine_habitat_chla.csv"),
 sst <- read_csv(here("Data/Habitat/sardine_habitat_sst.csv"),
                 col_names = c("datetime", "lat", "long", "sst")) 
 
-chl[atm:::is.nan.df(chl)] <- NA
-sst[atm:::is.nan.df(sst)] <- NA
+chl[atm:::isNaNdf(chl)] <- NA
+sst[atm:::isNaNdf(sst)] <- NA
 
 sst$sst[sst$sst > 23] <- NA
 

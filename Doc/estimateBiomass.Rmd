@@ -3463,7 +3463,7 @@ ts.proportions <- clf %>%
   replace(is.na(.), 0) 
 
 # Replace all NaNs with zeros
-ts.proportions[atm:::is.nan.df(ts.proportions)] <- NA
+ts.proportions[atm:::isNaNdf(ts.proportions)] <- NA
 
 # Save to file
 write_csv(ts.proportions, file = here("Output/ts_proportions_raw.csv"))
@@ -7007,7 +7007,7 @@ if (extrapolate.biomass) {
     select(Species, Stock, Stratum, Area, nTransects, Distance, nClusters, nIndiv,
            Biomass, lower.ci.B, upper.ci.B, biomass.sd, biomass.cv)
   
-  be.nse[atm:::is.nan.df(be.nse)] <- NA
+  be.nse[atm:::isNaNdf(be.nse)] <- NA
   
   # Save results
   write.csv(be.nse,

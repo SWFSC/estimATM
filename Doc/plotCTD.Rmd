@@ -68,6 +68,9 @@ get.nav         <- T # Download NOAA Ship nav data
 save.figs       <- T # create new figures
 get.map         <- T # download map from rnaturalearth
 resize.map      <- T # Resize map during survey; if T, uses anticipated bounds of survey area
+
+# Plotting options
+do.plotly       <- F # Set to F if having issues rendering Leaflet maps
 ```
 
 ```{r copy-files, include=F}
@@ -140,7 +143,7 @@ nav.now <- tail(nav.sf, 1) %>%
 uctd.hdr <- dir_ls(here("Data/UCTD"), regexp = uctd.hdr.pattern, recurse = TRUE) %>% 
   path_filter(regexp = "_processed", invert = TRUE)
 
-# Plot UCTD casts
+# Process UCTD cast headers
 if (length(uctd.hdr) == 0) {
   # Create empty figure if no UCTD casts present
   df <- data.frame()
@@ -604,7 +607,7 @@ if (save.figs) {
 }
 ```  
 
-```{r i-map-uctd, out.width='100%'}
+```{r i-map-uctd, out.width='100%',eval=TRUE}
 # Create color palette for planned transects
 txPal    <- colorFactor(wpt.colors, wpt.types)
 
@@ -675,7 +678,8 @@ i.map.uctd
 
 Descent rate of the UCTD by depth and vessel speed.  
 
-```{r uctd-dZt-plot,out.width="100%",out.height="8in"}
+```{r uctd-dZt-plot,out.width="100%"}
+# ,out.height="8in"
 if (exists("all.uctd.casts")) {
   if (length(all.uctd.casts) > 0) {
     if (save.figs) {
@@ -702,12 +706,13 @@ if (exists("all.uctd.casts")) {
       # save plot
       ggsave(uctd.dZt, file = here("Figs/fig_uctd_dZt_v_Z.png"))
     }
-    # Print plotly figure
-    ggplotly(uctd.dZt)
     
-  } else {
-    include_graphics(here("Figs/fig_uctd_missing.png"))
-  } 
+    if (do.plotly) {
+      ggplotly(uctd.dZt)
+    } else {
+      uctd.dZt
+    }
+  }  
 } else {
   cat("No UCTD casts to plot.")
 }
@@ -717,7 +722,8 @@ if (exists("all.uctd.casts")) {
 
 The dashed line represent the Loess-smoothed depth profiles.  
 
-```{r uctd-depth-time-plot,out.width="100%",out.height="8in"}
+```{r uctd-depth-time-plot,out.width="100%"}
+# ,out.height="8in"
 if (exists("all.uctd.casts")) {
   if (length(all.uctd.casts) > 0) {
     if (save.figs) {
@@ -745,12 +751,13 @@ if (exists("all.uctd.casts")) {
       # save plot
       ggsave(uctd.Z, file = here("Figs/fig_uctd_Z_v_time.png"))
     }
-    # Print plotly figure
-    ggplotly(uctd.Z)
     
-  } else {
-    include_graphics(here("Figs/fig_uctd_Z_v_time.png"))
-  }  
+    if (do.plotly) {
+      ggplotly(uctd.Z)
+    } else {
+      uctd.Z
+    }
+  } 
 } else {
   cat("No UCTD casts to plot.")
 }
@@ -758,7 +765,7 @@ if (exists("all.uctd.casts")) {
 
 ## Temperature v. Depth plot
 
-```{r uctd-temp-depth-plot,out.width="100%",out.height="8in"}
+```{r uctd-temp-depth-plot,out.width="100%"}
 if (exists("all.uctd.casts")) {
   if (length(all.uctd.casts) > 0) {
     if (save.figs) {
@@ -781,12 +788,13 @@ if (exists("all.uctd.casts")) {
       # save plot
       ggsave(uctd.T, file = here("Figs/fig_uctd_T_v_Z.png"))
     }
-    # Print plotly figure
-    ggplotly(uctd.T)
+    if (do.plotly) {
+      ggplotly(uctd.T)
+    } else {
+      uctd.T
+    }
     
-  } else {
-    include_graphics(here("Figs/fig_uctd_missing.png"))
-  }  
+  } 
 } else {
   cat("No UCTD casts to plot.")
 }
@@ -794,7 +802,7 @@ if (exists("all.uctd.casts")) {
 
 ## Salinity v. Depth plot
 
-```{r uctd-sal-depth-plot,out.width="100%",out.height="8in"}
+```{r uctd-sal-depth-plot,out.width="100%"}
 if (exists("all.uctd.casts")) {
   if (length(all.uctd.casts) > 0) {
     if (save.figs) {
@@ -819,12 +827,13 @@ if (exists("all.uctd.casts")) {
       # save plot
       ggsave(uctd.S,file = here("Figs/fig_uctd_S_v_Z.png"))
     }
-    # Print plotly figure
-    ggplotly(uctd.S)
+    if (do.plotly) {
+      ggplotly(uctd.S)
+    } else {
+      uctd.S
+    }
     
-  } else {
-    include_graphics(here("Figs/fig_uctd_missing.png"))
-  }  
+  } 
 } else {
   cat("No UCTD casts to plot.")
 }
@@ -832,7 +841,7 @@ if (exists("all.uctd.casts")) {
 
 ## Sound speed v. Depth plot
 
-```{r uctd-sv-depth-plot,out.width="100%",out.height="8in"}
+```{r uctd-sv-depth-plot,out.width="100%"}
 if (exists("all.uctd.casts")) {
   if (length(all.uctd.casts) > 0) {
     if (save.figs) {
@@ -858,12 +867,13 @@ if (exists("all.uctd.casts")) {
       ggsave(uctd.Sv, file = here("Figs/fig_uctd_sV_v_Z.png"))
     }
     
-    # Print plotly figure
-    ggplotly(uctd.Sv)
+    if (do.plotly) {
+      ggplotly(uctd.Sv)
+    } else {
+      uctd.Sv
+    }
     
-  } else {
-    include_graphics(here("Figs/fig_uctd_missing.png"))
-  } 
+  }
 } else {
   cat("No UCTD casts to plot.")
 }
@@ -871,7 +881,7 @@ if (exists("all.uctd.casts")) {
 
 ## Chlorophyll-a v. Depth plot
 
-```{r uctd-chl-depth-plot,out.width="100%",out.height="8in"}
+```{r uctd-chl-depth-plot,out.width="100%"}
 if (exists("all.uctd.casts")) {
   if (length(all.uctd.casts) > 0) {
     if (has_name(all.uctd.casts, "ChlA")) {
@@ -899,12 +909,12 @@ if (exists("all.uctd.casts")) {
         ggsave(uctd.chl, file = here("Figs/fig_uctd_ChlA_v_Z.png"))
       }
       
-      # Print plotly figure
-      ggplotly(uctd.chl)
-      
-    } else {
-      include_graphics(here("Figs/fig_uctd_missing.png"))
-    } 
+      if (do.plotly) {
+        ggplotly(uctd.chl)
+      } else {
+        uctd.chl
+      }
+    }  
   }
 } else {
   cat("No UCTD casts to plot.")
@@ -962,9 +972,7 @@ if (exists("all.uctd.casts")) {
              width = map.width*2, height = map.height)
     }
     include_graphics(here("Figs/fig_uctd_T-S_map.png"))
-  } else {
-    include_graphics(here("Figs/fig_uctd_missing.png"))
-  }
+  } 
 } else {
   cat("No UCTD casts to plot.")
 }
@@ -1036,10 +1044,8 @@ if (save.figs) {
 }
 ```  
 
-```{r i-map-ctd}
+```{r i-map-ctd,eval=TRUE}
 # Map casts
-# Add nav data
-# Add nav data
 i.map.ctd <- i.map %>% 
   # Enable tile caching
   enableTileCaching() %>%
@@ -1136,7 +1142,7 @@ if (save.figs) {
 
 ## Temperature v. Depth plot
 
-```{r ctd-temp-depth-plot,out.width="100%",out.height="8in"}
+```{r ctd-temp-depth-plot,out.width="100%"}
 if (exists("all.ctd.casts")) {
   if (length(all.ctd.casts) > 0) {
     if (save.figs) {
@@ -1163,12 +1169,13 @@ if (exists("all.ctd.casts")) {
       ggsave(ctd.T, file = here("Figs/fig_ctd_T_v_Z.png"))
     }
     
-    # Print plotly figure
-    ggplotly(ctd.T)
+    if (do.plotly) {
+      ggplotly(ctd.T)
+    } else {
+      ctd.T
+    }
     
-  } else {
-    include_graphics(here("Figs/fig_ctd_missing.png"))
-  }
+  } 
 } else {
   cat("No CTD casts to plot.")
 }
@@ -1202,11 +1209,13 @@ if (exists("all.ctd.casts")) {
       ggsave(ctd.S,file = here("Figs/fig_ctd_S_v_Z.png"))
     }
     # Print plotly figure
-    ggplotly(ctd.S)
+    if (do.plotly) {
+      ggplotly(ctd.S)
+    } else {
+      ctd.S
+    }
     
-  } else {
-    include_graphics(here("Figs/fig_ctd_missing.png"))
-  }
+  } 
 } else {
   cat("No CTD casts to plot.")
 }
@@ -1214,7 +1223,7 @@ if (exists("all.ctd.casts")) {
 
 ## Sound speed v. Depth plot
 
-```{r ctd-sv-depth-plot,out.width="100%",out.height="8in"}
+```{r ctd-sv-depth-plot,out.width="100%"}
 if (exists("all.ctd.casts")) {
   if (length(all.ctd.casts) > 0) {
     if (save.figs) {
@@ -1242,11 +1251,13 @@ if (exists("all.ctd.casts")) {
       ggsave(ctd.Sv, file = here("Figs/fig_ctd_sV_v_T.png"))
     }
     # Print ploty figure
-    ggplotly(ctd.Sv)
+    if (do.plotly) {
+      ggplotly(ctd.Sv)
+    } else {
+      ctd.Sv
+    }
     
-  } else {
-    include_graphics(here("Figs/fig_ctd_missing.png"))
-  }
+  } 
 } else {
   cat("No CTD casts to plot.")
 }
@@ -1304,15 +1315,13 @@ if (exists("all.ctd.casts")) {
              width = map.width*2, height = map.height)
     }
     include_graphics(here("Figs/fig_ctd_T-S_map.png"))
-  } else {
-    include_graphics(here("Figs/fig_ctd_missing.png"))
   } 
 } else {
   cat("No CTD casts to plot.")
 }
 ```
 
-```{r combine-cast-data,eval=FALSE}
+```{r combine-cast-data,eval=TRUE}
 # Combine all CTD and UCTD cast data in one data frame
 ctd.data.all <- tibble()
 
@@ -1362,7 +1371,7 @@ write.csv(ctd.info.all, file = here("Output/cast_info_all.csv"),
 
 Locations of CTD (blue points) and UCTD (green points) locations.  
 
-```{r i-map-all-ctds, out.width='100%'}
+```{r i-map-all-ctds, out.width='100%',eval=TRUE}
 # Create color palette for planned transects
 txPal    <- colorFactor(wpt.colors, wpt.types)
 

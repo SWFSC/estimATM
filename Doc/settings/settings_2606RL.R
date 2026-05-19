@@ -957,7 +957,7 @@ min.T <- 0
 max.T <- 25
 
 # Salinity limits
-min.S <- 30
+min.S <- 0
 max.S <- 35
 
 # Set limits for latitude and longitude ----------------------------------------

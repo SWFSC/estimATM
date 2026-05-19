@@ -66,7 +66,7 @@ overwrite.files <- T # overwrite existing files
 get.nav         <- T # Download NOAA Ship nav data
 
 save.figs       <- T # create new figures
-get.map         <- F # download map from rnaturalearth
+get.map         <- T # download map from rnaturalearth
 resize.map      <- T # Resize map during survey; if T, uses anticipated bounds of survey area
 ```
 

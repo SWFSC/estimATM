@@ -16,9 +16,9 @@ if (!require("pacman")) install.packages("pacman")
 if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
-pacman::p_load(tidyverse,cowplot,knitr,shadowtext,plotly,sf,fs,vroom,leaflet,
+pacman::p_load(tidyverse,cowplot,knitr,shadowtext,sf,fs,vroom,leaflet,ggiraph,
                DBI,stringr,gdata,forecast,lubridate,here,rnaturalearth,viridis,
-               DT,mapview,bookdown,ggspatial,leafem,leaflet.extras,xts)
+               DT,mapview,bookdown,ggspatial,leafem,leaflet.extras,xts,plotly)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
@@ -697,7 +697,7 @@ if (exists("all.uctd.casts")) {
         scale_colour_viridis("Vessel\nspeed (kt)\n", option = "plasma") +
         facet_wrap(~leg, ncol = 2) +
         theme_bw() + 
-        theme(panel.grid.major     = element_line(size = 0.75),
+        theme(panel.grid.major     = element_line(linewidth = 0.75),
               legend.position      =  c(0,1),
               legend.justification = c(0,1),
               legend.background    = element_blank(),
@@ -781,7 +781,7 @@ if (exists("all.uctd.casts")) {
                            expand = c(0,0)) +
         facet_wrap(~leg, ncol = 2) +
         theme_bw() +
-        theme(panel.grid.major = element_line(size = 0.75), 
+        theme(panel.grid.major = element_line(linewidth = 0.75), 
               legend.position = "none",
               strip.background.x = element_blank(),
               strip.text.x = element_text(face = "bold"))
@@ -820,7 +820,7 @@ if (exists("all.uctd.casts")) {
                            expand = c(0,0)) + 
         facet_wrap(~leg, ncol = 2) +
         theme_bw() +
-        theme(panel.grid.major = element_line(size = 0.75), 
+        theme(panel.grid.major = element_line(linewidth = 0.75), 
               legend.position = "none",
               strip.background.x = element_blank(),
               strip.text.x = element_text(face = "bold"))
@@ -859,7 +859,7 @@ if (exists("all.uctd.casts")) {
                            expand = c(0,0)) + 
         facet_wrap(~leg, ncol = 2) +
         theme_bw() +
-        theme(panel.grid.major = element_line(size = 0.75), 
+        theme(panel.grid.major = element_line(linewidth = 0.75), 
               legend.position = "none",
               strip.background.x = element_blank(),
               strip.text.x = element_text(face = "bold"))
@@ -900,7 +900,7 @@ if (exists("all.uctd.casts")) {
                              expand = c(0,0)) + 
           facet_wrap(~leg, ncol = 2, scales = "free_x") +
           theme_bw() +
-          theme(panel.grid.major = element_line(size = 0.75), 
+          theme(panel.grid.major = element_line(linewidth = 0.75), 
                 legend.position  = "none",
                 strip.background.x = element_blank(),
                 strip.text.x     = element_text(face = "bold"))
@@ -941,7 +941,7 @@ if (exists("all.uctd.casts")) {
                            expand = c(0,0)) + 
         scale_colour_hue("Water\nmass") +
         theme_bw() +
-        theme(panel.grid.major     = element_line(size = 0.75),
+        theme(panel.grid.major     = element_line(linewidth = 0.75),
               legend.position      = c(0,0),
               legend.justification = c(0,0),
               legend.background    = element_blank(),
@@ -956,7 +956,7 @@ if (exists("all.uctd.casts")) {
         geom_point(data = uctd.sf, aes(X, Y, colour = class), 
                    size = 2, alpha = 0.75) +
         scale_colour_hue(name = "Water\nmass") +
-        theme(panel.grid.major = element_line(size = 0.75),
+        theme(panel.grid.major = element_line(linewidth = 0.75),
               legend.position =  c(0,0),
               legend.justification = c(0,0),
               legend.background = element_blank()) +
@@ -1160,7 +1160,7 @@ if (exists("all.ctd.casts")) {
                            expand = c(0,0)) +
         facet_wrap(~leg, ncol = 2) +
         theme_bw() +
-        theme(panel.grid.major = element_line(size = 0.75), 
+        theme(panel.grid.major = element_line(linewidth = 0.75), 
               legend.position = "none",
               strip.background.x = element_blank(),
               strip.text.x = element_text(face = "bold"))
@@ -1201,7 +1201,7 @@ if (exists("all.ctd.casts")) {
                            expand = c(0,0)) + 
         facet_wrap(~leg, ncol = 2) +
         theme_bw() +
-        theme(panel.grid.major = element_line(size = 0.75), 
+        theme(panel.grid.major = element_line(linewidth = 0.75), 
               legend.position = "none",
               strip.background.x = element_blank(),
               strip.text.x = element_text(face = "bold"))
@@ -1243,7 +1243,7 @@ if (exists("all.ctd.casts")) {
           expand = c(0,0)) + 
         facet_wrap(~leg, ncol = 2) +
         theme_bw() +
-        theme(panel.grid.major = element_line(size = 0.75), 
+        theme(panel.grid.major = element_line(linewidth = 0.75), 
               legend.position = "none",
               strip.background.x = element_blank(),
               strip.text.x = element_text(face = "bold"))
@@ -1286,7 +1286,7 @@ if (exists("all.ctd.casts")) {
           expand = c(0,0)) + 
         scale_colour_hue("Water\nmass") +
         theme_bw() +
-        theme(panel.grid.major     = element_line(size = 0.75),
+        theme(panel.grid.major     = element_line(linewidth = 0.75),
               legend.position      = c(0,0),
               legend.justification = c(0,0),
               legend.background    = element_blank())
@@ -1299,7 +1299,7 @@ if (exists("all.ctd.casts")) {
         geom_point(data = ctd.sf, aes(X, Y, colour = class), 
                    size = 2, alpha = 0.75) +
         scale_colour_hue(name = "Water\nmass") +
-        theme(panel.grid.major = element_line(size = 0.75),
+        theme(panel.grid.major = element_line(linewidth = 0.75),
               legend.position =  c(0,0),
               legend.justification = c(0,0),
               legend.background = element_blank()) +

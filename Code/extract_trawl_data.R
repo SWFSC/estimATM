@@ -24,7 +24,7 @@ if (trawl.source == "SQL") {
   # Configure ODBC connection to TRAWL database on SQL server
   trawl.con  <- dbConnect(odbc(), 
                           Driver = "SQL Server", 
-                          Server = trawl.db.ip, 
+                          Server = trawl.db.server, 
                           Database = "Trawl", 
                           Trusted_Connection = "True")
 } else if (trawl.source == "Access") {

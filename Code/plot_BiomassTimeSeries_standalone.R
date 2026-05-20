@@ -7,7 +7,7 @@ library(ggpattern)
 # Configure ODBC connection to AST database ------------------------------------
 ast.con  <- dbConnect(odbc(), 
                       Driver = "SQL Server", 
-                      Server = trawl.db.ip, 
+                      Server = trawl.db.server, 
                       Database = "AST", 
                       Trusted_Connection = "True")
 

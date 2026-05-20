@@ -1376,7 +1376,7 @@ if (get.db) {
     # Configure ODBC connection to TRAWL database
     trawl.con  <- dbConnect(odbc(), 
                             Driver = "SQL Server", 
-                            Server = trawl.db.ip, 
+                            Server = trawl.db.server, 
                             Database = "Trawl", 
                             Trusted_Connection = "True")
   } else if (trawl.source == "Access") {
@@ -2571,7 +2571,7 @@ if (get.db) {
   } else if (cufes.source == "SQL") {
     cufes.con  <- dbConnect(odbc::odbc(), 
                             Driver = "SQL Server", 
-                            Server = trawl.db.ip, 
+                            Server = trawl.db.server, 
                             Database = "CUFES", 
                             Trusted_Connection = "True")
     # Create the pointer to the CUFES table

@@ -19,11 +19,12 @@ if (seine.source == "Excel") {
   # Extract tables from appropriate database
   if (seine.source == "SQL") {
     # Configure ODBC connection to TRAWL database
-    seine.con  <- DBI::dbConnect(odbc::odbc(), 
-                                 Driver = "SQL Server", 
-                                 Server = trawl.db.ip, 
-                                 Database = "Trawl", 
-                                 Trusted_Connection = "True")
+    seine.con  <- DBI::dbConnect(odbc::odbc(),
+                                 DRIVER="ODBC Driver 18 for SQL Server",
+                                 Encrypt = "Optional",
+                                 DATABASE="Trawl",
+                                 Trusted_Connection= "Yes",
+                                 SERVER = trawl.db.server)
   } else if (seine.source == "Access") {
     # Copy trawl Access database
     seine.db <- fs::dir_ls(file.path(survey.dir[survey.vessel.primary],

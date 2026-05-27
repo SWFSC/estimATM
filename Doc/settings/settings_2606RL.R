@@ -51,7 +51,7 @@ show.maps <- TRUE
 ## Used by processTransects.R -----------
 ### GPX file location
 gpx.dir          <- here("Data/Nav")
-gpx.file         <- "2606RL-12.5-nmi-spacing_20260420.gpx" # "2606RL-hybrid-spacing.gpx" "2606RL-12.5-nmi-spacing.gpx"
+gpx.file         <- "2606RL-12.5-nmi-spacing_final.gpx" # "2606RL-hybrid-spacing.gpx" "2606RL-12.5-nmi-spacing.gpx"
 
 # Define transit and survey speed (kn) for estimating progress
 survey.speed     <- 9 # FSV

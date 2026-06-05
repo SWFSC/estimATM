@@ -60,7 +60,7 @@ Information about the baseline transects, from which the final transects will be
 
 ```{r read-info,message=FALSE}
 # Read start locations
-baseline.info <- read_csv(here("Data/Map/baselines.csv")) %>% 
+baseline.info <- read_csv(here("Data/Map", baseline.file)) %>% 
   arrange(order) %>% 
   filter(!loc %in% rm.location)
 

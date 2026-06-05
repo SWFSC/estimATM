@@ -11,7 +11,8 @@ combine.regions   <- F # Combine nearshore/offshore plots with those from the co
 # Survey planning ---------------------------------------------------------
 ## This section controls and configures settings used by makeTransects and checkTransects for generating and checking survey transects
 ### Transect spacing (nautical miles)
-tx.spacing.fsv  <- 20 # For Lasker 
+baseline.file   <- "baselines-iwcps.csv"
+tx.spacing.fsv  <- 15 # For Lasker 
 tx.spacing.sd   <- 15 # For Saildrone
 tx.break.ns     <- 52 # Northernmost transect sampled by the southern F/V, 64 in 2024, near Carmel
 tx.spacing.ns   <- 7  # c("S" = 7, "N" = 7, "CI" = 2.5) # or NA
@@ -25,14 +26,14 @@ fsv.buffer <- 80 #limits offshore portion of lines (SCB)
 min.tx.length <- 0 # nmi
 
 # eDNA, CTD, and UCTD station preferences
-ctd.tx.range   <- seq(15, 100) # Range of transects to include eDNA stations
+ctd.tx.range   <- seq(13, 100) # Range of transects to include eDNA stations
 edna.spacing   <- 10 # Surface eDNA sample spacing (nmi)
 edna.tx.range  <- seq(1, 15) # Range of transects to include eDNA stations
 uctd.spacing   <- 15 # UCTD spacing (nmi)
 uctd.tx.range  <- seq(1, 100) # Range of transects to include eDNA stations
 
 ### Transect removal and renumbering
-rm.n.transects     <- 35 # Number of transects to remove from the start (if near Mexico); if none, use zero; 71@10 nmi spacing
+rm.n.transects     <- 47 # Number of transects to remove from the start (if near Mexico); if none, use zero; 71@10 nmi spacing
 rm.n.transects.ns  <- 99 # Number of transects to remove from the start (if near Mexico); if none, use zero
 rm.n.transects.sd  <- 47 # Number of transects to remove from the start (if near Mexico); if none, use zero
 rm.i.transects     <- NA # Remove specific transects from plan; else NA (for 2007RL: c(paste(90:117, "Nearshore")))
@@ -41,7 +42,7 @@ renumber.transects <- c("Compulsory" = TRUE,
                         "Nearshore" = FALSE) 
 
 # Locations to remove from planning (e.g., north, central, or south)
-rm.location <- c("north") # c("south")
+rm.location <- c("bc") # c("south")
 
 # Randomize
 do.random <- TRUE
@@ -51,7 +52,7 @@ show.maps <- TRUE
 ## Used by processTransects.R -----------
 ### GPX file location
 gpx.dir          <- here("Data/Nav")
-gpx.file         <- "2606RL-12.5-nmi-spacing_20260420.gpx" # "2606RL-hybrid-spacing.gpx" "2606RL-12.5-nmi-spacing.gpx"
+gpx.file         <- "2706RL-IWCPS-NW format.gpx" # "2606RL-hybrid-spacing.gpx" "2606RL-12.5-nmi-spacing.gpx"
 
 # Define transit and survey speed (kn) for estimating progress
 survey.speed     <- 9 # FSV

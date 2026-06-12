@@ -12,7 +12,7 @@ combine.regions   <- F # Combine nearshore/offshore plots with those from the co
 ## This section controls and configures settings used by makeTransects and checkTransects for generating and checking survey transects
 ### Transect spacing (nautical miles)
 baseline.file   <- "baselines-iwcps.csv"
-tx.spacing.fsv  <- 15 # For Lasker 
+tx.spacing.fsv  <- 5 # For Lasker 
 tx.spacing.sd   <- 15 # For Saildrone
 tx.break.ns     <- 52 # Northernmost transect sampled by the southern F/V, 64 in 2024, near Carmel
 tx.spacing.ns   <- 7  # c("S" = 7, "N" = 7, "CI" = 2.5) # or NA
@@ -26,14 +26,14 @@ fsv.buffer <- 80 #limits offshore portion of lines (SCB)
 min.tx.length <- 0 # nmi
 
 # eDNA, CTD, and UCTD station preferences
-ctd.tx.range   <- seq(13, 100) # Range of transects to include eDNA stations
+ctd.tx.range   <- seq(34, 201) # Range of transects to include CTD stations
 edna.spacing   <- 10 # Surface eDNA sample spacing (nmi)
-edna.tx.range  <- seq(1, 15) # Range of transects to include eDNA stations
+edna.tx.range  <- seq(1, 33) # Range of transects to include eDNA stations
 uctd.spacing   <- 15 # UCTD spacing (nmi)
 uctd.tx.range  <- seq(1, 100) # Range of transects to include eDNA stations
 
 ### Transect removal and renumbering
-rm.n.transects     <- 47 # Number of transects to remove from the start (if near Mexico); if none, use zero; 71@10 nmi spacing
+rm.n.transects     <- 141 # Number of transects to remove from the start (if near Mexico); if none, use zero; 71@10 nmi spacing
 rm.n.transects.ns  <- 99 # Number of transects to remove from the start (if near Mexico); if none, use zero
 rm.n.transects.sd  <- 47 # Number of transects to remove from the start (if near Mexico); if none, use zero
 rm.i.transects     <- NA # Remove specific transects from plan; else NA (for 2007RL: c(paste(90:117, "Nearshore")))
@@ -103,8 +103,8 @@ region.vec <- c(0, 32.5353, 34.7, 41.99, 48.490, 55)
 ## Used by formatCoastalExplorerNotebook.R ------
 ### Coastal (.nob)X file location
 nob.dir          <- here("Data/Nav")
-nob.file         <- "2606RL-12.5-nmi-spacing_20260421.nob"
-nob.file.final   <- "2606RL-12.5-nmi-spacing_final.nob"
+nob.file         <- "2706RL-IWCPS-NW format.nob"
+nob.file.final   <- "2706RL-IWCPS-NW format_final.nob"
 
 ### Waypoint preferences
 rangeCircleRadius <- c(ctd = "1 NM", uctd = "1 NM", eDNA = "1 NM")

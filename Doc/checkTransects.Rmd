@@ -21,8 +21,8 @@ pacman::p_load(tidyverse,sf,mapview,lubridate,here,knitr,DT,bookdown,
                shadowtext,stplanr,tmaptools,patchwork)
 
 # Install and load required packages from Github -------------------------------
-if (!require("atm")) pkg_install("SWFSC/atm")
-if (!require("surveyR")) pkg_install("SWFSC/surveyR")
+if (!require("atm")) pak::pkg_install("SWFSC/atm")
+if (!require("surveyR")) pak::pkg_install("SWFSC/surveyR")
 pacman::p_load_gh("SWFSC/atm")
 pacman::p_load_gh("SWFSC/atmData")
 pacman::p_load_gh("SWFSC/surveyR")
@@ -43,9 +43,9 @@ theme_set(theme_bw())
 # User input --------------------------------------------------------------
 copy.gpx           <- F # Copy GPX file from AST server
 process.transects  <- T # Usually T; Process GPX file using processTransects.R
-create.stations    <- F # Create U/CTD, eDNA, and/or Pairovet stations
+create.stations    <- T # Create U/CTD, eDNA, and/or Pairovet stations
 update.routes      <- T # Re-write route files after processing
-get.bathy          <- T # Get NOAA bathymetry (used to extract bathymetry)
+get.bathy          <- F # Get NOAA bathymetry (used to extract bathymetry)
 extract.bathy      <- T # Extract bathymetry profile along each transect
 load.data          <- F # Load CPS density data from {atmData}
 
@@ -128,10 +128,10 @@ if (create.stations) {
 ```
 
 ```{r read-tables, include = FALSE}
-# Read bathymetry shapefile -----------------------------------------
-if (!exists("bathy")) {bathy <- st_read(here("Data/GIS/bathy_contours.shp"))}
-if (!exists("bathy.ctd")) bathy.ctd <- st_read(here("Data/GIS/bathy_us_wc_50m.shp")) %>% 
-  st_transform(crs.geog)
+# Read bathymetry shapefiles -----------------------------------------
+bathy <- st_read(here("Data/GIS/bathy_contours.shp"))
+bathy.ctd <- st_read(here("Data/GIS/bathy_us_wc_50m.shp")) %>% 
+    st_transform(crs.geog)
 
 # Read MPA shapefiles  -----------------------------------------
 # Canada
@@ -340,7 +340,7 @@ if (leaflet.checkTransects.simple) {
                  label = "EEZ-Mexico", group = "Exclusive Economic Zones") %>% 
     # Add bathymetry contours
     addPolylines(data = bathy, color = "white", weight = 2, 
-                 label = ~paste(Depth, "m"), group = "Bathymetry Contours") %>% 
+                 label = ~paste(Contour, "m"), group = "Bathymetry Contours") %>% 
     addPolylines(data = bathy.ctd, color = "black", weight = 2, 
                  label = ~paste(CONTOUR, "m"), group = "Bathymetry Contours") %>% 
     # Add State waters
@@ -858,12 +858,12 @@ wpts %>%
 ```{r ctd-wpts-table}
 if (nrow(ctd) > 0) {
   ctd %>% 
-    select(Station = station, Region, Depth) %>% 
+    select(Station = name, Region, Depth) %>% 
     arrange(Station) %>%
-    # mutate(
-    #   Long = as.data.frame(st_coordinates(.))$X,
-    #   Lat = as.data.frame(st_coordinates(.))$Y) %>% 
-    # st_set_geometry(NULL) %>% 
+    mutate(
+      Longitude = as.data.frame(st_coordinates(.))$X,
+      Latitude = as.data.frame(st_coordinates(.))$Y) %>%
+    st_set_geometry(NULL) %>%
     datatable(rownames = FALSE)  
 } else {
   print("No CTD stations planned.")
@@ -875,12 +875,12 @@ if (nrow(ctd) > 0) {
 ```{r uctd-wpts-table}
 if (nrow(uctd) > 0) {
   uctd %>% 
-    select(Station = station, Region, Depth) %>% 
+    select(Transect, Station = name, Depth) %>% 
     arrange(Station) %>%
-    # mutate(
-    #   Long = as.data.frame(st_coordinates(.))$X,
-    #   Lat = as.data.frame(st_coordinates(.))$Y) %>% 
-    # st_set_geometry(NULL) %>% 
+    mutate(
+      Longitude = as.data.frame(st_coordinates(.))$X,
+      Latitude = as.data.frame(st_coordinates(.))$Y) %>%
+    st_set_geometry(NULL) %>%
     datatable(rownames = FALSE)  
 } else {
   print("No UCTD stations planned.")
@@ -892,12 +892,12 @@ if (nrow(uctd) > 0) {
 ```{r eDNA-wpts-table}
 if (nrow(eDNA) > 0) {
   eDNA %>% 
-    select(Station = station, Region, Depth) %>% 
+    select(Transect, Station = name, Depth) %>% 
     arrange(Station) %>%
-    # mutate(
-    #   Long = as.data.frame(st_coordinates(.))$X,
-    #   Lat = as.data.frame(st_coordinates(.))$Y) %>% 
-    # st_set_geometry(NULL) %>% 
+    mutate(
+      Longitude = as.data.frame(st_coordinates(.))$X,
+      Latitude = as.data.frame(st_coordinates(.))$Y) %>%
+    st_set_geometry(NULL) %>%
     datatable(rownames = FALSE)  
 } else {
   print("No eDNA stations planned.")
@@ -911,10 +911,10 @@ if (nrow(pairovets) > 0) {
   pairovets %>% 
     select(Station = station, Region, Depth) %>% 
     arrange(Station) %>%
-    # mutate(
-    #   Long = as.data.frame(st_coordinates(.))$X,
-    #   Lat = as.data.frame(st_coordinates(.))$Y) %>% 
-    # st_set_geometry(NULL) %>% 
+    mutate(
+      Longitude = as.data.frame(st_coordinates(.))$X,
+      Latitude = as.data.frame(st_coordinates(.))$Y) %>%
+    st_set_geometry(NULL) %>%
     datatable(rownames = FALSE) 
 } else {
   print("No Pairovet stations planned.")

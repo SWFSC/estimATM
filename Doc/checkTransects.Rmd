@@ -43,7 +43,7 @@ theme_set(theme_bw())
 # User input --------------------------------------------------------------
 copy.gpx           <- F # Copy GPX file from AST server
 process.transects  <- T # Usually T; Process GPX file using processTransects.R
-create.stations    <- T # Create U/CTD, eDNA, and/or Pairovet stations
+create.stations    <- F # Create U/CTD, eDNA, and/or Pairovet stations
 update.routes      <- T # Re-write route files after processing
 get.bathy          <- F # Get NOAA bathymetry (used to extract bathymetry)
 extract.bathy      <- T # Extract bathymetry profile along each transect
@@ -857,14 +857,21 @@ wpts %>%
 
 ```{r ctd-wpts-table}
 if (nrow(ctd) > 0) {
-  ctd %>% 
-    select(Station = name, Region, Depth) %>% 
-    arrange(Station) %>%
-    mutate(
-      Longitude = as.data.frame(st_coordinates(.))$X,
-      Latitude = as.data.frame(st_coordinates(.))$Y) %>%
-    st_set_geometry(NULL) %>%
-    datatable(rownames = FALSE)  
+  if (class(ctd) == "data.frame") {
+    ctd %>% 
+      select(Station = name, Region, Latitude, Longitude, Depth) %>% 
+      arrange(Station) %>%
+      datatable(rownames = FALSE)  
+  } else if (inherits(ctd.sf, "sf")) {
+    ctd %>% 
+      select(Station = name, Region, Depth) %>% 
+      arrange(Station) %>%
+      mutate(
+        Longitude = as.data.frame(st_coordinates(.))$X,
+        Latitude = as.data.frame(st_coordinates(.))$Y) %>%
+      st_set_geometry(NULL) %>%
+      datatable(rownames = FALSE)  
+  }
 } else {
   print("No CTD stations planned.")
 }
@@ -874,14 +881,21 @@ if (nrow(ctd) > 0) {
 
 ```{r uctd-wpts-table}
 if (nrow(uctd) > 0) {
-  uctd %>% 
-    select(Transect, Station = name, Depth) %>% 
-    arrange(Station) %>%
-    mutate(
-      Longitude = as.data.frame(st_coordinates(.))$X,
-      Latitude = as.data.frame(st_coordinates(.))$Y) %>%
-    st_set_geometry(NULL) %>%
-    datatable(rownames = FALSE)  
+  if (class(uctd) == "data.frame") {
+    uctd %>% 
+      select(Station = name, Region, Latitude, Longitude, Depth) %>% 
+      arrange(Station) %>%
+      datatable(rownames = FALSE)  
+  } else if (inherits(uctd.sf, "sf")) {
+    uctd %>% 
+      select(Station = name, Region, Depth) %>% 
+      arrange(Station) %>%
+      mutate(
+        Longitude = as.data.frame(st_coordinates(.))$X,
+        Latitude = as.data.frame(st_coordinates(.))$Y) %>%
+      st_set_geometry(NULL) %>%
+      datatable(rownames = FALSE)  
+  }
 } else {
   print("No UCTD stations planned.")
 }
@@ -891,14 +905,21 @@ if (nrow(uctd) > 0) {
 
 ```{r eDNA-wpts-table}
 if (nrow(eDNA) > 0) {
-  eDNA %>% 
-    select(Transect, Station = name, Depth) %>% 
-    arrange(Station) %>%
-    mutate(
-      Longitude = as.data.frame(st_coordinates(.))$X,
-      Latitude = as.data.frame(st_coordinates(.))$Y) %>%
-    st_set_geometry(NULL) %>%
-    datatable(rownames = FALSE)  
+  if (class(eDNA) == "data.frame") {
+    eDNA %>% 
+      select(Station = name, Region, Latitude, Longitude, Depth) %>% 
+      arrange(Station) %>%
+      datatable(rownames = FALSE)  
+  } else if (inherits(eDNA, "sf")) {
+    eDNA %>% 
+      select(Station = name, Region, Depth) %>% 
+      arrange(Station) %>%
+      mutate(
+        Longitude = as.data.frame(st_coordinates(.))$X,
+        Latitude = as.data.frame(st_coordinates(.))$Y) %>%
+      st_set_geometry(NULL) %>%
+      datatable(rownames = FALSE)  
+  }
 } else {
   print("No eDNA stations planned.")
 }
@@ -908,14 +929,21 @@ if (nrow(eDNA) > 0) {
 
 ```{r pairovet-wpts-table}
 if (nrow(pairovets) > 0) {
-  pairovets %>% 
-    select(Station = station, Region, Depth) %>% 
-    arrange(Station) %>%
-    mutate(
-      Longitude = as.data.frame(st_coordinates(.))$X,
-      Latitude = as.data.frame(st_coordinates(.))$Y) %>%
-    st_set_geometry(NULL) %>%
-    datatable(rownames = FALSE) 
+  if (class(pairovets) == "data.frame") {
+    pairovets %>% 
+      select(Station = name, Region, Latitude, Longitude, Depth) %>% 
+      arrange(Station) %>%
+      datatable(rownames = FALSE)  
+  } else if (inherits(pairovets, "sf")) {
+    pairovets %>% 
+      select(Station = name, Region, Depth) %>% 
+      arrange(Station) %>%
+      mutate(
+        Longitude = as.data.frame(st_coordinates(.))$X,
+        Latitude = as.data.frame(st_coordinates(.))$Y) %>%
+      st_set_geometry(NULL) %>%
+      datatable(rownames = FALSE)  
+  }
 } else {
   print("No Pairovet stations planned.")
 }

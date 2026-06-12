@@ -1557,7 +1557,7 @@ be.os <- be.stratum.os %>%
   select(Species, Stock, Stratum, Area, nTransects, Distance, nClusters, nIndiv,
          Biomass, lower.ci.B, upper.ci.B, biomass.sd, biomass.cv)
 
-be.os[atm:::is.nan.df(be.os)] <- NA
+be.os[atm:::isNaNdf(be.os)] <- NA
 
 # Save results
 write.csv(be.os,

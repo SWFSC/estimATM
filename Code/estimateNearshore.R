@@ -2378,7 +2378,7 @@ if (do.bootstrap) {
   close(pb1)
   
   # # Replace NaNs in abundance summaries with zeros
-  # abundance.estimates.ns[atm:::is.nan.df(abundance.estimates.ns)] <- 0
+  # abundance.estimates.ns[atm:::isNaNdf(abundance.estimates.ns)] <- 0
   # abundance.estimates.ns[is.nan(abundance.estimates.ns)] <- 0
   # 
   # Save bootstrap results
@@ -2536,7 +2536,7 @@ be.ns <- be.stratum.ns %>%
   select(Species, Stock, Stratum, Area, nTransects, Distance, nClusters, nIndiv,
          Biomass, lower.ci.B, upper.ci.B, biomass.sd, biomass.cv)
 
-be.ns[atm:::is.nan.df(be.ns)] <- NA
+be.ns[atm:::isNaNdf(be.ns)] <- NA
 
 # Save results
 write_csv(be.ns, here("Output/biomass_bootstrap_estimates_final_ns.csv"))

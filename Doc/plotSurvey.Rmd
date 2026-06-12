@@ -1524,25 +1524,24 @@ if (exists("ctd.sf"))
                    group =  "CTD Casts")  
 
 # Add raster habitat layers
-## Potential sardine habitat
-if (exists("sar.hab"))
-  i.map <- i.map %>% addTiles() %>%
-  addRasterImage(sar.hab, colors = sar.pal, opacity = 0.5,
-                 group = "Sardine habitat-Probability") %>%
-  addLegend(pal = sar.pal, values = values(sar.hab),
-            title = "Sardine habitat-Probability",
-            group = "Sardine habitat-Probability")
-
-if (exists("sar.hab.class"))
-  i.map <- i.map %>% addTiles() %>%
-  addRasterImage(sar.hab.class, colors = sarHabPal, opacity = 0.5,
-                 group = "Sardine habitat-Classification") %>%
-  addLegend(position = "bottomleft", 
-            pal = sarHabPal, 
-            values = values(sar.hab.class),
-            title = "Sardine habitat-Classification",
-            group = "Sardine habitat-Classification")
-
+# ## Potential sardine habitat
+# if (exists("sar.hab"))
+#   i.map <- i.map %>% addTiles() %>%
+#   addRasterImage(sar.hab, colors = sar.pal, opacity = 0.5,
+#                  group = "Sardine habitat-Probability") %>%
+#   addLegend(pal = sar.pal, values = values(sar.hab),
+#             title = "Sardine habitat-Probability",
+#             group = "Sardine habitat-Probability")
+# 
+# if (exists("sar.hab.class"))
+#   i.map <- i.map %>% addTiles() %>%
+#   addRasterImage(sar.hab.class, colors = sarHabPal, opacity = 0.5,
+#                  group = "Sardine habitat-Classification") %>%
+#   addLegend(position = "bottomleft", 
+#             pal = sarHabPal, 
+#             values = values(sar.hab.class),
+#             title = "Sardine habitat-Classification",
+#             group = "Sardine habitat-Classification")
 
 ## Chlorophyll a
 if (exists("chl.a.log"))

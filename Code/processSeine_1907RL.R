@@ -348,7 +348,7 @@ ts.proportions.seine <- clf.seine %>%
   replace(is.na(.), 0) 
 
 # Replace all NaNs with zeros
-ts.proportions.seine[atm:::is.nan.df(ts.proportions.seine)] <- NA
+ts.proportions.seine[atm:::isNaNdf(ts.proportions.seine)] <- NA
 
 # Save to file
 write.csv(ts.proportions.seine, file = here("Output/ts_proportions_raw_seine.csv"), 

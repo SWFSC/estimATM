@@ -924,7 +924,7 @@ if (update.routes) {
     select(id = name, Latitude, Longitude)
   
   if (nrow(ctd.sub) > 0) {
-    write_csv(ctd.sub, here("Output/waypoints_updated/ctd_wpts.csv"),
+    write_csv(ctd.sub, here("Output/waypoints_updated/waypoints_ctd.csv"),
               col_names = FALSE)
   }
   
@@ -934,7 +934,7 @@ if (update.routes) {
     select(id = name, Latitude, Longitude)
   
   if (nrow(uctd.sub) > 0) {
-    write_csv(uctd.sub, here("Output/waypoints_updated/uctd_wpts.csv"),
+    write_csv(uctd.sub, here("Output/waypoints_updated/waypoints_uctd.csv"),
               col_names = FALSE)
   }
   
@@ -944,7 +944,7 @@ if (update.routes) {
     select(id = name, Latitude, Longitude)
   
   if (nrow(eDNA.sub) > 0) {
-    write_csv(eDNA.sub, here("Output/waypoints_updated/eDNA_wpts.csv"),
+    write_csv(eDNA.sub, here("Output/waypoints_updated/waypoints_eDNA.csv"),
               col_names = FALSE)
   }
   
@@ -954,7 +954,7 @@ if (update.routes) {
     select(id = name, Latitude, Longitude)
   
   if (nrow(pairovet.sub) > 0) {
-    write_csv(uctd.sub, here("Output/waypoints_updated/pairovet_wpts.csv"),
+    write_csv(uctd.sub, here("Output/waypoints_updated/waypoints_pairovet.csv"),
               col_names = FALSE)
   }
   

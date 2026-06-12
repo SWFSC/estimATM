@@ -657,7 +657,7 @@ if (sampling.cufes) {
     } else if (cufes.source == "SQL") {
       cufes.con  <- dbConnect(odbc::odbc(), 
                               Driver = "SQL Server", 
-                              Server = trawl.db.ip, 
+                              Server = trawl.db.server, 
                               Database = "CUFES", 
                               Trusted_Connection = "True")
       # Create the pointer to the CUFES table

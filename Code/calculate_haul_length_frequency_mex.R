@@ -101,7 +101,7 @@ ts.proportions.h <- hlf %>%
     prop.rher.wg = (meanwg.rher * sigmawg.rher  * num.rher) / weighted.wg)
 
 # Replace all NaNs with zeros
-ts.proportions.h[atm:::is.nan.df(ts.proportions.h)] <- NA
+ts.proportions.h[atm:::isNaNdf(ts.proportions.h)] <- NA
 
 # Save to file
 write_csv(ts.proportions.h, file = here("Output/ts_proportions_raw_haul.csv"))

@@ -1,5 +1,5 @@
 # Copy UCTD data files -------------------------------------
-if (uctd.type == "Valeport") {
+if (uctd.type %in% c("MVP","Valeport")) {
   # Location of header files on survey directory
   uctd.files <- dir_ls(uctd.dir, regexp = uctd.cast.pattern, recurse = TRUE) 
   

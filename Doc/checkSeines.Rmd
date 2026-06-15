@@ -18,8 +18,8 @@ if (!require("pacman")) install.packages("pacman")
 if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
-pacman::p_load(tidyverse,plotly,lubridate,mapview,kableExtra,leaflet,
-               here,bookdown,odbc,DBI,knitr,DT,fs,sf,leafem,naniar,
+pacman::p_load(tidyverse,plotly,lubridate,mapview,kableExtra,leaflet,gdtools,
+               here,bookdown,odbc,DBI,knitr,DT,fs,sf,leafem,naniar,ggiraph,
                cowplot,xts,tmaptools,htmltools,rnaturalearth,scatterpie)
 
 # Install and load required packages from Github -------------------------------
@@ -48,6 +48,9 @@ if (doc.type == "latex") {
 } else {
   knitr.format <- "html" 
 }
+
+# Register fonts
+register_liberationsans()
 ```
 
 ```{r project-settings, include=FALSE}
@@ -70,6 +73,7 @@ dir_create(here(c("Figs", "Output")))
 get.db     <- T # Extract data from trawl database (F for testing)
 get.nav    <- T # Download nearshore vessel nav data
 resize.map <- T # Adjust map boundaries to data
+do.ggiraph <- T # Set to F if having issues rendering Leaflet maps
 ```
 
 ```{r get-nav}
@@ -384,23 +388,18 @@ set.lengths.all <- set.lengths.all %>%
   # Find missing lengths
   mutate(
     missing.length = case_when(
-      is.na(standardLength_mm) & scientificName %in% c("Sardinops sagax", 
-                                                       "Engraulis mordax") ~ TRUE,
-      is.na(forkLength_mm) & scientificName %in% c("Scomber japonicus", "Trachurus symmetricus", 
-                                                   "Clupea pallasii", "Etrumeus acuminatus",
-                                                   "Merluccius productus") ~ TRUE,
-      is.na(mantleLength_mm) & scientificName %in% c("Doryteuthis opalescens") ~ TRUE,
+      is.na(standardLength_mm) & scientificName %in% spp.sl ~ TRUE,
+      is.na(forkLength_mm) & scientificName %in% spp.fl ~ TRUE,
+      is.na(mantleLength_mm) & scientificName %in% spp.ml ~ TRUE,
       TRUE ~ NA),
     missing.weight = case_when(
       is.na(weightg) ~ TRUE,
       TRUE ~ FALSE)) %>% 
   # Calculate native lengths for each species, for plotting later
   mutate(nativeLength_mm = case_when(
-    scientificName %in% c("Sardinops sagax", "Engraulis mordax") ~ standardLength_mm,
-    scientificName %in% c("Scomber japonicus", "Trachurus symmetricus", 
-                          "Clupea pallasii", "Etrumeus acuminatus",
-                          "Merluccius productus") ~ forkLength_mm,
-    scientificName == "Doryteuthis opalescens" ~ mantleLength_mm,
+    scientificName %in% spp.sl ~ standardLength_mm,
+    scientificName %in% spp.fl ~ forkLength_mm,
+    scientificName %in% spp.ml ~ mantleLength_mm,
     TRUE ~ NA_integer_))
 
 set.lengths.all <- set.lengths.all %>% 
@@ -426,6 +425,8 @@ set.lengths.all  <- set.lengths.all %>%
         convert_length("Engraulis mordax", .$nativeLength_mm, "SL", "TL"),
       scientificName == "Sardinops sagax" ~ 
         convert_length("Sardinops sagax", .$nativeLength_mm, "SL", "TL"),
+      scientificName == "Sardinops melanosticta" ~ 
+        convert_length("Sardinops melanosticta", .$nativeLength_mm, "SL", "TL"),
       scientificName == "Scomber japonicus" ~ 
         convert_length("Scomber japonicus", .$nativeLength_mm, "FL", "TL"),
       scientificName == "Trachurus symmetricus" ~ 
@@ -718,6 +719,7 @@ The dashed lines represent the season-specific (in this case, `r survey.season`)
 For each species, the native lengths (standard length for Sardine and Anchovy, and fork length for mackerels and Herring) and weights are plotted atop modeled L/W curves. Curves depicting native lengths are dark gray, and the others are light gray. Ideally, the measured values will fall along the darker gray dashed line.  
 
 ## Sardine
+### Pacific
 
 Standard length (mm) vs. weight (g).
 
@@ -727,42 +729,127 @@ scientificName.sub <- "Sardinops sagax"
 
 # Subset lengths and models
 lengths.sub     <- filter(set.lengths, scientificName == scientificName.sub)
-lengths.all.sub <- filter(set.lengths.all, 
+lengths.all.sub <- filter(set.lengths.all,
                           scientificName == scientificName.sub,
                           season ==  tolower(survey.season))
 
-lw.df.sub <- filter(lw.df, scientificName == scientificName.sub) %>% 
+lw.df.sub <- filter(lw.df, scientificName == scientificName.sub) %>%
   pivot_longer(totalLength_mm:standardLength_mm, names_to = "length_type", values_to = "length_mm")
 
 if (nrow(lengths.sub) > 0) {
   # Plot L/W data from past and current survey -----------------------------------
-  lw.plot <- ggplot() + 
+  lw.plot <- ggplot() +
     # Plot L/W data from all years/surveys
-    geom_point(data = lengths.all.sub, 
-               aes(standardLength_mm, weightg),
-               colour = "gray70", alpha = 0.3) +
+    geom_point_interactive(data = lengths.all.sub,
+                           aes(standardLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           colour = "gray70", alpha = 0.3) +
+    # Plot seasonal length models for each species
+    geom_line_interactive(data = lw.df.sub, aes(length_mm, weightg, 
+                                                group = length_type, tooltip = length_type),
+                          alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot L/W data for current survey
-    geom_point(data = lengths.sub,
-               aes(standardLength_mm, weightg, fill = sex, 
-                   colour = outlier, label = label), 
-               shape = 21, alpha = 0.9) + 
+    geom_point_interactive(data = lengths.sub,
+                           aes(standardLength_mm, weightg, fill = sex,
+                               colour = outlier,
+                               data_id = label, tooltip = label),
+                           shape = 21, alpha = 0.9) +
     scale_fill_manual(name = "Sex", values = c("female" = "pink", "male" = "lightblue",
                                                "unknown" = "#FFC926", "missing" = "purple")) +
     scale_colour_manual(name = "Flagged", values = c("NA" = NA, "TRUE" = "black")) +
-    # Plot seasonal length models for each species
-    geom_line(data = lw.df.sub, aes(length_mm, weightg, group = length_type), 
-              alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot individuals with missing lengths and weights
-    geom_point(data = filter(lengths.sub, missing.length == TRUE), 
-               aes(totalLength_mm, weightg, label = label),
-               shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
-    geom_point(data = filter(lengths.sub, missing.weight == TRUE), 
-               aes(nativeLength_mm, weightg, label = label),
-               shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.length == TRUE),
+                           aes(totalLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.weight == TRUE),
+                           aes(nativeLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
     # Format plot
-    xlab("Length (mm)") + ylab("Mass (g)") 
+    xlab("Length (mm)") + ylab("Mass (g)")
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.ggiraph) {
+    # Create interactive plot
+    lw.plot.interactive <- ggiraph::girafe(
+      ggobj = lw.plot,
+      dependencies = list(liberationsansHtmlDependency())
+    )
+    
+    # Print interactive plot
+    lw.plot.interactive
+  } else {
+    lw.plot
+  }
+  
+} else {
+  print("No specimens present.")
+}
+```
+
+### Japanese
+
+Standard length (mm) vs. weight (g).
+
+```{r sardine-data-japanese}
+# Select species
+scientificName.sub <- "Sardinops melanosticta"
+
+# Subset lengths and models
+lengths.sub     <- filter(set.lengths, scientificName == scientificName.sub)
+lengths.all.sub <- filter(set.lengths.all,
+                          scientificName == scientificName.sub,
+                          season ==  tolower(survey.season))
+
+lw.df.sub <- filter(lw.df, scientificName == scientificName.sub) %>%
+  pivot_longer(totalLength_mm:standardLength_mm, names_to = "length_type", values_to = "length_mm")
+
+if (nrow(lengths.sub) > 0) {
+  # Plot L/W data from past and current survey -----------------------------------
+  lw.plot <- ggplot() +
+    # Plot L/W data from all years/surveys
+    geom_point_interactive(data = lengths.all.sub,
+                           aes(standardLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           colour = "gray70", alpha = 0.3) +
+    # Plot seasonal length models for each species
+    geom_line_interactive(data = lw.df.sub, aes(length_mm, weightg, 
+                                                group = length_type, tooltip = length_type),
+                          alpha = 0.75, colour = "gray20", linetype = 'dashed') +
+    # Plot L/W data for current survey
+    geom_point_interactive(data = lengths.sub,
+                           aes(standardLength_mm, weightg, fill = sex,
+                               colour = outlier,
+                               data_id = label, tooltip = label),
+                           shape = 21, alpha = 0.9) +
+    scale_fill_manual(name = "Sex", values = c("female" = "pink", "male" = "lightblue",
+                                               "unknown" = "#FFC926", "missing" = "purple")) +
+    scale_colour_manual(name = "Flagged", values = c("NA" = NA, "TRUE" = "black")) +
+    # Plot individuals with missing lengths and weights
+    geom_point_interactive(data = filter(lengths.sub, missing.length == TRUE),
+                           aes(totalLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.weight == TRUE),
+                           aes(nativeLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
+    # Format plot
+    xlab("Length (mm)") + ylab("Mass (g)")
+  
+  if (do.ggiraph) {
+    # Create interactive plot
+    lw.plot.interactive <- ggiraph::girafe(
+      ggobj = lw.plot,
+      dependencies = list(liberationsansHtmlDependency())
+    )
+    
+    # Print interactive plot
+    lw.plot.interactive
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -787,33 +874,50 @@ lw.df.sub <- filter(lw.df, scientificName == scientificName.sub) %>%
 
 if (nrow(lengths.sub) > 0) {
   # Plot L/W data from past and current survey -----------------------------------
-  lw.plot <- ggplot() + 
+  lw.plot <- ggplot() +
     # Plot L/W data from all years/surveys
-    geom_point(data = lengths.all.sub, 
-               aes(standardLength_mm, weightg),
-               colour = "gray70", alpha = 0.3) +
+    geom_point_interactive(data = lengths.all.sub,
+                           aes(standardLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           colour = "gray70", alpha = 0.3) +
+    # Plot seasonal length models for each species
+    geom_line_interactive(data = lw.df.sub, aes(length_mm, weightg, 
+                                                group = length_type, tooltip = length_type),
+                          alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot L/W data for current survey
-    geom_point(data = lengths.sub,
-               aes(standardLength_mm, weightg, fill = sex, 
-                   colour = outlier, label = label), 
-               shape = 21, alpha = 0.9) + 
+    geom_point_interactive(data = lengths.sub,
+                           aes(standardLength_mm, weightg, fill = sex,
+                               colour = outlier,
+                               data_id = label, tooltip = label),
+                           shape = 21, alpha = 0.9) +
     scale_fill_manual(name = "Sex", values = c("female" = "pink", "male" = "lightblue",
                                                "unknown" = "#FFC926", "missing" = "purple")) +
     scale_colour_manual(name = "Flagged", values = c("NA" = NA, "TRUE" = "black")) +
-    # Plot seasonal length models for each species
-    geom_line(data = lw.df.sub, aes(length_mm, weightg, group = length_type), 
-              alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot individuals with missing lengths and weights
-    geom_point(data = filter(lengths.sub, missing.length == TRUE), 
-               aes(totalLength_mm, weightg, label = label),
-               shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
-    geom_point(data = filter(lengths.sub, missing.weight == TRUE), 
-               aes(nativeLength_mm, weightg, label = label),
-               shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.length == TRUE),
+                           aes(totalLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.weight == TRUE),
+                           aes(nativeLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
     # Format plot
-    xlab("Length (mm)") + ylab("Mass (g)") 
+    xlab("Length (mm)") + ylab("Mass (g)")
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.ggiraph) {
+    # Create interactive plot
+    lw.plot.interactive <- ggiraph::girafe(
+      ggobj = lw.plot,
+      dependencies = list(liberationsansHtmlDependency())
+    )
+    
+    # Print interactive plot
+    lw.plot.interactive
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -838,33 +942,50 @@ lw.df.sub <- filter(lw.df, scientificName == scientificName.sub) %>%
 
 if (nrow(lengths.sub) > 0) {
   # Plot L/W data from past and current survey -----------------------------------
-  lw.plot <- ggplot() + 
+  lw.plot <- ggplot() +
     # Plot L/W data from all years/surveys
-    geom_point(data = lengths.all.sub, 
-               aes(forkLength_mm, weightg),
-               colour = "gray70", alpha = 0.3) +
+    geom_point_interactive(data = lengths.all.sub,
+                           aes(forkLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           colour = "gray70", alpha = 0.3) +
+    # Plot seasonal length models for each species
+    geom_line_interactive(data = lw.df.sub, aes(length_mm, weightg, 
+                                                group = length_type, tooltip = length_type),
+                          alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot L/W data for current survey
-    geom_point(data = lengths.sub,
-               aes(forkLength_mm, weightg, fill = sex, 
-                   colour = outlier, label = label), 
-               shape = 21, alpha = 0.9) + 
+    geom_point_interactive(data = lengths.sub,
+                           aes(forkLength_mm, weightg, fill = sex,
+                               colour = outlier,
+                               data_id = label, tooltip = label),
+                           shape = 21, alpha = 0.9) +
     scale_fill_manual(name = "Sex", values = c("female" = "pink", "male" = "lightblue",
                                                "unknown" = "#FFC926", "missing" = "purple")) +
     scale_colour_manual(name = "Flagged", values = c("NA" = NA, "TRUE" = "black")) +
-    # Plot seasonal length models for each species
-    geom_line(data = lw.df.sub, aes(length_mm, weightg, group = length_type), 
-              alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot individuals with missing lengths and weights
-    geom_point(data = filter(lengths.sub, missing.length == TRUE), 
-               aes(totalLength_mm, weightg, label = label),
-               shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
-    geom_point(data = filter(lengths.sub, missing.weight == TRUE), 
-               aes(nativeLength_mm, weightg, label = label),
-               shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.length == TRUE),
+                           aes(totalLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.weight == TRUE),
+                           aes(nativeLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
     # Format plot
-    xlab("Length (mm)") + ylab("Mass (g)") 
+    xlab("Length (mm)") + ylab("Mass (g)")
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.ggiraph) {
+    # Create interactive plot
+    lw.plot.interactive <- ggiraph::girafe(
+      ggobj = lw.plot,
+      dependencies = list(liberationsansHtmlDependency())
+    )
+    
+    # Print interactive plot
+    lw.plot.interactive
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -889,33 +1010,50 @@ lw.df.sub <- filter(lw.df, scientificName == scientificName.sub) %>%
 
 if (nrow(lengths.sub) > 0) {
   # Plot L/W data from past and current survey -----------------------------------
-  lw.plot <- ggplot() + 
+  lw.plot <- ggplot() +
     # Plot L/W data from all years/surveys
-    geom_point(data = lengths.all.sub, 
-               aes(forkLength_mm, weightg),
-               colour = "gray70", alpha = 0.3) +
+    geom_point_interactive(data = lengths.all.sub,
+                           aes(forkLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           colour = "gray70", alpha = 0.3) +
+    # Plot seasonal length models for each species
+    geom_line_interactive(data = lw.df.sub, aes(length_mm, weightg, 
+                                                group = length_type, tooltip = length_type),
+                          alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot L/W data for current survey
-    geom_point(data = lengths.sub,
-               aes(forkLength_mm, weightg, fill = sex, 
-                   colour = outlier, label = label), 
-               shape = 21, alpha = 0.9) + 
+    geom_point_interactive(data = lengths.sub,
+                           aes(forkLength_mm, weightg, fill = sex,
+                               colour = outlier,
+                               data_id = label, tooltip = label),
+                           shape = 21, alpha = 0.9) +
     scale_fill_manual(name = "Sex", values = c("female" = "pink", "male" = "lightblue",
                                                "unknown" = "#FFC926", "missing" = "purple")) +
     scale_colour_manual(name = "Flagged", values = c("NA" = NA, "TRUE" = "black")) +
-    # Plot seasonal length models for each species
-    geom_line(data = lw.df.sub, aes(length_mm, weightg, group = length_type), 
-              alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot individuals with missing lengths and weights
-    geom_point(data = filter(lengths.sub, missing.length == TRUE), 
-               aes(totalLength_mm, weightg, label = label),
-               shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
-    geom_point(data = filter(lengths.sub, missing.weight == TRUE), 
-               aes(nativeLength_mm, weightg, label = label),
-               shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.length == TRUE),
+                           aes(totalLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.weight == TRUE),
+                           aes(nativeLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
     # Format plot
-    xlab("Length (mm)") + ylab("Mass (g)") 
+    xlab("Length (mm)") + ylab("Mass (g)")
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.ggiraph) {
+    # Create interactive plot
+    lw.plot.interactive <- ggiraph::girafe(
+      ggobj = lw.plot,
+      dependencies = list(liberationsansHtmlDependency())
+    )
+    
+    # Print interactive plot
+    lw.plot.interactive
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -940,33 +1078,50 @@ lw.df.sub <- filter(lw.df, scientificName == scientificName.sub) %>%
 
 if (nrow(lengths.sub) > 0) {
   # Plot L/W data from past and current survey -----------------------------------
-  lw.plot <- ggplot() + 
+  lw.plot <- ggplot() +
     # Plot L/W data from all years/surveys
-    geom_point(data = lengths.all.sub, 
-               aes(forkLength_mm, weightg),
-               colour = "gray70", alpha = 0.3) +
+    geom_point_interactive(data = lengths.all.sub,
+                           aes(forkLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           colour = "gray70", alpha = 0.3) +
+    # Plot seasonal length models for each species
+    geom_line_interactive(data = lw.df.sub, aes(length_mm, weightg, 
+                                                group = length_type, tooltip = length_type),
+                          alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot L/W data for current survey
-    geom_point(data = lengths.sub,
-               aes(forkLength_mm, weightg, fill = sex, 
-                   colour = outlier, label = label), 
-               shape = 21, alpha = 0.9) + 
+    geom_point_interactive(data = lengths.sub,
+                           aes(forkLength_mm, weightg, fill = sex,
+                               colour = outlier,
+                               data_id = label, tooltip = label),
+                           shape = 21, alpha = 0.9) +
     scale_fill_manual(name = "Sex", values = c("female" = "pink", "male" = "lightblue",
                                                "unknown" = "#FFC926", "missing" = "purple")) +
     scale_colour_manual(name = "Flagged", values = c("NA" = NA, "TRUE" = "black")) +
-    # Plot seasonal length models for each species
-    geom_line(data = lw.df.sub, aes(length_mm, weightg, group = length_type), 
-              alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot individuals with missing lengths and weights
-    geom_point(data = filter(lengths.sub, missing.length == TRUE), 
-               aes(totalLength_mm, weightg, label = label),
-               shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
-    geom_point(data = filter(lengths.sub, missing.weight == TRUE), 
-               aes(nativeLength_mm, weightg, label = label),
-               shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.length == TRUE),
+                           aes(totalLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.weight == TRUE),
+                           aes(nativeLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
     # Format plot
-    xlab("Length (mm)") + ylab("Mass (g)") 
+    xlab("Length (mm)") + ylab("Mass (g)")
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.ggiraph) {
+    # Create interactive plot
+    lw.plot.interactive <- ggiraph::girafe(
+      ggobj = lw.plot,
+      dependencies = list(liberationsansHtmlDependency())
+    )
+    
+    # Print interactive plot
+    lw.plot.interactive
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -991,33 +1146,50 @@ lw.df.sub <- filter(lw.df, scientificName == scientificName.sub) %>%
 
 if (nrow(lengths.sub) > 0) {
   # Plot L/W data from past and current survey -----------------------------------
-  lw.plot <- ggplot() + 
+  lw.plot <- ggplot() +
     # Plot L/W data from all years/surveys
-    geom_point(data = lengths.all.sub, 
-               aes(forkLength_mm, weightg),
-               colour = "gray70", alpha = 0.3) +
+    geom_point_interactive(data = lengths.all.sub,
+                           aes(forkLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           colour = "gray70", alpha = 0.3) +
+    # Plot seasonal length models for each species
+    geom_line_interactive(data = lw.df.sub, aes(length_mm, weightg, 
+                                                group = length_type, tooltip = length_type),
+                          alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot L/W data for current survey
-    geom_point(data = lengths.sub,
-               aes(forkLength_mm, weightg, fill = sex, 
-                   colour = outlier, label = label), 
-               shape = 21, alpha = 0.9) + 
+    geom_point_interactive(data = lengths.sub,
+                           aes(forkLength_mm, weightg, fill = sex,
+                               colour = outlier,
+                               data_id = label, tooltip = label),
+                           shape = 21, alpha = 0.9) +
     scale_fill_manual(name = "Sex", values = c("female" = "pink", "male" = "lightblue",
                                                "unknown" = "#FFC926", "missing" = "purple")) +
     scale_colour_manual(name = "Flagged", values = c("NA" = NA, "TRUE" = "black")) +
-    # Plot seasonal length models for each species
-    geom_line(data = lw.df.sub, aes(length_mm, weightg, group = length_type), 
-              alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot individuals with missing lengths and weights
-    geom_point(data = filter(lengths.sub, missing.length == TRUE), 
-               aes(totalLength_mm, weightg, label = label),
-               shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
-    geom_point(data = filter(lengths.sub, missing.weight == TRUE), 
-               aes(nativeLength_mm, weightg, label = label),
-               shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.length == TRUE),
+                           aes(totalLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.weight == TRUE),
+                           aes(nativeLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
     # Format plot
-    xlab("Length (mm)") + ylab("Mass (g)") 
+    xlab("Length (mm)") + ylab("Mass (g)")
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.ggiraph) {
+    # Create interactive plot
+    lw.plot.interactive <- ggiraph::girafe(
+      ggobj = lw.plot,
+      dependencies = list(liberationsansHtmlDependency())
+    )
+    
+    # Print interactive plot
+    lw.plot.interactive
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -1042,33 +1214,50 @@ lw.df.sub <- filter(lw.df, scientificName == scientificName.sub) %>%
 
 if (nrow(lengths.sub) > 0) {
   # Plot L/W data from past and current survey -----------------------------------
-  lw.plot <- ggplot() + 
+  lw.plot <- ggplot() +
     # Plot L/W data from all years/surveys
-    geom_point(data = lengths.all.sub, 
-               aes(totalLength_mm, weightg),
-               colour = "gray70", alpha = 0.3) +
+    geom_point_interactive(data = lengths.all.sub,
+                           aes(forkLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           colour = "gray70", alpha = 0.3) +
+    # Plot seasonal length models for each species
+    geom_line_interactive(data = lw.df.sub, aes(length_mm, weightg, 
+                                                group = length_type, tooltip = length_type),
+                          alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot L/W data for current survey
-    geom_point(data = lengths.sub,
-               aes(totalLength_mm, weightg, fill = sex, 
-                   colour = outlier, label = label), 
-               shape = 21, alpha = 0.9) + 
+    geom_point_interactive(data = lengths.sub,
+                           aes(forkLength_mm, weightg, fill = sex,
+                               colour = outlier,
+                               data_id = label, tooltip = label),
+                           shape = 21, alpha = 0.9) +
     scale_fill_manual(name = "Sex", values = c("female" = "pink", "male" = "lightblue",
                                                "unknown" = "#FFC926", "missing" = "purple")) +
     scale_colour_manual(name = "Flagged", values = c("NA" = NA, "TRUE" = "black")) +
-    # Plot seasonal length models for each species
-    geom_line(data = lw.df.sub, aes(length_mm, weightg, group = length_type), 
-              alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot individuals with missing lengths and weights
-    geom_point(data = filter(lengths.sub, missing.length == TRUE), 
-               aes(totalLength_mm, weightg, label = label),
-               shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
-    geom_point(data = filter(lengths.sub, missing.weight == TRUE), 
-               aes(nativeLength_mm, weightg, label = label),
-               shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.length == TRUE),
+                           aes(totalLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.weight == TRUE),
+                           aes(nativeLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
     # Format plot
-    xlab("Length (mm)") + ylab("Mass (g)") 
+    xlab("Length (mm)") + ylab("Mass (g)")
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.ggiraph) {
+    # Create interactive plot
+    lw.plot.interactive <- ggiraph::girafe(
+      ggobj = lw.plot,
+      dependencies = list(liberationsansHtmlDependency())
+    )
+    
+    # Print interactive plot
+    lw.plot.interactive
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -1090,32 +1279,50 @@ lengths.all.sub <- filter(set.lengths.all,
 
 if (nrow(lengths.sub) > 0) {
   # Plot L/W data from past and current survey -----------------------------------
-  lw.plot <- ggplot() + 
+  lw.plot <- ggplot() +
     # Plot L/W data from all years/surveys
-    geom_point(data = lengths.all.sub,
-               aes(mantleLength_mm, weightg),
-               colour = "gray70", alpha = 0.3) +
+    geom_point_interactive(data = lengths.all.sub,
+                           aes(standardLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           colour = "gray70", alpha = 0.3) +
+    # Plot seasonal length models for each species
+    geom_line_interactive(data = lw.df.sub, aes(length_mm, weightg, 
+                                                group = length_type, tooltip = length_type),
+                          alpha = 0.75, colour = "gray20", linetype = 'dashed') +
     # Plot L/W data for current survey
-    geom_point(data = lengths.sub, aes(mantleLength_mm, weightg, fill = sex, 
-                                       colour = outlier, label = label), 
-               shape = 21, alpha = 0.9) + 
+    geom_point_interactive(data = lengths.sub,
+                           aes(standardLength_mm, weightg, fill = sex,
+                               colour = outlier,
+                               data_id = label, tooltip = label),
+                           shape = 21, alpha = 0.9) +
     scale_fill_manual(name = "Sex", values = c("female" = "pink", "male" = "lightblue",
                                                "unknown" = "#FFC926", "missing" = "purple")) +
     scale_colour_manual(name = "Flagged", values = c("NA" = NA, "TRUE" = "black")) +
-    # Plot Loess smoother around data
-    geom_smooth(data = lengths.sub, aes(mantleLength_mm, weightg), se = FALSE, 
-                color = "gray50", alpha = 0.5, linetype = "dashed", size = 0.5) +
     # Plot individuals with missing lengths and weights
-    geom_point(data = filter(lengths.sub, missing.length == TRUE), 
-               aes(mantleLength_mm, weightg, label = label),
-               shape = 21, fill = 'red',  size = 2.5, colour = NA) +
-    geom_point(data = filter(lengths.sub, missing.weight == TRUE), 
-               aes(nativeLength_mm, weightg, label = label),
-               shape = 21, fill = 'blue', size = 2.5, colour = NA) +
+    geom_point_interactive(data = filter(lengths.sub, missing.length == TRUE),
+                           aes(totalLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.weight == TRUE),
+                           aes(nativeLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
     # Format plot
-    xlab("Mantle length (mm)") + ylab("Mass (g)") 
+    xlab("Length (mm)") + ylab("Mass (g)")
   
-  ggplotly(lw.plot, dynamicTicks = TRUE) 
+  if (do.ggiraph) {
+    # Create interactive plot
+    lw.plot.interactive <- ggiraph::girafe(
+      ggobj = lw.plot,
+      dependencies = list(liberationsansHtmlDependency())
+    )
+    
+    # Print interactive plot
+    lw.plot.interactive
+  } else {
+    lw.plot
+  }
+  
 } else {
   print("No specimens present.")
 }
@@ -1127,27 +1334,30 @@ Total lengths (or mantle length, for Market Squid) vs. weight for all specimens,
 
 ```{r length-weight-leg}
 lw.df.sub <- lw.df %>% 
-  pivot_longer(totalLength_mm:standardLength_mm, names_to = "length_type", values_to = "length_mm") %>% 
-  filter(scientificName %in% unique(set.lengths$scientificName))
+  pivot_longer(totalLength_mm:standardLength_mm, names_to = "length_type", values_to = "length_mm")
 
 # Examine length differences by leg
 lw.plot.leg <- ggplot() +
+  # Plot seasonal length models for each species
+  geom_line_interactive(data = lw.df.sub, aes(length_mm, weightg, 
+                                              group = length_type, tooltip = length_type), 
+                        alpha = 0.75, colour = "gray20", linetype = 'dashed') +
   # Plot L/W data for current survey
-  geom_point(data = set.lengths,
-             aes(nativeLength_mm, weightg, group = sex, 
-                 fill = factor(leg), label = label),
-             shape = 21, alpha = 0.75) +
+  geom_point_interactive(data = set.lengths,
+                         aes(nativeLength_mm, weightg, group = sex, 
+                             fill = factor(leg), 
+                             data_id = label, tooltip = label),
+                         shape = 21, alpha = 0.75) +
   scale_fill_viridis_d(name = "Leg") +
   # Plot individuals with missing lengths and weights
-  geom_point(data = filter(set.lengths, missing.length == TRUE),
-             aes(totalLength_mm, weightg),
-             shape = 21, fill = 'red',  size = 2.5) +
-  geom_point(data = filter(set.lengths, missing.weight == TRUE),
-             aes(totalLength_mm, weightg),
-             shape = 21, fill = 'blue', size = 2.5) +
-  # Plot seasonal length models for each species
-  geom_line(data = lw.df.sub, aes(length_mm, weightg, group = length_type), 
-            alpha = 0.75, colour = "gray20", linetype = 'dashed') +
+  geom_point_interactive(data = filter(set.lengths, missing.length == TRUE),
+                         aes(totalLength_mm, weightg,
+                             data_id = label, tooltip = label),
+                         shape = 21, fill = 'red',  size = 2.5) +
+  geom_point_interactive(data = filter(set.lengths, missing.weight == TRUE),
+                         aes(totalLength_mm, weightg,
+                             data_id = label, tooltip = label),
+                         shape = 21, fill = 'blue', size = 2.5) +
   # Facet by species
   facet_wrap(~scientificName, scales = "free") +
   # Format plot
@@ -1157,11 +1367,21 @@ lw.plot.leg <- ggplot() +
         strip.text.x = element_text(face = "bold.italic"))
 
 # Save length/weight plot
-ggsave(lw.plot.leg, filename = here("Figs/fig_LW_plots_leg_seine.png"),
+ggsave(lw.plot.leg, filename = here("Figs/fig_LW_plots_leg.png"),
        width = 10, height = 7) 
 
-# View plot
-ggplotly(lw.plot.leg)
+if (do.ggiraph) {
+  # Create interactive plot
+  lw.plot.leg.interactive <- ggiraph::girafe(
+    ggobj = lw.plot.leg,
+    dependencies = list(liberationsansHtmlDependency())
+  )
+  
+  # Print interactive plot
+  lw.plot.leg.interactive
+} else {
+  lw.plot.leg
+}
 ```
 
 ## Final length-weight comparison 
@@ -1400,15 +1620,15 @@ set.catch.bar <- set.catch.all %>%
 bar.labs <- c("Atherinopsis californiensis" = "Jacksmelt", "Clupea pallasii" = "P. herring",
               "Engraulis mordax" = "Anchovy", "Etrumeus acuminatus" = "R. herring", 
               "Merluccius productus" = "P. hake", "Other" = "Other",
-              "Sardinops sagax" = "Sardine", "Scomber japonicus" = "P. mackerel", 
-              "Trachurus symmetricus" = "J. mackerel")
+              "Sardinops melanosticta" = "J. Sardine", "Sardinops sagax" = "Sardine",
+              "Scomber japonicus" = "P. mackerel", "Trachurus symmetricus" = "J. mackerel")
 
 # Species colors
 bar.colors <- c("Atherinopsis californiensis" = jacksmelt.color, "Clupea pallasii" = pac.herring.color,
                 "Engraulis mordax" = anchovy.color, "Etrumeus acuminatus" = rnd.herring.color,
                 "Merluccius productus" = "purple", "Other" = "gray70",
-                "Sardinops sagax" = sardine.color, "Scomber japonicus" = pac.mack.color, 
-                "Trachurus symmetricus" = jack.mack.color) 
+                "Sardinops melanosticta" = jap.sardine.color, "Sardinops sagax" = sardine.color,
+                "Scomber japonicus" = pac.mack.color, "Trachurus symmetricus" = jack.mack.color) 
 
 bar.spp <- sort(unique(set.catch.bar$group))
 

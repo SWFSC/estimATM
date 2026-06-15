@@ -869,7 +869,7 @@ if (nrow(lengths.sub) > 0) {
   
   if (do.ggiraph) {
     # Create interactive plot
-    lw.plot.interactive <- girafe(
+    lw.plot.interactive <- ggiraph::girafe(
       ggobj = lw.plot,
       dependencies = list(liberationsansHtmlDependency())
     )
@@ -937,7 +937,7 @@ if (nrow(lengths.sub) > 0) {
   
   if (do.ggiraph) {
     # Create interactive plot
-    lw.plot.interactive <- girafe(
+    lw.plot.interactive <- ggiraph::girafe(
       ggobj = lw.plot,
       dependencies = list(liberationsansHtmlDependency())
     )
@@ -1005,7 +1005,7 @@ if (nrow(lengths.sub) > 0) {
   
   if (do.ggiraph) {
     # Create interactive plot
-    lw.plot.interactive <- girafe(
+    lw.plot.interactive <- ggiraph::girafe(
       ggobj = lw.plot,
       dependencies = list(liberationsansHtmlDependency())
     )
@@ -1073,7 +1073,7 @@ if (nrow(lengths.sub) > 0) {
   
   if (do.ggiraph) {
     # Create interactive plot
-    lw.plot.interactive <- girafe(
+    lw.plot.interactive <- ggiraph::girafe(
       ggobj = lw.plot,
       dependencies = list(liberationsansHtmlDependency())
     )
@@ -1141,7 +1141,7 @@ if (nrow(lengths.sub) > 0) {
   
   if (do.ggiraph) {
     # Create interactive plot
-    lw.plot.interactive <- girafe(
+    lw.plot.interactive <- ggiraph::girafe(
       ggobj = lw.plot,
       dependencies = list(liberationsansHtmlDependency())
     )
@@ -1209,7 +1209,7 @@ if (nrow(lengths.sub) > 0) {
   
   if (do.ggiraph) {
     # Create interactive plot
-    lw.plot.interactive <- girafe(
+    lw.plot.interactive <- ggiraph::girafe(
       ggobj = lw.plot,
       dependencies = list(liberationsansHtmlDependency())
     )
@@ -1277,7 +1277,7 @@ if (nrow(lengths.sub) > 0) {
   
   if (do.ggiraph) {
     # Create interactive plot
-    lw.plot.interactive <- girafe(
+    lw.plot.interactive <- ggiraph::girafe(
       ggobj = lw.plot,
       dependencies = list(liberationsansHtmlDependency())
     )
@@ -1345,7 +1345,7 @@ if (nrow(lengths.sub) > 0) {
   
   if (do.ggiraph) {
     # Create interactive plot
-    lw.plot.interactive <- girafe(
+    lw.plot.interactive <- ggiraph::girafe(
       ggobj = lw.plot,
       dependencies = list(liberationsansHtmlDependency())
     )
@@ -1410,7 +1410,7 @@ if (nrow(lengths.sub) > 0) {
   
   if (do.ggiraph) {
     # Create interactive plot
-    lw.plot.interactive <- girafe(
+    lw.plot.interactive <- ggiraph::girafe(
       ggobj = lw.plot,
       dependencies = list(liberationsansHtmlDependency())
     )
@@ -1470,7 +1470,7 @@ ggsave(lw.plot.leg, filename = here("Figs/fig_LW_plots_leg.png"),
 
 if (do.ggiraph) {
   # Create interactive plot
-  lw.plot.leg.interactive <- girafe(
+  lw.plot.leg.interactive <- ggiraph::girafe(
     ggobj = lw.plot.leg,
     dependencies = list(liberationsansHtmlDependency())
   )
@@ -1654,7 +1654,7 @@ ggsave(plot.duration.all, filename = here("Figs/fig_trawl_evoution.png"))
 
 if (do.ggiraph) {
   # Create interactive plot
-  plot.duration.all.interactive <- girafe(
+  plot.duration.all.interactive <- ggiraph::girafe(
     ggobj = plot.duration.all,
     dependencies = list(
       liberationsansHtmlDependency()

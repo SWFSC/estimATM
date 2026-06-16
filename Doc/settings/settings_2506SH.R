@@ -289,9 +289,9 @@ pie.spp <- c("Jacksmelt"  = "Atherinopsis californiensis", "PacHerring" = "Clupe
 
 # Species columns
 pie.cols <- c("Engraulis mordax" = "Anchovy", "Trachurus symmetricus" = "JackMack", 
-              "Atherinopsis californiensis" = "Jacksmelt", "Clupea pallasii" = "PacHerring", 
-              "Scomber japonicus" = "PacMack", "Etrumeus acuminatus" = "RndHerring", 
-              "Sardinops sagax" = "Sardine", "Sardinops melanosticta" = "JapSardine")
+              "Atherinopsis californiensis" = "Jacksmelt", "Sardinops melanosticta" = "JapSardine",
+              "Clupea pallasii" = "PacHerring", "Scomber japonicus" = "PacMack", 
+              "Etrumeus acuminatus" = "RndHerring","Sardinops sagax" = "Sardine")
 
 pie.cols.prop <- c("Engraulis mordax" = "prop.anch", "Trachurus symmetricus" = "prop.jack", 
                    "Atherinopsis californiensis" = "prop.jsmelt", "Clupea pallasii" = "prop.her", 
@@ -327,6 +327,12 @@ dens.labels        <- c("0-1", "1-10", "10-100", "100-500", "500-1000",
 dens.colors        <- c("#000000", "#1E90FF", "#FFFF00", "#FF8C00", 
                         "#FF0000", "#FFC0CB", "#FFFFFF", "#00FF00") # for legend colors
 dens.sizes         <- c(0.25, 1, 2.25, 3, 4.25, 5.5, 6.5, 7.5) # for legend sizes
+
+# Raster settings ------------------------------------------------------------------
+# Sardine habitat
+sar.hab.breaks       <- c(0, 0.18, 0.29, 1) 
+sar.hab.colors       <- c("black", "#595959", "#CCCCCC")
+sar.hab.labels       <- c("0", "0.18", "0.29", "1") 
 
 # Catch map
 # For legend objects

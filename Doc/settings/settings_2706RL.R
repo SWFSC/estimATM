@@ -257,6 +257,7 @@ jacksmelt.color    <- '#A020F0'
 pac.mack.color     <- '#00FFFF'
 pac.herring.color  <- '#F5DEB3'
 rnd.herring.color  <- '#F0B81D'
+jap.sardine.color  <- '#F0A6A6'
 other.color        <- 'gray'
 
 # Set gear type colors
@@ -265,8 +266,8 @@ trawl.color <- "black"
 
 # Define species to be analysed -------------------
 ## CPS species
-cps.spp            <- c("Clupea pallasii","Engraulis mordax","Sardinops sagax",
-                        "Scomber japonicus","Trachurus symmetricus", 
+cps.spp            <- c("Clupea pallasii","Engraulis mordax","Sardinops melanosticta",
+                        "Sardinops sagax","Scomber japonicus","Trachurus symmetricus", 
                         "Etrumeus acuminatus")
 
 ## trouts & salmon, Pacific salmon unid, pink, chum, coho, sockeye, Chinook, steelhead, cutthroat trout
@@ -299,9 +300,9 @@ trawl.sizes        <- c(1, 2, 3, 4, 5, 6, 7)
 # For pie charts; subsetted using pie.spp, which is defined from the catch data
 # Species columns
 pie.cols <- c("Engraulis mordax" = "Anchovy", "Trachurus symmetricus" = "JackMack", 
-              "Atherinopsis californiensis" = "Jacksmelt", "Clupea pallasii" = "PacHerring", 
-              "Scomber japonicus" = "PacMack", "Etrumeus acuminatus" = "RndHerring", 
-              "Sardinops sagax" = "Sardine")
+              "Atherinopsis californiensis" = "Jacksmelt", "Sardinops melanosticta" = "JapSardine",
+              "Clupea pallasii" = "PacHerring", "Scomber japonicus" = "PacMack", 
+              "Etrumeus acuminatus" = "RndHerring","Sardinops sagax" = "Sardine")
 
 pie.cols.prop <- c("Engraulis mordax" = "prop.anch", "Trachurus symmetricus" = "prop.jack", 
                    "Atherinopsis californiensis" = "prop.jsmelt", "Clupea pallasii" = "prop.her", 
@@ -316,9 +317,9 @@ pie.labs <- c("Engraulis mordax" = "Anchovy", "Trachurus symmetricus" = "J. Mack
 
 # Species colors
 pie.colors <- c("Engraulis mordax" = anchovy.color, "Trachurus symmetricus" = jack.mack.color, 
-                "Atherinopsis californiensis" = jacksmelt.color, "Clupea pallasii" = pac.herring.color, 
-                "Scomber japonicus" = pac.mack.color, "Etrumeus acuminatus" = rnd.herring.color,
-                "Sardinops sagax" = sardine.color)
+                "Atherinopsis californiensis" = jacksmelt.color, "Sardinops melanosticta" = jap.sardine.color,
+                "Clupea pallasii" = pac.herring.color, "Scomber japonicus" = pac.mack.color, 
+                "Etrumeus acuminatus" = rnd.herring.color, "Sardinops sagax" = sardine.color)
 
 # NASC ------------------------------------------------------------------
 # For legend objects
@@ -342,7 +343,7 @@ dens.sizes         <- c(0.25, 1, 2.25, 3, 4.25, 5.5, 6.5, 7.5) # for legend size
 # Sardine habitat
 sar.hab.breaks       <- c(0, 0.18, 0.29, 1) 
 sar.hab.colors       <- c("black", "#595959", "#CCCCCC")
-sar.hab.labels       <- c("0", "0.18", "0.29", "1") 
+sar.hab.labels       <- c("0", "0.18", "0.29", "1")  
 
 # Catch map
 # For legend objects

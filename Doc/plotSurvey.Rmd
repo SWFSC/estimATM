@@ -14,11 +14,11 @@ if (!require("pacman")) install.packages("pacman")
 if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
-pacman::p_load(tidyverse,raster,cowplot,DBI,odbc,RSQLite,scatterpie,ggspatial,vroom,
+pacman::p_load(tidyverse,cowplot,DBI,odbc,RSQLite,scatterpie,ggspatial,vroom,
                readxl,lubridate,rnaturalearth,sf,here,naniar,mapview,xts,terra,
-               shadowtext,knitr,ggrepel,fs,plotly,leaflet,leaflet.extras,bookdown,
+               shadowtext,knitr,ggrepel,fs,leaflet,leaflet.extras,bookdown,
                htmltools,leafem,DT,rworldmap,rworldxtra,lwgeom,htmlwidgets,httr,
-               ncdf4,rerddap)
+               ncdf4,rerddap,ggiraph,gdtools)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pkg_install("SWFSC/atm")
@@ -76,8 +76,8 @@ process.csv.krill  <- T # Process krill backscatter files
 process.csv.all    <- F # Process all CSV files (F = new files only)
 
 # Are we sampling? If no, F. Skips data processing steps.
-sampling.acoustics <- F 
-sampling.trawl     <- F 
+sampling.acoustics <- T 
+sampling.trawl     <- T 
 sampling.cufes     <- F 
 
 # Get environmental layers from ERDDAP (e.g., sardine potential habitat, Chl a, etc.)
@@ -175,7 +175,7 @@ transects.sf <- wpts.sf %>%
 nav.gps <- nav %>% 
   mutate(GPS_date = format(time, format = "%F"),
          GPS_time = format(time, format = "%T")) %>% 
-  select(GPS_date, GPS_time, latitude = lat, longitude = long)
+  dplyr::select(GPS_date, GPS_time, latitude = lat, longitude = long)
 
 write_csv(nav.gps, here("Output/nav.gps.csv"))
 
@@ -370,6 +370,7 @@ if (sampling.trawl) {
     # Add species with zero total weight
     if (!has_name(haul.summ.wt, "Engraulis mordax"))      {haul.summ.wt$`Engraulis mordax`      <- 0}
     if (!has_name(haul.summ.wt, "Sardinops sagax"))       {haul.summ.wt$`Sardinops sagax`       <- 0}
+    if (!has_name(haul.summ.wt, "Sardinops melanosticta")){haul.summ.wt$`Sardinops melanosticta`<- 0}
     if (!has_name(haul.summ.wt, "Scomber japonicus"))     {haul.summ.wt$`Scomber japonicus`     <- 0}
     if (!has_name(haul.summ.wt, "Trachurus symmetricus")) {haul.summ.wt$`Trachurus symmetricus` <- 0}
     if (!has_name(haul.summ.wt, "Clupea pallasii"))       {haul.summ.wt$`Clupea pallasii`       <- 0}
@@ -387,6 +388,7 @@ if (sampling.trawl) {
              "PacHerring" = "Clupea pallasii",
              "Anchovy"    = "Engraulis mordax",
              "Sardine"    = "Sardinops sagax",
+             "JapSardine" = "Sardinops melanosticta",
              "PacMack"    = "Scomber japonicus",
              "JackMack"   = "Trachurus symmetricus",
              "RndHerring" = "Etrumeus acuminatus",
@@ -414,6 +416,7 @@ if (sampling.trawl) {
                                 "PacHerring" = rep(0, nrow(haul)),
                                 "Anchovy"    = rep(0, nrow(haul)),
                                 "Sardine"    = rep(0, nrow(haul)),
+                                "JapSardine" = rep(0, nrow(haul)),
                                 "PacMack"    = rep(0, nrow(haul)),
                                 "JackMack"   = rep(0, nrow(haul)),
                                 "RndHerring" = rep(0, nrow(haul)),
@@ -433,18 +436,14 @@ if (sampling.trawl) {
   
   # Select and rename trawl data for pie charts
   haul.pie <- haul.summ.wt %>% 
-    select(haul, long, lat, Anchovy, JackMack, 
-           Jacksmelt, Other, PacHerring, PacMack, 
-           RndHerring, Sardine, AllCPS, sample.type) %>%
+    select(haul, long, lat, any_of(names(pie.spp)), AllCPS, sample.type) %>%
     # Create bins for defining point size in NASC plots
     mutate(bin       = cut(AllCPS, trawl.breaks, include.lowest = TRUE),
            bin.level = as.numeric(bin)) %>% 
     project_df(to = crs.proj)
   
   cluster.pie <- cluster.summ.wt %>% 
-    select(cluster, long, lat, Anchovy, JackMack, 
-           Jacksmelt, Other, PacHerring, PacMack, 
-           RndHerring, Sardine, AllCPS, sample.type) %>% 
+    select(cluster, long, lat, any_of(names(pie.spp)), AllCPS, sample.type) %>% 
     # Create bins for defining point size in NASC plots
     mutate(bin       = cut(AllCPS, trawl.breaks, include.lowest = TRUE),
            bin.level =  as.numeric(bin)) %>% 
@@ -1067,7 +1066,8 @@ if (sampling.trawl) {
       label    = paste("Haul", haul),
       popup    = paste('<b>Haul:', haul, '</b><br/>',
                        'Anchovy:', Anchovy, 'kg<br/>',
-                       'Sardine:', Sardine, 'kg<br/>',
+                       'P. Sardine:', Sardine, 'kg<br/>',
+                       'J. Sardine:', JapSardine, 'kg<br/>',
                        'Jack mackerel:', JackMack, 'kg<br/>',
                        'P. herring:', PacHerring, 'kg<br/>',
                        'P. mackerel:', PacMack, 'kg<br/>',
@@ -1091,7 +1091,8 @@ if (sampling.trawl) {
       label = paste("Cluster", cluster),
       popup = paste('<b>Cluster:', cluster, '</b><br/>',
                     'Anchovy:', Anchovy, 'kg<br/>',
-                    'Sardine:', Sardine, 'kg<br/>',
+                    'P. Sardine:', Sardine, 'kg<br/>',
+                    'J. Sardine:', JapSardine, 'kg<br/>',
                     'Jack Mackerel:', JackMack, 'kg<br/>',
                     'P. herring:', PacHerring, 'kg<br/>',
                     'P. mackerel:', PacMack, 'kg<br/>',
@@ -1600,7 +1601,7 @@ if (save.imap) {
 if (exists("big.nasc")) {
   # Create outlier plot
   nasc.outlier.plot <- ggplot(big.nasc, aes(rank, NASC, ids = label, fill = type)) +
-    geom_point(shape = 21, size = 2, alpha = 0.7) +
+    geom_point_interactive(shape = 21, size = 2, alpha = 0.7, aes(tooltip = label)) +
     geom_text_repel(data = top_n(big.nasc, 20, NASC), 
                     aes(rank, NASC, label = label), size = 2) +
     scale_fill_manual(name = "NASC\ntype", 
@@ -1608,18 +1609,12 @@ if (exists("big.nasc")) {
     ylab("NASC / 19\n") + xlab("\nRank") +
     theme_bw()
   
-  # Create outlier plot for plotly
-  nasc.outlier.plotly <- ggplot(big.nasc, 
-                                aes(rank, NASC, ids = label, fill = type)) +
-    geom_point(shape = 21, size = 4, alpha = 0.7) +
-    scale_fill_manual(name = "NASC\ntype", 
-                      values = c("CPS" = "blue", "Krill" = "yellow")) +
-    ylab("NASC / 19\n") + xlab("\nRank") +
-    theme_bw()
-  
-  # Save plotly graph
-  save(nasc.outlier.plotly, file = here("Output/nasc_backscatter_plotly.Rdata"))
-  
+  # Create interactive plot
+    nasc.outlier.plot.interactive <- ggiraph::girafe(
+      ggobj = nasc.outlier.plot,
+      dependencies = list(liberationsansHtmlDependency())
+    )
+
   if (save.figs) {
     # Save figure
     ggsave(nasc.outlier.plot, filename = here("Figs/fig_nasc_outliers.png"), 
@@ -1684,12 +1679,9 @@ For questions about this page, please contact Kevin Stierhoff ([kevin.stierhoff@
 (ref:nasc-outliers) An interactive plot of the top 100 backscatter ($s_A$) intervals (i.e., potential outliers/errors), labeled with the transect name and interval to facilitate further scrutiny of processing steps in Echoview.
 
 ```{r plot-big-nasc,fig.cap='(ref:nasc-outliers)'}
-if (file.exists(here("Output/nasc_backscatter_plotly.Rdata"))) {
-  # Load NASC outliers
-  load(here("Output/nasc_backscatter_plotly.Rdata"))
-  
-  # Plot NASC outliers using plotly
-  plotly::ggplotly(nasc.outlier.plotly)
+if (exists("nasc.outlier.plot.interactive")) {
+  # Plot NASC outliers
+  nasc.outlier.plot.interactive
 } else {
   print("No backscatter data yet.")
 }

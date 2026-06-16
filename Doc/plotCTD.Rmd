@@ -11,14 +11,14 @@ css: css/ast.css
 ---
 
 ```{r setup,echo=FALSE,warning=FALSE,message=FALSE,include=FALSE}
-# Install and load pacman (library management package)
+# Install and load pacman and pak (library management packages)
 if (!require("pacman")) install.packages("pacman")
 if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
-pacman::p_load(tidyverse,cowplot,knitr,shadowtext,sf,fs,vroom,leaflet,ggiraph,
+pacman::p_load(tidyverse,cowplot,knitr,shadowtext,sf,fs,vroom,leaflet,
                DBI,stringr,gdata,forecast,lubridate,here,rnaturalearth,viridis,
-               DT,mapview,bookdown,ggspatial,leafem,leaflet.extras,xts,plotly)
+               DT,mapview,bookdown,ggspatial,leafem,leaflet.extras,xts,ggiraph,gdtools)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pak::pkg_install("SWFSC/atm")
@@ -41,6 +41,9 @@ knitr::opts_chunk$set(
   echo = FALSE, warning = FALSE, message = FALSE, 
   fig.align = "center", dev = "png", dev.args = list(type = "cairo"), dpi = 150
 )
+
+# Register fonts
+register_liberationsans()
 
 # Create data directories
 dir_create(here(), c("Code","Data","Doc","Figs","Images","Output","References"))
@@ -70,7 +73,7 @@ get.map         <- T # download map from rnaturalearth
 resize.map      <- T # Resize map during survey; if T, uses anticipated bounds of survey area
 
 # Plotting options
-do.plotly       <- F # Set to F if having issues rendering Leaflet maps
+do.ggiraph       <- T # Set to F if having issues rendering Leaflet maps
 ```
 
 ```{r copy-files, include=F}
@@ -607,7 +610,7 @@ if (save.figs) {
 }
 ```  
 
-```{r i-map-uctd, out.width='100%',eval=TRUE}
+```{r i-map-uctd, out.width='100%'}
 # Create color palette for planned transects
 txPal    <- colorFactor(wpt.colors, wpt.types)
 
@@ -678,15 +681,14 @@ i.map.uctd
 
 Descent rate of the UCTD by depth and vessel speed.  
 
-```{r uctd-dZt-plot,out.width="100%"}
-# ,out.height="8in"
+```{r uctd-dZt-plot,fig.height=10,fig.width=10}
 if (exists("all.uctd.casts")) {
   if (length(all.uctd.casts) > 0) {
     if (save.figs) {
       # plot descent rate v depth
       uctd.dZt <- ggplot(data = all.uctd.casts, 
                          aes(dZt, Z, group = cast, colour = SOG)) + 
-        geom_path(alpha = 0.75) +
+        geom_path_interactive(alpha = 0.75, aes(tooltip = t)) +
         xlab("\nDescent rate (m/s)") + ylab("Depth (m)\n") + 
         scale_x_continuous(limits = c(0,ceiling(max(all.uctd.casts$dZt, na.rm = TRUE))),
                            breaks = seq(0, ceiling(max(all.uctd.casts$dZt, na.rm = TRUE)), 0.5), 
@@ -698,17 +700,25 @@ if (exists("all.uctd.casts")) {
         facet_wrap(~leg, ncol = 2) +
         theme_bw() + 
         theme(panel.grid.major     = element_line(linewidth = 0.75),
-              legend.position      =  c(0,1),
-              legend.justification = c(0,1),
+              legend.position.inside = c(1,1),
+              legend.justification = c(1,1),
               legend.background    = element_blank(),
               strip.background.x = element_blank(),
               strip.text.x = element_text(face = "bold"))
+      
       # save plot
       ggsave(uctd.dZt, file = here("Figs/fig_uctd_dZt_v_Z.png"))
     }
     
-    if (do.plotly) {
-      ggplotly(uctd.dZt)
+    if (do.ggiraph) {
+      # Create interactive plot
+      uctd.dZt.interactive <- ggiraph::girafe(
+        ggobj = uctd.dZt,
+        dependencies = list(liberationsansHtmlDependency())
+      )
+      
+      # Print interactive plot
+      uctd.dZt.interactive
     } else {
       uctd.dZt
     }
@@ -722,14 +732,14 @@ if (exists("all.uctd.casts")) {
 
 The dashed line represent the Loess-smoothed depth profiles.  
 
-```{r uctd-depth-time-plot,out.width="100%"}
+```{r uctd-depth-time-plot,fig.height=10,fig.width=10}
 # ,out.height="8in"
 if (exists("all.uctd.casts")) {
   if (length(all.uctd.casts) > 0) {
     if (save.figs) {
       # plot depth v time
       uctd.Z <- ggplot(data = all.uctd.casts, aes(s, Z, group = factor(cast), colour = SOG)) + 
-        geom_path(alpha = 0.75) +
+        geom_path_interactive(alpha = 0.75, aes(tooltip = t)) +
         xlab("\nTime (s)") + ylab("Depth (m)\n") + 
         scale_x_continuous(limits = c(0,max(all.uctd.casts$s) + 10),
                            breaks = seq(0, max(all.uctd.casts$s) + 10, 25),
@@ -752,8 +762,15 @@ if (exists("all.uctd.casts")) {
       ggsave(uctd.Z, file = here("Figs/fig_uctd_Z_v_time.png"))
     }
     
-    if (do.plotly) {
-      ggplotly(uctd.Z)
+    if (do.ggiraph) {
+      # Create interactive plot
+      uctd.Z.interactive <- ggiraph::girafe(
+        ggobj = uctd.Z,
+        dependencies = list(liberationsansHtmlDependency())
+      )
+      
+      # Print interactive plot
+      uctd.Z.interactive
     } else {
       uctd.Z
     }
@@ -765,13 +782,13 @@ if (exists("all.uctd.casts")) {
 
 ## Temperature v. Depth plot
 
-```{r uctd-temp-depth-plot,out.width="100%"}
+```{r uctd-temp-depth-plot,fig.height=10,fig.width=10}
 if (exists("all.uctd.casts")) {
   if (length(all.uctd.casts) > 0) {
     if (save.figs) {
       # plot temperature v depth
       uctd.T <- ggplot(data = all.uctd.casts, aes(T, Z, group = cast, colour = factor(cast))) + 
-        geom_path(alpha = 0.75) +
+        geom_path_interactive(alpha = 0.75, aes(tooltip = t)) +
         xlab("\nTemperature (C)") + ylab("Depth (m)\n") + 
         scale_x_continuous(limits = c(round(min(all.uctd.casts$T),0) - 1, round(max(all.uctd.casts$T),0) + 1),
                            breaks = seq(round(min(all.uctd.casts$T),0) - 1, round(max(all.uctd.casts$T), 0) + 1, 2),
@@ -788,12 +805,19 @@ if (exists("all.uctd.casts")) {
       # save plot
       ggsave(uctd.T, file = here("Figs/fig_uctd_T_v_Z.png"))
     }
-    if (do.plotly) {
-      ggplotly(uctd.T)
+    
+    if (do.ggiraph) {
+      # Create interactive plot
+      uctd.T.interactive <- ggiraph::girafe(
+        ggobj = uctd.T,
+        dependencies = list(liberationsansHtmlDependency())
+      )
+      
+      # Print interactive plot
+      uctd.T.interactive
     } else {
       uctd.T
     }
-    
   } 
 } else {
   cat("No UCTD casts to plot.")
@@ -802,13 +826,13 @@ if (exists("all.uctd.casts")) {
 
 ## Salinity v. Depth plot
 
-```{r uctd-sal-depth-plot,out.width="100%"}
+```{r uctd-sal-depth-plot,fig.height=10,fig.width=10}
 if (exists("all.uctd.casts")) {
   if (length(all.uctd.casts) > 0) {
     if (save.figs) {
       # plot salinity v depth
       uctd.S <- ggplot(data = all.uctd.casts, aes(S, Z, group = cast, colour = factor(cast))) + 
-        geom_path(alpha = 0.75) +
+        geom_path_interactive(alpha = 0.75, aes(tooltip = t)) +
         xlab("\nSalinity") + ylab("Depth (m)\n") +
         scale_x_continuous(limits = c(round(min(all.uctd.casts$S), 2) - 0.1, 
                                       round(max(all.uctd.casts$S), 2) + 0.1),
@@ -827,12 +851,19 @@ if (exists("all.uctd.casts")) {
       # save plot
       ggsave(uctd.S,file = here("Figs/fig_uctd_S_v_Z.png"))
     }
-    if (do.plotly) {
-      ggplotly(uctd.S)
+    
+    if (do.ggiraph) {
+      # Create interactive plot
+      uctd.S.interactive <- ggiraph::girafe(
+        ggobj = uctd.S,
+        dependencies = list(liberationsansHtmlDependency())
+      )
+      
+      # Print interactive plot
+      uctd.S.interactive
     } else {
       uctd.S
     }
-    
   } 
 } else {
   cat("No UCTD casts to plot.")
@@ -841,13 +872,13 @@ if (exists("all.uctd.casts")) {
 
 ## Sound speed v. Depth plot
 
-```{r uctd-sv-depth-plot,out.width="100%"}
+```{r uctd-sv-depth-plot,fig.height=10,fig.width=10}
 if (exists("all.uctd.casts")) {
   if (length(all.uctd.casts) > 0) {
     if (save.figs) {
       # plot sound speed v depth
       uctd.Sv <- ggplot(data = all.uctd.casts, aes(Sv, Z, group = cast, colour = factor(cast))) + 
-        geom_path(alpha = 0.75) +
+        geom_path_interactive(alpha = 0.75, aes(tooltip = t)) +
         xlab("\nSound speed (m/s)") + ylab("Depth (m)\n") +
         scale_x_continuous(limits = c(round(min(all.uctd.casts$Sv), 0) - 1, 
                                       round(max(all.uctd.casts$Sv), 0) + 1),
@@ -867,12 +898,18 @@ if (exists("all.uctd.casts")) {
       ggsave(uctd.Sv, file = here("Figs/fig_uctd_sV_v_Z.png"))
     }
     
-    if (do.plotly) {
-      ggplotly(uctd.Sv)
+    if (do.ggiraph) {
+      # Create interactive plot
+      uctd.Sv.interactive <- ggiraph::girafe(
+        ggobj = uctd.Sv,
+        dependencies = list(liberationsansHtmlDependency())
+      )
+      
+      # Print interactive plot
+      uctd.Sv.interactive
     } else {
       uctd.Sv
     }
-    
   }
 } else {
   cat("No UCTD casts to plot.")
@@ -881,14 +918,14 @@ if (exists("all.uctd.casts")) {
 
 ## Chlorophyll-a v. Depth plot
 
-```{r uctd-chl-depth-plot,out.width="100%"}
+```{r uctd-chl-depth-plot,fig.height=10,fig.width=10}
 if (exists("all.uctd.casts")) {
   if (length(all.uctd.casts) > 0) {
     if (has_name(all.uctd.casts, "ChlA")) {
       if (save.figs) {
         # plot sound speed v depth
         uctd.chl <- ggplot(data = all.uctd.casts, aes(ChlA, Z, group = cast, colour = factor(cast))) + 
-          geom_path(alpha = 0.75) +
+          geom_path_interactive(alpha = 0.75, aes(tooltip = t)) +
           xlab("\nChlorophyll-a (ug/L)") + ylab("Depth (m)\n") +
           # scale_x_continuous(limits = c(round(min(all.uctd.casts$ChlA), 0) - 1, 
           #                               round(max(all.uctd.casts$ChlA), 0) + 1),
@@ -909,8 +946,15 @@ if (exists("all.uctd.casts")) {
         ggsave(uctd.chl, file = here("Figs/fig_uctd_ChlA_v_Z.png"))
       }
       
-      if (do.plotly) {
-        ggplotly(uctd.chl)
+      if (do.ggiraph) {
+        # Create interactive plot
+        uctd.chl.interactive <- ggiraph::girafe(
+          ggobj = uctd.chl,
+          dependencies = list(liberationsansHtmlDependency())
+        )
+        
+        # Print interactive plot
+        uctd.chl.interactive
       } else {
         uctd.chl
       }
@@ -1044,7 +1088,7 @@ if (save.figs) {
 }
 ```  
 
-```{r i-map-ctd,eval=TRUE}
+```{r i-map-ctd}
 # Map casts
 i.map.ctd <- i.map %>% 
   # Enable tile caching
@@ -1142,13 +1186,13 @@ if (save.figs) {
 
 ## Temperature v. Depth plot
 
-```{r ctd-temp-depth-plot,out.width="100%"}
+```{r ctd-temp-depth-plot,fig.height=10,fig.width=10}
 if (exists("all.ctd.casts")) {
   if (length(all.ctd.casts) > 0) {
     if (save.figs) {
       # plot temperature v depth
       ctd.T <- ggplot(data = all.ctd.casts, aes(T, Z, group = cast, colour = factor(cast))) + 
-        geom_path(alpha = 0.75) +
+        geom_path_interactive(alpha = 0.75, aes(tooltip = cast.date)) +
         xlab("\nTemperature (C)") + ylab("Depth (m)\n") + 
         scale_x_continuous(limits = c(round(min(all.ctd.casts$T), 0) - 1, 
                                       round(max(all.ctd.casts$T), 0) + 1),
@@ -1169,12 +1213,18 @@ if (exists("all.ctd.casts")) {
       ggsave(ctd.T, file = here("Figs/fig_ctd_T_v_Z.png"))
     }
     
-    if (do.plotly) {
-      ggplotly(ctd.T)
+    if (do.ggiraph) {
+      # Create interactive plot
+      ctd.T.interactive <- ggiraph::girafe(
+        ggobj = ctd.T,
+        dependencies = list(liberationsansHtmlDependency())
+      )
+      
+      # Print interactive plot
+      ctd.T.interactive
     } else {
       ctd.T
     }
-    
   } 
 } else {
   cat("No CTD casts to plot.")
@@ -1183,13 +1233,13 @@ if (exists("all.ctd.casts")) {
 
 ## Salinity v. Depth plot
 
-```{r ctd-sal-depth-plot,out.width="100%",out.height="8in"}
+```{r ctd-sal-depth-plot,fig.height=10,fig.width=10}
 if (exists("all.ctd.casts")) {
   if (length(all.ctd.casts) > 0) {
     if (save.figs) {
       # plot salinity v depth
       ctd.S <- ggplot(data = all.ctd.casts, aes(S, Z, group = cast, colour = factor(cast))) + 
-        geom_path(alpha = 0.75) +
+        geom_path_interactive(alpha = 0.75, aes(tooltip = cast.date)) +
         xlab("\nSalinity") + ylab("Depth (m)\n") +
         scale_x_continuous(limits = c(round(min(all.ctd.casts$S),2) - 0.1,
                                       round(max(all.ctd.casts$S), 2) + 0.1),
@@ -1208,13 +1258,19 @@ if (exists("all.ctd.casts")) {
       # save plot
       ggsave(ctd.S,file = here("Figs/fig_ctd_S_v_Z.png"))
     }
-    # Print plotly figure
-    if (do.plotly) {
-      ggplotly(ctd.S)
+    
+    if (do.ggiraph) {
+      # Create interactive plot
+      ctd.S.interactive <- ggiraph::girafe(
+        ggobj = ctd.S,
+        dependencies = list(liberationsansHtmlDependency())
+      )
+      
+      # Print interactive plot
+      ctd.S.interactive
     } else {
       ctd.S
     }
-    
   } 
 } else {
   cat("No CTD casts to plot.")
@@ -1223,13 +1279,13 @@ if (exists("all.ctd.casts")) {
 
 ## Sound speed v. Depth plot
 
-```{r ctd-sv-depth-plot,out.width="100%"}
+```{r ctd-sv-depth-plot,fig.height=10,fig.width=10}
 if (exists("all.ctd.casts")) {
   if (length(all.ctd.casts) > 0) {
     if (save.figs) {
       # plot sound speed v depth
       ctd.Sv <- ggplot(data = all.ctd.casts, aes(Sv, Z, group = cast, colour = factor(cast))) + 
-        geom_path(alpha = 0.75) +
+        geom_path_interactive(alpha = 0.75, aes(tooltip = cast.date)) +
         xlab("\nSound speed (m/s)") + ylab("Depth (m)\n") +
         scale_x_continuous(
           limits = c(round(min(all.ctd.casts$Sv), 0) - 1, 
@@ -1250,13 +1306,19 @@ if (exists("all.ctd.casts")) {
       # save plot
       ggsave(ctd.Sv, file = here("Figs/fig_ctd_sV_v_T.png"))
     }
-    # Print ploty figure
-    if (do.plotly) {
-      ggplotly(ctd.Sv)
+    
+    if (do.ggiraph) {
+      # Create interactive plot
+      ctd.Sv.interactive <- ggiraph::girafe(
+        ggobj = ctd.Sv,
+        dependencies = list(liberationsansHtmlDependency())
+      )
+      
+      # Print interactive plot
+      ctd.Sv.interactive
     } else {
       ctd.Sv
     }
-    
   } 
 } else {
   cat("No CTD casts to plot.")
@@ -1264,6 +1326,7 @@ if (exists("all.ctd.casts")) {
 ```
 
 ## Temperature-Salinity plot
+
 Temperature-salinity plot for all CTD casts (left) and the location of CTD casts (right), symbolized by water mass.
 
 ```{r ctd-temp-sal-plot}
@@ -1321,7 +1384,7 @@ if (exists("all.ctd.casts")) {
 }
 ```
 
-```{r combine-cast-data,eval=TRUE}
+```{r combine-cast-data}
 # Combine all CTD and UCTD cast data in one data frame
 ctd.data.all <- tibble()
 
@@ -1371,7 +1434,7 @@ write.csv(ctd.info.all, file = here("Output/cast_info_all.csv"),
 
 Locations of CTD (blue points) and UCTD (green points) locations.  
 
-```{r i-map-all-ctds, out.width='100%',eval=TRUE}
+```{r i-map-all-ctds, out.width='100%'}
 # Create color palette for planned transects
 txPal    <- colorFactor(wpt.colors, wpt.types)
 

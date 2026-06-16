@@ -42,6 +42,9 @@ knitr::opts_chunk$set(
   fig.align = "center", dev = "png", dev.args = list(type = "cairo"), dpi = 150
 )
 knitr::opts_chunk$set(cache = FALSE)
+
+# Register fonts
+register_liberationsans()
 ```
 
 ```{r user-input, include=FALSE}

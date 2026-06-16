@@ -2,7 +2,7 @@
 pacman::p_load(tidyverse, lubridate, here, sf, gganimate, scatterpie,tmaptools)
 
 # Install and load required packages from Github -------------------------------
-if (!require("atm")) pkg_install("SWFSC/atm")
+if (!require("atm")) pak::pkg_install("SWFSC/atm")
 pacman::p_load_gh("SWFSC/atm")
  
 # theme_set(theme_bw())

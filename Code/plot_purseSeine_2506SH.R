@@ -10,8 +10,8 @@ pacman::p_load(tidyverse,readr, lubridate, here, plotly, sf, mapview,
                scatterpie,tmaptools)
 
 # Install and load required packages from Github -------------------------------
-if (!require("atm")) pkg_install("SWFSC/atm")
-if (!require("surveyR")) pkg_install("SWFSC/surveyR")
+if (!require("atm")) pak::pkg_install("SWFSC/atm")
+if (!require("surveyR")) pak::pkg_install("SWFSC/surveyR")
 pacman::p_load_gh("SWFSC/atm")
 pacman::p_load_gh("SWFSC/surveyR")
 

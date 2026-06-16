@@ -13,8 +13,8 @@ here("C:/KLS/CODE/Github/estimATM/1907RL")
 # install_version("ggrepel", version = "0.9.4", repos = "http://cran.us.r-project.org")
 
 # Install and load required packages from Github -------------------------------
-if (!require("atm")) pkg_install("SWFSC/atm")
-if (!require("surveyR")) pkg_install("SWFSC/surveyR")
+if (!require("atm")) pak::pkg_install("SWFSC/atm")
+if (!require("surveyR")) pak::pkg_install("SWFSC/surveyR")
 pacman::p_load_gh("SWFSC/atm")
 pacman::p_load_gh("SWFSC/surveyR")
 

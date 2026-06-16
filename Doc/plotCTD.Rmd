@@ -70,7 +70,7 @@ get.nav         <- T # Download NOAA Ship nav data
 
 save.figs       <- T # create new figures
 get.map         <- T # download map from rnaturalearth
-resize.map      <- T # Resize map during survey; if T, uses anticipated bounds of survey area
+resize.map      <- F # Resize map during survey; if T, uses anticipated bounds of survey area
 
 # Plotting options
 do.ggiraph       <- T # Set to F if having issues rendering Leaflet maps

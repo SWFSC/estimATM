@@ -474,7 +474,7 @@ imap.bounds <- map_bounds(nav$lat, nav$long, 0.1)
 
 # Leaflet tile options; set both to T if caching
 useCachedTile  <- F # Use cached tiles
-useCrossOrigin <- F # USe cross origin
+useCrossOrigin <- F # Use cross origin
 
 # Create leaflet map
 i.map <- leaflet() %>% 

@@ -76,8 +76,8 @@ process.csv.krill  <- T # Process krill backscatter files
 process.csv.all    <- F # Process all CSV files (F = new files only)
 
 # Are we sampling? If no, F. Skips data processing steps.
-sampling.acoustics <- T 
-sampling.trawl     <- T 
+sampling.acoustics <- F 
+sampling.trawl     <- F
 sampling.cufes     <- F 
 
 # Get environmental layers from ERDDAP (e.g., sardine potential habitat, Chl a, etc.)

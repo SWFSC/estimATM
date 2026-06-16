@@ -137,9 +137,9 @@ daynight.filter        <- c("Day","Night")# A character string including "Day", 
 
 # Inport dates for classifying data by cruise leg (if desired) -----------------
 # Use start dates of each leg + end date of last leg
-leg.breaks <- as.numeric(lubridate::ymd(c("2026-06-19", "2026-07-09", 
-                                          "2026-07-30", "2026-08-20", 
-                                          "2026-09-10", "2026-09-27")))
+leg.breaks <- as.numeric(lubridate::ymd(c("2026-06-16", "2026-07-04", 
+                                          "2026-07-23", "2026-08-12", 
+                                          "2026-09-02", "2026-09-25")))
 
 # Anticipated progress throught the transect plan
 # Leg 1:1-12, Leg 2:13-28, Leg 3:29-45, Leg 4: 46-59, Leg 5: 60-67 + EB cal
@@ -158,8 +158,8 @@ if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {
 # Define ERDDAP data variables for primary NOAA vessel
 erddap.url           <- "http://coastwatch.pfeg.noaa.gov/erddap/tabledap/fsuNoaaShip"
 erddap.vessel        <- "WTEGnrt"    # Lasker == WTEG; Shimada == WTED; add "nrt" if survey in progress
-erddap.survey.start  <- "2026-04-25" # Start of survey for ERDDAP vessel data query
-erddap.survey.end    <- "2026-10-01" # End of survey for ERDDAP vessel data query
+erddap.survey.start  <- "2026-06-10" # Start of survey for ERDDAP vessel data query
+erddap.survey.end    <- "2026-09-24" # End of survey for ERDDAP vessel data query
 erddap.vars          <- c("time,latitude,longitude,seaTemperature,platformSpeed,windDirection,windSpeed,flag")
 erddap.classes       <- c("character", "numeric", "numeric", "numeric","numeric","numeric","numeric","character")
 erddap.headers       <- c("time", "lat","long","SST","SOG","wind_dir","wind_speed","flag")

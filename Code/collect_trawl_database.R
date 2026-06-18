@@ -38,10 +38,24 @@ if (trawl.source == "SQL") {
 } else if (trawl.source == "CLAMS-SQLite") {
   # Configure ODBC connection to CLAMS SQLite database
   trawl.con      <- DBI::dbConnect(SQLite(), dbname = here("Data/Trawl", trawl.db.name))
+} else if (trawl.source == "CLAMS-Postgres") {
+  # Load db connection settings
+  source(here::here("Code", clams.db.settings))
+  
+  # Configure ODBC connection to CLAMS SQLite database
+  trawl.con      <- DBI::dbConnect(
+    RPostgres::Postgres(),
+    dbname = clams_db_name,
+    host = clams_db_host,
+    port = clams_db_port,
+    user = clams_db_user,
+    password = clams_db_pw,
+    options = paste0("-c search_path=", clams_db_schema) # Set the schema here
+  )
 }
 
 # Import trawl database tables
-if (trawl.source %in% c("SQL","Access")) {
+if (trawl.source %in% c("SQL","Access","CLAMS-Postgres")) {
   catch.all	     <- dplyr::tbl(trawl.con,"Catch") %>% dplyr::collect()
   haul.all       <- dplyr::tbl(trawl.con,"Haul")  %>% dplyr::collect()
   lengths.all    <- dplyr::tbl(trawl.con,"Specimen") %>% dplyr::collect()

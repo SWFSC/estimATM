@@ -147,7 +147,7 @@ tx.breaks <- c(0, 12, 28, 45, 59, 68)
 
 # Define nav source depending on location of computer
 ## Options are: SCS (usually on the ship) or ERDDAP (usually on shore; 24h update rate)
-if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {
+if (Sys.info()['nodename'] %in% c("SWC-KSTIERH1-L")) { #("SWC-FRD-AST1-D",
   nav.source    <- "SCS"
   nav.source.ns <- "GPX"
 } else {
@@ -626,7 +626,8 @@ cufes.date.format      <- "mdy" # mdy (1907RL and later) or ymd (earlier surveys
 cufes.vessels          <- c("RL")
 
 # Trawl data
-trawl.source           <- "CLAMS-SQLite"  # "SQL" or "Access" or "CLAMS-Oracle" or "CLAMS-SQLite"
+trawl.source           <- "CLAMS-Postgres"  # "SQL" or "Access" or "CLAMS-Oracle" or "CLAMS-SQLite" or "CLAMS-Postgres"
+clams.db.settings      <- "CLAMS_db_info-2606RL.R"
 trawl.dsn              <- "TRAWL"  # DSN for Trawl database on SQL server
 trawl.db.name          <- "TrawlDataEntry2606RL.db"
 trawl.db.ext           <- ".db"

@@ -29,7 +29,6 @@ Thumbs.db
 Code/Archive
 Code/*.mat
 Code/clams_conn_test.R
-Code/CLAMS_db_info-2606RL.R
 Code/habitatData/*.mat
 Code/habitatData/Generating_animated_gif.txt
 Data/*/*.Rdata

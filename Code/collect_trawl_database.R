@@ -39,11 +39,8 @@ if (trawl.source == "SQL") {
   # Configure ODBC connection to CLAMS SQLite database
   trawl.con      <- DBI::dbConnect(SQLite(), dbname = here("Data/Trawl", trawl.db.name))
 } else if (trawl.source == "CLAMS-Postgres") {
-  # Load db connection settings
-  source(here::here("Code", clams.db.settings))
-  
   # Configure ODBC connection to CLAMS SQLite database
-  trawl.con      <- DBI::dbConnect(
+  trawl.con <- DBI::dbConnect(
     RPostgres::Postgres(),
     dbname = clams_db_name,
     host = clams_db_host,
@@ -55,7 +52,7 @@ if (trawl.source == "SQL") {
 }
 
 # Import trawl database tables
-if (trawl.source %in% c("SQL","Access","CLAMS-Postgres")) {
+if (trawl.source %in% c("SQL","Access")) {
   catch.all	     <- dplyr::tbl(trawl.con,"Catch") %>% dplyr::collect()
   haul.all       <- dplyr::tbl(trawl.con,"Haul")  %>% dplyr::collect()
   lengths.all    <- dplyr::tbl(trawl.con,"Specimen") %>% dplyr::collect()
@@ -72,6 +69,22 @@ if (trawl.source %in% c("SQL","Access","CLAMS-Postgres")) {
          file = here::here("Data/Trawl/trawl_data_raw.Rdata"))
   }
   
+} else if (trawl.source %in% c("CLAMS-Postgres")) {
+  catch.all	     <- dplyr::tbl(trawl.con,"v_catch") %>% dplyr::collect()
+  haul.all       <- dplyr::tbl(trawl.con,"v_haul")  %>% dplyr::collect()
+  lengths.all    <- dplyr::tbl(trawl.con,"v_specimen") %>% dplyr::collect()
+  if (DBI::dbExistsTable(trawl.con, "LengthFrequency"))
+    lengthFreq.all <- dplyr::tbl(trawl.con,"LengthFrequency") %>% dplyr::collect()
+  spp.codes      <- dplyr::tbl(trawl.con,"species") %>% dplyr::collect()
+  
+  # Save imported database data to .Rdata file
+  if (exists("lengthFreq.all")) {
+    save(catch.all, haul.all, lengths.all, spp.codes, lengthFreq.all, 
+         file = here::here("Data/Trawl/trawl_data_raw.Rdata"))
+  } else {
+    save(catch.all, haul.all, lengths.all, spp.codes,  
+         file = here::here("Data/Trawl/trawl_data_raw.Rdata"))
+  }
 } else if (trawl.source %in% c("CLAMS-Oracle", "CLAMS-SQLite")) {
   # dbListTables(trawl.con)
   baskets       <- dplyr::tbl(trawl.con, "BASKETS") %>% dplyr::collect()

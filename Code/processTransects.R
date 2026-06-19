@@ -823,16 +823,27 @@ if (update.routes) {
         Type == "Adaptive"   ~ paste0(transect.name, "A")),
       id = name)
   
+  # Convert updated routes to sf
+  updated.route.sf <- updated.route %>% 
+    filter(!is.na(transect)) %>% 
+    st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
+    group_by(transect) %>% 
+    summarise(do_union = F) %>% 
+    st_cast("LINESTRING") %>% 
+    ungroup()
+  
   # Create output directories
   dir_create(here("Output", c("waypoints_updated")))
   dir_create(here("Output/routes_updated"), 
              c("Adaptive","Compulsory","Nearshore","Saildrone",
-               "Carranza", "Franklin"))
+               "Carranza", "Franklin","GPX"))
   
   # Delete existing CSV files
   rm.csv.routes <- dir_ls(here("Output/routes_updated"), regexp = "*.csv", recurse = TRUE)
+  rm.gpx.routes <- dir_ls(here("Output/routes_updated"), regexp = "*.gpx", recurse = TRUE)
   rm.csv.wpts <- dir_ls(here("Output/waypoints_updated"), regexp = "*.csv", recurse = TRUE)
   file_delete(rm.csv.routes)
+  file_delete(rm.gpx.routes)
   file_delete(rm.csv.wpts)
   
   # Write all waypoints to one CSV (to import one route)
@@ -844,6 +855,21 @@ if (update.routes) {
   # 
   # write_csv(select(waypoints.final.ns.csv, id, lat, long), 
   #           here("Output/waypoints/transect_wpts_ns.csv"))
+  
+  # Write transects from one sf object to multiple GPX files to create single routes
+  for (i in unique(updated.route.sf$transect)) {
+    tx.sub <- updated.route.sf %>%
+      filter(transect == i) %>%
+      select(name = transect)
+    
+    st_write(
+      obj = tx.sub, 
+      dsn = here("Output/routes_updated/GPX", paste0(i,".gpx")), 
+      driver = "GPX", 
+      dataset_options = "GPX_USE_EXTENSIONS=YES",
+      delete_dsn = TRUE # Overwrites the file if it already exists
+    )
+  }
   
   # Write waypoints from individual files to multiple CSV to create single routes
   # Compulsory transects

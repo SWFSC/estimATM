@@ -67,7 +67,7 @@ nasc.plot.min    <- 0
 
 ```{r processing-controls}
 # Control script behavior (usually T)
-get.db             <- T # Import trawl database
+get.db             <- F # Import trawl database
 get.nav            <- T # Download NOAA Ship nav data
 get.nav.sd         <- F # Download Saildrone nav data from ERDDAP
 get.nav.sh         <- F # Download NOAA Ship nav data
@@ -255,7 +255,9 @@ if (sampling.trawl) {
   haul.good <- purrr::pluck(haul$haul)
   
   # Replace missing lat/long values for hauls (a CLAMS/SCS problem, usually)
-  source(here("Code/nav_match_CLAMS.R"))
+  if (trawl.source %in% c("CLAMS-Oracle", "CLAMS-SQLite")) {
+    source(here("Code/nav_match_CLAMS.R"))
+  }
   
   # Find midpoint of each haul as the mean lat/long
   haul.mid <- haul %>% 

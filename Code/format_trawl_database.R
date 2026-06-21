@@ -347,6 +347,24 @@ if (trawl.source == "Access") {
   
   ## Final specimen table 
   lengths.all <- specimens %>% ungroup()
+} else if (trawl.source %in% c("CLAMS-Postgres")){
+  # Format haul data
+  haul.all <- haul.all %>% 
+    mutate(across(startLatDecimal:stopLongDecimal, as.numeric))
+  
+  # Format catch data
+  catch.all <- catch.all %>% 
+    mutate(across(collection, as.numeric))
+  
+  # Format specimen data
+  lenghts.all <- lengths.all %>% 
+    mutate(across(collection, as.numeric))
+  
+  # Format species code table
+  spp.codes <- spp.codes %>% 
+    rename(species = species_code,
+           scientificName = scientific_name,
+           commonName = common_name)
 }
 
 # Classify hauls by season (spring or summer)

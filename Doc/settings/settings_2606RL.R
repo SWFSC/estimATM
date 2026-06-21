@@ -229,8 +229,9 @@ pie.scale  <- 0.0125 # 0.01-0.02 works well for coast-wide survey (i.e., summer)
 
 # Lookup table for renaming columns
 pie.spp <- c("Jacksmelt"  = "Atherinopsis californiensis", "PacHerring" = "Clupea pallasii",
-             "Anchovy"    = "Engraulis mordax", "Sardine"    = "Sardinops sagax",
-             "PacMack"    = "Scomber japonicus", "JackMack"   = "Trachurus symmetricus",
+             "Anchovy"    = "Engraulis mordax", "Sardine"    = "Sardinops sagax", 
+             "JapSardine" = "Sardinops melanosticta", "PacMack" = "Scomber japonicus", 
+             "JackMack"   = "Trachurus symmetricus",
              "RndHerring" = "Etrumeus acuminatus", "AllCPS" = "AllCPS")
 
 # Map landmarks
@@ -306,13 +307,13 @@ pie.cols <- c("Engraulis mordax" = "Anchovy", "Trachurus symmetricus" = "JackMac
 pie.cols.prop <- c("Engraulis mordax" = "prop.anch", "Trachurus symmetricus" = "prop.jack", 
                    "Atherinopsis californiensis" = "prop.jsmelt", "Clupea pallasii" = "prop.her", 
                    "Scomber japonicus" = "prop.mack", "Etrumeus acuminatus" = "prop.rher", 
-                   "Sardinops sagax" = "prop.sar")
+                   "Sardinops sagax" = "prop.sar", "Sardinops melanosticta" = "prop.sar.jap")
 
 # Species labels
 pie.labs <- c("Engraulis mordax" = "Anchovy", "Trachurus symmetricus" = "J. Mackerel", 
-              "Atherinopsis californiensis" = "Jacksmelt", "Clupea pallasii" = "P. herring", 
-              "Scomber japonicus" = "P. mackerel", "Etrumeus acuminatus" = "R. herring", 
-              "Sardinops sagax" = "Sardine")
+              "Atherinopsis californiensis" = "Jacksmelt", "Sardinops melanosticta" = "J. Sardine",
+              "Clupea pallasii" = "P. herring", "Scomber japonicus" = "P. mackerel", 
+              "Etrumeus acuminatus" = "R. herring", "Sardinops sagax" = "Sardine")
 
 # Species colors
 pie.colors <- c("Engraulis mordax" = anchovy.color, "Trachurus symmetricus" = jack.mack.color, 

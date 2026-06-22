@@ -67,7 +67,7 @@ nasc.plot.min    <- 0
 
 ```{r processing-controls}
 # Control script behavior (usually T)
-get.db             <- F # Import trawl database
+get.db             <- T # Import trawl database
 get.nav            <- T # Download NOAA Ship nav data
 get.nav.sd         <- F # Download Saildrone nav data from ERDDAP
 get.nav.sh         <- F # Download NOAA Ship nav data
@@ -76,11 +76,11 @@ copy.files         <- T # Copy data files from data to estimATM directory
 overwrite.files    <- T # Overwrite existing files when copying (not CSV, see below)
 process.csv        <- T # Process acoustic backscatter files
 process.csv.krill  <- F # Process krill backscatter files
-process.csv.all    <- T # Process all CSV files (F = new files only)
+process.csv.all    <- F # Process all CSV files (F = new files only)
 
 # Are we sampling? If no, F. Skips data processing steps.
 sampling.acoustics <- T 
-sampling.trawl     <- F
+sampling.trawl     <- T
 sampling.cufes     <- F 
 
 # Get environmental layers from ERDDAP (e.g., sardine potential habitat, Chl a, etc.)
@@ -1063,21 +1063,23 @@ if (sampling.trawl) {
   source(here("Code/create_haul_paths.R"))
   
   # Create haul paths from starts and ends
-  haul.paths <- haul.paths %>% 
-    left_join(select(haul.catch, -X, -Y, -cluster)) %>% 
-    ungroup() %>% 
-    mutate(
-      distance = round(as.numeric(st_length(.))/1852,1),
-      label    = paste("Haul", haul),
-      popup    = paste('<b>Haul:', haul, '</b><br/>',
-                       'Anchovy:', Anchovy, 'kg<br/>',
-                       'P. Sardine:', Sardine, 'kg<br/>',
-                       'J. Sardine:', JapSardine, 'kg<br/>',
-                       'Jack mackerel:', JackMack, 'kg<br/>',
-                       'P. herring:', PacHerring, 'kg<br/>',
-                       'P. mackerel:', PacMack, 'kg<br/>',
-                       'R. herring:', RndHerring, 'kg<br/>',
-                       'All CPS:', AllCPS, 'kg')) 
+  if (exists("haul.paths")) {
+    haul.paths <- haul.paths %>% 
+      left_join(select(haul.catch, -X, -Y, -cluster)) %>% 
+      ungroup() %>% 
+      mutate(
+        distance = round(as.numeric(st_length(.))/1852,1),
+        label    = paste("Haul", haul),
+        popup    = paste('<b>Haul:', haul, '</b><br/>',
+                         'Anchovy:', Anchovy, 'kg<br/>',
+                         'P. Sardine:', Sardine, 'kg<br/>',
+                         'J. Sardine:', JapSardine, 'kg<br/>',
+                         'Jack mackerel:', JackMack, 'kg<br/>',
+                         'P. herring:', PacHerring, 'kg<br/>',
+                         'P. mackerel:', PacMack, 'kg<br/>',
+                         'R. herring:', RndHerring, 'kg<br/>',
+                         'All CPS:', AllCPS, 'kg')) 
+  }
   
   # Convert haul paths and midpoints to sf; CRS = crs.geog
   haul.locs.sf <- haul.mid %>% 
@@ -1305,7 +1307,7 @@ i.map <- leaflet() %>%
   addPolygons(data = mex_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalMex(NOMBRE),
               fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
   addMarkers(data = locations.sf, label = ~name, popup = ~name,
-               group = "Landmarks") %>%
+             group = "Landmarks") %>%
   # Add core planned transects
   addPolylines(data = filter(transects.sf, Type %in% c("Compulsory", "Adaptive")),
                color = ~txPal(Type), weight = 3, opacity = 0.5,
@@ -1615,11 +1617,11 @@ if (exists("big.nasc")) {
     theme_bw()
   
   # Create interactive plot
-    nasc.outlier.plot.interactive <- ggiraph::girafe(
-      ggobj = nasc.outlier.plot,
-      dependencies = list(liberationsansHtmlDependency())
-    )
-
+  nasc.outlier.plot.interactive <- ggiraph::girafe(
+    ggobj = nasc.outlier.plot,
+    dependencies = list(liberationsansHtmlDependency())
+  )
+  
   if (save.figs) {
     # Save figure
     ggsave(nasc.outlier.plot, filename = here("Figs/fig_nasc_outliers.png"), 
@@ -1701,7 +1703,7 @@ if (exists("haul.bad")) {
   haul.bad %>% 
     filter(cruise %in% cruise.name) %>%
     mutate(trawlDate = date(equilibriumTime)) %>% 
-    select(haul, trawlDate, orderOcc, trawlPerformance) %>% 
+    select(haul, trawlDate, trawlPerformance) %>% 
     datatable(rownames = FALSE)
 } else {
   print("No trawl data yet.")

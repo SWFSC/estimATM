@@ -55,10 +55,10 @@ dir_create(here(c("Figs/TDR", "Output")))
 copy.files   <- T # Copy TDR files
 process.rsk  <- T # Process RBR Duet^3^ TDR files (.rsk format)
 process.asc  <- F # Process Seabird TDR files (.asc format)
-process.tv80 <- T # Process Simrad TV80 data
+process.tv80 <- F # Process Simrad TV80 data
 
 # Usually F; set T to reprocess all TDR/TV80 files
-process.tdr.all   <- F # Process all TDR files 
+process.tdr.all   <- T # Process all TDR files 
 process.tv80.all  <- F # Process all TV80 files
 
 get.db      <- T # Extract data from trawl database (F for testing)
@@ -75,8 +75,10 @@ if (copy.files) {
     tibble(file_info(.))
   
   # Copy most recently modified trawl database
-  file_copy(haul.db.info$path[which.max(haul.db.info$modification_time)], 
-            here("Data/Trawl", trawl.db.name), overwrite = TRUE)
+  if (nrow(haul.db.info) > 0) {
+    file_copy(haul.db.info$path[which.max(haul.db.info$modification_time)], 
+              here("Data/Trawl", trawl.db.name), overwrite = TRUE)
+  }
   
   # Create directory for TDR files -------------------------------------------------  
   dir_create(here("Data/TDR", c("Kite","Footrope")))
@@ -153,7 +155,9 @@ haul <- filter(haul.all, cruise %in% cruise.name) %>%
          cluster  = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1) # Assign cluster
 
 # Replace missing lat/long values for hauls (a CLAMS/SCS problem, usually)
-source(here("Code/nav_match_CLAMS.R"))
+if (trawl.source %in% c("CLAMS-Oracle", "CLAMS-SQLite")) {
+  source(here("Code/nav_match_CLAMS.R"))
+}
 
 # Find midpoint of each haul as the mean lat/lon
 haul.mid <- haul %>% 
@@ -283,11 +287,11 @@ if (process.rsk) {
                time     = force_tz(time, tz = tdr.tz.kite[tdr.haul])) %>% # Define original time
         # Convert to UTC and apply offset
         mutate(time     = with_tz(time, tzone = "UTC") + hours(tdr.offset.k[tdr.haul])) 
-       
+      
       tbl.kite <- bind_rows(tbl.kite, tbl.kite.tmp)
     }
   }
-
+  
   # Process Footrope files ----------------------------------------------------------------------
   ## Create tibble for storing results
   tbl.foot <- tibble()
@@ -312,7 +316,7 @@ if (process.rsk) {
                time     = force_tz(time, tz = tdr.tz.foot[tdr.haul])) %>% # Define original time
         # Convert to UTC and apply offset
         mutate(time     = with_tz(time, tzone = "UTC") + hours(tdr.offset.f[tdr.haul])) 
-       
+      
       tbl.foot <- bind_rows(tbl.foot, tbl.foot.tmp)
     }
   }
@@ -496,14 +500,9 @@ if (process.tv80) {
 ```{r plot-results}
 # Plot and save all new deployments
 if(nrow(tbl.all.new) > 0) {
-  for (k in unique(tbl.all.new$haul)) {
+  for (k in sort(unique(tbl.all.new$haul))) {
     # Get TDR data from haul k
     tdr.plot <- filter(tbl.all.new, haul == k) 
-    
-    tdr.plot %>% 
-      group_by(loc) %>% 
-      summarise(min.time = min(time),
-                max.time = max(time))
     
     # Get haul info from haul k
     trawl.window <- haul %>% 
@@ -529,10 +528,12 @@ if(nrow(tbl.all.new) > 0) {
                      max(trawl.text$time, na.rm = TRUE) + minutes(10)))
     
     # Extract TDR data for 30 min before and after haul 
-    tdr.plot <- tdr.plot %>% 
-      filter(between(time,  
-                     min(trawl.text$time, na.rm = TRUE) - minutes(10), 
-                     max(trawl.text$time, na.rm = TRUE) + minutes(10)))
+    if (nrow(trawl.nav) > 0) {
+      tdr.plot <- tdr.plot %>% 
+        filter(between(time,  
+                       min(trawl.text$time, na.rm = TRUE) - minutes(10), 
+                       max(trawl.text$time, na.rm = TRUE) + minutes(10)))  
+    }
     
     # Pivot wider to compute mouth opening height
     if (exists("tdr.plot.wider")) rm(tdr.plot.wider)

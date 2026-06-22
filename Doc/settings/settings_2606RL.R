@@ -669,31 +669,29 @@ uctd.cast.depth        <- 330
 # RBR TDR data
 tdr.dir.kite           <- here("Data/TDR/Kite")
 tdr.dir.foot           <- here("Data/TDR/Footrope")
-tdr.pattern            <- "202606RL*.*rsk"
-tdr.pattern.cruise     <- "^\\d{6}\\w{2}"
+tdr.pattern            <- "2606RL\\d{3}\\w{1,2}.rsk$"
+tdr.pattern.cruise     <- "^\\d{4}\\w{2}"
 tdr.recurse            <- TRUE # Recursively search TDR directory
 # Time zone setting for TDRs
-tdr.tz.kite            <- c(rep("America/Los_Angeles", 46), 
-                            rep("UTC", 200)) 
+tdr.tz.kite            <- c(rep("UTC", 200)) 
 tdr.tz.kite <- setNames(tdr.tz.kite, 1:length(tdr.tz.kite))
-tdr.tz.foot            <- c(rep("America/Los_Angeles", 46), 
-                            rep("UTC", 200)) 
+tdr.tz.foot            <- c(rep("UTC", 200)) 
 tdr.tz.foot <- setNames(tdr.tz.foot, 1:length(tdr.tz.foot))
 # Time offset, in hours (e.g., -1, diff between PDT and PST in summer)
 ## Kite
 ### Define offsets
-tdr.offset.k <- c(rep(0, 46), rep(0, 200)) 
+tdr.offset.k <- c(rep(-7, 200)) 
 ### Add names from haul numbers
 tdr.offset.k <- setNames(tdr.offset.k, 1:length(tdr.offset.k))
 ## Footrope
 ### Define offsets
-tdr.offset.f <- c(rep(-7, 12), rep(0, 234)) 
+tdr.offset.f <- c(rep(-7, 200)) 
 ### Add names from haul numbers
 tdr.offset.f <- setNames(tdr.offset.f, 1:length(tdr.offset.f)) 
 # Data info
 tdr.nav.source         <- "ERDDAP"
 tdr.trawl.source       <- "Access"
-tdr.cruise             <- c("202506") # Cruise name(s) for TDR files
+tdr.cruise             <- c("202606") # Cruise name(s) for TDR files
 
 # Seabird TDR data
 tdr.offset.asc <- 0

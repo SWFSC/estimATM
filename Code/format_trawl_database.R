@@ -350,15 +350,36 @@ if (trawl.source == "Access") {
 } else if (trawl.source %in% c("CLAMS-Postgres")){
   # Format haul data
   haul.all <- haul.all %>% 
-    mutate(across(startLatDecimal:stopLongDecimal, as.numeric))
+    mutate(across(startLatDecimal:stopLongDecimal, as.numeric)) %>% 
+    mutate(deploymentTime = difftime(equilibriumTime, netInWaterTime, units = "mins"),
+           recoveryTime   = difftime(netOnDeckTime, haulBackTime, units = "mins"),
+           evolutionTime  = difftime(netOnDeckTime, netInWaterTime, units = "mins"))
   
   # Format catch data
   catch.all <- catch.all %>% 
     mutate(across(collection, as.numeric))
   
+  # Add missing variables
+  if (!"flaggedData " %in% names(catch.all)) {
+    catch.all <- catch.all %>% mutate(flaggedData  = NA)
+  } 
+  
   # Format specimen data
   lenghts.all <- lengths.all %>% 
-    mutate(across(collection, as.numeric))
+    mutate(across(collection, as.numeric)) 
+  
+  # Create variables that Brittany refused to include in the view
+  if (!"totalLength_mm" %in% names(lengths.all)) {
+    lengths.all <- lengths.all %>% mutate(totalLength_mm = NA)
+  } 
+  
+  if (!"mantleLength_mm" %in% names(lengths.all)) {
+    lengths.all <- lengths.all %>% mutate(mantleLength_mm = NA)
+  } 
+  
+  if (!"flaggedData " %in% names(lengths.all)) {
+    lengths.all <- lengths.all %>% mutate(flaggedData  = NA)
+  } 
   
   # Format species code table
   spp.codes <- spp.codes %>% 

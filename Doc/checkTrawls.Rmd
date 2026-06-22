@@ -178,7 +178,9 @@ haul <- filter(haul.all, cruise %in% cruise.name) %>%
 haul.good <- purrr::pluck(haul$haul)
 
 # Replace missing lat/long values for hauls (a CLAMS/SCS problem, usually)
-source(here("Code/nav_match_CLAMS.R"))
+if (trawl.source %in% c("CLAMS-Oracle", "CLAMS-SQLite")) {
+  source(here("Code/nav_match_CLAMS.R"))
+}
 
 # Find midpoint of each haul as the mean lat/lon
 haul.mid <- haul %>% 
@@ -222,6 +224,17 @@ if (nrow(catch) > 0) {
     ungroup() %>% 
     mutate(AllCPS = rowSums(.[, 3:ncol(.)])) %>% 
     arrange(haul)
+  
+  # Add species with zero total weight
+  if (!has_name(haul.summ.wt, "Engraulis mordax"))      {haul.summ.wt$`Engraulis mordax`      <- 0}
+  if (!has_name(haul.summ.wt, "Sardinops sagax"))       {haul.summ.wt$`Sardinops sagax`       <- 0}
+  if (!has_name(haul.summ.wt, "Sardinops melanosticta")){haul.summ.wt$`Sardinops melanosticta`<- 0}
+  if (!has_name(haul.summ.wt, "Scomber japonicus"))     {haul.summ.wt$`Scomber japonicus`     <- 0}
+  if (!has_name(haul.summ.wt, "Trachurus symmetricus")) {haul.summ.wt$`Trachurus symmetricus` <- 0}
+  if (!has_name(haul.summ.wt, "Clupea pallasii"))       {haul.summ.wt$`Clupea pallasii`       <- 0}
+  if (!has_name(haul.summ.wt, "Atherinopsis californiensis")) {haul.summ.wt$`Atherinopsis californiensis` <- 0}
+  if (!has_name(haul.summ.wt, "Etrumeus acuminatus"))   {haul.summ.wt$`Etrumeus acuminatus` <- 0}
+  if (!has_name(haul.summ.wt, "Other"))                 {haul.summ.wt$`Other` <- 0}
   
   # Summarise catch by cluster
   cluster.summ.wt <- haul.summ.wt %>% 
@@ -284,42 +297,38 @@ haul.catch <- project_sf(haul.catch, crs = crs.proj)
 # Create data frame with haul navigation data
 source(here("Code/create_haul_paths.R"))
 
-# Create haul paths from nav for each trawl period (Deployment, Fishing, and Recovery)
-haul.paths <- haul.nav %>% 
-  arrange(haul, time) %>% 
-  st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-  group_by(haul, period) %>% 
-  summarise(do_union = FALSE) %>% 
-  st_cast("LINESTRING") 
-
-# Add catch info to each haul
-haul.paths <- haul.paths %>% 
-  left_join(select(haul.catch, -X, -Y, -cluster)) %>% 
-  ungroup() %>% 
-  mutate(
-    distance = round(as.numeric(st_length(.))/1852,1),
-    label    = paste("Haul", haul),
-    popup    = paste('<b>Haul:', haul, '</b><br/>',
-                     'Anchovy:', Anchovy, 'kg<br/>',
-                     'Sardine:', Sardine, 'kg<br/>',
-                     'Jack mackerel:', JackMack, 'kg<br/>',
-                     'P. herring:', PacHerring, 'kg<br/>',
-                     'P. mackerel:', PacMack, 'kg<br/>',
-                     'R. herring:', RndHerring, 'kg<br/>',
-                     'All CPS:', AllCPS, 'kg')) 
-
-# Add coordinates if using the Access database (columns do not exist in SQL database)
-if (trawl.source == "Access") {
+if (exists("haul.paths")) {
+  # Add catch info to each haul
   haul.paths <- haul.paths %>% 
-    left_join(select(haul, haul, 
-                     startLatDeg   = startLatitudeDegrees,
-                     startLatMin   = startLatitudeMinutes,
-                     startLongDeg  = startLongitudeDegrees,
-                     startLongMin  = startLongitudeMinutes,
-                     stopLatDeg    = stopLatitudeDegrees,
-                     stopLatMin    = stopLatitudeMinutes,
-                     stopLongDeg   = stopLongitudeDegrees,
-                     stopLongMin   = stopLongitudeMinutes))  
+    left_join(select(haul.catch, -X, -Y, -cluster)) %>% 
+    ungroup() %>% 
+    mutate(
+      distance = round(as.numeric(st_length(.))/1852,1),
+      label    = paste("Haul", haul),
+      popup    = paste('<b>Haul:', haul, '</b><br/>',
+                       'Anchovy:', Anchovy, 'kg<br/>',
+                       'Sardine:', Sardine, 'kg<br/>',
+                       'Jack mackerel:', JackMack, 'kg<br/>',
+                       'P. herring:', PacHerring, 'kg<br/>',
+                       'P. mackerel:', PacMack, 'kg<br/>',
+                       'R. herring:', RndHerring, 'kg<br/>',
+                       'All CPS:', AllCPS, 'kg')) 
+  
+  # Add coordinates if using the Access database (columns do not exist in SQL database)
+  if (trawl.source == "Access") {
+    haul.paths <- haul.paths %>% 
+      left_join(select(haul, haul, 
+                       startLatDeg   = startLatitudeDegrees,
+                       startLatMin   = startLatitudeMinutes,
+                       startLongDeg  = startLongitudeDegrees,
+                       startLongMin  = startLongitudeMinutes,
+                       stopLatDeg    = stopLatitudeDegrees,
+                       stopLatMin    = stopLatitudeMinutes,
+                       stopLongDeg   = stopLongitudeDegrees,
+                       stopLongMin   = stopLongitudeMinutes))  
+  }
+  # Save haul paths
+  saveRDS(haul.paths, file = here("Output/haul_paths.rds"))
 }
 
 # Convert haul locations to sf
@@ -346,8 +355,6 @@ cluster.catch.sf <- catch.pie %>%
                   'P. mackerel:', PacMack, 'kg<br/>',
                   'R. herring:', RndHerring, 'kg<br/>',
                   'All CPS:', AllCPS, 'kg'))
-
-saveRDS(haul.paths, file = here("Output/haul_paths.rds"))
 ```
 
 ```{r process-trawl-length-data}
@@ -1562,7 +1569,7 @@ Hauls removed due to trawl performance issues (e.g., aborted, bad, poor, etc.) o
 haul.bad %>% 
   filter(cruise %in% cruise.name) %>%
   mutate(trawlDate = date(equilibriumTime)) %>% 
-  select(haul, trawlDate, orderOcc, trawlPerformance) %>% 
+  select(haul, trawlDate, trawlPerformance) %>% #orderOcc
   datatable(rownames = FALSE)
 ```
 
@@ -1571,20 +1578,24 @@ haul.bad %>%
 Trawl distances are examined to look for data entry errors. Trawls longer than 5 nmi are highlighted orange.
 
 ```{r check-trawl-distance}
-haul.paths %>% 
-  st_set_geometry(NULL) %>% 
-  arrange(desc(haul)) %>% 
-  filter(period == "Fishing") %>% 
-  mutate(distance = cell_spec(
-    distance, knitr.format, color = "black",
-    background = ifelse(distance <= 5, "white", "orange"))) %>%
-  select(haul, distance) %>%
-  kable(format = knitr.format, booktabs = TRUE, escape = FALSE,
-        align = c("c")) %>% 
-  kable_styling(bootstrap_options = c("striped","hover","condensed"),
-                full_width = FALSE) %>%
-  row_spec(0, align = c("c")) %>% 
-  scroll_box(height = "250px")
+if (exists("haul.paths")) {
+  haul.paths %>% 
+    st_set_geometry(NULL) %>% 
+    arrange(desc(haul)) %>% 
+    filter(period == "Fishing") %>% 
+    mutate(distance = cell_spec(
+      distance, knitr.format, color = "black",
+      background = ifelse(distance <= 5, "white", "orange"))) %>%
+    select(haul, distance) %>%
+    kable(format = knitr.format, booktabs = TRUE, escape = FALSE,
+          align = c("c")) %>% 
+    kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                  full_width = FALSE) %>%
+    row_spec(0, align = c("c")) %>% 
+    scroll_box(height = "250px")
+} else {
+  print("No haul paths available yet.")
+}
 ```
 
 ### Haul durations
@@ -1838,22 +1849,6 @@ if (exists("nav.paths.sf")) {
                  label = ~leg, group = "Vessel Track") %>%
     addMarkers(data = nav.now, label = ~label, popup = ~popup, icon = ~oceanIcons["ship"],
                group = "Vessel Positions") %>% 
-    # Add trawl paths 
-    addPolylines(data = haul.paths, weight = 5, opacity = 0.8, 
-                 color = ~trawlPathPal(period), 
-                 popup = ~popup, label = ~label, 
-                 group = "Trawls") %>% 
-    # Add trawl catch
-    addCircleMarkers(data = cluster.catch.sf, radius = 5, color = "#000000", stroke = TRUE, weight = 2,
-                     opacity = 0.8, fillOpacity = 1, fillColor =  "white",
-                     popup = ~popup, label = ~label,
-                     group =  "Trawls") %>%
-    # Add trawls with procted salmon catch
-    addCircleMarkers(data = salmon.hauls, 
-                     radius = 5, color = "#000000", stroke = TRUE, weight = 2,
-                     opacity = 0.8, fillOpacity = 1, fillColor =  "green",
-                     popup = ~popup, label = ~label,
-                     group =  "Trawls-Salmon") %>%
     # Add scale bar
     addScaleBar(position = "bottomright") %>%
     # Add map coordinates
@@ -1882,6 +1877,34 @@ if (exists("nav.paths.sf")) {
     i.map <- i.map %>% 
       addPolylines(data = nav.paths.sh.sf, color = c("#000414"), weight = 1,
                    label = ~paste("Leg", leg), group = "Vessel Track")
+  
+  # Add haul paths
+  if (exists("haul.paths"))
+    i.map <- i.map %>% 
+      # Add trawl paths 
+      addPolylines(data = haul.paths, weight = 5, opacity = 0.8, 
+                   color = ~trawlPathPal(period), 
+                   popup = ~popup, label = ~label, 
+                   group = "Trawls")
+  
+  # Add salmon hauls
+  if (nrow(salmon.hauls) > 0)
+    i.map <- i.map %>% 
+      # Add trawls with protected salmon catch
+      addCircleMarkers(data = salmon.hauls, 
+                       radius = 5, color = "#000000", stroke = TRUE, weight = 2,
+                       opacity = 0.8, fillOpacity = 1, fillColor =  "green",
+                       popup = ~popup, label = ~label,
+                       group =  "Trawls-Salmon")
+  
+  # Add trawl cluster data
+  if (exists("cluster.catch.sf"))
+  i.map <- i.map %>% 
+    # Add trawl catch
+    addCircleMarkers(data = cluster.catch.sf, radius = 5, color = "#000000", stroke = TRUE, weight = 2,
+                     opacity = 0.8, fillOpacity = 1, fillColor =  "white",
+                     popup = ~popup, label = ~label,
+                     group =  "Trawls")
   
   # Display interactive map
   i.map
@@ -1976,7 +1999,7 @@ haul.summary %>%
   kable_styling(bootstrap_options = c("striped","hover","condensed"),
                 full_width = FALSE) %>%
   row_spec(0, align = c("c")) %>% 
-  add_header_above(c(" " = 1, "Trawls/night" = 3, " " = 2))
+  add_header_above(c(" " = 1, "Trawls/night" = n_distinct(haul.summary$nHauls), " " = 2))
 
 write_csv(haul.summary, file = here("Output/trawl_effort_summary_leg.csv"))
 ```
@@ -2030,6 +2053,7 @@ List catches with protected salmon present. A total of `r sum(salmon.catch$total
 
 ```{r salmon-catch-table}
 salmon.catch %>% 
+  ungroup() %>% 
   select(-species) %>% 
   adorn_totals(where = "row") %>% 
   kable(format = knitr.format,booktabs = TRUE, escape = FALSE,
@@ -2530,6 +2554,7 @@ if (nrow(gonad.check2) > 0) {
   print("Hooray, no incorrect gonad codes!")
 }
 ```
+
 # Survey Area Maps
 ## Southern CA Bight
 

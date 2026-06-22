@@ -273,6 +273,12 @@ cps.spp            <- c("Clupea pallasii","Engraulis mordax","Sardinops melanost
 ## trouts & salmon, Pacific salmon unid, pink, chum, coho, sockeye, Chinook, steelhead, cutthroat trout
 salmon.spp <- c(161931, 161974, 161975, 161976, 161977, 161979, 161980, 161989, 161983) 
 
+## Define length types per species
+spp.sl <- c("Sardinops sagax", "Sardinops melanosticta", "Engraulis mordax")
+spp.fl <- c("Scomber japonicus", "Trachurus symmetricus", "Clupea pallasii", 
+            "Etrumeus acuminatus", "Merluccius productus")
+spp.ml <- c("Doryteuthis opalescens")
+
 # CUFES -------------------------------------------------------
 cufes.start        <- NA # Start of survey for CUFES filtering
 cufes.end          <- NA # End of survey for CUFES filtering

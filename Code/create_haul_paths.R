@@ -22,10 +22,13 @@ for (h in unique(haul$haul)) {
     bind_rows(haul.nav.tmp)
 }
 
-# Create haul paths from nav for each trawl period (Deployment, Fishing, and Recovery)
+# Create haul paths from nav for each trawl period (Deployment, Fishing, and Recovery) if nav data exists
+if (nrow(haul.nav) > 0) {
 haul.paths <- haul.nav %>% 
   arrange(haul, time) %>% 
   st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
   group_by(haul, period) %>% 
   summarise(do_union = FALSE) %>% 
   st_cast("LINESTRING")
+
+}

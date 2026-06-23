@@ -87,7 +87,7 @@ sampling.cufes     <- F
 get.env            <- F
 
 # Control script behavior (often F)
-scale.pies         <- F # Scale catch pies to by total weight
+scale.pies         <- T # Scale catch pies to by total weight
 resize.map         <- F # Resize map during survey; if T, uses anticipated bounds of survey area
 overwrite.csv      <- T # Overwrite existing Echoview CSV files when copying
 save.imap          <- F # Save interactive map using "mapshot"

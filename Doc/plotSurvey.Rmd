@@ -84,7 +84,7 @@ sampling.trawl     <- T
 sampling.cufes     <- F 
 
 # Get environmental layers from ERDDAP (e.g., sardine potential habitat, Chl a, etc.)
-get.env            <- T
+get.env            <- F
 
 # Control script behavior (often F)
 scale.pies         <- F # Scale catch pies to by total weight
@@ -1084,10 +1084,12 @@ if (sampling.trawl) {
   # Convert haul paths and midpoints to sf; CRS = crs.geog
   haul.locs.sf <- haul.mid %>% 
     mutate(label = paste("Haul", haul)) %>% 
+    filter(if_all(c(lat, long), ~ !is.na(.))) %>% 
     st_as_sf(coords = c("long","lat"), crs = crs.geog) 
   
   cluster.locs.sf <- cluster.mid %>% 
     mutate(label = paste("Cluster", cluster)) %>% 
+    filter(if_all(c(lat, long), ~ !is.na(.))) %>% 
     st_as_sf(coords = c("long","lat"), crs = crs.geog) 
   
   # Convert haul catch to sf and create labels
@@ -1384,7 +1386,7 @@ if (sampling.cufes) {
   
   if (nrow(cufes.sf) > 0) 
     i.map <- i.map %>% 
-      addLegend("bottomleft", colors = cufes.colors, 
+      leaflet::addLegend("bottomleft", colors = cufes.colors, 
                 values = ~sort(unique(cufes.sf$Species)), 
                 labels = cufes.spp.labels, 
                 title = "CUFES Egg Density <br/> (eggs m<sup>-3</sup>)", 
@@ -1451,7 +1453,7 @@ if (sampling.acoustics) {
                        label = ~label, popup = ~popup,
                        group = "Backscatter-CPS") %>%
       # Add legends
-      addLegend("bottomleft", colors = nasc.colors.all, 
+      leaflet::addLegend("bottomleft", colors = nasc.colors.all, 
                 values = sort(unique(nasc.cps.sf$bin.level)),
                 labels = nasc.labels.all, 
                 title = "CPS Backscatter<br/> (s<sub>A</sub>; m<sup>2</sup> nmi<sup>-2</sup>)", 
@@ -1465,7 +1467,7 @@ if (sampling.acoustics) {
                          fillOpacity = 0.75, fillColor =  ~nascPal(bin.level), 
                          label = ~label, popup = ~popup,
                          group = "Backscatter-Krill") %>% 
-        addLegend("bottomleft", colors = nasc.colors.all, 
+        leaflet::addLegend("bottomleft", colors = nasc.colors.all, 
                   values = ~sort(unique(nasc.krill.sf$bin.level)),
                   labels = nasc.labels.all, 
                   title = "Krill Backscatter<br/> (s<sub>A</sub>; m<sup>2</sup> nmi<sup>-2</sup>)", 
@@ -1537,7 +1539,7 @@ if (exists("ctd.sf"))
 #   i.map <- i.map %>% addTiles() %>%
 #   addRasterImage(sar.hab, colors = sar.pal, opacity = 0.5,
 #                  group = "Sardine habitat-Probability") %>%
-#   addLegend(pal = sar.pal, values = values(sar.hab),
+#   leaflet::addLegend(pal = sar.pal, values = values(sar.hab),
 #             title = "Sardine habitat-Probability",
 #             group = "Sardine habitat-Probability")
 # 
@@ -1545,7 +1547,7 @@ if (exists("ctd.sf"))
 #   i.map <- i.map %>% addTiles() %>%
 #   addRasterImage(sar.hab.class, colors = sarHabPal, opacity = 0.5,
 #                  group = "Sardine habitat-Classification") %>%
-#   addLegend(position = "bottomleft", 
+#   leaflet::addLegend(position = "bottomleft", 
 #             pal = sarHabPal, 
 #             values = values(sar.hab.class),
 #             title = "Sardine habitat-Classification",
@@ -1556,7 +1558,7 @@ if (exists("chl.a.log"))
   i.map <- i.map %>% addTiles() %>%
   addRasterImage(chl.a.log, colors = chl.pal.log, opacity = 0.75,
                  group = "Chlorophyll") %>%
-  addLegend(
+  leaflet::addLegend(
     position = "bottomleft",
     pal = chl.pal.log,
     values = values(chl.a.log),
@@ -1878,7 +1880,10 @@ if (exists("uctd.summ")|exists("ctd.summ")) {
     }
     
     if (exists("haul.mid")) {
-      haul.plot <- project_df(ungroup(haul.mid), to = crs.proj)
+      haul.plot <- haul.mid %>% 
+        ungroup() %>% 
+        filter(if_all(c(lat, long), ~ !is.na(.))) %>%
+        project_df(to = crs.proj)
       
       # Add surface trawls to map
       sample.map <- sample.map +

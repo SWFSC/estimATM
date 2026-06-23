@@ -1439,7 +1439,7 @@ if (nrow(lengths.sub) > 0) {
 
 Total lengths (or mantle length, for Market Squid) vs. weight for all specimens, symbolized by cruise leg.  
 
-```{r length-weight-leg}
+```{r length-weight-leg,fig.height=10,fig.width=10}
 lw.df.sub <- lw.df %>% 
   pivot_longer(totalLength_mm:standardLength_mm, names_to = "length_type", values_to = "length_mm")
 
@@ -1492,25 +1492,26 @@ if (do.ggiraph) {
 ```
 
 ## Final length-weight comparison
+
 For the purposes of computing biomass, total length is used to estimate target strength. Here, total length vs. weight is plotted along with the models from Palance et al. [-@Palance2019].
 
-```{r final-length-weight}
+```{r final-length-weight,fig.height=10,fig.width=10}
 # Examine length differences by leg
 lw.plot.final <- ggplot() +
-  # Plot L/W data for current survey
-  geom_point(data = lengths,
-             aes(totalLength_mm, weightg, group = sex, colour = sex), 
-             alpha = 0.75) +
-  # Plot individuals with missing lengths and weights
-  geom_point(data = filter(lengths, missing.length == TRUE),
-             aes(totalLength_mm, weightg),
-             shape = 21, fill = 'red',  size = 2.5) +
-  geom_point(data = filter(lengths, missing.weight == TRUE),
-             aes(totalLength_mm, weightg),
-             shape = 21, fill = 'blue', size = 2.5) +
-  # Plot seasonal length models for each species
+   # Plot seasonal length models for each species
   geom_line(data = lw.df, aes(totalLength_mm, weightg), 
             alpha = 0.75, colour = "gray20", linetype = 'dashed') +
+  # Plot L/W data for current survey
+  geom_point_interactive(data = lengths,
+             aes(totalLength_mm, weightg, group = sex, colour = sex, tooltip = label), 
+             alpha = 0.75) +
+  # Plot individuals with missing lengths and weights
+  geom_point_interactive(data = filter(lengths, missing.length == TRUE),
+             aes(totalLength_mm, weightg, tooltip = label),
+             shape = 21, fill = 'red',  size = 2.5) +
+  geom_point_interactive(data = filter(lengths, missing.weight == TRUE),
+             aes(totalLength_mm, weightg, tooltip = label),
+             shape = 21, fill = 'blue', size = 2.5) +
   # Facet by species
   facet_wrap(~scientificName, scales = "free") +
   # Format plot
@@ -1523,7 +1524,18 @@ lw.plot.final <- ggplot() +
 ggsave(lw.plot.final, filename = here("Figs/fig_LW_plots_final.png"),
        width = 10, height = 7) 
 
-include_graphics(here("Figs/fig_LW_plots_final.png"))
+if (do.ggiraph) {
+  # Create interactive plot
+  lw.plot.final.interactive <- ggiraph::girafe(
+    ggobj = lw.plot.final,
+    dependencies = list(liberationsansHtmlDependency())
+  )
+  
+  # Print interactive plot
+  lw.plot.final.interactive
+} else {
+  lw.plot.final
+}
 ```
 
 ```{r final-length-weight-log-log, eval=FALSE}
@@ -1807,7 +1819,7 @@ if(!file.exists(here("Images/oceanIcons.Rdata"))) {
 }
 
 # Set padding around data  
-imap.bounds <- map_bounds(haul$startLatDecimal, haul$startLongDecimal, 0.1) 
+imap.bounds <- atm::map_bounds(haul$startLatDecimal, haul$startLongDecimal, 0.1) 
 
 # Provider tiles info: http://leaflet-extras.github.io/leaflet-providers/preview/index.html
 if (exists("nav.paths.sf")) {

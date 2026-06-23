@@ -660,11 +660,17 @@ ctd.cast.pattern       <- ".*_processed.asc"
 ctd.cast.depth         <- 350
 
 # UCTD data   
-uctd.dir               <- file.path(survey.dir[survey.vessel.primary],"DATA/UCTD")
+uctd.dir               <- file.path(survey.dir[survey.vessel.primary],"DATA/MVP")
 uctd.type              <- "MVP" # "Valeport" or "Oceansciences" or "MVP"
-uctd.hdr.pattern       <- "mvp.*.m1"
-uctd.cast.pattern      <- "mvp.*.m1"
+uctd.hdr.pattern       <- "rl2604.*.m1"
+uctd.cast.pattern      <- "rl2604.*.m1"
 uctd.cast.depth        <- 330
+# Column names for cast files
+uctd.col.names         <- list(vp2 = c("date","time","Z","P","T","C","S","Sv","Dens","ChlA","Ticks"),
+                               m1  = c("P","Z","Sv","T","C","S","Dens","LOPC","ANLG0","ANLG1"))
+# Number of lines to skip when reading txt file
+uctd.skip              <- c(vp2 = 79, 
+                            m1  = 62)
 
 # RBR TDR data
 tdr.dir.kite           <- here("Data/TDR/Kite")

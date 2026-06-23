@@ -820,7 +820,8 @@ if (update.routes) {
       transect.name = str_sub(name, 1, 3),
       transect = case_when(
         Type == "Compulsory" ~ paste0(transect.name, "C"),
-        Type == "Adaptive"   ~ paste0(transect.name, "A")),
+        Type == "Adaptive"   ~ paste0(transect.name, "A"),
+        Type == "Nearshore"  ~ paste0(transect.name, "N")),
       id = name)
   
   # Convert updated routes to sf
@@ -828,7 +829,7 @@ if (update.routes) {
     filter(!is.na(transect)) %>% 
     st_as_sf(coords = c("Longitude","Latitude"), crs = crs.geog) %>% 
     group_by(transect) %>% 
-    summarise(do_union = F) %>% 
+    summarise(do_union = FALSE) %>% 
     st_cast("LINESTRING") %>% 
     ungroup()
   

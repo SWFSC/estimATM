@@ -180,7 +180,9 @@ if (length(uctd.hdr) == 0) {
     # Process all UCTD casts
     for (i in uctd.proc) {
       all.uctd.casts <- bind_rows(all.uctd.casts, 
-                                  extract_ctd_cast(i, type = "UCTD"))
+                                  extract_ctd_cast(i, type = "UCTD", 
+                                                   skip = uctd.skip,
+                                                   col.names = uctd.col.names))
     }
     
     # Arrange and filter results

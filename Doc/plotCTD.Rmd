@@ -690,7 +690,7 @@ if (exists("all.uctd.casts")) {
       # plot descent rate v depth
       uctd.dZt <- ggplot(data = all.uctd.casts, 
                          aes(dZt, Z, group = cast, colour = SOG)) + 
-        geom_path_interactive(alpha = 0.75, aes(tooltip = t)) +
+        geom_path_interactive(alpha = 0.75, aes(tooltip = cast)) +
         xlab("\nDescent rate (m/s)") + ylab("Depth (m)\n") + 
         scale_x_continuous(limits = c(0,ceiling(max(all.uctd.casts$dZt, na.rm = TRUE))),
                            breaks = seq(0, ceiling(max(all.uctd.casts$dZt, na.rm = TRUE)), 0.5), 
@@ -741,7 +741,7 @@ if (exists("all.uctd.casts")) {
     if (save.figs) {
       # plot depth v time
       uctd.Z <- ggplot(data = all.uctd.casts, aes(s, Z, group = factor(cast), colour = SOG)) + 
-        geom_path_interactive(alpha = 0.75, aes(tooltip = t)) +
+        geom_path_interactive(alpha = 0.75, aes(tooltip = cast)) +
         xlab("\nTime (s)") + ylab("Depth (m)\n") + 
         scale_x_continuous(limits = c(0,max(all.uctd.casts$s) + 10),
                            breaks = seq(0, max(all.uctd.casts$s) + 10, 25),
@@ -790,7 +790,7 @@ if (exists("all.uctd.casts")) {
     if (save.figs) {
       # plot temperature v depth
       uctd.T <- ggplot(data = all.uctd.casts, aes(T, Z, group = cast, colour = factor(cast))) + 
-        geom_path_interactive(alpha = 0.75, aes(tooltip = t)) +
+        geom_path_interactive(alpha = 0.75, aes(tooltip = cast)) +
         xlab("\nTemperature (C)") + ylab("Depth (m)\n") + 
         scale_x_continuous(limits = c(round(min(all.uctd.casts$T),0) - 1, round(max(all.uctd.casts$T),0) + 1),
                            breaks = seq(round(min(all.uctd.casts$T),0) - 1, round(max(all.uctd.casts$T), 0) + 1, 2),
@@ -834,7 +834,7 @@ if (exists("all.uctd.casts")) {
     if (save.figs) {
       # plot salinity v depth
       uctd.S <- ggplot(data = all.uctd.casts, aes(S, Z, group = cast, colour = factor(cast))) + 
-        geom_path_interactive(alpha = 0.75, aes(tooltip = t)) +
+        geom_path_interactive(alpha = 0.75, aes(tooltip = cast)) +
         xlab("\nSalinity") + ylab("Depth (m)\n") +
         scale_x_continuous(limits = c(round(min(all.uctd.casts$S), 2) - 0.1, 
                                       round(max(all.uctd.casts$S), 2) + 0.1),
@@ -880,7 +880,7 @@ if (exists("all.uctd.casts")) {
     if (save.figs) {
       # plot sound speed v depth
       uctd.Sv <- ggplot(data = all.uctd.casts, aes(Sv, Z, group = cast, colour = factor(cast))) + 
-        geom_path_interactive(alpha = 0.75, aes(tooltip = t)) +
+        geom_path_interactive(alpha = 0.75, aes(tooltip = cast)) +
         xlab("\nSound speed (m/s)") + ylab("Depth (m)\n") +
         scale_x_continuous(limits = c(round(min(all.uctd.casts$Sv), 0) - 1, 
                                       round(max(all.uctd.casts$Sv), 0) + 1),
@@ -927,7 +927,7 @@ if (exists("all.uctd.casts")) {
       if (save.figs) {
         # plot sound speed v depth
         uctd.chl <- ggplot(data = all.uctd.casts, aes(ChlA, Z, group = cast, colour = factor(cast))) + 
-          geom_path_interactive(alpha = 0.75, aes(tooltip = t)) +
+          geom_path_interactive(alpha = 0.75, aes(tooltip = cast)) +
           xlab("\nChlorophyll-a (ug/L)") + ylab("Depth (m)\n") +
           # scale_x_continuous(limits = c(round(min(all.uctd.casts$ChlA), 0) - 1, 
           #                               round(max(all.uctd.casts$ChlA), 0) + 1),

@@ -334,11 +334,13 @@ if (exists("haul.paths")) {
 # Convert haul locations to sf
 haul.locs.sf <- haul.mid %>% 
   mutate(label = paste("Haul", haul)) %>% 
+  filter(if_all(c(lat, long), ~ !is.na(.))) %>% 
   st_as_sf(coords = c("long","lat"), crs = crs.geog) 
 
 # Convert cluster locations to sf
 cluster.locs.sf <- cluster.mid %>% 
   mutate(label = paste("Cluster", cluster)) %>% 
+  filter(if_all(c(lat, long), ~ !is.na(.))) %>%
   st_as_sf(coords = c("long","lat"), crs = crs.geog) 
 
 # Convert haul catch to sf and create labels
@@ -1569,8 +1571,27 @@ Hauls removed due to trawl performance issues (e.g., aborted, bad, poor, etc.) o
 haul.bad %>% 
   filter(cruise %in% cruise.name) %>%
   mutate(trawlDate = date(equilibriumTime)) %>% 
-  select(haul, trawlDate, trawlPerformance) %>% #orderOcc
+  select(haul, trawlDate, trawlPerformance) %>% 
   datatable(rownames = FALSE)
+```
+
+### Haul positions  
+
+Hauls missing lat/long data.
+
+```{r bad-haul-positions}
+haul %>% 
+  filter(if_any(c(startLatDecimal, startLongDecimal,
+                  stopLatDecimal, stopLongDecimal), ~ is.na(.))) %>%
+  select(haul, startLatDecimal:stopLongDecimal) %>% 
+  mutate(across(everything(), 
+                ~cell_spec(.x, background = ifelse(is.na(.x), "red", "white")))) %>% 
+  kable(format = knitr.format, booktabs = TRUE, escape = FALSE,
+        align = c("c")) %>% 
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                full_width = FALSE) %>%
+  row_spec(0, align = c("c")) %>% 
+  scroll_box(height = "250px")
 ```
 
 ### Haul distances
@@ -1976,6 +1997,9 @@ haul.summary <- haul %>%
   group_by(Leg = leg, haulsPerNight) %>% 
   tally(name = "nNights") 
 
+# Get unique number of hauls per night
+nHaulColumns <- n_distinct(haul.summary$haulsPerNight)
+
 # Summarize the total number of hauls per Leg
 haul.summary.all <- haul.summary %>% 
   mutate(nHauls = haulsPerNight*nNights) %>% 
@@ -1999,7 +2023,7 @@ haul.summary %>%
   kable_styling(bootstrap_options = c("striped","hover","condensed"),
                 full_width = FALSE) %>%
   row_spec(0, align = c("c")) %>% 
-  add_header_above(c(" " = 1, "Trawls/night" = n_distinct(haul.summary$nHauls), " " = 2))
+  add_header_above(c(" " = 1, "Trawls/night" = nHaulColumns, " " = 2))
 
 write_csv(haul.summary, file = here("Output/trawl_effort_summary_leg.csv"))
 ```

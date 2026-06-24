@@ -16,7 +16,7 @@ if (!require("pacman")) install.packages("pacman")
 if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
-pacman::p_load(tidyverse,cowplot,knitr,shadowtext,sf,fs,vroom,leaflet,
+pacman::p_load(tidyverse,cowplot,knitr,shadowtext,sf,fs,vroom,leaflet,xml2,
                DBI,stringr,gdata,forecast,lubridate,here,rnaturalearth,viridis,
                DT,mapview,bookdown,ggspatial,leafem,leaflet.extras,xts,ggiraph,gdtools)
 
@@ -94,11 +94,13 @@ if (copy.files) {
 ```
 
 ```{r process-nav}
-# Source code to get nav data from ERDDAP or SCS
+# Source code to get nav data from ERDDAP, RosePoint, or SCS
 if (nav.source == "ERDDAP") {
   source(here("Code/get_nav_erddap.R"))
 } else if (nav.source == "SCS") {
   source(here("Code", scs.nav.script))
+} else if (nav.source == "RosePoint") {
+  source(here("Code/get_nav_rosepoint.R"))
 }
 
 # Read transect waypoints

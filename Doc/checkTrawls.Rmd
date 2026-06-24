@@ -18,7 +18,7 @@ if (!require("pacman")) install.packages("pacman")
 if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
-pacman::p_load(tidyverse,lubridate,mapview,kableExtra,leaflet,gdtools,
+pacman::p_load(tidyverse,lubridate,mapview,kableExtra,leaflet,gdtools,xml2,
                here,bookdown,odbc,DBI,knitr,DT,fs,sf,leafem,naniar,ggiraph,
                cowplot,RSQLite,xts,rnaturalearth,htmltools,janitor,lwgeom)
 
@@ -81,13 +81,13 @@ do.ggiraph      <- T # Set to F if having issues rendering Leaflet maps
 ```
 
 ```{r get-nav}
-# Get nav data
+# Source code to get nav data from ERDDAP, RosePoint, or SCS
 if (nav.source == "ERDDAP") {
-  # Source code to get nav data from ERDDAP
   source(here("Code/get_nav_erddap.R"))
 } else if (nav.source == "SCS") {
-  # Source code to get nav data from SCS
-  source(here("Code",  scs.nav.script))
+  source(here("Code", scs.nav.script))
+} else if (nav.source == "RosePoint") {
+  source(here("Code/get_nav_rosepoint.R"))
 }
 
 # Get nav data from Shimada

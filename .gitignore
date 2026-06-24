@@ -139,6 +139,7 @@ Output/tables_updated/*
 Output/trackSurvey/*
 Output/waypoints/*
 Output/waypoints_updated/*
+PROCESSED/*
 Reviews/*
 rsconnect/*
 Sandbox/*.pdf

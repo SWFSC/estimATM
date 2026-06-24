@@ -148,10 +148,12 @@ tx.breaks <- c(0, 12, 28, 45, 59, 68)
 # Define nav source depending on location of computer
 ## Options are: SCS (usually on the ship) or ERDDAP (usually on shore; 24h update rate)
 if (Sys.info()['nodename'] %in% c("SWC-KSTIERH1-L")) { #("SWC-FRD-AST1-D",
-  nav.source    <- "SCS"
+  nav.source    <- "RosePoint" # SCS, ERDDAP, or RosePoint
+  nav.path.nob  <- "C:/KLS/CODE/Github/estimATM/2606RL/Data/Nav/2606RL-for-R.nob" 
   nav.source.ns <- "GPX"
 } else {
-  nav.source    <- "ERDDAP"
+  nav.source    <- "RosePoint" # SCS, ERDDAP, or RosePoint
+  nav.path.nob  <- "C:/KLS/CODE/Github/estimATM/2606RL/Data/Nav/2606RL-for-R.nob" 
   nav.source.ns <- "GPX"
 }
 

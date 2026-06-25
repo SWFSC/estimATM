@@ -93,7 +93,7 @@ if (copy.files) {
 }
 ```
 
-```{r process-nav}
+```{r process-nav, include=F}
 # Source code to get nav data from ERDDAP, RosePoint, or SCS
 if (nav.source == "ERDDAP") {
   source(here("Code/get_nav_erddap.R"))

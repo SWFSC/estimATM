@@ -15,7 +15,7 @@ pacman::p_load(tidyverse,raster,cowplot,DBI,odbc,RSQLite,scatterpie,ggspatial,vr
                readxl,lubridate,rnaturalearth,sf,here,naniar,mapview,xts,terra,
                shadowtext,knitr,ggrepel,fs,plotly,leaflet,leaflet.extras,bookdown,
                htmltools,leafem,DT,rworldmap,rworldxtra,lwgeom,htmlwidgets,httr,
-               ncdf4,rerddap,patchwork,kableExtra)
+               ncdf4,rerddap,patchwork,kableExtra,xml2)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pak::pkg_install("SWFSC/atm")
@@ -92,12 +92,18 @@ if (copy.files) {
 ```
 
 ```{r process-nav}
-# Source code to get nav data from ERDDAP or SCS
+# Source code to get nav data from ERDDAP, RosePoint, or SCS
 if (nav.source == "ERDDAP") {
   source(here("Code/get_nav_erddap.R"))
 } else if (nav.source == "SCS") {
   source(here("Code", scs.nav.script))
+} else if (nav.source == "RosePoint") {
+  source(here("Code/get_nav_rosepoint.R"))
 }
+
+# if (get.nav.sh) {
+#   source(here("Code/get_nav_erddap_SH.R"))
+# }
 
 # Remove non-survey legs
 nav.paths.sf <- nav.paths.sf %>% 
@@ -736,7 +742,7 @@ das.summary %>%
                 full_width = FALSE) 
 ```
 
-According to our calculations, a total of **`r sum(das.summary$das.actual)`** DAS were accomplished of the `r sum(das.summary$das.planned)` DAS planned, resulting in a loss of **`r sum(das.summary$delta.das)` DAS**.  
+According to our calculations, a total of **`r sum(das.summary$das.actual)`** DAS were accomplished of the `r sum(das.summary$das.planned)` DAS planned, resulting in a loss of **`r sum(das.summary$delta.das)` DAS**.
 
 ## Planned vs. actual **survey** days at sea (DAS)
 

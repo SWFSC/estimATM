@@ -990,7 +990,9 @@ haul <- filter(haul.all, cruise %in% cruise.name) %>%
 haul.good <- purrr::pluck(haul$haul)
 
 # Replace missing lat/long values for hauls (a CLAMS/SCS problem, usually)
-source(here("Code/nav_match_CLAMS.R"))
+if (trawl.source %in% c("CLAMS-Oracle", "CLAMS-SQLite", "CLAMS-Postgres")) {
+  source(here("Code/nav_match_CLAMS.R"))
+}
 
 # Find midpoint of each haul as the mean lat/lon
 haul.mid <- haul %>% 

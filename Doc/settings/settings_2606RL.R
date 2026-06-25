@@ -147,13 +147,13 @@ tx.breaks <- c(0, 12, 28, 45, 59, 68)
 
 # Define nav source depending on location of computer
 ## Options are: SCS (usually on the ship) or ERDDAP (usually on shore; 24h update rate)
-if (Sys.info()['nodename'] %in% c("SWC-KSTIERH1-L")) { #("SWC-FRD-AST1-D",
+if (Sys.info()['nodename'] %in% c("SWC-KSTIERHOFF-")) { #("SWC-FRD-AST1-D",
   nav.source    <- "RosePoint" # SCS, ERDDAP, or RosePoint
-  nav.path.nob  <- "C:/KLS/CODE/Github/estimATM/2606RL/Data/Nav/2606RL-for-R.nob" 
+  nav.path.nob  <- "C:/SURVEY/2606RL/DATA/NAV/2606RL-12.5-nmi-spacing_final.nob" 
   nav.source.ns <- "GPX"
 } else {
   nav.source    <- "RosePoint" # SCS, ERDDAP, or RosePoint
-  nav.path.nob  <- "C:/KLS/CODE/Github/estimATM/2606RL/Data/Nav/2606RL-for-R.nob" 
+  nav.path.nob  <- "C:/SURVEY/2606RL/ANALYSIS/estimATM/2606RL/Nav/2606RL-12.5-nmi-spacing_final.nob" 
   nav.source.ns <- "GPX"
 }
 
@@ -688,12 +688,12 @@ tdr.tz.foot <- setNames(tdr.tz.foot, 1:length(tdr.tz.foot))
 # Time offset, in hours (e.g., -1, diff between PDT and PST in summer)
 ## Kite
 ### Define offsets
-tdr.offset.k <- c(rep(-7, 200)) 
+tdr.offset.k <- c(rep(0, 200)) 
 ### Add names from haul numbers
 tdr.offset.k <- setNames(tdr.offset.k, 1:length(tdr.offset.k))
 ## Footrope
 ### Define offsets
-tdr.offset.f <- c(rep(-7, 200)) 
+tdr.offset.f <- c(rep(0, 200)) 
 ### Add names from haul numbers
 tdr.offset.f <- setNames(tdr.offset.f, 1:length(tdr.offset.f)) 
 # Data info

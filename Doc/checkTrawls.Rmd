@@ -80,7 +80,7 @@ overwrite.files <- T # Overwrite files
 do.ggiraph      <- T # Set to F if having issues rendering Leaflet maps
 ```
 
-```{r get-nav}
+```{r get-nav, include=F}
 # Source code to get nav data from ERDDAP, RosePoint, or SCS
 if (nav.source == "ERDDAP") {
   source(here("Code/get_nav_erddap.R"))
@@ -178,9 +178,9 @@ haul <- filter(haul.all, cruise %in% cruise.name) %>%
 haul.good <- purrr::pluck(haul$haul)
 
 # Replace missing lat/long values for hauls (a CLAMS/SCS problem, usually)
-if (trawl.source %in% c("CLAMS-Oracle", "CLAMS-SQLite")) {
-  source(here("Code/nav_match_CLAMS.R"))
-}
+if (trawl.source %in% c("CLAMS-Oracle", "CLAMS-SQLite", "CLAMS-Postgres")) {
+    source(here("Code/nav_match_CLAMS.R"))
+  }
 
 # Find midpoint of each haul as the mean lat/lon
 haul.mid <- haul %>% 

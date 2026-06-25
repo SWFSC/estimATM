@@ -166,7 +166,9 @@ haul <- filter(haul.all, cruise %in% cruise.name) %>%
 haul.good <- purrr::pluck(haul$haul)
 
 # Replace missing lat/long values for hauls (a CLAMS/SCS problem, usually)
-source(here("Code/nav_match_CLAMS.R"))
+if (trawl.source %in% c("CLAMS-Oracle", "CLAMS-SQLite", "CLAMS-Postgres")) {
+  source(here("Code/nav_match_CLAMS.R"))
+}
 
 # Find midpoint of each haul as the mean lat/lon
 haul.mid <- haul %>% 
@@ -476,7 +478,7 @@ if (nrow(specimens.or) > 0) {
   # Write specimen level data to CSV
   write_csv(specimens.or, 
             file = here("Output", paste0(survey.name, "_specimen_info_ODFW.csv")))
-    # Save specimen summary to CSV
+  # Save specimen summary to CSV
   write_csv(specimen.summ, 
             here("Output", paste0(survey.name, "_specimen_table_ODFW.csv")),
             na = "")

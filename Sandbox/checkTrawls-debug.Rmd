@@ -172,7 +172,9 @@ haul <- filter(haul.all, cruise %in% cruise.name) %>%
 haul.good <- purrr::pluck(haul$haul)
 
 # Replace missing lat/long values for hauls (a CLAMS/SCS problem, usually)
-source(here("Code/nav_match_CLAMS.R"))
+if (trawl.source %in% c("CLAMS-Oracle", "CLAMS-SQLite", "CLAMS-Postgres")) {
+  source(here("Code/nav_match_CLAMS.R"))
+}
 
 # Find midpoint of each haul as the mean lat/lon
 haul.mid <- haul %>% 
@@ -884,7 +886,7 @@ if (nrow(lengths.sub) > 0) {
                shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
     # Format plot
     xlab("Length (mm)") + ylab("Mass (g)")
-
+  
   if (do.plotly) {
     ggplotly(lw.plot)
   } else {

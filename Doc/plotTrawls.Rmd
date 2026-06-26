@@ -737,6 +737,314 @@ if(nrow(tbl.all.new) > 0) {
 }
 ```
 
+```{r extract-fishing-data}
+if (process.tdr.all) {
+  # Extract data during fishing
+  
+  # Create df for storing TDR data
+  tdr.fishing <- data.frame()
+  
+  # Extract fishing data
+  for (i in sort(unique(tbl.all$haul))) {
+    # Get haul info
+    haul.tmp <- filter(haul, haul == i) 
+    
+    # Subset TDR data and extract fishing data
+    tdr.tmp <- tbl.all %>%
+      filter(haul == i) %>% 
+      filter(between(time, haul.tmp$equilibriumTime, haul.tmp$haulBackTime)) %>% 
+      select(cruise, haul, time, loc, depth)
+    
+    if ("Kite" %in% tdr.tmp$loc & "Footrope" %in% tdr.tmp$loc) {
+      # For hauls that have both kite and footrope TDRs
+      # Calculate relative time from start of fishing
+      tdr.tmp <- tdr.tmp %>% 
+        pivot_wider(names_from = loc, values_from = depth) %>% 
+        mutate(time.diff = c(0, diff(time)),
+               time.cum  = cumsum(time.diff)/60,
+               height = Kite - Footrope) %>% 
+        mutate(key = i)
+      
+      # Combine results
+      tdr.fishing <- bind_rows(tdr.tmp, tdr.fishing)
+    }
+  }
+  
+  # Arrange TDR data by time
+  tdr.fishing <- tdr.fishing %>% 
+    arrange(haul, time) %>% 
+    left_join(select(haul, haul, gear.type = gearType))
+  
+  # Save processed data
+  save(tdr.fishing, file = here("Data/TDR/tdr_data_fishing.Rdata"))
+  
+} else {
+  # Load processed data
+  load(here("Data/TDR/tdr_data_fishing.Rdata"))
+}
+
+# Calculate horizontal spread and area
+tdr.fishing <- tdr.fishing %>% 
+  # Calculate spread
+  mutate(P = case_when(
+    gear.type == "MFT" ~ 87.2,
+    gear.type == "Nordic 264" ~ 65.7,
+    TRUE ~ NA
+  )) %>% 
+  mutate(b = height/2,
+         A = pi*b*sqrt((P^2)/(2*pi^2)-b^2)) %>% 
+  filter(!is.na(A))
+```
+
+```{r extract-tdr-paths}
+# Create df for all results
+tdr.nav <- data.frame()
+
+for (kk in unique(tdr.fishing$haul)) {
+    # Extract TDR data for each haul
+    tdr.tmp <- filter(tdr.fishing, haul == kk)
+    
+    # Extract nav data during the fishing period
+    nav.tmp <- filter(nav, between(time, min(tdr.tmp$time), max(tdr.tmp$time))) %>% 
+      mutate(period = "Fishing",
+             cruise = unique(tdr.tmp$cruise),
+             haul = kk)    
+    
+    tdr.nav <- bind_rows(tdr.nav, nav.tmp)
+  }
+
+tdr.nav.sf <- tdr.nav %>% 
+  st_as_sf(coords = c("long","lat"), crs = 4326) 
+
+# Identify hauls with >1 point
+tdr.nav.summ <- tdr.nav %>% 
+  group_by(cruise, haul) %>% tally() %>% arrange(n) %>% 
+  filter(n > 1) %>% 
+  mutate(key = paste(cruise, haul)) %>% 
+  arrange(haul)
+
+tdr.paths.sf <- tdr.nav.sf %>% 
+  mutate(key = paste(cruise, haul)) %>% 
+  filter(key %in% tdr.nav.summ$key) %>% 
+  group_by(cruise, haul, period) %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("LINESTRING") %>% 
+  ungroup() %>% 
+  mutate(distance = as.numeric(st_length(.))) %>% 
+  filter(distance > 0)
+```
+
+```{r summarise-tdr-metrics}
+# Summarize TDR depth by location and cruise
+tdr.depth.summ.k <- tdr.fishing %>% 
+  group_by(cruise) %>% 
+  summarise(kite.depth = mean(Kite, na.rm = TRUE)) 
+
+tdr.depth.summ.fr <- tdr.fishing %>% 
+  group_by(cruise) %>% 
+  summarise(footrope.depth = mean(Footrope, na.rm = TRUE)) 
+
+tdr.depth.summ <- tdr.depth.summ.k %>% 
+  left_join(tdr.depth.summ.fr) 
+
+# Summarize mouth opening by cruise
+tdr.height.summ <- tdr.fishing %>% 
+  group_by(cruise) %>% 
+  summarise(mean.height = mean(height, na.rm = TRUE))
+
+tdr.area.summ <- tdr.fishing %>% 
+  group_by(cruise) %>% 
+  summarise(A = mean(A, na.rm = TRUE))
+
+tdr.summ.haul <- tdr.fishing %>% 
+  group_by(cruise, haul, gear.type) %>% 
+  summarise(A = mean(A, na.rm = TRUE),
+            fishing.start = min(time),
+            fishing.end = max(time),
+            duration = as.numeric(difftime(fishing.end, fishing.start, units = "mins"))) %>% 
+  mutate(duration.bin = cut(duration, c(0, 35, 100)))
+
+# tdr.summ.haul <- tdr.fishing %>% 
+#   group_by(cruise, haul, gear.type) %>% 
+#   summarise(A = mean(A, na.rm = TRUE))
+
+# tdr.summ.haul %>% group_by(gear.type, duration.bin) %>% tally()
+
+# Combine haul summaries with distances to compute volume sampled or swept area
+tdr.summ.haul <- tdr.summ.haul %>% 
+  left_join(select(tdr.paths.sf, cruise, haul, distance)) %>% 
+  mutate(V = A * distance)
+
+# Summarise volume/swept area for histogram plots
+tdr.summ.all <- tdr.summ.haul %>% 
+  group_by(cruise, gear.type) %>% 
+  summarise(distance = mean(distance, na.rm = T),
+            A = mean(A, na.rm = T),
+            V = mean(V, na.rm = T)) %>% 
+  left_join(tdr.depth.summ) %>% 
+  left_join(tdr.height.summ)
+
+tdr.summ.all.gear <- tdr.summ.all %>% 
+  group_by(gear.type) %>% 
+  summarise(kite.depth = mean(kite.depth),
+            footrope.depth = mean(footrope.depth),
+            height = mean(mean.height))
+
+tdr.summ.all.gear <- tdr.fishing %>% 
+  group_by(gear.type) %>% 
+  summarise(kite.depth = mean(Kite),
+            footrope.depth = mean(Footrope),
+            height = mean(Kite - Footrope), 
+            area = mean(A)) %>% 
+  arrange(gear.type)
+
+# Save processed data
+save(tdr.fishing, file = here("Data/TDR/tdr_data_fishing_final.Rdata"))
+```
+
+```{r plot-fishing-data,eval=FALSE}
+# Summarise hauls by cruise
+tdr.tow.summ <- tdr.fishing %>% group_by(cruise) %>% summarise(nHauls = n_distinct(haul))
+
+# Create df for labeling plots by cruise and gear type
+tdr.labels <- tdr.fishing %>% 
+  group_by(cruise, gear.type) %>% tally() %>% 
+  left_join(tdr.tow.summ) %>% 
+  mutate(label = paste0(gear.type, " (", nHauls, ")"))
+
+if (save.figs) {
+  # Save TDR depth plots
+  tdr.plot.depths <- ggplot(filter(tdr.fishing, time.cum < 45)) +
+    geom_path(aes(time.cum, Kite, group = haul), colour = "red", alpha = 0.1) +
+    geom_path(aes(time.cum, Footrope, group = haul), colour = "blue", alpha = 0.1) +
+    # geom_hline(data = tdr.depth.summ.k,
+    #            aes(yintercept = kite.depth), linetype = "dashed") +
+    # geom_hline(data = tdr.depth.summ.fr,
+    #            aes(yintercept = footrope.depth), linetype = "dashed") +
+    geom_rect(data = tdr.depth.summ,
+              aes(xmin = 0,
+                  xmax = 45,
+                  ymin = footrope.depth,
+                  ymax = kite.depth),
+              fill = 'gray70', alpha = 0.1) +
+    geom_rect(data = tdr.depth.summ,
+              aes(xmin = 0,
+                  xmax = 45,
+                  ymin = footrope.depth,
+                  ymax = kite.depth),
+              colour = 'black', linetype = "dashed", alpha = 0.5) +
+    geom_text(data = tdr.labels, aes(5, -70, label = label),
+              hjust = 0, fontface = "bold") +
+    facet_wrap(~cruise, nrow = 2) + 
+    labs(x = "Time fishing (minutes)",
+         y = "Depth (m)") +
+    theme(strip.background = element_rect(fill = "white"),
+          strip.text.x = element_text(face = "bold")) 
+  
+  ggsave(tdr.plot.depths, 
+         filename = here("Figs/fig_tdr_depths_all_facet.png"),
+         width = 7, height = 7)
+  
+  tdr.plot.heights <- ggplot(filter(tdr.fishing, time.cum < 45)) +
+    # ggplot(filter(tdr.fishing, time.cum < 45, height > 0)) +
+    geom_path(aes(time.cum, height, group = haul), 
+              colour = "green", alpha = 0.3) +
+    geom_text(data = tdr.labels, aes(5, -3, label = label),
+              hjust = 0, fontface = "bold") +
+    facet_wrap(~cruise, nrow = 2) +
+    labs(x = "Time fishing (minutes)",
+         y = "Vertical opening (m)") +
+    theme(strip.background = element_rect(fill = "white"),
+          strip.text.x = element_text(face = "bold")) 
+  
+  ggsave(tdr.plot.heights, 
+         filename = here("Figs/fig_tdr_heights_all_facet.png"),
+         width = 7, height = 7)
+  
+  tdr.plot.area <- ggplot(filter(tdr.fishing, time.cum < 45)) +
+    # ggplot(filter(tdr.fishing, time.cum < 45, height > 0)) +
+    geom_path(aes(time.cum, A, group = haul), 
+              colour = "purple", alpha = 0.3) +
+    geom_text(data = tdr.labels, aes(5, -75, label = label),
+              hjust = 0, fontface = "bold") +
+    facet_wrap(~cruise, nrow = 2) +
+    labs(x = "Time fishing (minutes)",
+         y = "Opening area (m^2)") +
+    theme(strip.background = element_rect(fill = "white"),
+          strip.text.x = element_text(face = "bold")) 
+  
+  ggsave(tdr.plot.area, 
+         filename = here("Figs/fig_tdr_areas_all_facet.png"),
+         width = 7, height = 7)
+}
+```
+
+```{r plot-tdr-metrics-cruise,eval=FALSE}
+# Define colors for legend
+gear.cols <- c("Nordic 264" = "red", "MFT" = "blue")
+
+# Plot distance histograms
+tdr.plot.distances <- ggplot(tdr.summ.haul, aes(as.numeric(distance), fill = gear.type)) +
+  geom_histogram(show.legend = FALSE) +  
+  geom_vline(data = tdr.summ.all, aes(xintercept = as.numeric(distance)),
+             colour = "black", linetype = "dashed", linewidth = 0.5) +
+  # facet_wrap(~cruise, ncol = 1) + 
+  labs(title = "Haul distances",
+       x = "Haul distance (m)",
+       y = "Frequency") +
+  scale_fill_manual(name = "Gear type",
+                    values = gear.cols) +
+  theme(strip.background = element_rect(fill = "white"),
+        strip.text.x = element_text(face = "bold")) 
+
+ggsave(tdr.plot.distances, 
+       filename = here("Figs/fig_tdr_distances_all_facet.png"),
+       width = 5, height = 7)
+
+# Plot area histograms
+tdr.plot.areas <- ggplot(tdr.summ.haul, aes(as.numeric(A), fill = gear.type)) +
+  geom_histogram(show.legend = FALSE) + 
+  geom_vline(data = tdr.summ.all, aes(xintercept = as.numeric(A)),
+             colour = "black", linetype = "dashed", linewidth = 0.5) +
+  # facet_wrap(~cruise, ncol = 1) + 
+  labs(title = "Net area",
+       x = "Net area (m^2)",
+       y = "Frequency") +
+  scale_fill_manual(name = "Gear type",
+                    values = gear.cols) +
+  theme(strip.background = element_rect(fill = "white"),
+        strip.text.x = element_text(face = "bold")) 
+
+ggsave(tdr.plot.areas, 
+       filename = here("Figs/fig_tdr_areas_all_facet_hist.png"),
+       width = 5, height = 7)
+
+# Plot volume histograms
+tdr.plot.volumes <- ggplot(tdr.summ.haul, aes(as.numeric(V), fill = gear.type)) +
+  geom_histogram() + 
+  geom_vline(data = tdr.summ.all, aes(xintercept = as.numeric(V)), 
+             colour = "black", linetype = "dashed", linewidth = 0.5) +
+  # facet_wrap(~cruise, ncol = 1) + 
+  labs(title = "Volume sampled",
+       x = "Volume sampled (m^3)",
+       y = "Frequency") +
+  scale_fill_manual(name = "Gear type",
+                    values = gear.cols) +
+  theme(strip.background = element_rect(fill = "white"),
+        strip.text.x = element_text(face = "bold")) 
+
+ggsave(tdr.plot.volumes, 
+       filename = here("Figs/fig_tdr_volumes_all_facet.png"),
+       width = 5, height = 7)
+
+# Combine plots
+tdr.plot.combo <- tdr.plot.distances + tdr.plot.areas + tdr.plot.volumes
+
+ggsave(tdr.plot.combo, 
+       filename = here("Figs/fig_tdr_summary_combo.png"),
+       width = 15, height = 7)
+```
+
 # Plots
 
 Below are TDR data for the last three trawl hauls. **<span style="color: black;">Black</span>** lines are vessel speed over ground (SOG, knots), **<span style="color: purple;">purple</span>** is kite depth, and **<span style="color: blue;">blue</span>** is footrope depth. If present, the  **<span style="color: red;">red</span>** and **<span style="color: green;">green</span>** lines represent the starboard- and port-side trawl door depths, respectively. The dashed box indicates the time between net deployment (or net in water) and retrieval (or net on deck), and the shaded **<span style="color: gray50;">gray</span>** region indicates the time during which the net was fishing (from equilibrium through haul back).  

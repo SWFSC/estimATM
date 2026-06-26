@@ -267,6 +267,11 @@ if (length(uctd.hdr) == 0) {
   all.uctd.casts <- all.uctd.casts %>%
     filter(!cast %in% exclude.uctd)
   
+  # Exclude surface soak times
+  if (exists("uctd.surface.rm"))
+    all.uctd.casts <- all.uctd.casts %>% 
+        filter(s > uctd.surface.rm)
+  
   # Save cast data to CSV
   write.csv(all.uctd.casts, file = here("Output/cast_data_uctd.csv"), 
             quote = FALSE, row.names = FALSE)

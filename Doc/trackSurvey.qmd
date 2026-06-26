@@ -334,8 +334,9 @@ nasc.summ.all <- nasc.cps %>%
   mutate(date = date(date.pdt),
          vessel.name = survey.vessel.primary) %>% 
   mutate(vessel = case_when(
-    vessel.name == "SH" ~ "Shimada",
-    vessel.name == "LM" ~ "Lisa Marie",
+    vessel.name == "SH"  ~ "Shimada",
+    vessel.name == "RL"  ~ "Lasker",
+    vessel.name == "LM"  ~ "Lisa Marie",
     vessel.name == "LBC" ~ "Long Beach Carnage")) %>% 
   group_by(vessel, date) %>% 
   summarise(lat = mean(lat)) %>% 
@@ -724,9 +725,9 @@ write_csv(tx.goals,
 
 These tables are meant to summarize planned versus realized survey effort. **Note:** these metrics are still under development and may not be completely accurate.
 
-## Planned vs. actual days at sea (DAS)
+## Scheduled vs. actual days at sea (DAS)
 
-How many days has the ship been on the water versus how many days were planned? This is derived from the entire vessel track, regardless of whether we were conducting a survey, including transits, etc. [**Red**]{style="color:red"} cells indicate differences between actual and planned dates or values.
+How many days has the ship been on the water versus how many days were scheduled? This is derived from the entire vessel track, regardless of whether we were conducting a survey, including transits, etc. [**Red**]{style="color:red"} cells indicate differences between the number of scheduled versus accomplished values.
 
 ```{r das-summary}
 # Subset summary to only include legs that have been
@@ -752,11 +753,13 @@ das.summary %>%
                 full_width = FALSE) 
 ```
 
-According to our calculations, a total of **`r sum(das.summary.sub$das.actual, na.rm = T)`** DAS were accomplished of the `r sum(das.summary.sub$das.planned, na.rm = T)` DAS planned, resulting in **`r sum(das.summary.sub$delta.das, na.rm = T)`** fewer DAS than planned.
+According to our calculations, a total of **`r sum(das.summary.sub$das.actual, na.rm = T)`** DAS were accomplished of the `r sum(das.summary.sub$das.planned, na.rm = T)` DAS scheduled, resulting in **`r sum(das.summary.sub$delta.das, na.rm = T)`** fewer DAS than planned.
+
+**NOTE:** If the `planned.end` date for the current leg is greater than **`r date(Sys.time())`**, then the survey leg is still ongoing and these calculations will not accurately reflect the actual results.
 
 ## Planned vs. actual **survey** days at sea (DAS)
 
-How many days has the ship been conducting acoustic transect sampling versus how many days were planned? This is derived from the acoustic data collected along planned transects, and excludes transits between transects and to/from ports of call. Red cells indicate differences between actual and planned dates or values. These values allow for **`r das.survey.transit`** DAS for transit at the beginning and end of each survey leg, when acoustic transect sampling may not actually be conducted. Values in [**red**]{style="color:red"} below are a possible reason for concern.
+How many days has the ship been conducting acoustic transect sampling versus how many days were planned? This is derived from the acoustic data collected along planned transects, and excludes transits between transects and to/from ports of call. Red cells indicate differences between scheduled and accomplished values. These values allow for **`r das.survey.transit`** DAS for transit at the beginning and end of each survey leg, when acoustic transect sampling may not actually be conducted. Values in [**red**]{style="color:red"} below are a potential reason for concern.
 
 ```{r survey-summary}
 # Summarize the planned vs. actual survey DAS
@@ -786,6 +789,8 @@ das.summary %>%
                 full_width = FALSE) 
 ```
 
-According to our calculations, a total of **`r sum(das.summary.sub$das.survey, na.rm = T)`** DAS were accomplished of the `r sum(das.summary.sub$das.planned, na.rm = T)` DAS planned, resulting in **`r sum(das.summary.sub$delta.survey, na.rm = T)`** fewer days of survey than planned.
+According to our calculations, a total of **`r sum(das.summary.sub$das.survey, na.rm = T)`** DAS were accomplished of the `r sum(das.summary.sub$das.planned, na.rm = T)` DAS scheduled, resulting in **`r sum(das.summary.sub$delta.survey, na.rm = T)`** fewer days of acoustic sampling than what was scheduled.
+
+**NOTE:** If the `planned.end` date for the current leg is greater than **`r date(Sys.time())`**, then the survey leg is still ongoing and these calculations will not accurately reflect the actual results.
 
 For questions about this page, please contact Kevin Stierhoff ([kevin.stierhoff\@noaa.gov](mailto:kevin.stierhoff@noaa.gov)).

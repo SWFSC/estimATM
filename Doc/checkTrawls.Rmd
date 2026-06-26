@@ -70,7 +70,8 @@ dir_create(here(c("Figs", "Output")))
 
 ```{r user-settings}
 # User-specified settings
-get.db          <- T # Extract data from trawl database (F for testing)
+# Extract data from trawl database (F for testing)
+get.db          <- ifelse(Sys.info()['nodename'] %in% c("SWC-KSTIERHOFF-"), F, T) 
 get.nav         <- T # Download NOAA Ship nav data
 get.nav.sh      <- F # Download NOAA Ship nav data
 copy.files      <- F # Copy trawl database
@@ -121,9 +122,11 @@ transects.sf <- wpts.sf %>%
 
 # Get most recent vessel position for plotting
 nav.now <- tail(nav.sf, 1) %>% 
-  mutate(label = paste("Last position:", time, "UTC"),
+  mutate(time_local = with_tz(time, tzone = "America/Los_Angeles")) %>% 
+  mutate(label = paste("Last position:", time, "UTC; ", time_local, "PT"),
          popup = paste0('<b>Vessel name: </b>', survey.vessel, '<br/>',
-                        '<b>Last position: </b>', time, ' UTC<br/>'))
+                        '<b>Last position (UTC): </b>', time, ' UTC<br/>',
+                        '<b>Last position (Local): </b>', time_local, ' PT<br/>'))
 ```
 
 ```{r copy-files, include=F}
@@ -1603,7 +1606,7 @@ haul %>%
   kable_styling(bootstrap_options = c("striped","hover","condensed"),
                 full_width = FALSE) %>%
   row_spec(0, align = c("c")) %>% 
-  scroll_box(height = "250px")
+  scroll_box(height = "100px")
 ```
 
 ### Haul distances

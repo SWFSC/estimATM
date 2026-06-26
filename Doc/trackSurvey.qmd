@@ -91,7 +91,7 @@ if (copy.files) {
 }
 ```
 
-```{r process-nav}
+```{r process-nav,include=F}
 # Source code to get nav data from ERDDAP, RosePoint, or SCS
 if (nav.source == "ERDDAP") {
   source(here("Code/get_nav_erddap.R"))
@@ -130,8 +130,8 @@ transects.sf <- wpts.sf %>%
     distance = round(as.numeric(st_length(.))/1852,1),
     label    = paste("Transect", Transect),
     popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
-                     'Distance:', distance, 'nmi<br/>')
-  )
+                     'Distance:', distance, 'nmi<br/>')) %>%
+  filter(Type %in% c("Compulsory","Adaptive"))
 
 if (exists("tx.breaks")) {
   transects.sf <- transects.sf %>% 
@@ -273,7 +273,8 @@ eez_mex <- st_read(here("Data/GIS/eez_mex.shp")) %>%
 
 ```{r create-static-maps}
 # Define manual color palette
-legPalette <- c("#FF0000", "#FFA500", "#008000", "#0000FF", "#8A2BE2", "#FFFF00")
+legPalette <- c("#FF0000", "#FFA500", "#008000", 
+                "#0000FF", "#8A2BE2", "#FFFF00")[1:n_distinct(transects.sf$Leg)]
 
 # Map planned transects
 map.plan <- base.map + 
@@ -362,7 +363,7 @@ leg.breaks <- data.frame(
   date = ymd(leg.ends[c(1, seq(2, length(leg.ends), 2))]),
   # Get leg labels
   leg = c("Start", paste("Leg", seq(1, (length(leg.ends)/2), 1)))
-)
+)[1:n_distinct(transects.sf$Leg), ]
 
 # Create landmarks data.frame
 landmarks <- data.frame(
@@ -441,7 +442,7 @@ ggsave(vessel.progress.plot,
 ```{r create-mapview-map, eval=FALSE}
 # Map compulsory and adaptive transects by Leg
 mapview(filter(transects.sf, !is.na(Leg), Type %in% c("Compulsory","Adaptive")), zcol = "Leg") + 
-  mapview(nav.paths.sf, zcol = "leg") 
+  mapview(select(nav.paths.sf, leg), zcol = "leg", color = "gray50") 
 ```
 
 ```{r create-leaflet-map, out.width="100%", out.height="8in", eval = FALSE}
@@ -475,6 +476,9 @@ mpaPalMex  <- colorFactor(topo.colors(10), all.mpa.types.mex)
 
 # Create color palette for planned transects
 txPal    <- colorFactor(wpt.colors, wpt.types)
+# Define color palette for legs
+txPalLeg <- colorFactor(legPalette,
+                        sort(unique(transects.sf$Leg)))
 
 # Create or load oceanIcons
 if(!file.exists(here("Images/oceanIcons.Rdata"))) {
@@ -545,13 +549,13 @@ i.map <- leaflet() %>%
               fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
   # Add core planned transects
   addPolylines(data = filter(transects.sf, Type %in% c("Compulsory", "Adaptive")),
-               color = ~Leg, weight = 3, opacity = 0.5,
+               color = ~txPalLeg(Leg), weight = 3, opacity = 0.5, 
                label = ~htmlEscape(paste(Type, Transect)),
                popup = ~popup,
-               group = "Planned Transects (Core)") %>%
+               group = "Planned Transects (Core)") %>% 
   addCircleMarkers(data = filter(wpts.sf, Type %in% c("Compulsory", "Adaptive")),
                    radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
-                   fillOpacity = 0.5, fillColor =  ~Leg, 
+                   fillOpacity = 0.5, fillColor =  ~txPalLeg(Leg), 
                    label = ~htmlEscape(paste(Type, Waypoint)),
                    popup = ~popup,
                    group = "Planned Transects (Core)") %>%
@@ -591,7 +595,9 @@ i.map <- leaflet() %>%
 if (exists("nav.paths.sf"))
   i.map <- i.map %>% 
   # Add nav data
-  addPolylines(data = nav.paths.sf, color = "#000414", weight = 1, 
+  addPolylines(data = nav.paths.sf, 
+               color = ~txPalLeg(leg), weight = 1, opacity = 1,
+               # color = "#000414", weight = 1, 
                label = ~leg, group = "Vessel Track") %>%
   addMarkers(data = nav.now, label = ~label, popup = ~popup, icon = ~oceanIcons["ship"],
              group = "Vessel Positions")
@@ -602,9 +608,9 @@ i.map <- i.map %>%
               "Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs"))
 ```
 
-Survey progress for the **`r survey.name`**
+Survey progress for the **`r survey.name.long` (`r survey.name`)**
 
-***Last updated:*** `r format(Sys.time(), "%F %T", tz = "America/Los_Angeles", usetz = TRUE)`
+**Last updated:** `r format(Sys.time(), "%F %T", tz = "America/Los_Angeles", usetz = TRUE)`
 
 # Survey progress map
 
@@ -620,7 +626,7 @@ map.plan.comp
 
 # Survey progress plot
 
-Actual survey progress by *`r survey.vessel`* (pink line) relative to the original plan (gray line). Points filled [**black**]{style="color:black"} indicate dates when acoustic/trawl sampling occurred (i.e., survey days), points filled [**blue**]{style="color:blue"} indicate days in port (i.e., when speeds are less than 1 kn, for example when the ship is tied-up), and open points indicate transit days or days on the water with no acoustic transect data collected (i.e., no acoustic data collected). The vertical and horizontal dashed lines represent the expected date and latitude at the end of each planned survey leg, respectively. Ideally, the actual progress line would align with the intersection of the two dashed lines at the end of a given survey leg.
+Actual survey progress by `r survey.vessel` (pink line) relative to the original plan (gray line). Points filled [**black**]{style="color:black"} indicate dates when acoustic/trawl sampling occurred (i.e., survey days), points filled [**blue**]{style="color:blue"} indicate days in port (i.e., when speeds are less than 1 kn, for example when the ship is tied-up), and open points indicate transit days or days on the water with no acoustic transect data collected (i.e., no acoustic data collected). The vertical and horizontal dashed lines represent the expected date and latitude at the end of each planned survey leg, respectively. Ideally, the actual progress line would align with the intersection of the two dashed lines at the end of a given survey leg.
 
 ```{r survey-progress-plot}
 #| fig-height: 7
@@ -645,7 +651,7 @@ das.actual <- nav %>%
                     as.numeric(leg.ends),
                     labels = FALSE)) %>% 
   filter(!is.na(Leg), leg2 %% 2 != 0) %>% 
-  filter(SOG > 1) %>% 
+  # filter(SOG > 1) %>% 
   group_by(leg2) %>% 
   summarise(
     actual.start = min(date(time)),
@@ -723,6 +729,10 @@ These tables are meant to summarize planned versus realized survey effort. **Not
 How many days has the ship been on the water versus how many days were planned? This is derived from the entire vessel track, regardless of whether we were conducting a survey, including transits, etc. [**Red**]{style="color:red"} cells indicate differences between actual and planned dates or values.
 
 ```{r das-summary}
+# Subset summary to only include legs that have been
+das.summary.sub <- das.summary %>% 
+  filter(!is.na(actual.start))
+
 das.summary %>% 
   filter(!is.na(actual.start)) %>% 
   mutate(
@@ -742,13 +752,17 @@ das.summary %>%
                 full_width = FALSE) 
 ```
 
-According to our calculations, a total of **`r sum(das.summary$das.actual)`** DAS were accomplished of the `r sum(das.summary$das.planned)` DAS planned, resulting in a loss of **`r sum(das.summary$delta.das)` DAS**.
+According to our calculations, a total of **`r sum(das.summary.sub$das.actual, na.rm = T)`** DAS were accomplished of the `r sum(das.summary.sub$das.planned, na.rm = T)` DAS planned, resulting in **`r sum(das.summary.sub$delta.das, na.rm = T)`** fewer DAS than planned.
 
 ## Planned vs. actual **survey** days at sea (DAS)
 
 How many days has the ship been conducting acoustic transect sampling versus how many days were planned? This is derived from the acoustic data collected along planned transects, and excludes transits between transects and to/from ports of call. Red cells indicate differences between actual and planned dates or values. These values allow for **`r das.survey.transit`** DAS for transit at the beginning and end of each survey leg, when acoustic transect sampling may not actually be conducted. Values in [**red**]{style="color:red"} below are a possible reason for concern.
 
 ```{r survey-summary}
+# Summarize the planned vs. actual survey DAS
+das.summ.planned <- das.summary %>% 
+  filter(!is.na(actual.start))
+
 das.summary %>% 
   filter(!is.na(actual.start)) %>% 
   mutate(
@@ -772,6 +786,6 @@ das.summary %>%
                 full_width = FALSE) 
 ```
 
-According to our calculations, a total of **`r sum(das.summary$das.survey)`** DAS were accomplished of the `r sum(das.summary$das.planned)` DAS planned, resulting in a loss of **`r sum(das.summary$delta.survey)` DAS**.
+According to our calculations, a total of **`r sum(das.summary.sub$das.survey, na.rm = T)`** DAS were accomplished of the `r sum(das.summary.sub$das.planned, na.rm = T)` DAS planned, resulting in **`r sum(das.summary.sub$delta.survey, na.rm = T)`** fewer days of survey than planned.
 
 For questions about this page, please contact Kevin Stierhoff ([kevin.stierhoff\@noaa.gov](mailto:kevin.stierhoff@noaa.gov)).

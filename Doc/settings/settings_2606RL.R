@@ -153,7 +153,7 @@ if (Sys.info()['nodename'] %in% c("SWC-KSTIERHOFF-")) { #("SWC-FRD-AST1-D",
   nav.source.ns <- "GPX"
 } else {
   nav.source    <- "RosePoint" # SCS, ERDDAP, or RosePoint
-  nav.path.nob  <- "C:/SURVEY/2606RL/ANALYSIS/estimATM/2606RL/Nav/2606RL-12.5-nmi-spacing_final.nob" 
+  nav.path.nob  <- "C:/SURVEY/2606RL/ANALYSIS/estimATM/2606RL/Data/Nav/2606RL-12.5-nmi-spacing_final.nob" 
   nav.source.ns <- "GPX"
 }
 

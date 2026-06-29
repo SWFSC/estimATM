@@ -182,7 +182,7 @@ save(haul, file = here("Output/tdr_haul_all.Rdata"))
 ```{r process-tdr-rsk}
 # Calculate mean latitude for computing depth from pressure
 # Could be improved (marginally) by extracting the latitude for each haul
-mean.lat <- mean(haul$startLatDecimal)
+mean.lat <- mean(haul$startLatDecimal, na.rm = TRUE)
 
 # Process TDR files ----------------------------------------------------------------------
 # Get fileSnapshot at the beginning of the knit, to compare with the end of the last knit
@@ -796,7 +796,7 @@ tdr.fishing <- tdr.fishing %>%
   filter(!is.na(A))
 ```
 
-```{r extract-tdr-paths}
+```{r extract-tdr-paths,eval=F}
 # Create df for all results
 tdr.nav <- data.frame()
 
@@ -834,7 +834,7 @@ tdr.paths.sf <- tdr.nav.sf %>%
   filter(distance > 0)
 ```
 
-```{r summarise-tdr-metrics}
+```{r summarise-tdr-metrics,eval=FALSE}
 # Summarize TDR depth by location and cruise
 tdr.depth.summ.k <- tdr.fishing %>% 
   group_by(cruise) %>% 

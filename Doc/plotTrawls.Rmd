@@ -54,8 +54,8 @@ dir_create(here(c("Figs/TDR", "Output")))
 # User-specified settings
 copy.files   <- T # Copy TDR files
 process.rsk  <- T # Process RBR Duet^3^ TDR files (.rsk format)
+process.tv80 <- T # Process Simrad TV80 data
 process.asc  <- F # Process Seabird TDR files (.asc format)
-process.tv80 <- F # Process Simrad TV80 data
 
 # Usually F; set T to reprocess all TDR/TV80 files
 process.tdr.all   <- T # Process all TDR files 

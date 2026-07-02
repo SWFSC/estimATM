@@ -145,7 +145,13 @@ if (exists("tx.breaks")) {
 nav.now <- tail(nav.sf, 1) %>% 
   mutate(label = paste("Last position:", time, "UTC"),
          popup = paste0('<b>Vessel name: </b>', survey.vessel, '<br/>',
-                        '<b>Last position: </b>', time, ' UTC<br/>'))
+                        '<b>Last position: </b>', time, ' UTC<br/>')) %>% 
+  # Calculate legs using the actual leg dates
+  mutate(leg = cut(as.numeric(date(time)), 
+                   as.numeric(leg.ends),
+                   labels = FALSE)) %>% 
+  filter(!is.na(leg), leg %% 2 != 0) 
+  
 
 # Set padding around data  
 if (resize.map) {
@@ -271,64 +277,19 @@ eez_mex <- st_read(here("Data/GIS/eez_mex.shp")) %>%
   st_transform(crs.geog)
 ```
 
-```{r create-static-maps}
-# Define manual color palette
-legPalette <- c("#FF0000", "#FFA500", "#008000", 
-                "#0000FF", "#8A2BE2", "#FFFF00")[1:n_distinct(transects.sf$Leg)]
-
-# Map planned transects
-map.plan <- base.map + 
-  geom_sf(data = filter(transects.sf, !is.na(Leg), Type %in% c("Compulsory","Adaptive")), 
-          aes(colour = factor(Leg)),
-          linewidth = 1) + 
-  # Plot acoustic transect labels N of Cape Flattery
-  geom_shadowtext(data = tx.labels,
-                  aes(X, Y, label = transect.name,
-                      angle = brg),
-                  size = 2.5,
-                  fontface = 'bold.italic',
-                  colour = "black",
-                  bg.colour = "white") +
-  scale_colour_manual(name = "Leg", values = legPalette) +
-  labs(title = "Projected progress",
-       subtitle = "Based on start-of-survey estimates") +
-  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
-           xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
-           ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
-# Map progress
-map.progress <- base.map + 
-  geom_sf(data = filter(transects.sf, !is.na(Leg), Type %in% c("Compulsory","Adaptive")), 
-          colour = "gray50",
-          linewidth = 0.5, linetype = "dashed") + 
-  geom_sf(data = nav.paths.sf, aes(colour = factor(Leg)),
-          linewidth = 1) + 
-  # Plot acoustic transect labels N of Cape Flattery
-  geom_shadowtext(data = tx.labels,
-                  aes(X, Y, label = transect.name,
-                      angle = brg),
-                  size = 2.5, 
-                  fontface = 'bold.italic',
-                  colour = "black",
-                  bg.colour = "white") +
-  scale_colour_manual(name = "Leg", values = legPalette) +
-  labs(title = "Actual progress",
-       subtitle = "Vessel position over time") +
-  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
-           xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
-           ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
-
-# Arrange figures
-map.plan.comp <- map.plan + map.progress
-
-ggsave(map.plan.comp, filename = here("Figs/fig_compare_survey_progress.png"),
-       height = 10, width = 10)
-```
-
 ```{r plot-survey-progress}
 # Load backscatter data
 load(here("Output/nasc_cps.Rdata"))
 
-# Summarize backscatter data by vessel and date
+# Add leg information to nasc data
+nasc.cps <- nasc.cps %>% 
+  # Calculate legs using the actual leg dates
+  mutate(leg = cut(as.numeric(date(datetime)), 
+                   as.numeric(leg.ends),
+                   labels = FALSE)) %>% 
+  filter(!is.na(leg), leg %% 2 != 0) 
+
+# Summarize latitude by vessel and date
 nasc.summ.all <- nasc.cps %>% 
   mutate(date.pdt = with_tz(datetime, tzone = "America/Los_Angeles")) %>%
   mutate(date = date(date.pdt),
@@ -341,6 +302,21 @@ nasc.summ.all <- nasc.cps %>%
   group_by(vessel, date) %>% 
   summarise(lat = mean(lat)) %>% 
   mutate(key = paste(vessel, date))
+
+# Summarize nautical miles sampled by vessel and date
+nasc.summ.all.dist <- nasc.cps %>% 
+  mutate(date.pdt = with_tz(datetime, tzone = "America/Los_Angeles")) %>%
+  mutate(date = date(date.pdt),
+         vessel.name = survey.vessel.primary) %>% 
+  mutate(vessel = case_when(
+    vessel.name == "SH"  ~ "Shimada",
+    vessel.name == "RL"  ~ "Lasker",
+    vessel.name == "LM"  ~ "Lisa Marie",
+    vessel.name == "LBC" ~ "Long Beach Carnage")) %>% 
+  group_by(vessel, date) %>% 
+  summarise(dist = n() * nasc.interval / 1000) %>% 
+  mutate(key = paste(vessel, date),
+         dist.cum = cumsum(dist))
 
 # Summarize underway nav data by vessel and date
 nav.summ.fsv <- nav %>% 
@@ -364,7 +340,7 @@ leg.breaks <- data.frame(
   date = ymd(leg.ends[c(1, seq(2, length(leg.ends), 2))]),
   # Get leg labels
   leg = c("Start", paste("Leg", seq(1, (length(leg.ends)/2), 1)))
-)[1:n_distinct(transects.sf$Leg), ]
+)[1:n_distinct(transects.sf$Leg)+1, ]
 
 # Create landmarks data.frame
 landmarks <- data.frame(
@@ -383,11 +359,20 @@ wpt.summ <- wpts %>%
   slice(which.max(Longitude))
 
 if (file.exists(here("Data/Nav", paste0("transect_plan_", survey.name, ".csv")))) {
-tx.plan <- read_csv(here("Data/Nav", paste0("transect_plan_", survey.name, ".csv"))) %>% 
-  mutate(date = mdy(date),
-         Transect = floor(tx.plan)) %>% 
-  left_join(select(wpt.summ, Transect, Latitude))
+  tx.plan <- read_csv(here("Data/Nav", paste0("transect_plan_", survey.name, ".csv"))) %>% 
+    mutate(date = mdy(date),
+           Transect = floor(tx.plan)) %>% 
+    left_join(select(wpt.summ, Transect, Latitude))
 }
+
+# Compute cumulative transect distances
+tx.summ <- transects.sf %>% 
+  mutate(dist = distance*1.852,
+         dist.cum = cumsum(dist))
+
+# Add cumulative distances to transect plan
+tx.plan <- tx.plan %>% 
+  left_join(select(tx.summ, Transect, dist, dist.cum))
 
 # Calculate goal transects
 tx.goals <- wpts %>% 
@@ -399,8 +384,9 @@ tx.goals <- wpts %>%
          date = min(leg.ends) - days(10)) %>% 
   mutate(label = case_when(
     label == "Leg 0" ~ "Start",
-    TRUE ~ label
-  ))
+    TRUE ~ label)) %>% 
+  # Add cumulative distances to transect goals
+  left_join(select(tx.summ, Transect, dist, dist.cum))
 
 # Plot survey progress
 vessel.progress.plot <- ggplot() +  #nav.summ.all, aes(date, lat, group = vessel, colour = vessel)
@@ -438,6 +424,111 @@ vessel.progress.plot <- ggplot() +  #nav.summ.all, aes(date, lat, group = vessel
 ggsave(vessel.progress.plot, 
        filename = here("Figs/fig_vessel_progress.png"), 
        height = 7, width = 12)
+```
+
+```{r plot-survey-progress-distance}
+# Plot survey progress
+vessel.progress.plot.dist <- ggplot() +  #nav.summ.all, aes(date, lat, group = vessel, colour = vessel)
+  geom_line(linewidth = 1, linetype = "dashed") + 
+  # planned transects
+  geom_line(data = tx.plan, aes(date, dist.cum), inherit.aes = FALSE,
+            linewidth = 1, linetype = "dashed", colour = "gray50") +
+  geom_point(data = tx.plan, aes(date, dist.cum), inherit.aes = FALSE,
+             size = 2, shape = 21, colour = "gray50", fill = "white") +
+  # # planned transects - revised
+  # geom_line(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
+  #           linewidth = 1, linetype = "dashed", colour = "blue") +
+  # geom_point(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
+  #            size = 2, shape = 21, colour = "blue", fill = "white") +
+  geom_vline(xintercept = leg.breaks$date, linetype = "dashed") +
+  geom_hline(yintercept = tx.goals$dist.cum, linetype = "dashed") +
+  geom_text(data = leg.breaks, aes(date, 500, label = leg), inherit.aes = FALSE) +
+  geom_text(data = tx.goals, aes(date, dist.cum + 400, label = label), inherit.aes = FALSE) +
+  # geom_text(data = landmarks, aes(date, lat+0.25, label = name), inherit.aes = FALSE) +
+  geom_line(data = nasc.summ.all.dist, aes(date, dist.cum, group = vessel, colour = vessel)) + 
+  # geom_line(data = nav.summ.all, aes(date, lat, group = vessel, colour = vessel),
+  #           linewidth = 1, linetype = "dashed") + 
+  geom_point(data = nasc.summ.all.dist, 
+             aes(date, dist.cum, group = vessel, colour = vessel), 
+             size = 2, shape = 21, fill = "white") +
+  # geom_point(data = filter(nav.summ.all, SOG < 1), 
+  #            aes(date, lat, group = vessel, colour = vessel), 
+  #            fill = "blue", size = 2, shape = 21, show.legend = FALSE) +
+  scale_colour_discrete(name = "Vessel") +
+  # scale_fill_manual(name = "Sampling", values = c("TRUE" = 'black', "FALSE" = 'white')) +
+  scale_x_date(date_breaks = "10 days") + 
+  labs(x = "Date", y = "Cumulative distance (km)") + 
+  theme_bw()
+
+ggsave(vessel.progress.plot.dist, 
+       filename = here("Figs/fig_vessel_progress_distance.png"), 
+       height = 7, width = 12)
+```
+
+
+```{r create-static-maps}
+nasc.cps.sf <- nasc.cps %>%
+  st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
+  group_by(transect, leg) %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("LINESTRING") %>% 
+  ungroup()
+
+# Define manual color palette
+legPalette <- c("#FF0000", "#FFA500", "#008000", 
+                "#0000FF", "#8A2BE2", "#FFFF00")[1:n_distinct(transects.sf$Leg)]
+
+# Map planned transects
+map.plan <- base.map + 
+  geom_sf(data = filter(transects.sf, !is.na(Leg), Type %in% c("Compulsory","Adaptive")), 
+          aes(colour = factor(Leg)),
+          linewidth = 1) + 
+  # Plot acoustic transect labels N of Cape Flattery
+  geom_shadowtext(data = tx.labels,
+                  aes(X, Y, label = transect.name,
+                      angle = brg),
+                  size = 2.5,
+                  fontface = 'bold.italic',
+                  colour = "black",
+                  bg.colour = "white") +
+  scale_colour_manual(name = "Leg", values = legPalette) +
+  labs(title = "Projected progress",
+       subtitle = "Based on start-of-survey estimates") +
+  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+           xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
+           ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
+
+# Map progress
+map.progress <- base.map + 
+  geom_sf(data = filter(transects.sf, !is.na(Leg), Type %in% c("Compulsory","Adaptive")), 
+          colour = "gray50",
+          linewidth = 0.5, linetype = "dashed") + 
+  geom_sf(data = nav.paths.sf, aes(colour = factor(Leg)),
+          linewidth = 0.5, alpha = 0.4) + 
+  geom_sf(data = nasc.cps.sf, aes(colour = factor(leg)),
+          linewidth = 1) + 
+  geom_sf(data = nav.now, aes(colour = factor(leg)), 
+          shape = 23, size = 3, fill = "white") + 
+  # Plot acoustic transect labels N of Cape Flattery
+  geom_shadowtext(data = tx.labels,
+                  aes(X, Y, label = transect.name,
+                      angle = brg),
+                  size = 2.5, 
+                  fontface = 'bold.italic',
+                  colour = "black",
+                  bg.colour = "white") +
+  scale_colour_manual(name = "Leg", values = legPalette) +
+  labs(title = "Actual progress",
+       subtitle = "Based on data collected") +
+  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+           xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
+           ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
+
+# Arrange figures
+map.plan.comp <- map.plan + map.progress
+
+ggsave(map.plan.comp, filename = here("Figs/fig_compare_survey_progress.png"),
+       height = 10, width = 10)
 ```
 
 ```{r create-mapview-map, eval=FALSE}
@@ -613,9 +704,11 @@ Survey progress for the **`r survey.name.long` (`r survey.name`)**
 
 **Last updated:** `r format(Sys.time(), "%F %T", tz = "America/Los_Angeles", usetz = TRUE)`
 
+**Disclaimer:** ***trackSurvey*** is a real-time tool for viewing survey progress relative to plans and objectives established at the beginning of the survey. Figures and tables in this report are constructed from data collected during the survey at various stages of QA/QC. **Therefore, this website may contain errors and is subject to change without notice.**
+
 # Survey progress map
 
-A map showing the the anticipated (left) versus actual (right) survey progress.
+The map below shows the the projected (left) versus actual (right) survey progress. **Projections** are based on various factors including (but not limited to): planned days-at-sea (DAS), average vessel speed (e.g., `r survey.speed` kn), latitude-specific day length, total nautical miles of planned transects, and non-survey transit distances. **Actual** progress shows transects (or portions thereof) that have been sampled to-date. The semitransparent lines show the vessel's path for each leg of the survey. The white diamond shows the latest known location of the ship as of **`r with_tz(nav.now$time, tz = "America/Los_Angeles")` PDT** (`r nav.now$time` UTC). The outline of the diamond indicates the current leg of the survey.  
 
 ```{r survey-progress-map}
 #| fig-height: 10
@@ -626,8 +719,9 @@ map.plan.comp
 ```
 
 # Survey progress plot
+## By latitude
 
-Actual survey progress by `r survey.vessel` (pink line) relative to the original plan (gray line). Points filled [**black**]{style="color:black"} indicate dates when acoustic/trawl sampling occurred (i.e., survey days), points filled [**blue**]{style="color:blue"} indicate days in port (i.e., when speeds are less than 1 kn, for example when the ship is tied-up), and open points indicate transit days or days on the water with no acoustic transect data collected (i.e., no acoustic data collected). The vertical and horizontal dashed lines represent the expected date and latitude at the end of each planned survey leg, respectively. Ideally, the actual progress line would align with the intersection of the two dashed lines at the end of a given survey leg.
+Actual survey progress by _`r survey.vessel`_ (pink line) relative to the original plan (gray line). Points filled [**black**]{style="color:black"} indicate dates when acoustic/trawl sampling occurred (i.e., survey days), points filled [**blue**]{style="color:blue"} indicate days in port (i.e., when speeds are less than 1 kn, for example when the ship is tied-up), and open points indicate transit days or days on the water with no acoustic transect data collected (i.e., no acoustic data collected). The vertical and horizontal dashed lines represent the expected date and latitude at the end of each planned survey leg, respectively. Ideally, the actual progress line would align with the intersection of the two dashed lines at the end of a given survey leg.
 
 ```{r survey-progress-plot}
 #| fig-height: 7
@@ -635,6 +729,18 @@ Actual survey progress by `r survey.vessel` (pink line) relative to the original
 
 # Print plan plot
 vessel.progress.plot
+```
+
+## By cumulative distance
+
+Cumulative acoustic distance sampled (km) by _`r survey.vessel`_ (pink line) relative to the cumulative planned acoustic transect distances (gray line). The vertical and horizontal dashed lines represent the expected date and cumulative distance at the end of each planned survey leg, respectively. Ideally, the actual progress line would align with the intersection of the two dashed lines at the end of a given survey leg.
+
+```{r survey-progress-plot-distance}
+#| fig-height: 7
+#| fig-width: 12 
+
+# Print plan plot
+vessel.progress.plot.dist
 ```
 
 ```{r summarize-das}
@@ -722,6 +828,8 @@ write_csv(tx.goals,
 ```
 
 # Progress summaries so far
+
+**Work in progress.**
 
 These tables are meant to summarize planned versus realized survey effort. **Note:** these metrics are still under development and may not be completely accurate.
 

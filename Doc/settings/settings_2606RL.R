@@ -709,10 +709,10 @@ tdr.offset.asc <- 0
 tv80.tz     <- "UTC"
 tv80.offset <- 0 # Offset, in hours
 # TV80 column names
-tv80.cols   <- stringr::str_split("UnixTimeSeconds;DateTime;VES_Latitude;VES_Longitude;VES_Heading;VES_Course_True;VES_Speed;VES_Course_True;VES_Speed;TRAWLEYE_Roll_code;TRAWLEYE_Depth_code;TWL_Depth;TWL_Battery;TWL_Flow1;TWL_Flow1_uncompensated_c;TWL_Geometry_Std;TWL_Pitch;TWL_Geometry_Prt;TWL_Geometry_Dif_c;DOR_Depth_Std;DOR_Temperature_Std;DOR_Battery_Prt;DOR_Roll_Std;DOR_Pitch_Std;DOR_Roll_Prt;DOR_Pitch_Prt;DOR_Depth_Prt;DOR_Depth_Dif_c;DOR_Battery_Prt;DOR_Battery_Std;DOR_Spread;DOR_Battery_Std",
+tv80.cols   <- stringr::str_split("UnixTimeSeconds;DateTime;VES_Heading;VES_Latitude;VES_Longitude;VES_Heading;VES_Course_True;VES_Speed;VES_Speed;VES_Course_True;TWL_Depth;TWL_Depth;VES_Temperature;DOR_Battery_Std;DOR_Pitch_Std;DOR_Roll_Std;DOR_Depth_Std;DOR_Pitch_Prt;DOR_Depth_Prt;DOR_Battery_Std;DOR_Temperature_Std;DOR_Roll_Prt;DOR_Depth_Dif_c;DOR_Battery_Prt;DOR_Spread",
                                 ";")[[1]]
 # Number of rows to skip when reading TV80 data files
-tv80.skip   <- 0 
+tv80.skip   <- 1 
 
 # Biomass estimation settings ------------------------------------------
 # Length bins and labels for calculating length frequencies 

@@ -52,9 +52,9 @@ if (get.nav) {
   
   # Filter nav data
   nav <- nav %>%
-    filter(is.na(ymd_hms(time)) == FALSE,
-           SST > 0, SST < 35,
-           is.nan(SOG) == FALSE, SOG > 0, SOG < 15,
+    filter(!is.na(ymd_hms(time)),
+           # SST > 0, SST < 35,
+           # !is.nan(SOG), SOG > 0, SOG < 15,
            between(lat, min(survey.lat), max(survey.lat)), 
            between(long, min(survey.long), max(survey.long))) %>% 
     # Remove duplicates and arrange by time

@@ -1,4 +1,4 @@
-if (get.db) {
+if (get.db.ts) {
   # Configure ODBC connection to AST database ------------------------------------
   ast.con  <- dbConnect(odbc(), 
                         Driver = "SQL Server", 

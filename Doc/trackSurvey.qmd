@@ -465,7 +465,6 @@ ggsave(vessel.progress.plot.dist,
        height = 7, width = 12)
 ```
 
-
 ```{r create-static-maps}
 nasc.cps.sf <- nasc.cps %>%
   st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
@@ -708,7 +707,7 @@ Survey progress for the **`r survey.name.long` (`r survey.name`)**
 
 # Survey progress map
 
-The map below shows the the projected (left) versus actual (right) survey progress. **Projections** are based on various factors including (but not limited to): planned days-at-sea (DAS), average vessel speed (e.g., `r survey.speed` kn), latitude-specific day length, total nautical miles of planned transects, and non-survey transit distances. **Actual** progress shows transects (or portions thereof) that have been sampled to-date. The semitransparent lines show the vessel's path for each leg of the survey. The white diamond shows the latest known location of the ship as of **`r with_tz(nav.now$time, tz = "America/Los_Angeles")` PDT** (`r nav.now$time` UTC). The outline of the diamond indicates the current leg of the survey.  
+The map below shows the the projected (left) versus actual (right) survey progress. **Projections** are based on various factors including (but not limited to): planned days-at-sea (DAS), average vessel speed (e.g., `r survey.speed` kn), latitude-specific day length, total nautical miles of planned transects, and non-survey transit distances. **Actual** progress shows transects (or portions thereof) that have been sampled to-date. The semitransparent lines show the vessel's path for each leg of the survey. The white diamond shows the latest known location of the ship as of **`r with_tz(nav.now$time, tz = "America/Los_Angeles")` PDT** (`r nav.now$time` UTC). The outline of the diamond indicates the current leg of the survey.
 
 ```{r survey-progress-map}
 #| fig-height: 10
@@ -719,9 +718,10 @@ map.plan.comp
 ```
 
 # Survey progress plot
+
 ## By latitude
 
-Actual survey progress by _`r survey.vessel`_ (pink line) relative to the original plan (gray line). Points filled [**black**]{style="color:black"} indicate dates when acoustic/trawl sampling occurred (i.e., survey days), points filled [**blue**]{style="color:blue"} indicate days in port (i.e., when speeds are less than 1 kn, for example when the ship is tied-up), and open points indicate transit days or days on the water with no acoustic transect data collected (i.e., no acoustic data collected). The vertical and horizontal dashed lines represent the expected date and latitude at the end of each planned survey leg, respectively. Ideally, the actual progress line would align with the intersection of the two dashed lines at the end of a given survey leg.
+Actual survey progress by *`r survey.vessel`* (pink line) relative to the original plan (gray line). Points filled [**black**]{style="color:black"} indicate dates when acoustic/trawl sampling occurred (i.e., survey days), points filled [**blue**]{style="color:blue"} indicate days in port (i.e., when speeds are less than 1 kn, for example when the ship is tied-up), and open points indicate transit days or days on the water with no acoustic transect data collected (i.e., no acoustic data collected). The vertical and horizontal dashed lines represent the expected date and latitude at the end of each planned survey leg, respectively. Ideally, the actual progress line would align with the intersection of the two dashed lines at the end of a given survey leg.
 
 ```{r survey-progress-plot}
 #| fig-height: 7
@@ -733,7 +733,7 @@ vessel.progress.plot
 
 ## By cumulative distance
 
-Cumulative acoustic distance sampled (km) by _`r survey.vessel`_ (pink line) relative to the cumulative planned acoustic transect distances (gray line). The vertical and horizontal dashed lines represent the expected date and cumulative distance at the end of each planned survey leg, respectively. Ideally, the actual progress line would align with the intersection of the two dashed lines at the end of a given survey leg.
+Cumulative acoustic distance sampled (km) by *`r survey.vessel`* (pink line) relative to the cumulative planned acoustic transect distances (gray line). The vertical and horizontal dashed lines represent the expected date and cumulative distance at the end of each planned survey leg, respectively. Ideally, the actual progress line would align with the intersection of the two dashed lines at the end of a given survey leg.
 
 ```{r survey-progress-plot-distance}
 #| fig-height: 7
@@ -875,7 +875,8 @@ das.summ.planned <- das.summary %>%
   filter(!is.na(actual.start))
 
 das.summary %>% 
-  filter(!is.na(actual.start)) %>% 
+  filter(!is.na(actual.start)) %>%
+  filter(!is.na(survey.start)) %>%
   mutate(
     survey.start = cell_spec(
       survey.start, knitr.format, color = "black",
@@ -895,6 +896,7 @@ das.summary %>%
   kable(format = knitr.format,booktabs = TRUE, escape = FALSE) %>% 
   kable_styling(bootstrap_options = c("striped","hover","condensed"), 
                 full_width = FALSE) 
+
 ```
 
 According to our calculations, a total of **`r sum(das.summary.sub$das.survey, na.rm = T)`** DAS were accomplished of the `r sum(das.summary.sub$das.planned, na.rm = T)` DAS scheduled, resulting in **`r sum(das.summary.sub$delta.survey, na.rm = T)`** fewer days of acoustic sampling than what was scheduled.

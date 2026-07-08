@@ -143,7 +143,7 @@ leg.breaks <- as.numeric(lubridate::ymd(c("2026-06-16", "2026-07-04",
 
 # Anticipated progress throughout the transect plan
 # Leg 1:1-20, Leg 2:21-47, Leg 3:48-74, Leg 4: 75-87
-tx.breaks <- c(0, 20, 47, 74, 87)
+tx.breaks <- c(0, 19, 47, 74, 87)
 
 # Define nav source depending on location of computer
 ## Options are: SCS (usually on the ship) or ERDDAP (usually on shore; 24h update rate)
@@ -168,18 +168,6 @@ erddap.headers       <- c("time", "lat","long","SST","SOG","wind_dir","wind_spee
 erddap.flags         <- c('"ZZZZ.Z.Z..Z.*"')
 survey.lat           <- c(27,51)
 survey.long          <- c(-130,-113)
-
-# # Inport dates for classifying data by cruise leg (if desired) -----------------
-# # Use start dates of each leg + end date of last leg
-# leg.breaks.sh <- as.numeric(lubridate::ymd(c("2024-06-26", "2024-07-22", 
-#                                              "2024-08-17", "2024-09-12",
-#                                              "2024-09-30")))
-# 
-# # Define ERDDAP data variables for Shimada
-# erddap.vessel.sh        <- "WTEDnrt"    # Lasker == WTEG; Shimada == WTED; add "nrt" if during survey
-# erddap.survey.start.sh  <- "2024-06-04" # Start of survey for ERDDAP vessel data query
-# erddap.survey.end.sh    <- "2024-09-30" # End of survey for ERDDAP vessel data query
-# erddap.flags.sh         <- c('"ZZZZ.Z.Z..Z.*"')
 
 # Survey plan info --------------------------------------------------------
 wpt.filename  <- "waypoints_2606RL.csv"
@@ -226,7 +214,7 @@ useCrossOrigin <- T # Use cross origin
 leaflet.checkTransects.simple <- TRUE # Use a simple Leaflet for checkTransects
 
 # Trawl proportion plots
-scale.pies <- FALSE   # Scale pie charts (TRUE/FALSE)
+scale.pies <- TRUE   # Scale pie charts (TRUE/FALSE)
 pie.scale  <- 0.0125 # 0.01-0.02 works well for coast-wide survey (i.e., summer), larger values (~0.03) for spring
 
 # Lookup table for renaming columns
@@ -271,6 +259,9 @@ trawl.color <- "black"
 cps.spp            <- c("Clupea pallasii","Engraulis mordax","Sardinops melanosticta",
                         "Sardinops sagax", "Scomber japonicus","Trachurus symmetricus", 
                         "Etrumeus acuminatus")
+
+## Estimate biomass of Japanese sardine?
+estimate.j.sardine <- FALSE
 
 ## trouts & salmon, Pacific salmon unid, pink, chum, coho, sockeye, Chinook, steelhead, cutthroat trout
 salmon.spp <- c(161931, 161974, 161975, 161976, 161977, 161979, 161980, 161989, 161983) 
@@ -379,6 +370,7 @@ nasc.vessels.krill     <- c("RL")
 # Define columns to use for a fixed integration depth (if cps.nasc is not present)
 # Options include 0-100 (by 5), 100, 150, 250, and 350 m.
 # Defined by the atm::extract_csv() function.
+nasc.depth.deep  <- "NASC.20" # "NASC.70"
 nasc.depth.cps   <- "NASC.250"
 nasc.depth.krill <- "NASC.350"
 
@@ -464,7 +456,7 @@ Sv.max                 <- NULL # Max Sv value (dB); Set to -14 after testing is 
 # Use seine data to apportion nearshore backscatter
 # If seine catches were believed to be representative, TRUE
 # Else, FALSE (e.g., if sets were non-random or otherwise believed to be biased)
-use.seine.data  <- FALSE
+use.seine.data  <- TRUE
 seine.source    <- "Excel"
 seine.dir       <- "DATA/BIOLOGICAL/SEINE"
 seine.db.name   <- "SeineDataEntry2606RL.accdb"
@@ -474,14 +466,14 @@ seine.types     <- c("survey", "research", NA)
 seine.gpx.name  <- "nav_nearshore.gpx"
 
 # Survey vessels that collected purse seine data
-seine.vessels          <- c("LBC") # ,"LM"
-seine.vessels.long     <- c("LBC" = "Long Beach Carnage") # ,"LM"  = "Lisa Marie"
+seine.vessels          <- c("LBC" ,"LM")
+seine.vessels.long     <- c("LBC" = "Long Beach Carnage","LM"  = "Lisa Marie")
 
 # Deep backscatter correction
 # Correct deep backscatter?
 adj.deep.nasc <- FALSE
 # Remove deep backscatter, if a correction is not applied? Set to FALSE if adj.deep.nasc = TRUE
-rm.deep.nasc <- FALSE
+rm.deep.nasc <- TRUE
 # Vessels for which to remove deep backscatter that may be anchovy
 deep.nasc.vessels <- c("LBC", "LM")
 
@@ -594,8 +586,11 @@ cum.biomass.limit      <- 0.90 # Distance used to compute max.cluster.distance
 max.cluster.dist       <- 30
 
 # Define transect spacing bins and values (nmi) used to characterize transect spacing
-tx.spacing.bins <- c(0,  6, 15, 35, 70, 100)
-tx.spacing.dist <- c(5, 10, 20, 40, 80)
+tx.spacing.bins <- c(0,  6, 25, 35, 70, 100)
+tx.spacing.dist <- c(5, 12.5, 30, 40, 80)
+
+# tx.spacing.bins <- c(0,  6, 15, 35, 70, 100)
+# tx.spacing.dist <- c(5, 12.5, 20, 40, 80)
 
 # Define transect buffering preferences for stratum polygon creation
 na.buffer.dist <- 4 # Distance (nmi) to buffer N. American land mask for core strata masking
@@ -605,7 +600,7 @@ ci.clip.dist   <- 0.1 # Distance (nmi) to buffer Channel Island land mask for ne
 ## Core area
 tx.ext.pct     <- 0.35   # Extension percentage constant
 tx.ext.dir     <- "east" # east (toward shore), west (away from shore), or both
-tx.buff.pct    <- 1.025  # Scaling factor for transect buffering
+tx.buff.pct    <- 1.05  # Scaling factor for transect buffering, 1.025 in 2025
 
 ## Nearshore area
 tx.ext.pct.ns    <- 2.25      # Extension percentage constant
@@ -646,7 +641,7 @@ trawl.performance      <- c("Aborted") # Character vector; trawl performance to 
 trawl.haul.rm          <- NA # c(24) # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)
 
 # Location of trawl database
-if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L")) {
+if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERHOFF-")) {
   trawl.dir <- "DATA/BIOLOGICAL/HAUL"
 } else if (Sys.info()['nodename'] %in% c("RL4433188-CHL1")) {
   trawl.dir <- ""
@@ -718,10 +713,10 @@ tv80.skip   <- 1
 # Length bins and labels for calculating length frequencies 
 length.min <- 1 # Minimum length bin for length frequencies
 # (max. anchovy = 20 cm, sardine & herrings = 30 cm, Pac. mack = 40, and jack mack. = 60)
-length.max <- data.frame("species" = c("Clupea pallasii","Engraulis mordax",
+length.max <- data.frame("species" = c("Clupea pallasii", "Engraulis mordax",
                                        "Sardinops sagax", "Scomber japonicus",
-                                       "Trachurus symmetricus","Etrumeus acuminatus"),
-                         "sl" = c(30,20,30,50,60,30))
+                                       "Trachurus symmetricus", "Etrumeus acuminatus"),
+                         "sl" = c(30, 20, 30, 50, 60, 30))
 
 # Species to generate point estimates
 point.est.spp          <- c("Clupea pallasii","Engraulis mordax","Sardinops sagax",
@@ -750,7 +745,7 @@ nIndiv.min    <- 1
 nClusters.min <- 1
 
 # Use manually defined strata?
-stratify.manually    <- TRUE
+stratify.manually    <- FALSE
 stratify.manually.os <- FALSE
 stratify.manually.ns <- FALSE
 
@@ -846,8 +841,7 @@ if ("SD" %in% nasc.vessels) {
 
 # Stock boundaries --------------------------------------------------------
 stock.break.anch <- c("Cape Mendocino" = 40.80)  # Latitude of Cape Mendocino
-stock.break.sar  <- c("Pt. Conception" = 34.3) # Latitude of ~Pt. Conception, base off 2023 habitat map
-# stock.break.sar  <- c("Bodega Bay" = 38.311) # Latitude of Bodega Bay, based on differences in length dist.
+stock.break.sar  <- c("Pt. Conception" = 34.55) # Latitude of ~Pt. Conception, base off 2023 habitat map
 
 # Transects used to define stock boundaries (primary or other)
 # Used in estimateOffshore, where stock break using offshore transect ends is ambiguous
@@ -856,8 +850,8 @@ stock.break.source <- "primary"
 # Data collection settings ------------------------------------------------
 # ER60 file info
 raw.prefix    <- "2606RL_EK80"
-raw.size      <- 1  # file size in gigabytes (GB)
-raw.log.range <-  350  # depth of ER60 logging (m)
+raw.size      <-   1  # file size in gigabytes (GB)
+raw.log.range <- 350  # depth of ER60 logging (m)
 
 # Echoview settings
 er60.version  <- "v2.4.3" # ER60 version
@@ -877,11 +871,11 @@ adz.range        <-    3  # Range (m) of acoustic dead zone
 nasc.freq        <-   38  # Echosounder frequency used to estimate CPS biomass
 
 # Adaptive sampling information ------------------------------------------
-compulsory.spacing      <- 20  # minimum transect spacing (nmi) for compulsory acoustic transects
-adaptive.spacing        <- 10  # minimum transect spacing (nmi) for adaptive acoustic transects
-adaptive.cluster.size   <- 5   # minimum number of consecutive transects to define a cluster
-cufes.threshold.anchovy <- 1   # egg density, eggs per minute
-cufes.threshold.sardine <- 0.3 # egg density, eggs per minute
+compulsory.spacing      <- 20   # minimum transect spacing (nmi) for compulsory acoustic transects
+adaptive.spacing        <- 10   # minimum transect spacing (nmi) for adaptive acoustic transects
+adaptive.cluster.size   <-  5   # minimum number of consecutive transects to define a cluster
+cufes.threshold.anchovy <-  1   # egg density, eggs per minute
+cufes.threshold.sardine <-  0.3 # egg density, eggs per minute
 
 # # Calibration information ------------------------------------------------
 cal.vessels        <- NA # c("RL","LBC","LM") 
@@ -901,18 +895,18 @@ cal.datetime       <- c(RL = "15 June")    # Date/time of calibration
 cal.plot.date      <- c(RL = "2026-06-15") # Date of the calibration, used to plot cal time series
 cal.window         <- c(RL = 75)           # Number of days around calibration date to look for results
 cal.group          <- c(RL = "SWFSC")      # Group conducting the calibration
-cal.personnel      <- c(RL = "A. Beittel, D. Murfin, J. Renfree, and S. Sessions") # Calibration participants
+cal.personnel      <- c(RL = "D. Murfin, J. Renfree, and S. Sessions") # Calibration participants
 cal.loc            <- c(RL = "10th Avenue Marine Terminal, San Diego Bay") # Location name
 cal.lat.dd         <- c(RL = 32.6956)    # Cal location latitude in decimal degrees (for mapping, e.g. with ggmap) 37.7865°N @ Pier 30-32
 cal.lon.dd         <- c(RL = -117.15278) # Cal location longitude in decimal degrees (for mapping, e.g. with ggmap) -122.3844°W @ Pier 30-32
 cal.lat            <- dd2decmin(cal.lat.dd)
 cal.lon            <- dd2decmin(cal.lon.dd)
 cal.sphere         <- c(RL = "38.1-mm diameter sphere made from tungsten carbide (WC) with 6% cobalt binder material (WC38.1)") # Cal sphere info
-cal.sphere.name    <- c(RL = "_Lasker_ sphere #1")
+cal.sphere.name    <- c(RL = "_Lasker_ sphere #TBD")
 cal.sphere.z       <- c(RL = 6) # Nominal depth of calibration sphere below the transducer
 cal.imp.anal       <- c(RL = "Agilent 4294A Precision Impedance Analyzer") # Info about impedance analyzer
 # Other notes about calibration
-cal.notes          <- c(RL = "Lasker calibration sphere #1")
+cal.notes          <- c(RL = "Lasker calibration sphere #TBD")
 
 # Physical conditions during calibration
 cal.temp  <- c(RL  = 20.16,

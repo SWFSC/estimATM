@@ -3,7 +3,7 @@
 
 # Define nearshore transects
 lbc.transects <- c(1:57, 284:347)
-lbc.transects.jz <- c(1:27) # Subset for Juan
+lbc.transects.jz <- c(1:27,327:347) # Subset for Juan
 lm.transects  <- c(58:152)
 
 # Map LBC transects

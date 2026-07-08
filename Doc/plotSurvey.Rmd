@@ -1096,6 +1096,21 @@ if (sampling.trawl) {
     st_as_sf(coords = c("long","lat"), crs = crs.geog) 
   
   # Convert haul catch to sf and create labels
+  haul.catch.sf <- haul.pie %>%
+    st_as_sf(coords = c("X","Y"), crs = crs.proj) %>%
+    st_transform(crs = crs.geog) %>% 
+    mutate(
+      label = paste("Haul", haul),
+      popup = paste('<b>Haul:', haul, '</b><br/>',
+                    'Anchovy:', Anchovy, 'kg<br/>',
+                    'P. Sardine:', Sardine, 'kg<br/>',
+                    'J. Sardine:', JapSardine, 'kg<br/>',
+                    'Jack Mackerel:', JackMack, 'kg<br/>',
+                    'P. herring:', PacHerring, 'kg<br/>',
+                    'P. mackerel:', PacMack, 'kg<br/>',
+                    'All CPS:', AllCPS, 'kg'))
+  
+  # Convert cluster catch to sf and create labels
   cluster.catch.sf <- cluster.pie %>%
     st_as_sf(coords = c("X","Y"), crs = crs.proj) %>%
     st_transform(crs = crs.geog) %>% 
@@ -1502,13 +1517,21 @@ if (sampling.trawl) {
                    popup = ~popup, label = ~label, 
                    group = "Trawls")
   
+  if (exists("haul.catch.sf"))
+    i.map <- i.map %>% 
+      # Add trawl catch
+      addCircleMarkers(data = haul.catch.sf, radius = 5, color = "#000000", stroke = TRUE, weight = 2,
+                       opacity = 0.8, fillOpacity = 1, fillColor =  "white",
+                       popup = ~popup, label = ~label,
+                       group =  "Trawls")
+  
   if (exists("cluster.catch.sf"))
     i.map <- i.map %>% 
       # Add trawl catch
       addCircleMarkers(data = cluster.catch.sf, radius = 5, color = "#000000", stroke = TRUE, weight = 2,
-                       opacity = 0.8, fillOpacity = 1, fillColor =  "white",
+                       opacity = 0.8, fillOpacity = 1, fillColor =  "magenta",
                        popup = ~popup, label = ~label,
-                       group =  "Trawls")  
+                       group =  "Trawls")
   
   if (exists("haul.midwater"))
     i.map <- i.map %>% 

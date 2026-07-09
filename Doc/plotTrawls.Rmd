@@ -58,8 +58,8 @@ process.tv80 <- T # Process Simrad TV80 data
 process.asc  <- F # Process Seabird TDR files (.asc format)
 
 # Usually F; set T to reprocess all TDR/TV80 files
-process.tdr.all   <- F # Process all TDR files 
-process.tv80.all  <- F # Process all TV80 files
+process.tdr.all   <- T # Process all TDR files 
+process.tv80.all  <- T # Process all TV80 files
 
 # Extract data from trawl database (F for testing)
 get.db      <- ifelse(Sys.info()['nodename'] %in% c("SWC-KSTIERHOFF-"), F, T) 
@@ -406,7 +406,7 @@ if (process.asc) {
 }
 ```
 
-```{r process-tv80}
+```{r process-tv80,include=FALSE}
 if (process.tv80) {
   # Get fileSnapshot at the beginning of the knit, to compare with the end of the last knit
   tv80.snapshot.start <- fileSnapshot(here("Data/TV80"), full.names = FALSE)

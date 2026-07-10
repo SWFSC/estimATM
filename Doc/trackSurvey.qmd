@@ -700,6 +700,17 @@ map.plan.comp
 ```
 
 # Survey progress plot
+## By cumulative distance
+
+Cumulative acoustic distance sampled (km) by *`r survey.vessel`* (pink line) relative to the cumulative planned acoustic transect distances (gray line). The vertical and horizontal dashed lines represent the expected date and cumulative distance at the end of each planned survey leg, respectively. Ideally, the actual progress line would align with the intersection of the two dashed lines at the end of a given survey leg.
+
+```{r survey-progress-plot-distance}
+#| fig-height: 7
+#| fig-width: 12 
+
+# Print plan plot
+vessel.progress.plot.dist
+```
 
 ## By latitude
 
@@ -711,18 +722,6 @@ Actual survey progress by *`r survey.vessel`* (pink line) relative to the origin
 
 # Print plan plot
 vessel.progress.plot
-```
-
-## By cumulative distance
-
-Cumulative acoustic distance sampled (km) by *`r survey.vessel`* (pink line) relative to the cumulative planned acoustic transect distances (gray line). The vertical and horizontal dashed lines represent the expected date and cumulative distance at the end of each planned survey leg, respectively. Ideally, the actual progress line would align with the intersection of the two dashed lines at the end of a given survey leg.
-
-```{r survey-progress-plot-distance}
-#| fig-height: 7
-#| fig-width: 12 
-
-# Print plan plot
-vessel.progress.plot.dist
 ```
 
 ```{r summarize-das}
@@ -815,7 +814,7 @@ This table is meant to summarize planned versus realized survey effort (i.e., da
 
 ## Planned vs. actual effort
 
-How many days has the ship been on the water (i.e., actual) versus how many days were planned? This is derived from the entire vessel track, regardless of whether or not we were conducting a survey (i.e., conducting acoustic sampling along planned transects), including transits and other vessel movements.  [**Red**]{style="color:red"} cells indicate potentially significant differences between the number of planned versus actual values.
+How many days has the ship been on the water (i.e., actual) versus how many days were planned? This is derived from the entire vessel track, regardless of whether or not we were conducting a survey (i.e., conducting acoustic sampling along planned transects), including transits and other vessel movements. [**Yellow**]{style="background-color:yellow"} cells may be a reason for concern. [**Red**]{style="color:red"} cells indicate potentially significant differences between the number of planned versus actual values and should be investigated further.
 
 ```{r effort-summary}
 # Subset summary to only include legs that have been
@@ -829,13 +828,20 @@ das.summ.planned <- das.summary %>%
 das.summary %>% 
   filter(!is.na(actual.start)) %>%
   filter(!is.na(survey.start)) %>%
+  mutate(status = case_when(
+    planned.end < Sys.Date() ~ "Completed",
+    TRUE ~ "Ongoing"
+  )) %>% 
   mutate(
     actual.start = cell_spec(
       actual.start, knitr.format, color = "black",
       background = ifelse(actual.start >= planned.start, "red", "white")),
     actual.end = cell_spec(
       actual.end, knitr.format, color = "black",
-      background = ifelse(actual.end < planned.end, "red", "white")),
+      background = case_when(
+        status == "Ongoing" ~ "yellow",
+        actual.end < planned.end ~ "red",
+        TRUE ~ "white")),
     survey.start = cell_spec(
       survey.start, knitr.format, color = "black",
       background = ifelse(survey.start > planned.start + days(das.survey.transit),
@@ -844,20 +850,34 @@ das.summary %>%
       survey.end, knitr.format, color = "black",
       background = ifelse(survey.end < planned.end - days(das.survey.transit),
                           "red", "white")),
+    status = cell_spec(
+      status, knitr.format, bold = TRUE,
+      background = ifelse(status == "Completed", "white", "green"),
+      color      = ifelse(status == "Completed", "black", "white")),
     das.actual = cell_spec(
       das.actual, knitr.format, color = "black",
-      background = ifelse(das.actual < das.planned, "red", "white")),
+      background = case_when(
+        das.actual == das.planned ~ "green", 
+        das.actual < das.planned & das.actual > das.planned - 2 ~ "yellow",
+        TRUE ~ "red")),
     das.survey = cell_spec(
       das.survey, knitr.format, color = "black",
-      background = ifelse(das.survey < das.planned - 2*das.survey.transit, "red", "white"))) %>%
+      background = case_when(
+        das.survey >= das.planned - 2*das.survey.transit ~ "green",
+        das.survey < das.planned - 2*das.survey.transit & 
+          das.survey > das.planned - 4*das.survey.transit ~ "yellow",
+        TRUE ~ "red"),
+      bold = if_else(Sys.Date() < planned.end, TRUE, FALSE))) %>%
   select(Leg, planned.start, actual.start, planned.end, actual.end, 
-         das.planned, das.actual, das.survey) %>%
+         das.planned, das.actual, das.survey, status) %>%
   kable(format = knitr.format,booktabs = TRUE, escape = FALSE,
         col.names = c("Leg", 
                       "Planned", "Actual", 
                       "Planned", "Actual", 
-                      "Planned", "Actual", "Survey")) %>% 
-  add_header_above(c(" " = 1, "Start date" = 2, "End date" = 2, "Days at Sea" = 3)) %>%
+                      "Planned", "Actual", "Survey",
+                      "Status")) %>% 
+  add_header_above(c(" " = 1, "Start date" = 2, "End date" = 2, 
+                     "Days at Sea" = 3, " " = 1)) %>%
   kable_styling(bootstrap_options = c("striped","hover","condensed"), 
                 full_width = FALSE) 
 
@@ -865,7 +885,7 @@ das.summary %>%
 
 According to our calculations, a total of **`r sum(das.summary.sub$das.actual, na.rm = T)`** DAS were accomplished of the `r sum(das.summary.sub$das.planned, na.rm = T)` DAS scheduled, resulting in **`r sum(das.summary.sub$delta.das, na.rm = T)`** fewer DAS than planned.
 
-**NOTE:** If the `planned.end` date for the current leg is greater than **`r date(Sys.time())`**, then the survey leg is still ongoing and these calculations will not accurately reflect the actual results.
+**NOTE:** If the Status is "[**Ongoing**]{style="background-color:green"}" then these calculations will not accurately reflect the actual results.
 
 ```{r das-summary,eval=FALSE}
 # Subset summary to only include legs that have been
@@ -973,13 +993,13 @@ das.summary %>%
 # **NOTE:** If the `planned.end` date for the current leg is greater than **`r date(Sys.time())`**, then the survey leg is still ongoing and these calculations will not accurately reflect the actual results.
 ```
 
-# Interactive data explorer 
+# Interactive data explorer
 
-An interactive map showing... Hover-over or click on some map objects for more info.
+An interactive map showing the path of the vessel (heavy lines) relative to planned acoustic transects (lighter lines). The colors of the lines indicate the expected leg that a planned transect would be sampled and the actual leg the vessel completed sampling. Hover-over or click on some map objects (e.g., the ship icon) for more info.
 
 ```{r interactive-map, out.height="12in", out.width="100%"}
 # Display map
 i.map
-```  
+```
 
 For questions about this page, please contact Kevin Stierhoff ([kevin.stierhoff\@noaa.gov](mailto:kevin.stierhoff@noaa.gov)).

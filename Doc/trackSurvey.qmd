@@ -597,7 +597,7 @@ i.map <- leaflet() %>%
                label = ~paste(Depth, "m"), group = "Bathymetry Contours") %>% 
   # Add National Marine Sanctuaries
   addPolygons(data = nms_bounds, color = "#000414", weight = 2, fillColor = ~mpaPal(NAME),
-              fillOpacity = 0.25, label = ~htmlEscape(NAME), group = "U.S. MPAs") %>%
+              fillOpacity = 0.1, label = ~htmlEscape(NAME), group = "U.S. MPAs") %>%
   # Add State waters
   addPolygons(data = or_waters, weight = 2, fillColor = "transparent", 
               opacity = 0.75,
@@ -609,7 +609,7 @@ i.map <- leaflet() %>%
               group = "State Waters") %>%
   # Add West Coast MPAs
   addPolygons(data = wc_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalWC(Design),
-              fillOpacity = 0.3, label = ~htmlEscape(Site_Nm), group = "State MPAs") %>%
+              fillOpacity = 0.25, label = ~htmlEscape(Site_Nm), group = "State MPAs") %>%
   # Add Canadian MPAs
   addPolygons(data = scott_islands_mpa, color = "#000414", weight = 2, 
               label = ~htmlEscape(MPA), group = "Canada MPAs") %>%
@@ -624,23 +624,23 @@ i.map <- leaflet() %>%
               fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
   # Add core planned transects
   addPolylines(data = filter(transects.sf, Type %in% c("Compulsory", "Adaptive")),
-               color = ~txPalLeg(Leg), weight = 1, opacity = 0.5, 
+               color = ~txPalLeg(Leg), weight = 1, opacity = 1, 
                label = ~htmlEscape(paste(Type, Transect)),
                popup = ~popup,
                group = "Planned Transects (Core)") %>% 
   addCircleMarkers(data = filter(wpts.sf, Type %in% c("Compulsory", "Adaptive")),
-                   radius = 3, color = "#000414", stroke = FALSE, opacity = 0.3,
+                   radius = 3, color = "#000414", stroke = FALSE, opacity = 1,
                    fillOpacity = 0.3, fillColor =  ~txPalLeg(Leg), 
                    label = ~htmlEscape(paste(Type, Waypoint)),
                    popup = ~popup,
                    group = "Planned Transects (Core)") %>%
   # Add ancillary planned transects
   addPolylines(data = filter(transects.sf, !Type %in% c("Compulsory", "Adaptive")),
-               color = ~txPal(Type), weight = 1, opacity = 0.3,
+               color = ~txPal(Type), weight = 1, opacity = 1,
                popup = ~popup,
                group = "Planned Transects (Ancillary)") %>%
   addCircleMarkers(data = filter(wpts.sf, !Type %in% c("Compulsory", "Adaptive")),
-                   radius = 3, color = ~txPal(Type), stroke = FALSE, opacity = 0.5,
+                   radius = 3, color = ~txPal(Type), stroke = FALSE, opacity = 1,
                    popup = ~popup,
                    group = "Planned Transects (Ancillary)") %>%
   # Add scale bar
@@ -677,8 +677,7 @@ if (exists("nav.paths.sf"))
 # Set visible layers
 i.map <- i.map %>%  
   hideGroup(c("State Waters", "Exclusive Economic Zones",
-              "Canada MPAs","Mexico MPAs","U.S. MPAs","State MPAs",
-              "Planned Transects (Ancillary)"))
+              "Canada MPAs","Mexico MPAs","Planned Transects (Ancillary)"))
 ```
 
 Survey progress for the **`r survey.name.long` (`r survey.name`)**
@@ -814,7 +813,7 @@ This table is meant to summarize planned versus realized survey effort (i.e., da
 
 ## Planned vs. actual effort
 
-How many days has the ship been on the water (i.e., actual) versus how many days were planned? This is derived from the entire vessel track, regardless of whether or not we were conducting a survey (i.e., conducting acoustic sampling along planned transects), including transits and other vessel movements. [**Yellow**]{style="background-color:yellow"} cells may be a reason for concern. [**Red**]{style="color:red"} cells indicate potentially significant differences between the number of planned versus actual values and should be investigated further.
+How many days has the ship been on the water (i.e., actual) versus how many days were planned? This is derived from the entire vessel track, regardless of whether or not we were conducting a survey (i.e., conducting acoustic sampling along planned transects), including transits and other vessel movements. [**Yellow**]{style="background-color:yellow"} cells may be a reason for concern. [**Red**]{style="background-color:red"} cells indicate potentially significant differences between the number of planned versus actual values and should be investigated further.
 
 ```{r effort-summary}
 # Subset summary to only include legs that have been

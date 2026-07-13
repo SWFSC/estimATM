@@ -737,7 +737,7 @@ if(nrow(tbl.all.new) > 0) {
 }
 ```
 
-```{r extract-fishing-data}
+```{r extract-fishing-data, eval=FALSE}
 if (process.tdr.all) {
   # Extract data during fishing
   

@@ -699,6 +699,7 @@ map.plan.comp
 ```
 
 # Survey progress plot
+
 ## By cumulative distance
 
 Cumulative acoustic distance sampled (km) by *`r survey.vessel`* (pink line) relative to the cumulative planned acoustic transect distances (gray line). The vertical and horizontal dashed lines represent the expected date and cumulative distance at the end of each planned survey leg, respectively. Ideally, the actual progress line would align with the intersection of the two dashed lines at the end of a given survey leg.

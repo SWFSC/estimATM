@@ -287,6 +287,7 @@ nasc.cps <- nasc.cps %>%
   mutate(leg = cut(as.numeric(date(datetime)), 
                    leg.breaks,
                    labels = FALSE)) %>% 
+  mutate(Transect = as.numeric(str_extract(transect, "\\d{3}"))) %>% 
   filter(!is.na(leg))
   # filter(!is.na(leg), leg %% 2 != 0)
 
@@ -351,7 +352,7 @@ landmarks <- data.frame(
 
 # Anticipated progress through the transect plan
 tx.breaks <- c(min(transects.sf$Transect[transects.sf$Type == "Compulsory"]),
-               tx.breaks[2:length(tx.breaks)-1],
+               tx.breaks[2:(length(tx.breaks)-1)],
                max(transects.sf$Transect[transects.sf$Type == "Compulsory"]))
 
 wpt.summ <- wpts %>% 
@@ -362,7 +363,7 @@ wpt.summ <- wpts %>%
 if (file.exists(here("Data/Nav", paste0("transect_plan_", survey.name, ".csv")))) {
   tx.plan <- read_csv(here("Data/Nav", paste0("transect_plan_", survey.name, ".csv"))) %>% 
     mutate(date = mdy(date),
-           Transect = floor(tx.plan)) %>% 
+           Transect = round(tx.plan)) %>% 
     inner_join(select(wpt.summ, Transect, Latitude))
 }
 
@@ -378,7 +379,7 @@ tx.plan <- tx.plan %>%
 
 # Calculate goal transects
 tx.goals <- wpts %>% 
-  filter(Transect %in% tx.breaks, Type %in% c("Compulsory")) %>% 
+  filter(Transect %in% tx.breaks, Type %in% c("Compulsory", "Adaptive")) %>% 
   group_by(Transect) %>% 
   slice(which.max(Longitude)) %>% 
   ungroup() %>% 
@@ -883,7 +884,19 @@ das.summary %>%
 
 ```
 
-According to our calculations, a total of **`r sum(das.summary.sub$das.actual, na.rm = T)`** DAS were accomplished of the `r sum(das.summary.sub$das.planned, na.rm = T)` DAS scheduled, resulting in **`r sum(das.summary.sub$delta.das, na.rm = T)`** fewer DAS than planned.
+```{r progress-comparison}
+# Compare actualy progress to planned progress
+tx.plan <- tx.plan %>% 
+  mutate(diff.date = abs(difftime(date(Sys.Date()), date, units = "days")))
+
+# Identify planned transect for a given date
+tx.num.plan <- tx.plan$Transect[which.min(tx.plan$diff.date)]
+
+# Identify the latest transect sampled on that same date
+tx.num.actual <- max(nasc.cps$Transect)
+```
+
+According to our calculations, a total of **`r sum(das.summary.sub$das.actual, na.rm = T)`** DAS were accomplished of the `r sum(das.summary.sub$das.planned, na.rm = T)` DAS scheduled, resulting in **`r sum(das.summary.sub$delta.das, na.rm = T)`** fewer DAS than planned. To date, acoustic sampling was expected to be completed through transect **`r tx.num.plan`** and has actually been completed through transect **`r tx.num.actual`**, which is difference of **`r tx.num.plan - tx.num.actual`** transects.
 
 **NOTE:** If the Status is "[**Ongoing**]{style="background-color:green"}" then these calculations will not accurately reflect the actual results.
 

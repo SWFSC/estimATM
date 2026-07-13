@@ -142,8 +142,8 @@ leg.breaks <- as.numeric(lubridate::ymd(c("2026-06-16", "2026-07-04",
                                           "2026-09-02", "2026-09-25")))
 
 # Anticipated progress throughout the transect plan
-# Leg 1:1-20, Leg 2:21-47, Leg 3:48-74, Leg 4: 75-87
-tx.breaks <- c(0, 14, 43, 69, 87)
+# Leg 1:1-14, Leg 2:15-43, Leg 3:44-68, Leg 4: 69-86
+tx.breaks <- c(0, 14, 43, 69, 88)
 
 # Define nav source depending on location of computer
 ## Options are: SCS (usually on the ship) or ERDDAP (usually on shore; 24h update rate)

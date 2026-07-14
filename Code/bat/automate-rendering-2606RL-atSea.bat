@@ -5,7 +5,7 @@ SET Q_PATH="C:\Program Files\RStudio\resources\app\bin\quarto\bin\quarto.exe"
 REM To install pandoc on Windows, run CMD.exe then winget install JohnMacFarlane.Pandoc
 
 REM Path to where the RMD and QMD files are located
-SET WORK_DIR="C:\KLS\CODE\Github\estimATM\2606RL\Doc"
+SET WORK_DIR="C:\SURVEY\2606RL\ANALYSIS\estimATM\2606RL\Doc"
 
 CD /d %WORK_DIR%
 

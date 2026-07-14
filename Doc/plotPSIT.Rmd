@@ -4,8 +4,8 @@ author: "Kevin Stierhoff"
 date: 'Last updated: `r format(Sys.time(), "%F %T", tz = "America/Los_Angeles", usetz = TRUE)`'
 output:
   bookdown::html_document2:
-    toc: yes
-    toc_float: yes
+    toc: no
+    toc_float: no
     number_sections: yes
 css: css/ast.css
 bibliography: bib/ast_bib.bib
@@ -95,8 +95,9 @@ psit.surveys <- c("California Current Ecosystem Survey (CCES)","Sardine (Norther
 psit <- read_xlsx(here("Data/PSIT/psit-swfsc.xlsx")) %>% 
   janitor::clean_names() %>% 
   mutate(year = year(start_of_sampling_event)) %>% 
-  filter(survey_name %in% psit.surveys,
-         taxa_type == "Marine Mammal") %>%
+  filter(taxa_type == "Marine Mammal") %>%
+  # filter(survey_name %in% psit.surveys,
+  #        taxa_type == "Marine Mammal") %>%
   select(survey_name, year, event_start = start_of_sampling_event, common_name, 
          taxa = protected_species_taken,
          taxa_type, gear, lat, lon, number_killed, number_total_taken) %>% 
@@ -106,10 +107,10 @@ psit <- read_xlsx(here("Data/PSIT/psit-swfsc.xlsx")) %>%
     str_detect(tolower(taxa), "dolphin") ~ "Cetaceans",
     TRUE ~ "Other"
   )) %>% 
-  mutate(gear_type = case_when(
-    year < 2024 ~ "Nordic",
-    TRUE ~ "MFT"
-  ))
+  # mutate(gear_type = case_when(
+  #   year < 2024 ~ "Nordic",
+  #   TRUE ~ "MFT")) %>% 
+  arrange(desc(number_total_taken))
 
 # Convert to sf
 psit.sf <- psit %>% 
@@ -161,12 +162,21 @@ save(base.map, file = here("Data/Map/basemap_psit.Rdata"))
 # Cetacean takes - all years
 cetacean.map <- base.map + 
   geom_sf(data = filter(psit.sf, taxa_group == "Cetaceans"),
-          aes(color = common_name, size = number_total_taken)) +
+          aes(fill = common_name, size = number_total_taken),
+          shape = 21, colour = "black") +
   labs(title = "Cetaceans") +
-  scale_colour_discrete(name = "Taxa") +
+  scale_fill_discrete(name = "Taxa") +
   scale_size_continuous(name = "Total take") +
   guides(color = guide_legend(order = 1),
          size = guide_legend(order = 2)) +
+  theme(
+    legend.background = element_rect(fill = alpha("white", 0.5), color = NA),
+    legend.position = "inside",
+    legend.position.inside = c(1,1),
+    legend.justification = c("right","top"),
+    legend.box.just = "right",
+    legend.text.align = 1,
+    legend.title.align = 1) +
   coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
            xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
            ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
@@ -174,46 +184,73 @@ cetacean.map <- base.map +
 # Pinniped takes - all years
 pinniped.map <- base.map + 
   geom_sf(data = filter(psit.sf, taxa_group == "Pinnipeds"),
-          aes(color = common_name, size = number_total_taken)) +
+          aes(fill = common_name, size = number_total_taken),
+          shape = 21, colour = "black") +
   labs(title = "Pinnipeds") +
-  scale_colour_discrete(name = "Taxa") +
+  scale_fill_discrete(name = "Taxa") +
   scale_size_continuous(name = "Total take") +
   guides(color = guide_legend(order = 1),
          size = guide_legend(order = 2)) +
+  theme(
+    legend.background = element_rect(fill = alpha("white", 0.5), color = NA),
+    legend.position = "inside",
+    legend.position.inside = c(1,1),
+    legend.justification = c("right","top"),
+    legend.box.just = "right",
+    legend.text.align = 1,
+    legend.title.align = 1) +
   coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
            xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
            ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
 
 pinniped.map.year <- base.map + 
   geom_sf(data = filter(psit.sf, taxa_group == "Pinnipeds"),
-          aes(fill = factor(year), colour = gear_type, size = number_total_taken),
+          aes(fill = factor(year), colour = gear, size = number_total_taken),
           shape = 21) +
   scale_fill_discrete(name = "Year") +
   scale_size_continuous(name = "Total take") +
-  scale_colour_manual(name = "Gear", 
-                      values = c("Nordic" = "blue", "MFT" = "green")) +
-  guides(fill = guide_legend(order = 1),
-         colour = guide_legend(order = 2),
-         size = guide_legend(order = 3)) +
+  scale_colour_discrete(name = "Gear") +
+  # scale_colour_manual(name = "Gear", 
+  #                     values = c("Nordic" = "blue", "MFT" = "green")) +
+  guides(fill = "none",
+         colour = guide_legend(order = 1),
+         size = guide_legend(order = 2)) +
   facet_wrap(~common_name) +
   labs(title = "Pinnipeds") +
+  theme(
+    legend.background = element_rect(fill = alpha("white", 0.5), color = NA),
+    legend.position = "inside",
+    legend.position.inside = c(1,1),
+    legend.justification = c("right","top"),
+    legend.box.just = "right",
+    legend.text.align = 1,
+    legend.title.align = 1) +
   coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
            xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
            ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
 
 cetacean.map.year <- base.map + 
   geom_sf(data = filter(psit.sf, taxa_group == "Cetaceans"),
-          aes(fill = factor(year), colour = gear_type, size = number_total_taken),
+          aes(fill = factor(year), colour = gear, size = number_total_taken),
           shape = 21) +
   scale_fill_discrete(name = "Year") +
   scale_size_continuous(name = "Total take") +
-  scale_colour_manual(name = "Gear", 
-                      values = c("Nordic" = "blue", "MFT" = "green")) +
-  guides(fill = guide_legend(order = 1),
-         colour = guide_legend(order = 2),
-         size = guide_legend(order = 3)) +
-  facet_wrap(~common_name) +
+  scale_colour_discrete(name = "Gear") +
+  # scale_colour_manual(name = "Gear", 
+  #                     values = c("Nordic" = "blue", "MFT" = "green")) +
+  guides(fill = "none",
+         colour = guide_legend(order = 1),
+         size = guide_legend(order = 2)) +
+  facet_wrap(~common_name, nrow = 2) +
   labs(title = "Cetaceans") +
+  theme(
+    legend.background = element_rect(fill = alpha("white", 0.5), color = NA),
+    legend.position = "inside",
+    legend.position.inside = c(1,1),
+    legend.justification = c("right","top"),
+    legend.box.just = "right",
+    legend.text.align = 1,
+    legend.title.align = 1) +
   coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
            xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
            ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
@@ -240,6 +277,6 @@ pinniped.map.year
 
 ## Cetacean takes - All years
 
-```{r, fig.height=8,fig.width=8}
+```{r, fig.height=15,fig.width=8}
 cetacean.map.year
 ```

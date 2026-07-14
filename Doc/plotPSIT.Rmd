@@ -1,0 +1,245 @@
+---
+title: "plotPSIT: Protected Species Incidental Take (PSIT) Explorer"
+author: "Kevin Stierhoff"
+date: 'Last updated: `r format(Sys.time(), "%F %T", tz = "America/Los_Angeles", usetz = TRUE)`'
+output:
+  bookdown::html_document2:
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+css: css/ast.css
+bibliography: bib/ast_bib.bib
+csl: csl/ices-journal-of-marine-science.csl
+---
+
+```{r set-up,echo=F,message=F,warning=F,error=F,include=F}
+# Install and load pacman (library management package)
+if (!require("pacman")) install.packages("pacman")
+if (!require("pak")) install.packages("pak")
+
+# Install and load required packages from CRAN ---------------------------------
+pacman::p_load(tidyverse,lubridate,mapview,kableExtra,leaflet,gdtools,xml2,
+               here,bookdown,odbc,DBI,knitr,DT,fs,sf,leafem,naniar,ggiraph,
+               cowplot,RSQLite,xts,rnaturalearth,htmltools,janitor,lwgeom,
+               readxl,patchwork)
+
+# Install and load required packages from Github -------------------------------
+if (!require("atm")) pak::pkg_install("SWFSC/atm")
+if (!require("surveyR")) pak::pkg_install("SWFSC/surveyR")
+pacman::p_load_gh("SWFSC/atm")
+pacman::p_load_gh("SWFSC/surveyR")
+
+# rnaturalearth data
+pacman::p_load_gh("ropenscilabs/rnaturalearthdata")
+pacman::p_load_gh("ropenscilabs/rnaturalearthhires")
+
+# Define method of table generation (whether kable or xtable) for best formatting
+doc.type <- knitr::opts_knit$get('rmarkdown.pandoc.to')
+if (is.null(doc.type)) {doc.type <- "html"}
+
+# Knitr options
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      out.width = "100%")
+
+theme_set(theme_bw())
+
+# Determine global knitr table format
+if (doc.type == "latex") {
+  knitr.format <- "latex"
+} else {
+  knitr.format <- "html" 
+}
+
+# Register fonts
+register_liberationsans()
+```
+
+```{r project-settings, include=FALSE}
+# Get project name from directory
+prj.name <- last(unlist(str_split(here(),"/")))
+
+# Get all settings files
+settings.files <- dir(here("Doc/settings"))
+
+# Source survey settings file
+prj.settings <- settings.files[str_detect(settings.files, paste0("settings_", prj.name, ".R"))]
+source(here("Doc/settings", prj.settings))
+
+# Create required directories
+dir_create(here(c("Figs", "Output")))
+```
+
+```{r user-settings}
+# User-specified settings
+# Extract data from trawl database (F for testing)
+get.db          <- ifelse(Sys.info()['nodename'] %in% c("SWC-KSTIERHOFF-"), F, T) 
+get.nav         <- T # Download NOAA Ship nav data
+get.nav.sh      <- F # Download NOAA Ship nav data
+copy.files      <- F # Copy trawl database
+overwrite.files <- T # Overwrite files
+
+# Plotting options
+do.ggiraph      <- T # Set to F if having issues rendering Leaflet maps
+```
+
+```{r import-take-report}
+psit.surveys <- c("California Current Ecosystem Survey (CCES)","Sardine (Northern Portion)",
+                  "Sardine (Southern Portion)","Sardine_Summer",
+                  "Coastal Pelagic Species (CPS) Survey (aka Sardine Survey)",
+                  "Coastal Pelagic Species (CPS)_Spring",
+                  "Coastal Pelagic Species (CPS)_Summer",
+                  "Sardine - Hake Acoustic Trawl Survey (SaKe)",
+                  "Integrated West Coast Pelagics Survey_SWFSC")
+
+# Read and format PSIT data
+psit <- read_xlsx(here("Data/PSIT/psit-swfsc.xlsx")) %>% 
+  janitor::clean_names() %>% 
+  mutate(year = year(start_of_sampling_event)) %>% 
+  filter(survey_name %in% psit.surveys,
+         taxa_type == "Marine Mammal") %>%
+  select(survey_name, year, event_start = start_of_sampling_event, common_name, 
+         taxa = protected_species_taken,
+         taxa_type, gear, lat, lon, number_killed, number_total_taken) %>% 
+  mutate(taxa_group = case_when(
+    str_detect(tolower(taxa), "sea lion") ~ "Pinnipeds",
+    str_detect(tolower(taxa), "seal") ~ "Pinnipeds",
+    str_detect(tolower(taxa), "dolphin") ~ "Cetaceans",
+    TRUE ~ "Other"
+  )) %>% 
+  mutate(gear_type = case_when(
+    year < 2024 ~ "Nordic",
+    TRUE ~ "MFT"
+  ))
+
+# Convert to sf
+psit.sf <- psit %>% 
+  st_as_sf(coords = c("lon", "lat"), crs = crs.geog) 
+
+# Set padding around data using take info
+map.bounds <- psit.sf %>%
+  st_transform(crs = crs.proj) %>%
+  st_bbox() 
+```
+
+```{r create-basemap,include=F}
+# Configure base map options -----------------
+# Import landmarks
+locations <- filter(read.csv(here("Data/Map/locations.csv")), name %in% label.list) %>%
+  project_df(to = crs.proj)
+
+locations.sf <- st_as_sf(locations, coords = c("long","lat"), crs = crs.geog)
+
+# Get state data
+states <- ne_states(country = 'United States of America', returnclass = 'sf')
+ca     <- filter(states, name == "California")
+
+# Get countries
+countries <- ne_countries(scale = "large", returnclass = "sf") %>%
+  filter(subregion %in% c("Northern America","Central America"))
+
+# Read bathy contours shapefile 
+bathy <- st_read(here("Data/GIS/bathy_contours.shp")) %>% 
+  st_transform(crs.geog) %>% 
+  rename(Depth = Contour)
+
+# Determine map aspect ratio and set height and width
+map.aspect <- (map.bounds$xmax - map.bounds$xmin)/(map.bounds$ymax - map.bounds$ymin)
+map.height <- 10
+map.width  <- map.height*map.aspect
+
+# Create base map
+base.map <- get_basemap(psit.sf, states, countries, locations, bathy, map.bounds, crs = crs.proj) 
+
+# Save the basemap
+ggsave(base.map, file = here("Figs/fig_basemap_psit.png"), 
+       height = map.height, width = map.width)
+
+save(base.map, file = here("Data/Map/basemap_psit.Rdata"))
+```
+
+```{r map-takes}
+# Cetacean takes - all years
+cetacean.map <- base.map + 
+  geom_sf(data = filter(psit.sf, taxa_group == "Cetaceans"),
+          aes(color = common_name, size = number_total_taken)) +
+  labs(title = "Cetaceans") +
+  scale_colour_discrete(name = "Taxa") +
+  scale_size_continuous(name = "Total take") +
+  guides(color = guide_legend(order = 1),
+         size = guide_legend(order = 2)) +
+  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+           xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
+           ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
+
+# Pinniped takes - all years
+pinniped.map <- base.map + 
+  geom_sf(data = filter(psit.sf, taxa_group == "Pinnipeds"),
+          aes(color = common_name, size = number_total_taken)) +
+  labs(title = "Pinnipeds") +
+  scale_colour_discrete(name = "Taxa") +
+  scale_size_continuous(name = "Total take") +
+  guides(color = guide_legend(order = 1),
+         size = guide_legend(order = 2)) +
+  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+           xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
+           ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
+
+pinniped.map.year <- base.map + 
+  geom_sf(data = filter(psit.sf, taxa_group == "Pinnipeds"),
+          aes(fill = factor(year), colour = gear_type, size = number_total_taken),
+          shape = 21) +
+  scale_fill_discrete(name = "Year") +
+  scale_size_continuous(name = "Total take") +
+  scale_colour_manual(name = "Gear", 
+                      values = c("Nordic" = "blue", "MFT" = "green")) +
+  guides(fill = guide_legend(order = 1),
+         colour = guide_legend(order = 2),
+         size = guide_legend(order = 3)) +
+  facet_wrap(~common_name) +
+  labs(title = "Pinnipeds") +
+  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+           xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
+           ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
+
+cetacean.map.year <- base.map + 
+  geom_sf(data = filter(psit.sf, taxa_group == "Cetaceans"),
+          aes(fill = factor(year), colour = gear_type, size = number_total_taken),
+          shape = 21) +
+  scale_fill_discrete(name = "Year") +
+  scale_size_continuous(name = "Total take") +
+  scale_colour_manual(name = "Gear", 
+                      values = c("Nordic" = "blue", "MFT" = "green")) +
+  guides(fill = guide_legend(order = 1),
+         colour = guide_legend(order = 2),
+         size = guide_legend(order = 3)) +
+  facet_wrap(~common_name) +
+  labs(title = "Cetaceans") +
+  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+           xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
+           ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
+
+# Combine maps for all years
+takes.all.years <- cetacean.map + pinniped.map
+```
+
+# Overview
+This report displays marine mammal takes from all CPS surveys conducted by the SWFSC between `r min(psit.sf$year)` and `r max(psit.sf$year)`. 
+
+# Marine mammal takes - All gear types
+## All takes - All years
+
+```{r, fig.height=8,fig.width=8}
+takes.all.years
+```
+
+## Pinniped takes - All years
+
+```{r, fig.height=8,fig.width=8}
+pinniped.map.year
+```
+
+## Cetacean takes - All years
+
+```{r, fig.height=8,fig.width=8}
+cetacean.map.year
+```

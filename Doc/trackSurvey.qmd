@@ -342,7 +342,8 @@ leg.breaks <- data.frame(
   date = ymd(leg.ends[c(1, seq(2, length(leg.ends), 2))]),
   # Get leg labels
   leg = c("Start", paste("Leg", seq(1, (length(leg.ends)/2), 1)))
-)[1:n_distinct(transects.sf$Leg)+1, ]
+)[1:n_distinct(transects.sf$Leg)+1, ] %>% 
+  mutate(date.label = date - days(leg.length))
 
 # Create landmarks data.frame
 landmarks <- data.frame(
@@ -406,8 +407,10 @@ vessel.progress.plot <- ggplot() +  #nav.summ.all, aes(date, lat, group = vessel
   #            size = 2, shape = 21, colour = "blue", fill = "white") +
   geom_vline(xintercept = leg.breaks$date, linetype = "dashed") +
   geom_hline(yintercept = tx.goals$Latitude, linetype = "dashed") +
-  geom_text(data = leg.breaks, aes(date, 31, label = leg), inherit.aes = FALSE) +
-  geom_text(data = tx.goals, aes(date, Latitude + 0.4, label = label), inherit.aes = FALSE) +
+  geom_text(data = leg.breaks, aes(date.label, 31, label = leg), 
+            hjust = 0.5, inherit.aes = FALSE) +
+  geom_text(data = tx.goals, aes(date, Latitude + 0.4, label = label),
+            inherit.aes = FALSE) +
   # geom_text(data = landmarks, aes(date, lat+0.25, label = name), inherit.aes = FALSE) +
   geom_line(data = nav.summ.all, aes(date, lat, group = vessel, colour = vessel)) + 
   # geom_line(data = nav.summ.all, aes(date, lat, group = vessel, colour = vessel),
@@ -440,7 +443,8 @@ vessel.progress.plot.dist <- ggplot() +
              size = 2, shape = 21, colour = "gray50", fill = "white") +
   geom_vline(xintercept = leg.breaks$date, linetype = "dashed") +
   geom_hline(yintercept = tx.goals$dist.cum, linetype = "dashed") +
-  geom_text(data = leg.breaks, aes(date, 500, label = leg), inherit.aes = FALSE) +
+  geom_text(data = leg.breaks, aes(date.label, 500, label = leg), 
+            hjust = 0.5, inherit.aes = FALSE) +
   geom_text(data = tx.goals, aes(date, dist.cum + 400, label = label), inherit.aes = FALSE) +
   geom_line(data = nasc.summ.all.dist, aes(date, dist.cum, group = vessel, colour = vessel)) + 
   geom_point(data = nasc.summ.all.dist, 

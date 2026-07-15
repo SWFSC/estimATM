@@ -457,7 +457,7 @@ Sv.max                 <- NULL # Max Sv value (dB); Set to -14 after testing is 
 # If seine catches were believed to be representative, TRUE
 # Else, FALSE (e.g., if sets were non-random or otherwise believed to be biased)
 use.seine.data  <- TRUE
-seine.source    <- "Excel"
+seine.source    <- "Access"
 seine.dir       <- "DATA/BIOLOGICAL/SEINE"
 seine.db.name   <- "SeineDataEntry2606RL.accdb"
 seine.xlsx.name <- "Nearshore_LBC_2606RL.xlsx"

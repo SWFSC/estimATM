@@ -71,7 +71,7 @@ dir_create(here(c("Figs", "Output")))
 ```{r user-settings}
 # User-specified settings
 get.db     <- T # Extract data from trawl database (F for testing)
-get.nav    <- T # Download nearshore vessel nav data
+get.nav    <- F # Download nearshore vessel nav data
 resize.map <- T # Adjust map boundaries to data
 do.ggiraph <- T # Set to F if having issues rendering Leaflet maps
 ```
@@ -202,6 +202,20 @@ set.catch <- set.catch.all %>%
            scientificName %in% cps.spp) %>% 
   left_join(select(sets.all, key, set_type)) %>% 
   mutate(key = paste(cruise, ship, date, set))
+
+# Compute mean individual weights for each seine species
+seine.wt.indiv <- set.catch %>% 
+  group_by(scientificName) %>% 
+  summarise(totalWt = sum(weight_lbs,na.rm = TRUE),
+            totalNum = sum(totalNum, na.rm = TRUE)) %>% 
+  mutate(indivWeight = totalWt/totalNum)
+
+# Add mean individual weight and compute missing weights
+set.catch <- set.catch %>% 
+  left_join(select(seine.wt.indiv, scientificName, indivWeight)) %>% 
+  mutate(totalWeight = case_when(
+    is.na(totalWeight) ~ totalNum * indivWeight,
+    TRUE ~ totalWeight))
 
 if (nrow(set.catch) > 0) {
   # Summarize trawl catch by species

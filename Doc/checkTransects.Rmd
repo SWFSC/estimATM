@@ -18,7 +18,7 @@ if (!require("pak")) install.packages("pak")
 pacman::p_load(tidyverse,sf,mapview,lubridate,here,knitr,DT,bookdown,
                rnaturalearth,swfscMisc,fs,photobiology,ggspatial,glue,
                leaflet,leaflet.extras,leafem,htmltools,marmap,mapproj,gt,
-               shadowtext,stplanr,tmaptools,patchwork)
+               shadowtext,stplanr,tmaptools,patchwork,ggOceanMaps)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pak::pkg_install("SWFSC/atm")
@@ -1165,6 +1165,33 @@ survey.plan.fsv <- base.map +
 # save survey plan map
 ggsave(here("Figs/fig_survey_plan_fsv.png"), survey.plan.fsv,
        height = map.height, width = map.width)
+
+# Make "fancy map" with bathymetry
+survey.plan.fancy <- basemap(limits = c(range(wpts$long), range(wpts$lat)), 
+        bathy.alpha = 1, bathy.style = "wceb", legends = FALSE,
+        expand.factor = 1.3, land.col = "gray") + 
+  geom_sf(data = states, fill = "gray") +
+  geom_sf(data = bathy, colour = "gray50", alpha = 0.5, size = 0.25) +
+  geom_sf(data = locations.sf, shape = 21, fill = "gray20", colour = "white") +
+  geom_shadowtext(data  = locations, aes(long, lat, label = name),
+                                  colour = 'gray20', size = 2, fontface = 'bold',
+                                  hjust = 0, nudge_x = 0.2, nudge_y = 0.05, angle = 25,
+                                  bg.colour = "white") +
+  geom_sf(data = filter(transects.sf, Type %in% c("Compulsory", "Adaptive")), 
+          size = 0.5) +
+  geom_shadowtext(data = filter(tx.labels, Type %in% c("Compulsory", "Adaptive")),
+                  aes(long, lat, label = transect.name, angle = brg),
+                  hjust = 1, size =2, fontface = 'bold.italic',
+                  colour = "black", bg.colour = "white") +
+  theme_bw() +
+  theme(plot.background = element_rect(fill = "white")) +
+  coord_sf(crs = crs.geog, # CA Albers Equal Area Projection
+           xlim = c(min(wpts$long) - 1, max(wpts$long) + 1), 
+           ylim = c(min(wpts$lat) - 1, max(wpts$lat) + 1))
+
+# save survey plan map
+ggsave(here("Figs/fig_survey_plan_fancy.png"), survey.plan.fancy,
+       height = map.height-1.5, width = map.width)
 
 include_graphics(here("Figs/fig_survey_plan.png"))
 ```

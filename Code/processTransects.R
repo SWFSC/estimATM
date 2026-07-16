@@ -751,13 +751,9 @@ survey.map.leg = base.map +
           aes(linetype = Type, colour = factor(Leg)), show.legend = "line") +
   # Plot acoustic transect labels N of Cape Flattery
   geom_shadowtext(data = filter(tx.labels, Type %in% c("Adaptive","Compulsory","Franklin","Carranza")),
-                  aes(X, Y, label = transect.name,
-                      angle = brg),
-                  size = 1.25, fontface = 'bold.italic',
+                  aes(X, Y, label = transect.name, angle = brg),
+                  hjust = 1, size = 1.25, fontface = 'bold.italic',
                   colour = "black", bg.colour = "white") +
-  # geom_sf(data = ctd.sf, shape = 21, size = 1, fill = "blue") +
-  # geom_sf(data = uctd.sf, shape = 24, size = 1.5, fill = "orange") +
-  # geom_sf(data = eDNA.sf, shape = 21, size = 1, fill = "green") +
   scale_linetype_manual(name = "Type", values = wpt.linetypes) +
   scale_colour_discrete("Leg") +
   coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
@@ -777,6 +773,11 @@ survey.map.region = base.map +
   geom_sf(data = filter(transects.sf, Type %in% c("Adaptive", "Compulsory", "Nearshore", 
                                                   "Carranza","Franklin","Offshore", "Saildrone")),
           aes(linetype = Type, colour = factor(Region)), show.legend = "line") +
+  geom_shadowtext(data = filter(tx.labels, Type %in% c("Compulsory", "Adaptive")),
+                  aes(X, Y, label = transect.name,
+                      angle = brg),
+                  hjust = 1, size = 1.25, fontface = 'bold.italic',
+                  colour = "black", bg.colour = "white") +
   geom_sf(data = ctd.sf,  shape = 21, size = 1, fill = "blue") +
   geom_sf(data = uctd.sf, shape = 24, size = 1.5, fill = "orange") +
   geom_sf(data = eDNA.sf, shape = 21, size = 1, fill = "green") +

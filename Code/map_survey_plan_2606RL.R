@@ -35,7 +35,7 @@ if (nrow(filter(transects, Type == "Nearshore", Transect %in% lbc.transects))>0)
                     aes(X, Y, label = transect.name,
                         angle = brg, colour = Type),
                     size = 2, fontface = 'bold.italic',
-                    bg.colour = "white") +
+                    bg.colour = "white", hjust = 1) +
     scale_colour_manual("Type",
                         values = wpt.colors) +
     scale_linetype_manual("Type",
@@ -121,7 +121,7 @@ if (nrow(filter(transects, Type == "Nearshore", Transect %in% lm.transects))>0) 
                     aes(X, Y, label = transect.name,
                         angle = brg, colour = Type),
                     size = 2, fontface = 'bold.italic',
-                    bg.colour = "white") +
+                    bg.colour = "white", hjust = 1) +
     scale_colour_manual("Type",
                         values = wpt.colors) +
     scale_linetype_manual("Type",

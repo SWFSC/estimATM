@@ -603,7 +603,7 @@ i.map
 Map of the survey area, showing planned acoustic FSV transects (black), nearshore transects (magenta), CTD stations (blue), surface eDNA stations (green circles), and UCTD stations (orange triangles).
 
 ```{r map-survey-plan-all}
-include_graphics(here("Figs/fig_survey_map.png"))
+include_graphics(here("Figs/fig_survey_plan.png"))
 ```
 
 ## Static map - By leg  
@@ -1092,14 +1092,17 @@ map.width  <- map.height*map.aspect
 base.map <- get_basemap(transects, states, countries, 
                         landmarks, bathy, map.bounds, crs = crs.proj)
 
-
-# Map planned transects
-survey.plan <- base.map +   
+# Map planned transects and station samples
+survey.plan.all <- base.map +   
   geom_sf(data = scott_islands_mpa, colour = "green", fill = NA, linetype = "dashed") +
   geom_sf(data = pacific_rim_mpa, colour = "green", fill = NA, linetype = "dashed") +
-  # geom_sf(data = ca_mpas, aes(fill = Type), alpha = 0.5) +
   geom_sf(data = transects, aes(colour = Type, linetype = Type), 
           show.legend = "line") +
+  geom_shadowtext(data = filter(tx.labels, Type %in% c("Compulsory", "Adaptive")),
+                  aes(X, Y, label = transect.name,
+                      angle = brg),
+                  hjust = 1, size = 1.25, fontface = 'bold.italic',
+                  colour = "black", bg.colour = "white") +
   scale_colour_manual("Type", 
                       values = wpt.colors) +
   scale_linetype_manual("Type", 
@@ -1113,30 +1116,54 @@ survey.plan <- base.map +
            ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
 
 # Save survey plan map
-ggsave(here("Figs/fig_survey_plan.png"), survey.plan,
+ggsave(here("Figs/fig_survey_plan.png"), survey.plan.all,
        height = map.height, width = map.width)
 
 # Map planned transects only
-survey.plan <- base.map +   
-  geom_sf(data = scott_islands_mpa, colour = "green", fill = NA, linetype = "dashed") +
-  geom_sf(data = pacific_rim_mpa, colour = "green", fill = NA, linetype = "dashed") +
-  # geom_sf(data = ca_mpas, aes(fill = Type), alpha = 0.5) +
+survey.plan.tx <- base.map +   
+  # geom_sf(data = scott_islands_mpa, colour = "green", fill = NA, linetype = "dashed") +
+  # geom_sf(data = pacific_rim_mpa, colour = "green", fill = NA, linetype = "dashed") +
   geom_sf(data = transects, aes(colour = Type, linetype = Type), 
           show.legend = "line") +
+  geom_shadowtext(data = filter(tx.labels, Type %in% c("Compulsory", "Adaptive")),
+                  aes(X, Y, label = transect.name,
+                      angle = brg),
+                  hjust = 1, size = 1.25, fontface = 'bold.italic',
+                  colour = "black", bg.colour = "white") +
   scale_colour_manual("Type", 
                       values = wpt.colors) +
   scale_linetype_manual("Type", 
                         values = wpt.linetypes) +
-  # geom_sf(data = ctd.sf, shape = 21, size = 1, fill = "blue") +
-  # geom_sf(data = uctd.sf, shape = 24, size = 1.5, fill = "orange") +
-  # geom_sf(data = eDNA.sf, shape = 21, size = 1, fill = "green") +
-  geom_sf(data = pairovets.sf, aes(fill = type), shape = 21, size = 1) +
   coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
            xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
            ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
 
 # save survey plan map
-ggsave(here("Figs/fig_survey_plan_tx_only.png"), survey.plan,
+ggsave(here("Figs/fig_survey_plan_tx_only.png"), survey.plan.tx,
+       height = map.height, width = map.width)
+
+# Map planned FSV transects only
+survey.plan.fsv <- base.map +   
+  # geom_sf(data = scott_islands_mpa, colour = "green", fill = NA, linetype = "dashed") +
+  # geom_sf(data = pacific_rim_mpa, colour = "green", fill = NA, linetype = "dashed") +
+  geom_sf(data = filter(transects, Type %in% c("Compulsory", "Adaptive")), 
+          aes(colour = Type, linetype = Type), 
+          show.legend = "line") +
+  geom_shadowtext(data = filter(tx.labels, Type %in% c("Compulsory", "Adaptive")),
+                  aes(X, Y, label = transect.name,
+                      angle = brg),
+                  hjust = 1, size = 1.25, fontface = 'bold.italic',
+                  colour = "black", bg.colour = "white") +
+  scale_colour_manual("Type", 
+                      values = wpt.colors) +
+  scale_linetype_manual("Type", 
+                        values = wpt.linetypes) +
+  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+           xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
+           ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
+
+# save survey plan map
+ggsave(here("Figs/fig_survey_plan_fsv.png"), survey.plan.fsv,
        height = map.height, width = map.width)
 
 include_graphics(here("Figs/fig_survey_plan.png"))
@@ -1171,7 +1198,7 @@ for (ii in unique(transects$loc)) {
                     aes(X, Y, label = transect.name,
                         angle = brg, colour = Type),
                     size = unname(map.label.size[ii]), fontface = 'bold.italic',
-                    bg.colour = "white") +
+                    bg.colour = "white", hjust = 1) +
     scale_colour_manual("Type", 
                         values = wpt.colors) +
     scale_linetype_manual("Type", 

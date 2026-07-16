@@ -129,7 +129,7 @@ get.nav           <- T # Download primary vessel nav data from ERDDAP
 get.nav.sd        <- F # Download Saildrone nav data from ERDDAP
 get.nav.sh        <- F # Download NOAA Ship nav data
 copy.files        <- T # Copy data files to local directory 
-process.csv       <- T # Process Echoview files
+process.csv       <- F # Process Echoview files
 save.figs         <- T # Draw new figures and maps
 download.hab      <- F # Download habitat map
 process.scs       <- F # Process SCS data

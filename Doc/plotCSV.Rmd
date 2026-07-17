@@ -17,7 +17,7 @@ if (!require("pacman")) install.packages("pacman")
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,lubridate,here,sf,knitr,fs,leaflet,leaflet.extras,
                bookdown,leafem,mapview,htmltools,rnaturalearth,stplanr,ggrepel,
-               plotly,kableExtra,tmaptools)
+               kableExtra,tmaptools,ggiraph,gdtools)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pak::pkg_install("SWFSC/atm")
@@ -367,7 +367,7 @@ i.map <- i.map %>%
 i.map
 ```
 
-```{r create-basemap,include=F}
+```{r create-basemap, include=F}
 # Configure base map options -----------------
 # Import landmarks
 locations <- filter(read.csv(here("Data/Map/locations.csv")), name %in% label.list) %>%
@@ -463,16 +463,16 @@ nasc.summ %>%
                 full_width = FALSE) %>%
   # row_spec(0, align = c("c")) %>% 
   # column_spec(1, italic = T) %>% 
-  scroll_box(height = "500px") 
+  scroll_box(height = "250px") 
 ```
 
 # Outlier plot
 
-```{r get-big-nasc, out.width="90%", out.width="100%"}
+```{r get-big-nasc, out.width="100%"}
 if (exists("big.nasc")) {
   # Create outlier plot
   nasc.outlier.plot <- ggplot(big.nasc, aes(rank, NASC, ids = label, fill = type)) +
-    geom_point(shape = 21, size = 2, alpha = 0.7) +
+    geom_point_interactive(shape = 21, size = 2, alpha = 0.7, aes(tooltip = label)) +
     geom_text_repel(data = top_n(big.nasc, 20, NASC), 
                     aes(rank, NASC, label = label), size = 2) +
     scale_fill_manual(name = "NASC\ntype", 
@@ -480,16 +480,13 @@ if (exists("big.nasc")) {
     ylab("NASC / 19\n") + xlab("\nRank") +
     theme_bw()
   
-  # Create outlier plot for plotly
-  nasc.outlier.plotly <- ggplot(big.nasc, 
-                                aes(rank, NASC, ids = label, fill = type)) +
-    geom_point(shape = 21, size = 4, alpha = 0.7) +
-    scale_fill_manual(name = "NASC\ntype", 
-                      values = c("CPS" = "blue", "Krill" = "yellow")) +
-    ylab("NASC / 19\n") + xlab("\nRank") +
-    theme_bw()
+  # Create interactive plot
+  nasc.outlier.plot.interactive <- ggiraph::girafe(
+    ggobj = nasc.outlier.plot,
+    dependencies = list(liberationsansHtmlDependency()))
   
-  # Display plot
-  ggplotly(nasc.outlier.plotly)
+  # Print interactive plot
+  nasc.outlier.plot.interactive
 }
-```  
+```
+

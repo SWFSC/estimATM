@@ -401,12 +401,12 @@ sounder.type           <- c(RL  = "EK80")
 # Root directory where survey data are stored; other paths relative to this
 if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D")) {
   survey.dir           <- c(RL  = "C:/SURVEY/2606RL",
-                            LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS",
-                            LM  = "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS")
+                            LBC = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS - Long Beach Carnage (2606LBC)",
+                            LM  = "C:/SURVEY/2606LM")
 } else {
   survey.dir           <- c(RL  = "C:/SURVEY/2606RL",
-                            LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS",
-                            LM  = "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS")   
+                            LBC = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS - Long Beach Carnage (2606LBC)",
+                            LM  = "C:/SURVEY/2606LM")
 }
 
 # Backscatter data (within survey.dir, typically)
@@ -417,7 +417,7 @@ nasc.dir               <- c(RL  = "PROCESSED/EV/CSV",
 # Regexp pattern for identifying CPS CSV files
 nasc.pattern.cps       <- c(RL  = "_CPS-Final 38 kHz CPS_nasc_cps.csv",
                             LM  = "Final 38 kHz CPS_nasc_cps.csv",
-                            LBC = "Final 38 kHz CPS_nasc_cps.csv")
+                            LBC = "Final 38 kHz CPS.csv")
 
 # Regex pattern for identifying krill CSV files
 nasc.pattern.krill     <- c(RL  = "Poly Krill Final 120.csv",
@@ -463,7 +463,7 @@ seine.db.name   <- "SeineDataEntry2606RL.accdb"
 seine.xlsx.name <- "Nearshore_LBC_2606RL.xlsx"
 seine.tz        <- "America/Los_Angeles"
 seine.types     <- c("survey", "research", NA)
-seine.gpx.name  <- "nav_nearshore.gpx"
+seine.gpx.name  <- "2606LBC_nav.gpx" # "nav_nearshore.gpx"
 
 # Survey vessels that collected purse seine data
 seine.vessels          <- c("LBC" ,"LM")

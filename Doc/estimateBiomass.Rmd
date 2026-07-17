@@ -129,11 +129,11 @@ get.nav           <- T # Download primary vessel nav data from ERDDAP
 get.nav.sd        <- F # Download Saildrone nav data from ERDDAP
 get.nav.sh        <- F # Download NOAA Ship nav data
 copy.files        <- T # Copy data files to local directory 
-process.csv       <- F # Process Echoview files
+process.csv       <- T # Process Echoview files
 save.figs         <- T # Draw new figures and maps
 download.hab      <- F # Download habitat map
 process.scs       <- F # Process SCS data
-plot.time.series  <- F # Plot biomass time series 
+plot.time.series  <- T # Plot biomass time series 
 get.db.ts         <- T # Get biomass time series data from database
 do.bootstrap      <- T # Generate bootstrap estimates
 do.imap           <- T # Create interactive Leaflet map
@@ -144,7 +144,7 @@ get.bathy         <- T # Extract ETOPO1 bathymetry data in the survey footprint
 
 ### Usually FALSE
 save.imap           <- F # Save Leaflet maps
-process.csv.all     <- F # Process all acoustic backscatter files (F = new files only)
+process.csv.all     <- T # Process all acoustic backscatter files (F = new files only)
 process.csv.krill   <- F # Process krill backscatter data
 process.cufes       <- F # Process CUFES data (no CUFES sampling post-2023)
 process.cal         <- F # Process calibration results
@@ -1258,7 +1258,7 @@ if (save.figs) {
                     aes(X, Y, label = transect.name,
                         angle = brg, colour = vessel.name),
                     size = 2, fontface = 'bold.italic', 
-                    bg.colour = "white") +
+                    bg.colour = "white", hjust = 1) +
     # Configure legend guides
     guides(fill = guide_legend(), size = guide_legend()) +
     # Plot title
@@ -1285,7 +1285,7 @@ if (save.figs) {
                     aes(X, Y, label = transect,
                         angle = brg, colour = vessel.name),
                     size = 2, fontface = 'bold.italic', 
-                    bg.colour = "white") +
+                    bg.colour = "white", hjust = 1) +
     # Configure legend guides
     guides(fill = guide_legend(), size = guide_legend()) +
     # Plot title

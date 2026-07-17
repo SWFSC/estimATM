@@ -570,8 +570,8 @@ bad.lengths <-  lengths.all %>%
 # Filter length data for current cruise and vessel
 lengths <- lengths.all %>% 
   filter(cruise %in% cruise.name & ship %in% cruise.ship & 
-           scientificName %in% c(cps.spp, "Doryteuthis opalescens", "Merluccius productus") & 
-           toupper(isRandomSample) == "Y") %>% 
+           scientificName %in% c(cps.spp, "Doryteuthis opalescens", "Merluccius productus")) %>%
+  # filter(toupper(isRandomSample) == "Y") %>% 
   # Removes catch from any bad or manually excluded hauls
   filter(haul %in% haul.good)
 
@@ -2379,7 +2379,7 @@ This table includes only those hauls where `diffWt` and `diffCt` are not equal t
 ```{r specimen-errors}
 # Filter hauls with diffCt or diffWt != zero
 specimen.comp.errors <- specimen.comp %>% 
-  filter(diffCt != 0 | diffWt != 0 | is.na(totalCtSpecimens) | is.na(totalWtSpecimens)) 
+  filter(diffCt != 0 | diffWt > 0.01 | is.na(totalCtSpecimens) | is.na(totalWtSpecimens)) 
 
 # Save output to CSV
 if (nrow(specimen.comp.errors) > 0) {
@@ -2388,7 +2388,7 @@ if (nrow(specimen.comp.errors) > 0) {
   
   # Display results
   specimen.comp %>% 
-    filter(diffCt != 0 | diffWt != 0 | is.na(totalCtSpecimens) | is.na(totalWtSpecimens)) %>% 
+    filter(diffCt != 0 | diffWt > 0.01 | is.na(totalCtSpecimens) | is.na(totalWtSpecimens)) %>% 
     mutate(
       totalWtSpecimens = cell_spec(round(totalWtSpecimens, digits = 4),
                                    knitr.format, color = "black",

@@ -9903,7 +9903,7 @@ if (do.imap) {
 # Biomass time series plots
 ## Per species (free axes)
 
-(ref:biomass-ts-line-facet) Estimated biomasses of the `num2words(n_distinct(biomass.ts$group))` most abundant CPS populations or subpopulations of `num2words(n_distinct(biomass.ts$species))` species in the CCE during summer since 2008. Surveys typically span the area between Cape Flattery and San Diego, but in some years also include Vancouver Island, Canada (2015-2019, 2024) and portions of Baja CA (2021-2022, 2024). Error bars are 95% confidence intervals. **Note: different y-axis limits per species.**
+(ref:biomass-ts-line-facet) Estimated biomasses of the `r num2words(n_distinct(be.table$Stock))` most abundant CPS populations or subpopulations of `r num2words(n_distinct(be.table$Name))` species in the CCE during summer since 2008. Surveys typically span the area between Cape Flattery and San Diego, but in some years also include Vancouver Island, Canada (2015-2019, 2024) and portions of Baja CA (2021-2022, 2024). Error bars are 95% confidence intervals. **Note: different y-axis limits per species.**
 
 ```{r biomass-ts-line-facet,fig.cap='(ref:biomass-ts-line-facet)',out.height='100%',fig.pos='H'}
 if (file.exists(here("Figs/fig_biomass_ts_line_facet.png"))) {
@@ -9914,7 +9914,7 @@ if (file.exists(here("Figs/fig_biomass_ts_line_facet.png"))) {
 ```
 
 ## Entire community
-(ref:biomass-ts-combo) a) Estimated and b) cumulative estimated biomasses of the `r num2words(n_distinct(biomass.ts$group))` most abundant CPS populations or subpopulations of `r num2words(n_distinct(biomass.ts$species))` species in the CCE during summer since 2008. Surveys typically span the area between Cape Flattery and San Diego, but in some years also include Vancouver Island, Canada (2015-2019, 2024) and portions of Baja CA (2021-2022, 2024).
+(ref:biomass-ts-combo) a) Estimated and b) cumulative estimated biomasses of the `r num2words(n_distinct(be.table$Stock))` most abundant CPS populations or subpopulations of `r num2words(n_distinct(be.table$Name))` species in the CCE during summer since 2008. Surveys typically span the area between Cape Flattery and San Diego, but in some years also include Vancouver Island, Canada (2015-2019, 2024) and portions of Baja CA (2021-2022, 2024).
 
 ```{r biomass-ts-combo,fig.cap='(ref:biomass-ts-combo)',out.height='100%',fig.pos='H'}
 if (file.exists(here("Figs/fig_biomass_ts_combo.png"))) {

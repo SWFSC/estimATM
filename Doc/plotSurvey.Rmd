@@ -18,7 +18,7 @@ pacman::p_load(tidyverse,cowplot,DBI,odbc,RSQLite,scatterpie,ggspatial,vroom,
                readxl,lubridate,rnaturalearth,sf,here,naniar,mapview,xts,terra,
                shadowtext,knitr,ggrepel,fs,leaflet,leaflet.extras,bookdown,
                htmltools,leafem,DT,rworldmap,rworldxtra,lwgeom,htmlwidgets,httr,
-               ncdf4,rerddap,ggiraph,gdtools,xml2,kable,kableExtra)
+               ncdf4,rerddap,ggiraph,gdtools,xml2,kableExtra,gdtools)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pak::pkg_install("SWFSC/atm")

@@ -62,7 +62,7 @@ source(here("Doc/settings", prj.settings))
 
 ```{r user-controls}
 # Processing settings
-get.db     <- T
+get.db     <- F
 get.nav    <- T
 do.spatial <- T
 nav.source <- "ERDDAP" # Navigation data source: ERDDAP or SCS
@@ -74,13 +74,13 @@ sampling.cufes <- F
 ```
 
 ```{r get-nav}
-# Get nav data
+# Source code to get nav data from ERDDAP, RosePoint, or SCS
 if (nav.source == "ERDDAP") {
-  # Source code to get nav data from ERDDAP
   source(here("Code/get_nav_erddap.R"))
 } else if (nav.source == "SCS") {
-  # Source code to get nav data from SCS
-  source(here("Code",  scs.nav.script))
+  source(here("Code", scs.nav.script))
+} else if (nav.source == "RosePoint") {
+  source(here("Code/get_nav_rosepoint.R"))
 }
 
 # Read transect waypoints

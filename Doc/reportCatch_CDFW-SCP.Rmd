@@ -63,8 +63,8 @@ source(here("Doc/settings", prj.settings))
 
 ```{r user-controls}
 # Processing settings
-get.db     <- T
-get.nav    <- F
+get.db     <- F
+get.nav    <- T
 do.spatial <- T
 nav.source <- "ERDDAP" # Navigation data source: ERDDAP or SCS
 save.figs  <- T
@@ -75,13 +75,13 @@ sampling.cufes <- F
 ```
 
 ```{r get-nav}
-# Get nav data
+# Source code to get nav data from ERDDAP, RosePoint, or SCS
 if (nav.source == "ERDDAP") {
-  # Source code to get nav data from ERDDAP
   source(here("Code/get_nav_erddap.R"))
 } else if (nav.source == "SCS") {
-  # Source code to get nav data from SCS
-  source(here("Code",  scs.nav.script))
+  source(here("Code", scs.nav.script))
+} else if (nav.source == "RosePoint") {
+  source(here("Code/get_nav_rosepoint.R"))
 }
 
 # Read transect waypoints
@@ -419,42 +419,44 @@ write_csv(catch.table,
 ```
 
 ```{r extract-catch-seine}
-set.catch.ca <- set.catch %>% 
-  filter(key.set %in% sets.ca$key.set) %>% 
-  # left_join(select(haul.ca, key, date_time)) %>% 
-  left_join(select(spp.codes, scientificName, commonName))
-
-set.catch.table <- set.catch.ca %>% 
-  left_join(select(sets, key.set, lat, long, datetime)) %>% 
-  left_join(select(as.data.frame(sets.mpa), key.set, MPA)) %>% 
-  mutate(county = NA,
-         utm_e = NA, 
-         utm_n = NA,
-         utm_zone = NA,
-         gps_datum = "WGS84",
-         map_scaling = "10K",
-         num_M = NA,
-         num_F = NA,
-         num_UNK = NA,
-         method = "Purse seine",
-         disposition = "S",
-         facility = "SWFSC",
-         totalWt = totalWeight,
-         meanWt = totalWeight/totalNum,
-         totalCt = round(totalWt/meanWt),
-         blank1 = NA,
-         blank2 = NA) %>% 
-  arrange(vessel.name, commonName) %>% 
-  select(key.set, commonName, blank1, scientificName, blank2, county, MPA, 
-         utm_e, utm_n, utm_zone, long, lat, gps_datum,
-         map_scaling, datetime, num_M, num_F, num_UNK, totalCt, 
-         method, disposition, facility) %>% 
-  mutate(datetime = format(ymd_hms(datetime), "%m/%d/%Y"))
-
-# Save to CSV
-write_csv(set.catch.table, 
-          file = here("Output", paste0(survey.name, "_catch_table_seine_Project8-CDFW.csv")),
-          na = "")
+if (exists("set.catch")) {
+  set.catch.ca <- set.catch %>% 
+    filter(key.set %in% sets.ca$key.set) %>% 
+    # left_join(select(haul.ca, key, date_time)) %>% 
+    left_join(select(spp.codes, scientificName, commonName))
+  
+  set.catch.table <- set.catch.ca %>% 
+    left_join(select(sets, key.set, lat, long, datetime)) %>% 
+    left_join(select(as.data.frame(sets.mpa), key.set, MPA)) %>% 
+    mutate(county = NA,
+           utm_e = NA, 
+           utm_n = NA,
+           utm_zone = NA,
+           gps_datum = "WGS84",
+           map_scaling = "10K",
+           num_M = NA,
+           num_F = NA,
+           num_UNK = NA,
+           method = "Purse seine",
+           disposition = "S",
+           facility = "SWFSC",
+           totalWt = totalWeight,
+           meanWt = totalWeight/totalNum,
+           totalCt = round(totalWt/meanWt),
+           blank1 = NA,
+           blank2 = NA) %>% 
+    arrange(vessel.name, commonName) %>% 
+    select(key.set, commonName, blank1, scientificName, blank2, county, MPA, 
+           utm_e, utm_n, utm_zone, long, lat, gps_datum,
+           map_scaling, datetime, num_M, num_F, num_UNK, totalCt, 
+           method, disposition, facility) %>% 
+    mutate(datetime = format(ymd_hms(datetime), "%m/%d/%Y"))
+  
+  # Save to CSV
+  write_csv(set.catch.table, 
+            file = here("Output", paste0(survey.name, "_catch_table_seine_Project8-CDFW.csv")),
+            na = "")
+} 
 ```
 
 ```{r extract-specimens}
@@ -478,8 +480,7 @@ specimen.summ <- specimens.ca %>%
             DNA      = sum(!is.na(DNAvialNumber)),
             adipose_intact  = sum(adiposeCondition == "intact", na.rm = TRUE),
             adipose_clipped = sum(adiposeCondition == "clipped", na.rm = TRUE)) %>% 
-  arrange(scientificName) %>% 
-  adorn_totals()
+  arrange(scientificName) 
 
 # Save to CSV
 write_csv(specimen.summ, 
@@ -488,27 +489,29 @@ write_csv(specimen.summ,
 ```
 
 ```{r extract-specimens-seine}
-# Extract specimens from sets in CA waters
-set.specimens.ca <- set.lengths %>% 
-  filter(key.set %in% sets.ca$key.set) %>% 
-  # left_join(select(haul.ca, key, date_time)) %>% 
-  left_join(select(spp.codes, scientificName, commonName))
-
-# Summarize specimens
-set.specimen.summ <- set.specimens.ca %>% 
-  # Select specimens where weights, otoliths, and/or DNA were taken
-  filter(!is.na(weightg)) %>% 
-  select(vessel.name, key.set, commonName, scientificName, weightg) %>% 
-  group_by(vessel.name, key.set, commonName, scientificName) %>% 
-  # !is.na(var) converts to logical then sum gives the total counts
-  summarise(measured = sum(!is.na(weightg))) %>% 
-  arrange(vessel.name, scientificName) %>% 
-  adorn_totals()
-
-# Save to CSV
-write_csv(set.specimen.summ, 
-          file = here("Output", paste0(survey.name, "_specimen_table_seine_Project8-CDFW.csv")),
-          na = "")
+if(exists("set.lengths")) {
+  # Extract specimens from sets in CA waters
+  set.specimens.ca <- set.lengths %>% 
+    filter(key.set %in% sets.ca$key.set) %>% 
+    # left_join(select(haul.ca, key, date_time)) %>% 
+    left_join(select(spp.codes, scientificName, commonName))
+  
+  # Summarize specimens
+  set.specimen.summ <- set.specimens.ca %>% 
+    # Select specimens where weights, otoliths, and/or DNA were taken
+    filter(!is.na(weightg)) %>% 
+    select(vessel.name, key.set, commonName, scientificName, weightg) %>% 
+    group_by(vessel.name, key.set, commonName, scientificName) %>% 
+    # !is.na(var) converts to logical then sum gives the total counts
+    summarise(measured = sum(!is.na(weightg))) %>% 
+    arrange(vessel.name, scientificName) %>% 
+    adorn_totals()
+  
+  # Save to CSV
+  write_csv(set.specimen.summ, 
+            file = here("Output", paste0(survey.name, "_specimen_table_seine_Project8-CDFW.csv")),
+            na = "")
+}
 ```
 
 # Interactive trawl plot
@@ -567,43 +570,47 @@ if (nrow(haul.mpa) > 0) {
 A map showing all purse seine sets (black points), sets in CA State waters (red points), and sets occurring in CA MPAs (blue markers). Hovering over shaded polygons will show MPA names, and over points will show the set "key", which includes the vessel and set number.  
 
 ```{r catch-map-leaflet-seine}
-# Configure palette for MPAs
-factpal <- colorFactor(topo.colors(10), ca_mpas$MPA)
-
-# Create leaflet map
-if (nrow(sets.mpa) > 0) {
-  leaflet() %>% 
-    addProviderTiles(providers$Esri.NatGeoWorldMap) %>%  
-    addPolygons(data = ca_waters, weight = 2, fillColor = "transparent") %>% 
-    addPolygons(data = ca_mpas, color = "gray50", weight = 2, fillColor =  ~factpal(MPA), fillOpacity = 0.5,
-                label = ~htmlEscape(MPA)) %>% 
-    # addPolylines(data = haul.paths, color = c("#000000"), weight = 5, opacity = 0.8, 
-    #              popup = ~paste("Haul:", haul), label = ~paste("Haul:", haul)) %>% 
-    addCircleMarkers(data = sets.out, radius = 3, color = "#000000", stroke = TRUE, weight = 2,
-                     opacity = 0.8, fillOpacity = 1, fillColor =  "white",
-                     label = ~paste("Vessel/set:", key.set),
-                     popup = ~paste("Vessel/set:", key.set)) %>% 
-    addCircleMarkers(data = sets.ca, radius = 3, color = "#000000", stroke = TRUE, weight = 2,
-                     opacity = 0.8, fillOpacity = 1, fillColor =  "red",
-                     label = ~paste("Vessel/set:", key.set),
-                     popup = ~paste("Vessel/set:", key.set)) %>% 
-    addMarkers(data = sets.mpa, label = ~paste("Vessel/set:", key.set), popup = ~paste("Vessel/set:", key.set))  
+if (exists("set.catch")) {
+  # Configure palette for MPAs
+  factpal <- colorFactor(topo.colors(10), ca_mpas$MPA)
+  
+  # Create leaflet map
+  if (nrow(sets.mpa) > 0) {
+    leaflet() %>% 
+      addProviderTiles(providers$Esri.NatGeoWorldMap) %>%  
+      addPolygons(data = ca_waters, weight = 2, fillColor = "transparent") %>% 
+      addPolygons(data = ca_mpas, color = "gray50", weight = 2, fillColor =  ~factpal(MPA), fillOpacity = 0.5,
+                  label = ~htmlEscape(MPA)) %>% 
+      # addPolylines(data = haul.paths, color = c("#000000"), weight = 5, opacity = 0.8, 
+      #              popup = ~paste("Haul:", haul), label = ~paste("Haul:", haul)) %>% 
+      addCircleMarkers(data = sets.out, radius = 3, color = "#000000", stroke = TRUE, weight = 2,
+                       opacity = 0.8, fillOpacity = 1, fillColor =  "white",
+                       label = ~paste("Vessel/set:", key.set),
+                       popup = ~paste("Vessel/set:", key.set)) %>% 
+      addCircleMarkers(data = sets.ca, radius = 3, color = "#000000", stroke = TRUE, weight = 2,
+                       opacity = 0.8, fillOpacity = 1, fillColor =  "red",
+                       label = ~paste("Vessel/set:", key.set),
+                       popup = ~paste("Vessel/set:", key.set)) %>% 
+      addMarkers(data = sets.mpa, label = ~paste("Vessel/set:", key.set), popup = ~paste("Vessel/set:", key.set))  
+  } else {
+    leaflet() %>% 
+      addProviderTiles(providers$Esri.NatGeoWorldMap) %>%  
+      addPolygons(data = ca_waters, weight = 2, fillColor = "transparent") %>% 
+      addPolygons(data = ca_mpas, color = "gray50", weight = 2, fillColor =  ~factpal(MPA), fillOpacity = 0.5,
+                  label = ~htmlEscape(MPA)) %>% 
+      # addPolylines(data = haul.paths, color = c("#000000"), weight = 5, opacity = 0.8, 
+      #              popup = ~paste("Haul:", haul), label = ~paste("Haul:", haul)) %>% 
+      addCircleMarkers(data = sets.out, radius = 3, color = "#000000", stroke = TRUE, weight = 2,
+                       opacity = 0.8, fillOpacity = 1, fillColor =  "white",
+                       label = ~paste("Vessel/set:", key.set),
+                       popup = ~paste("Vessel/set:", key.set)) %>% 
+      addCircleMarkers(data = sets.ca, radius = 3, color = "#000000", stroke = TRUE, weight = 2,
+                       opacity = 0.8, fillOpacity = 1, fillColor =  "red",
+                       label = ~paste("Vessel/set:", key.set),
+                       popup = ~paste("Vessel/set:", key.set)) 
+  }
 } else {
-  leaflet() %>% 
-    addProviderTiles(providers$Esri.NatGeoWorldMap) %>%  
-    addPolygons(data = ca_waters, weight = 2, fillColor = "transparent") %>% 
-    addPolygons(data = ca_mpas, color = "gray50", weight = 2, fillColor =  ~factpal(MPA), fillOpacity = 0.5,
-                label = ~htmlEscape(MPA)) %>% 
-    # addPolylines(data = haul.paths, color = c("#000000"), weight = 5, opacity = 0.8, 
-    #              popup = ~paste("Haul:", haul), label = ~paste("Haul:", haul)) %>% 
-    addCircleMarkers(data = sets.out, radius = 3, color = "#000000", stroke = TRUE, weight = 2,
-                     opacity = 0.8, fillOpacity = 1, fillColor =  "white",
-                     label = ~paste("Vessel/set:", key.set),
-                     popup = ~paste("Vessel/set:", key.set)) %>% 
-    addCircleMarkers(data = sets.ca, radius = 3, color = "#000000", stroke = TRUE, weight = 2,
-                     opacity = 0.8, fillOpacity = 1, fillColor =  "red",
-                     label = ~paste("Vessel/set:", key.set),
-                     popup = ~paste("Vessel/set:", key.set)) 
+  print("No seine data to date.")
 }
 ```
 
@@ -613,11 +620,15 @@ if (nrow(sets.mpa) > 0) {
 A summary of catches from trawls conducted in CA.
 
 ```{r catch-summary}
-catch.table %>% 
-  select(haul, commonName, scientificName, MPA, long, lat, totalCt, disposition) %>% 
-  mutate(lat  = round(lat, 4),
-         long = round(long, 4)) %>% 
-  datatable(rownames = FALSE)
+if (nrow(catch.table) > 0){
+  catch.table %>% 
+    select(haul, commonName, scientificName, MPA, long, lat, totalCt, disposition) %>% 
+    mutate(lat  = round(lat, 4),
+           long = round(long, 4)) %>% 
+    datatable(rownames = FALSE)
+} else {
+  print("No catches in CA waters.")
+}
 ```
 
 ## Seine
@@ -625,11 +636,19 @@ catch.table %>%
 A summary of catches from purse seines conducted in CA.
 
 ```{r catch-summary-seine}
-set.catch.table %>% 
-  select(key.set, commonName, scientificName, MPA, long, lat, totalCt) %>% 
-  mutate(lat  = round(lat, 4),
-         long = round(long, 4)) %>% 
-  datatable(rownames = FALSE)
+if (exists("set.catch.table")) {
+  if (nrow(set.catch.table) > 0) {
+    set.catch.table %>% 
+      select(key.set, commonName, scientificName, MPA, long, lat, totalCt) %>% 
+      mutate(lat  = round(lat, 4),
+             long = round(long, 4)) %>% 
+      datatable(rownames = FALSE)
+  } else {
+    print("No seine catches in CA waters.")
+  }
+} else {
+  print("No seine catches to date.")
+}
 ```
 
 # Specimen summary
@@ -638,8 +657,13 @@ set.catch.table %>%
 A summary of samples taken from trawl specimens collected in CA.
 
 ```{r specimen-summary}
-specimen.summ %>% 
-  datatable(rownames = FALSE)
+if (nrow(specimen.summ) > 0) {
+  specimen.summ %>% 
+    adorn_totals() %>% 
+    datatable(rownames = FALSE)  
+} else {
+  print("No specimens to date.")
+}
 ```
 
 # CUFES samples

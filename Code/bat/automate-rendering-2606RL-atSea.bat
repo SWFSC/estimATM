@@ -20,6 +20,3 @@ SET RMD_FILE="checkTrawls.Rmd"
 REM Name of trackSurvey Qmd
 SET QMD_FILE="trackSurvey.qmd"
 %Q_PATH% render "%QMD_FILE%"
-
-REM Keeps window open to show results
-pause

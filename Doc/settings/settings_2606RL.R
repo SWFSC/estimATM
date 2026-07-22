@@ -143,7 +143,7 @@ leg.breaks <- as.numeric(lubridate::ymd(c("2026-06-16", "2026-07-04",
 
 # Anticipated progress throughout the transect plan
 # Leg 1:1-14, Leg 2:15-43, Leg 3:44-68, Leg 4: 69-86
-tx.breaks <- c(0, 14, 43, 69, 88)
+tx.breaks <- c(0, 22, 42, 64, 88)
 
 # Define nav source depending on location of computer
 ## Options are: SCS (usually on the ship) or ERDDAP (usually on shore; 24h update rate)
@@ -463,7 +463,7 @@ seine.db.name   <- "SeineDataEntry2606RL.accdb"
 seine.xlsx.name <- "Nearshore_LBC_2606RL.xlsx"
 seine.tz        <- "America/Los_Angeles"
 seine.types     <- c("survey", "research", NA)
-seine.gpx.name  <- "2606LBC_nav.gpx" # "nav_nearshore.gpx"
+seine.gpx.name  <- "lbc_nav.gpx" # "nav_nearshore.gpx"
 
 # Survey vessels that collected purse seine data
 seine.vessels          <- c("LBC" ,"LM")

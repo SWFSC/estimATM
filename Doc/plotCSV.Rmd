@@ -340,7 +340,7 @@ i.map <- leaflet() %>%
 
 if (exists("nav.paths.sf"))
   i.map <- i.map %>% 
-  addPolylines(data = nav.paths.sf, color = "blue", stroke = TRUE, weight = 2,
+  addPolylines(data = nav.paths.sf, color = "magenta", stroke = TRUE, weight = 2,
                opacity = 0.5, fillOpacity = 0.5,
                group =  "Vessel Paths")
 

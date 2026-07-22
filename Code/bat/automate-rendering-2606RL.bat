@@ -1,3 +1,6 @@
+REM Execute batch file to sync data from GCP
+call "%~dp0sync-gcp-2606RL.bat"
+
 REM Define the location of the R and Quarto executables
 SET R_PATH="C:\Program Files\R\R-4.6.0\bin\x64\Rscript.exe" 
 SET Q_PATH="C:\Program Files\RStudio\resources\app\bin\quarto\bin\quarto.exe"

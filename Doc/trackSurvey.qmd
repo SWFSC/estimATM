@@ -101,10 +101,6 @@ if (nav.source == "ERDDAP") {
   source(here("Code/get_nav_rosepoint.R"))
 }
 
-# if (get.nav.sh) {
-#   source(here("Code/get_nav_erddap_SH.R"))
-# }
-
 # Remove non-survey legs
 nav.paths.sf <- nav.paths.sf %>% 
   filter(!leg == "Leg NA", !is.na(Leg))

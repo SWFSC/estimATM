@@ -145,10 +145,30 @@ biomass.spp.summ <- biomass.ts %>%
   left_join(biomass.comm.summ) %>% 
   mutate(biomass.pct = biomass/biomass.total*100)
 
+# Combine with data from prior to 2015 (stocks not separated)
+# Add jitter to dates for different stocks
+biomass.ts.stock <- biomass.ts %>% 
+  filter(species == "Sardinops sagax", year >= 2015) %>% 
+  left_join(biomass.ts.sar.rm) %>% 
+  # Remove non-US biomass from NSP and SSP
+  replace_na(list(biomass.rm = 0, cil.rm = 0, ciu.rm = 0)) %>% 
+  mutate(biomass = biomass - biomass.rm,
+         biomass_ci_lower = biomass_ci_lower - cil.rm,
+         biomass_ci_upper = biomass_ci_upper - ciu.rm) 
+
+biomass.ts.sar <- biomass.ts.sar %>% 
+  bind_rows(filter(biomass.ts.stock, species == "Sardinops sagax", year >= 2015)) %>% 
+  # filter(year >= 2015) %>% 
+  mutate(date_start = case_when(
+    str_detect(group, "Northern") ~ date_start + days(30),
+    str_detect(group, "Southern") ~ date_start - days(30),
+    TRUE ~ date_start))
+
+# Save final objects
 save(biomass.ts, biomass.comm.summ, biomass.spp.summ, biomass.ts.sar,
      file = here("Output/biomass_timeseries_final.Rdata"))
 
-# Create plot ------------------------------------------------------------------
+# Create plots ------------------------------------------------------------------
 # Create line plot - single
 biomass.ts.line <- ggplot(filter(biomass.ts, biomass != 0), 
                           aes(x = date_start, y = biomass, 
@@ -180,26 +200,6 @@ biomass.ts.line <- ggplot(filter(biomass.ts, biomass != 0),
 ggsave(biomass.ts.line, 
        filename = here("Figs/fig_biomass_ts_line.png"),
        width = 8, height = 4)
-
-# Combine with data from prior to 2015 (stocks not separated)
-# Add jitter to dates for different stocks
-
-biomass.ts.stock <- biomass.ts %>% 
-  filter(species == "Sardinops sagax", year >= 2015) %>% 
-  left_join(biomass.ts.sar.rm) %>% 
-  # Remove non-US biomass from NSP and SSP
-  replace_na(list(biomass.rm = 0, cil.rm = 0, ciu.rm = 0)) %>% 
-  mutate(biomass = biomass - biomass.rm,
-         biomass_ci_lower = biomass_ci_lower - cil.rm,
-         biomass_ci_upper = biomass_ci_upper - ciu.rm) 
-
-biomass.ts.sar <- biomass.ts.sar %>% 
-  bind_rows(filter(biomass.ts.stock, species == "Sardinops sagax", year >= 2015)) %>% 
-  # filter(year >= 2015) %>% 
-  mutate(date_start = case_when(
-    str_detect(group, "Northern") ~ date_start + days(30),
-    str_detect(group, "Southern") ~ date_start - days(30),
-               TRUE ~ date_start))
 
 # Create line plot - single (All sardine in U.S. waters)
 biomass.ts.line.sar <- ggplot(filter(biomass.ts.sar, biomass != 0), 

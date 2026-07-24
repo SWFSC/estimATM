@@ -78,12 +78,26 @@ if (get.nav) {
     nav <- bind_rows(nav, nav.tmp.xml)
   }
   
-  # List new columns to add
-  new_cols <- c("SST", "SOG", "wind_dir", "wind_speed", "flag","wind_brg","wind_angle")
-  
-  # Convert time to POSIXct
+  # Compute speed from position, since speed is not present in the data
   nav <- nav %>% 
-    mutate(time = ymd_hms(time))
+    mutate(time = ymd_hms(time))  %>%  
+    mutate(
+      time_diff_sec = as.numeric(difftime(time, lag(time), units = "secs")),
+      dist_meters = geosphere::distHaversine(
+        cbind(lag(long), lag(lat)), 
+        cbind(long, lat)),
+      # Compute speeds
+      speed_mps   = dist_meters / time_diff_sec,
+      speed_kmh   = speed_mps * 3.6,
+      speed_knots = speed_kmh / 1.852)  %>%  
+    mutate(SOG = case_when(
+      speed_knots > 11 ~ NA,
+      TRUE ~ speed_knots
+    ))
+    
+  
+  # List new columns to add
+  new_cols <- c("SST", "wind_dir", "wind_speed", "flag","wind_brg","wind_angle")
   
   # Create new columns with value NA
   nav[new_cols] <- NA

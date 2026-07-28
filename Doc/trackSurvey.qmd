@@ -126,14 +126,21 @@ transects.sf <- wpts.sf %>%
     distance = round(as.numeric(st_length(.))/1852,1),
     label    = paste("Transect", Transect),
     popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
-                     'Distance:', distance, 'nmi<br/>')) 
+                     'Distance:', distance)) 
 
 if (exists("tx.breaks")) {
   transects.sf <- transects.sf %>% 
-    mutate(Leg = as.factor(cut(Transect, tx.breaks, labels = FALSE)))
+    mutate(Leg = as.factor(cut(Transect, tx.breaks, labels = FALSE)),
+      label    = paste("Transect", Transect),
+      popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
+                       'Distance:', distance, 'nmi<br/>',
+                       'Leg:', Leg))
   
   wpts.sf <- wpts.sf %>% 
-    mutate(Leg = as.factor(cut(Transect, tx.breaks, labels = FALSE)))
+    mutate(Leg = as.factor(cut(Transect, tx.breaks, labels = FALSE)),
+      label = paste("Transect", Transect),
+      popup = paste('<b>Transect:</b>', Transect, Type, '<br/>',
+                    'Leg:', Leg))
 }
 
 # Get most recent vessel position for plotting
@@ -465,8 +472,8 @@ nasc.cps.sf <- nasc.cps %>%
   ungroup()
 
 # Define manual color palette
-legPalette <- c("#FF0000", "#FFA500", "#008000", 
-                "#0000FF", "#8A2BE2", "#FFFF00")[1:n_distinct(transects.sf$Leg)]
+legPalette <- c("#FF0000", "#FFA500", "#0fb00c", 
+                "#130ce8", "#8907b0", "#FFFF00")[1:n_distinct(transects.sf$Leg)]
 
 # Map planned transects
 map.plan <- base.map + 
@@ -624,12 +631,14 @@ i.map <- leaflet() %>%
   addPolygons(data = mex_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalMex(NOMBRE),
               fillOpacity = 0.25, label = ~htmlEscape(NOMBRE), group = "Mexico MPAs") %>%
   # Add core planned transects
-  addPolylines(data = filter(transects.sf, Type %in% c("Compulsory", "Adaptive")),
+  addPolylines(data = filter(transects.sf, 
+                             !is.na(Leg), Type %in% c("Compulsory","Adaptive")),
                color = ~txPalLeg(Leg), weight = 1, opacity = 1, 
                label = ~htmlEscape(paste(Type, Transect)),
                popup = ~popup,
                group = "Planned Transects (Core)") %>% 
-  addCircleMarkers(data = filter(wpts.sf, Type %in% c("Compulsory", "Adaptive")),
+  addCircleMarkers(data = filter(wpts.sf, 
+                                 !is.na(Leg), Type %in% c("Compulsory","Adaptive")),
                    radius = 3, color = "#000414", stroke = FALSE, opacity = 1,
                    fillOpacity = 0.3, fillColor =  ~txPalLeg(Leg), 
                    label = ~htmlEscape(paste(Type, Waypoint)),

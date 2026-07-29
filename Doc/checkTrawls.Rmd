@@ -1607,7 +1607,7 @@ Hauls removed due to trawl performance issues (e.g., aborted, bad, poor, etc.) o
 haul.bad %>% 
   filter(cruise %in% cruise.name) %>%
   mutate(trawlDate = date(equilibriumTime)) %>% 
-  select(haul, trawlDate, trawlPerformance) %>% 
+  select(haul, trawlDate, trawlPerformance, notes) %>% 
   datatable(rownames = FALSE)
 ```
 

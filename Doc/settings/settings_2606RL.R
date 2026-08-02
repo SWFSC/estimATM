@@ -243,12 +243,12 @@ stratum.ns    <- 1
 sardine.color      <- '#FF0000'
 anchovy.color      <- '#00CD66'
 jack.mack.color    <- '#0000FF'
-jacksmelt.color    <- '#A020F0'
+jacksmelt.color    <- '#FFFF00' 
 pac.mack.color     <- '#00FFFF'
 pac.herring.color  <- '#F5DEB3'
 rnd.herring.color  <- '#F0B81D'
 jap.sardine.color  <- '#F0A6A6'
-smelt.color        <- '#FFFF00'
+smelt.color        <- '#A020F0'
 other.color        <- 'gray'
 
 # Set gear type colors
@@ -302,24 +302,28 @@ trawl.sizes        <- c(1, 2, 3, 4, 5, 6, 7)
 pie.cols <- c("Engraulis mordax" = "Anchovy", "Trachurus symmetricus" = "JackMack", 
               "Atherinopsis californiensis" = "Jacksmelt", "Sardinops melanosticta" = "JapSardine",
               "Clupea pallasii" = "PacHerring", "Scomber japonicus" = "PacMack", 
-              "Etrumeus acuminatus" = "RndHerring","Sardinops sagax" = "Sardine")
+              "Etrumeus acuminatus" = "RndHerring","Sardinops sagax" = "Sardine",
+              "Allosmerus elongatus" = "Smelt")
 
 pie.cols.prop <- c("Engraulis mordax" = "prop.anch", "Trachurus symmetricus" = "prop.jack", 
                    "Atherinopsis californiensis" = "prop.jsmelt", "Clupea pallasii" = "prop.her", 
                    "Scomber japonicus" = "prop.mack", "Etrumeus acuminatus" = "prop.rher", 
-                   "Sardinops sagax" = "prop.sar", "Sardinops melanosticta" = "prop.sar.jap")
+                   "Sardinops sagax" = "prop.sar", "Sardinops melanosticta" = "prop.sar.jap",
+                   "Alllosmerus elongatus" = "prop.smelt")
 
 # Species labels
 pie.labs <- c("Engraulis mordax" = "Anchovy", "Trachurus symmetricus" = "J. Mackerel", 
               "Atherinopsis californiensis" = "Jacksmelt", "Sardinops melanosticta" = "J. Sardine",
               "Clupea pallasii" = "P. herring", "Scomber japonicus" = "P. mackerel", 
-              "Etrumeus acuminatus" = "R. herring", "Sardinops sagax" = "Sardine")
+              "Etrumeus acuminatus" = "R. herring", "Sardinops sagax" = "Sardine",
+              "Allosmerus elongatus" = "Smelt")
 
 # Species colors
 pie.colors <- c("Engraulis mordax" = anchovy.color, "Trachurus symmetricus" = jack.mack.color, 
                 "Atherinopsis californiensis" = jacksmelt.color, "Sardinops melanosticta" = jap.sardine.color,
                 "Clupea pallasii" = pac.herring.color, "Scomber japonicus" = pac.mack.color, 
-                "Etrumeus acuminatus" = rnd.herring.color, "Sardinops sagax" = sardine.color)
+                "Etrumeus acuminatus" = rnd.herring.color, "Sardinops sagax" = sardine.color,
+                "Allosmerus elongatus" = smelt.color)
 
 # NASC ------------------------------------------------------------------
 # For legend objects

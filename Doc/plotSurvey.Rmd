@@ -437,7 +437,7 @@ if (sampling.trawl) {
                                 "PacMack"    = rep(0, nrow(haul)),
                                 "JackMack"   = rep(0, nrow(haul)),
                                 "RndHerring" = rep(0, nrow(haul)),
-                                "Smelt" = rep(0, nrow(haul)),
+                                "Smelt"      = rep(0, nrow(haul)),
                                 "Other"      = rep(0, nrow(haul)),
                                 "AllCPS"     = rep(0, nrow(haul)))) %>% 
       right_join(haul.mid)

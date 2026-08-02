@@ -237,7 +237,7 @@ if (nrow(catch) > 0) {
   if (!has_name(haul.summ.wt, "Clupea pallasii"))       {haul.summ.wt$`Clupea pallasii`       <- 0}
   if (!has_name(haul.summ.wt, "Atherinopsis californiensis")) {haul.summ.wt$`Atherinopsis californiensis` <- 0}
   if (!has_name(haul.summ.wt, "Etrumeus acuminatus"))   {haul.summ.wt$`Etrumeus acuminatus` <- 0}
-  if (!has_name(haul.summ.wt, "Allosmerus elongatus"))   {haul.summ.wt$`Allosmerus elongatus` <- 0}
+  if (!has_name(haul.summ.wt, "Allosmerus elongatus"))  {haul.summ.wt$`Allosmerus elongatus` <- 0}
   if (!has_name(haul.summ.wt, "Other"))                 {haul.summ.wt$`Other` <- 0}
   
   # Summarise catch by cluster

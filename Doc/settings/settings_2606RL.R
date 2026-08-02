@@ -221,7 +221,7 @@ pie.scale  <- 0.0125 # 0.01-0.02 works well for coast-wide survey (i.e., summer)
 pie.spp <- c("Jacksmelt"  = "Atherinopsis californiensis", "PacHerring" = "Clupea pallasii",
              "Anchovy"    = "Engraulis mordax", "Sardine"    = "Sardinops sagax", 
              "JapSardine" = "Sardinops melanosticta", "PacMack" = "Scomber japonicus", 
-             "JackMack"   = "Trachurus symmetricus",
+             "JackMack"   = "Trachurus symmetricus", "Smelt" = "Allosmerus elongatus",
              "RndHerring" = "Etrumeus acuminatus", "AllCPS" = "AllCPS")
 
 # Map landmarks
@@ -248,6 +248,7 @@ pac.mack.color     <- '#00FFFF'
 pac.herring.color  <- '#F5DEB3'
 rnd.herring.color  <- '#F0B81D'
 jap.sardine.color  <- '#F0A6A6'
+smelt.color        <- '#FFFF00'
 other.color        <- 'gray'
 
 # Set gear type colors
@@ -258,7 +259,7 @@ trawl.color <- "black"
 ## CPS species
 cps.spp            <- c("Clupea pallasii","Engraulis mordax","Sardinops melanosticta",
                         "Sardinops sagax", "Scomber japonicus","Trachurus symmetricus", 
-                        "Etrumeus acuminatus")
+                        "Etrumeus acuminatus","Allosmerus elongatus")
 
 ## Estimate biomass of Japanese sardine?
 estimate.j.sardine <- FALSE
@@ -269,7 +270,7 @@ salmon.spp <- c(161931, 161974, 161975, 161976, 161977, 161979, 161980, 161989, 
 ## Define length types per species
 spp.sl <- c("Sardinops sagax", "Sardinops melanosticta", "Engraulis mordax")
 spp.fl <- c("Scomber japonicus", "Trachurus symmetricus", "Clupea pallasii", 
-            "Etrumeus acuminatus", "Merluccius productus")
+            "Etrumeus acuminatus", "Merluccius productus","Allosmerus elongatus")
 spp.ml <- c("Doryteuthis opalescens")
 
 # CUFES -------------------------------------------------------

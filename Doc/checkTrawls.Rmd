@@ -237,6 +237,7 @@ if (nrow(catch) > 0) {
   if (!has_name(haul.summ.wt, "Clupea pallasii"))       {haul.summ.wt$`Clupea pallasii`       <- 0}
   if (!has_name(haul.summ.wt, "Atherinopsis californiensis")) {haul.summ.wt$`Atherinopsis californiensis` <- 0}
   if (!has_name(haul.summ.wt, "Etrumeus acuminatus"))   {haul.summ.wt$`Etrumeus acuminatus` <- 0}
+  if (!has_name(haul.summ.wt, "Allosmerus elongatus"))   {haul.summ.wt$`Allosmerus elongatus` <- 0}
   if (!has_name(haul.summ.wt, "Other"))                 {haul.summ.wt$`Other` <- 0}
   
   # Summarise catch by cluster
@@ -268,6 +269,7 @@ if (nrow(catch) > 0) {
                               "PacMack"    = rep(0, nrow(haul)),
                               "JackMack"   = rep(0, nrow(haul)),
                               "RndHerring" = rep(0, nrow(haul)),
+                              "Smelt"      = rep(0, nrow(haul)),
                               "AllCPS"     = rep(0, nrow(haul)))) %>% 
     right_join(haul.mid)
   
@@ -320,6 +322,7 @@ if (exists("haul.paths")) {
                        'Jack mackerel:', JackMack, 'kg<br/>',
                        'P. herring:', PacHerring, 'kg<br/>',
                        'P. mackerel:', PacMack, 'kg<br/>',
+                       'Smelt:', Smelt, 'kg<br/>',
                        'R. herring:', RndHerring, 'kg<br/>',
                        'All CPS:', AllCPS, 'kg')) 
   
@@ -365,6 +368,8 @@ haul.catch.sf <- haul.pie %>%
                   'Jack Mackerel:', JackMack, 'kg<br/>',
                   'P. herring:', PacHerring, 'kg<br/>',
                   'P. mackerel:', PacMack, 'kg<br/>',
+                  'R. herring:', RndHerring, 'kg<br/>',
+                  'Smelt:', Smelt, 'kg<br/>',
                   'All CPS:', AllCPS, 'kg'))
 
 # Convert cluster catch to sf and create labels
@@ -380,6 +385,7 @@ cluster.catch.sf <- cluster.pie %>%
                   'P. herring:', PacHerring, 'kg<br/>',
                   'P. mackerel:', PacMack, 'kg<br/>',
                   'R. herring:', RndHerring, 'kg<br/>',
+                  'Smelt:', Smelt, 'kg<br/>',
                   'All CPS:', AllCPS, 'kg'))
 ```
 
@@ -489,6 +495,8 @@ lengths.all <- lengths.all %>%
 lengths.all  <- lengths.all %>%
   mutate(
     totalLength_mm = case_when(
+      scientificName == "Allosmerus elongatus" ~ 
+        nativeLength_mm * 1.1, # Based on a basic ration of FL to TL
       scientificName == "Clupea pallasii" ~ 
         convert_length("Clupea pallasii", .$nativeLength_mm, "FL", "TL"),
       scientificName == "Engraulis mordax" ~ 
@@ -1197,6 +1205,74 @@ Fork length (mm) vs. weight (g).
 ```{r herring-data}
 # Select species
 scientificName.sub <- "Clupea pallasii"
+
+# Subset lengths and models
+lengths.sub     <- filter(lengths, scientificName == scientificName.sub)
+lengths.all.sub <- filter(lengths.all, 
+                          scientificName == scientificName.sub,
+                          season ==  tolower(survey.season))
+
+lw.df.sub <- filter(lw.df, scientificName == scientificName.sub) %>% 
+  pivot_longer(totalLength_mm:standardLength_mm, names_to = "length_type", values_to = "length_mm")
+
+if (nrow(lengths.sub) > 0) {
+  # Plot L/W data from past and current survey -----------------------------------
+  lw.plot <- ggplot() +
+    # Plot L/W data from all years/surveys
+    geom_point_interactive(data = lengths.all.sub,
+                           aes(forkLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           colour = "gray70", alpha = 0.3) +
+    # Plot seasonal length models for each species
+    geom_line_interactive(data = lw.df.sub, aes(length_mm, weightg, 
+                                                group = length_type, tooltip = length_type),
+                          alpha = 0.75, colour = "gray20", linetype = 'dashed') +
+    # Plot L/W data for current survey
+    geom_point_interactive(data = lengths.sub,
+                           aes(forkLength_mm, weightg, fill = sex,
+                               colour = outlier,
+                               data_id = label, tooltip = label),
+                           shape = 21, alpha = 0.9) +
+    scale_fill_manual(name = "Sex", values = c("female" = "pink", "male" = "lightblue",
+                                               "unknown" = "#FFC926", "missing" = "purple")) +
+    scale_colour_manual(name = "Flagged", values = c("NA" = NA, "TRUE" = "black")) +
+    # Plot individuals with missing lengths and weights
+    geom_point_interactive(data = filter(lengths.sub, missing.length == TRUE),
+                           aes(totalLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.weight == TRUE),
+                           aes(nativeLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
+    # Format plot
+    xlab("Length (mm)") + ylab("Mass (g)")
+  
+  if (do.ggiraph) {
+    # Create interactive plot
+    lw.plot.interactive <- ggiraph::girafe(
+      ggobj = lw.plot,
+      dependencies = list(liberationsansHtmlDependency())
+    )
+    
+    # Print interactive plot
+    lw.plot.interactive
+  } else {
+    lw.plot
+  }
+  
+} else {
+  print("No specimens present.")
+}
+```
+
+## Smelt (Whitebait)  
+
+Fork length (mm) vs. weight (g).  
+
+```{r smelt-data}
+# Select species
+scientificName.sub <- "Allosmerus elongatus"
 
 # Subset lengths and models
 lengths.sub     <- filter(lengths, scientificName == scientificName.sub)
@@ -2219,14 +2295,16 @@ catch.bar <- catch.all %>%
   arrange(haul, totalWeight)
 
 # Species labels
-bar.labs <- c("Atherinopsis californiensis" = "Jacksmelt", "Clupea pallasii" = "P. herring",
+bar.labs <- c("Allosmerus elongatus" = "Whitebait smelt", 
+              "Atherinopsis californiensis" = "Jacksmelt", "Clupea pallasii" = "P. herring",
               "Engraulis mordax" = "Anchovy", "Etrumeus acuminatus" = "R. herring", 
               "Merluccius productus" = "P. hake", "Other" = "Other",
               "Sardinops melanosticta" = "J. Sardine", "Sardinops sagax" = "Sardine",
               "Scomber japonicus" = "P. mackerel", "Trachurus symmetricus" = "J. mackerel")
 
 # Species colors
-bar.colors <- c("Atherinopsis californiensis" = jacksmelt.color, "Clupea pallasii" = pac.herring.color,
+bar.colors <- c("Allosmerus elongatus" = smelt.color,
+                "Atherinopsis californiensis" = jacksmelt.color, "Clupea pallasii" = pac.herring.color,
                 "Engraulis mordax" = anchovy.color, "Etrumeus acuminatus" = rnd.herring.color,
                 "Merluccius productus" = "purple", "Other" = "gray70",
                 "Sardinops melanosticta" = jap.sardine.color, "Sardinops sagax" = sardine.color,

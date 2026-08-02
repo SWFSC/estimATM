@@ -27,6 +27,12 @@ SET RMD_FILE="plotTrawls.Rmd"
 REM Open resulting file
 start "" "%~dp0..\..\Doc\plotTrawls.html"
 
+REM Name of plotCTD Rmd
+SET RMD_FILE="plotCTD.Rmd"
+%R_PATH% -e "rmarkdown::render('%RMD_FILE%', output_format='html_document')"
+REM Open resulting file
+start "" "%~dp0..\..\Doc\plotCTD.html"
+
 REM Name of trackSurvey Qmd
 SET QMD_FILE="trackSurvey.qmd"
 %Q_PATH% render "%QMD_FILE%"

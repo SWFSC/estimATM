@@ -9,18 +9,6 @@ SET WORK_DIR="C:\SURVEY\2606RL\ANALYSIS\estimATM\2606RL\Doc"
 
 CD /d %WORK_DIR%
 
-REM Name of plotSurvey Rmd
-SET RMD_FILE="plotSurvey.Rmd"
-%R_PATH% -e "rmarkdown::render('%RMD_FILE%', output_format='html_document')"
-REM Open resulting file
-start "" "%~dp0..\..\Doc\plotSurvey.html"
-
-REM Name of checkTrawls Rmd
-SET RMD_FILE="checkTrawls.Rmd"
-%R_PATH% -e "rmarkdown::render('%RMD_FILE%', output_format='html_document')"
-REM Open resulting file
-start "" "%~dp0..\..\Doc\checkTrawls.html"
-
 REM Name of plotTrawls Rmd
 SET RMD_FILE="plotTrawls.Rmd"
 %R_PATH% -e "rmarkdown::render('%RMD_FILE%', output_format='html_document')"
@@ -32,6 +20,18 @@ SET RMD_FILE="plotCTD.Rmd"
 %R_PATH% -e "rmarkdown::render('%RMD_FILE%', output_format='html_document')"
 REM Open resulting file
 start "" "%~dp0..\..\Doc\plotCTD.html"
+
+REM Name of plotSurvey Rmd
+SET RMD_FILE="plotSurvey.Rmd"
+%R_PATH% -e "rmarkdown::render('%RMD_FILE%', output_format='html_document')"
+REM Open resulting file
+start "" "%~dp0..\..\Doc\plotSurvey.html"
+
+REM Name of checkTrawls Rmd
+SET RMD_FILE="checkTrawls.Rmd"
+%R_PATH% -e "rmarkdown::render('%RMD_FILE%', output_format='html_document')"
+REM Open resulting file
+start "" "%~dp0..\..\Doc\checkTrawls.html"
 
 REM Name of trackSurvey Qmd
 SET QMD_FILE="trackSurvey.qmd"

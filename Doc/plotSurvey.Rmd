@@ -1742,16 +1742,24 @@ if (exists("nasc.outlier.plot.interactive")) {
 Provide transect start and end times, which are helpful for populating Echoview file sets, etc. You may download the CSV or Excel file using the buttons below. 
 
 ```{r get-transect-breaks}
+# Create directory for storing output
+fs::dir_create(hakeML.dir)
+
 # Summarise transect segments by start and end times
-nasc.tx.summ <- nasc.cps %>% 
-  mutate(part = str_extract(transect, ("\\d{3}"))) %>% 
-  group_by(transect, part) %>% 
+nasc.tx.summ <- nasc.cps %>%
+  rename(transectPart = transect) %>% 
+  mutate(transectNum = str_extract(transectPart, ("\\d{3}"))) %>% 
+  group_by(transectNum, transectPart) %>% 
   summarise(transectStart = min(datetime),
             transectEnd = max(datetime)) %>% 
   arrange(desc(transectStart))
 
 # Write to CSV
 write_csv(nasc.tx.summ, here("Output/ek80_raw_summary.csv"))
+
+# Save for hakeML
+write_csv(nasc.tx.summ, 
+          file = file.path(hakeML.dir, "transect_start_end_times.csv"))
 
 # Print results
 # nasc.tx.summ %>% 

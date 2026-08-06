@@ -157,6 +157,13 @@ if (Sys.info()['nodename'] %in% c("SWC-KSTIERHOFF-")) { #("SWC-FRD-AST1-D",
   nav.source.ns <- "GPX"
 }
 
+# Define hakeML directory depending on location of computer
+if (Sys.info()['nodename'] %in% c("SWC-KSTIERHOFF-")) { #("SWC-FRD-AST1-D",
+  hakeML.dir    <- "C:/SURVEY/2606RL/DATA/EK80" 
+} else {
+  hakeML.dir    <- "//10.15.115.10/data_import/Cruise Data/RL2604 IWCPS/transect_info"
+}
+
 # Define ERDDAP data variables for primary NOAA vessel
 erddap.url           <- "http://coastwatch.pfeg.noaa.gov/erddap/tabledap/fsuNoaaShip"
 erddap.vessel        <- "WTEGnrt"    # Lasker == WTEG; Shimada == WTED; add "nrt" if survey in progress

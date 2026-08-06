@@ -1761,13 +1761,6 @@ write_csv(nasc.tx.summ, here("Output/ek80_raw_summary.csv"))
 write_csv(nasc.tx.summ, 
           file = file.path(hakeML.dir, "transect_start_end_times.csv"))
 
-# Print results
-# nasc.tx.summ %>% 
-#   kable(format = knitr.format, booktabs = TRUE, escape = FALSE) %>% 
-#   kable_styling(bootstrap_options = c("striped","hover","condensed"), 
-#                 full_width = FALSE) %>% 
-#   scroll_box(height = "200px")
-
 # Create a searchable HTML table with a CSV download button
 datatable(
   nasc.tx.summ,

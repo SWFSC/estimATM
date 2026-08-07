@@ -2306,7 +2306,7 @@ bar.labs <- c("Allosmerus elongatus" = "Whitebait smelt",
 bar.colors <- c("Allosmerus elongatus" = smelt.color,
                 "Atherinopsis californiensis" = jacksmelt.color, "Clupea pallasii" = pac.herring.color,
                 "Engraulis mordax" = anchovy.color, "Etrumeus acuminatus" = rnd.herring.color,
-                "Merluccius productus" = "purple", "Other" = "gray70",
+                "Merluccius productus" = hake.color, "Other" = other.color,
                 "Sardinops melanosticta" = jap.sardine.color, "Sardinops sagax" = sardine.color,
                 "Scomber japonicus" = pac.mack.color, "Trachurus symmetricus" = jack.mack.color) 
 

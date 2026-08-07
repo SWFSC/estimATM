@@ -254,11 +254,13 @@ stratum.ns    <- 1
 sardine.color      <- '#FF0000'
 anchovy.color      <- '#00CD66'
 jack.mack.color    <- '#0000FF'
-jacksmelt.color    <- '#A020F0'
+jacksmelt.color    <- '#FFFF00' 
 pac.mack.color     <- '#00FFFF'
 pac.herring.color  <- '#F5DEB3'
 rnd.herring.color  <- '#F0B81D'
 jap.sardine.color  <- '#F0A6A6'
+smelt.color        <- '#A020F0'
+hake.color         <- 'brown'
 other.color        <- 'gray'
 
 # Set gear type colors

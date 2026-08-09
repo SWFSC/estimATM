@@ -34,14 +34,16 @@ eez_usa <- st_read(here("Data/GIS/eez_us.shp")) %>%
 
 # Get nearshore survey footprint
 ns_footprint <- st_union(ci_buffer, na_buffer) %>% 
-  st_intersection(eez_usa)
+  st_intersection(eez_usa) %>% 
+  st_simplify()
 
 # Read offshore clip polygon
 offshore.clip <- st_read(here("Data/GIS/waypoint_polygon.shp")) %>% 
   st_transform(crs.proj)
 
 # Get the intersection with the US EEZ
-sd_footprint <- st_intersection(offshore.clip, eez_usa)
+sd_footprint <- st_intersection(offshore.clip, eez_usa) %>% 
+  st_simplify()
 
 # Write to shapefile
 st_write(ns_footprint, here("Data/GIS/Permits/sampling_area_nearshore.shp"), 

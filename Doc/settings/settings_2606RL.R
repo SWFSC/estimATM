@@ -990,7 +990,7 @@ min.long <- -132
 max.long <- -117
 
 # Files to manually exclude
-exclude.uctd <- c(NA)
+exclude.uctd <- c("rl2604_20260805_0380.m1")
 exclude.ctd  <- c(NA)
 
 # SCS values and structure

@@ -3,6 +3,10 @@ if (uctd.type %in% c("MVP","Valeport")) {
   # Location of header files on survey directory
   uctd.files <- dir_ls(uctd.dir, regexp = uctd.cast.pattern, recurse = FALSE) 
   
+  # Exclude certain files defined by exclude.uctd
+  uctd.files <- uctd.files[which(!path_file(uctd.files) %in% exclude.uctd)]
+  
+  
   # Copy files to estimATM directory
   file_copy(uctd.files, here("Data/UCTD"), 
             overwrite = overwrite.files) 

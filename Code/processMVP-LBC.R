@@ -11,7 +11,7 @@ library(atm)      # For loading functions used to process cast data
 DATA_DIR     <- "C:\\KLS\\CODE\\Github\\estimATM\\2606RL\\Data\\UCTD"
 OUTPUT_DIR   <- "C:\\KLS\\CODE\\Github\\estimATM\\2606RL\\PROCESSED\\EV\\ECS\\LBC"
 ECS_TEMPLATE <- "C:\\KLS\\CODE\\Github\\estimATM\\2606RL\\PROCESSED\\EV\\ECS\\LBC\\_2606LBC_Template.ecs"
-TX_DEPTH     <- 7.35  
+TX_DEPTH     <- 2.0  
 # -----------------------------------------------
 
 dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)

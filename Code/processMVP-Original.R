@@ -243,8 +243,8 @@ export_template_ecs <- function(raw_descent_df, binned_df, cast_id, output_dir, 
                           str_sub(ECS_new, temp[[1]][2]+attr(temp[[1]], "match.length")[2]))
       }
       
-      # EBA Compensation
-      pattern <- paste0("(?s)SourceCal T", j, ".*?TwoWayBeamAngle\\s*=\\s*(\\d*\\.*\\d*)")
+      # EBA Compensation                          
+      pattern <- paste0("(?s)SourceCal T", j, ".*?TwoWayBeamAngle\\s*=\\s*(-?\\d*\\.*\\d*)")
       temp <- regexec(pattern, ECS_new, perl = TRUE)
       if (temp[[1]][1] != -1) {
         ECS_new <- paste0(str_sub(ECS_new, 1, temp[[1]][2]-1),
@@ -318,9 +318,9 @@ export_template_ecs <- function(raw_descent_df, binned_df, cast_id, output_dir, 
 if (!interactive() || sys.nframe() == 0) {
   
   # ---------------- USER SETTINGS ----------------
-  DATA_DIR <- "Y:\\2606RL\\Cruise Data\\RAW\\MVP\\ToProcess"
-  OUTPUT_DIR <- "C:\\SURVEY\\2606RL\\PROCESSED\\EV\\ECS"
-  ECS_TEMPLATE <- "C:\\SURVEY\\2606RL\\PROCESSED\\EV\\ECS\\_2606RL_Template.ecs"
+  DATA_DIR     <- "C:\\KLS\\CODE\\Github\\estimATM\\2606RL\\Data\\UCTD\\ToProcess"
+  OUTPUT_DIR   <- "C:\\KLS\\CODE\\Github\\estimATM\\2606RL\\PROCESSED\\EV\\ECS\\LBC"
+  ECS_TEMPLATE <- "C:\\KLS\\CODE\\Github\\estimATM\\2606RL\\PROCESSED\\EV\\ECS\\LBC\\_2606LBC_Template.ecs"
   TX_DEPTH <- 7.35  
   # -----------------------------------------------
   

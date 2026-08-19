@@ -674,7 +674,7 @@ uctd.dir               <- file.path(survey.dir[survey.vessel.primary],"DATA/MVP"
 uctd.type              <- "MVP" # "Valeport" or "Oceansciences" or "MVP"
 uctd.hdr.pattern       <- "rl2604.*.m1"
 uctd.cast.pattern      <- "rl2604.*.m1"
-uctd.cast.depth        <- 330
+uctd.cast.depth        <- 250
 # Column names for cast files
 uctd.col.names         <- list(vp2 = c("date","time","Z","P","T","C","S","Sv","Dens","ChlA","Ticks"),
                                m1  = c("P","Z","Sv","T","C","S","Dens","LOPC","ANLG0","ANLG1"))

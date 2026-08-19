@@ -496,7 +496,7 @@ lengths.all  <- lengths.all %>%
   mutate(
     totalLength_mm = case_when(
       scientificName == "Allosmerus elongatus" ~ 
-        nativeLength_mm * 1.1, # Based on a basic ration of FL to TL
+        convert_length("Allosmerus elongatus", .$nativeLength_mm, "FL", "TL"),
       scientificName == "Clupea pallasii" ~ 
         convert_length("Clupea pallasii", .$nativeLength_mm, "FL", "TL"),
       scientificName == "Engraulis mordax" ~ 
@@ -511,7 +511,8 @@ lengths.all  <- lengths.all %>%
         convert_length("Trachurus symmetricus", .$forkLength_mm, "FL", "TL"),
       scientificName == "Etrumeus acuminatus" ~ 
         convert_length("Etrumeus acuminatus", .$forkLength_mm, "FL", "TL"),
-      scientificName == "Merluccius productus" ~ forkLength_mm, # There is no FL to TL conversion yet
+      # There is no FL to TL conversion yet for hake
+      scientificName == "Merluccius productus" ~ forkLength_mm, 
       scientificName == "Doryteuthis opalescens" ~  as.numeric(mantleLength_mm),
       TRUE ~ totalLength_mm)) %>% 
   mutate(totalLength_mm  = round(totalLength_mm),

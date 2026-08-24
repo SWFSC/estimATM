@@ -148,6 +148,12 @@ nav.now <- tail(nav.sf, 1) %>%
 uctd.hdr <- dir_ls(here("Data/UCTD"), regexp = uctd.hdr.pattern, recurse = TRUE) %>% 
   path_filter(regexp = "_processed", invert = TRUE)
 
+# Remove bad casts
+if(exists("uctd.cast.rm")) {
+  # Filter paths by matching against the file names
+  uctd.hdr <- uctd.hdr[!basename(uctd.hdr) %in% uctd.cast.rm]  
+}
+
 # Process UCTD cast headers
 if (length(uctd.hdr) == 0) {
   # Create empty figure if no UCTD casts present
@@ -175,6 +181,12 @@ if (length(uctd.hdr) == 0) {
     # Process UCTD cast files --------------------------------------------------
     # List processed UCTD cast files
     uctd.proc <- dir_ls(here("Data/UCTD"), regexp = uctd.cast.pattern, recurse = TRUE) 
+    
+    # Remove bad casts
+    if(exists("uctd.cast.rm")) {
+      # Filter paths by matching against the file names
+      uctd.proc <- uctd.proc[!basename(uctd.proc) %in% uctd.cast.rm]  
+    }
     
     # create a data frame for storing results
     all.uctd.casts <- data.frame()

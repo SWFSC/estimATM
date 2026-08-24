@@ -681,7 +681,11 @@ uctd.col.names         <- list(vp2 = c("date","time","Z","P","T","C","S","Sv","D
 # Number of lines to skip when reading txt file
 uctd.skip              <- c(vp2 = 79, 
                             m1  = 62)
-uctd.surface.rm        <- 20 # Amount of seconds to remove from UCTD casts (e.g., MVP at surface)
+# Vector of file names for bad casts
+uctd.cast.rm <- c("rl2604_20260824_0380.m1",
+                  "rl2604_20260824_0434.m1")
+# Amount of seconds to remove from UCTD casts (e.g., MVP at surface)
+uctd.surface.rm        <- 20 
 
 # RBR TDR data
 tdr.dir.kite           <- here("Data/TDR/Kite")

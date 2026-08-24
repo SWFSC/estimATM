@@ -256,7 +256,7 @@ pac.herring.color  <- '#F5DEB3'
 rnd.herring.color  <- '#F0B81D'
 jap.sardine.color  <- '#F0A6A6'
 smelt.color        <- '#A020F0'
-hake.color         <- 'brown'
+hake.color         <- '#563D2D'
 other.color        <- 'gray'
 
 # Set gear type colors

@@ -19,7 +19,7 @@ dir.CTD <- "C:\\SURVEY\\2606RL\\DATA\\UCTD\\Valeport\\TO_PROCESS\\"
 ECS.template <- "C:\\SURVEY\\2606RL\\PROCESSED\\EV\\ECS\\_2606RL_Template.ecs"
 
 # ECS output directory
-dir.ECS <- "C:\\SURVEY\\2606RL\\PROCESSED\\EV\\ECS"
+dir.ECS <- "C:\\SURVEY\\2606RL\\PROCESSED\\EV\\ECS\\"
 
 # Minimum depth for determining start of downcast (in meters)
 minDepth <- 2
@@ -41,7 +41,6 @@ EBA_0 <- as.numeric(str_match_all(ECS, "TwoWayBeamAngle\\s*=\\s*([^\\s]+)")[[1]]
 BW_minor_0 <- as.numeric(str_match_all(ECS, "MinorAxis3dbBeamAngle\\s*=\\s*([^\\s]+)")[[1]][,2])
 BW_major_0 <- as.numeric(str_match_all(ECS, "MajorAxis3dbBeamAngle\\s*=\\s*([^\\s]+)")[[1]][,2])
 
-
 # Process CTD data --------------------------------------------------------
 
 # Find all raw data files in CTD directory
@@ -49,7 +48,6 @@ files.CTD <- list.files(path = dir.CTD, pattern = "*.vp2")
 
 # Loop through each file
 for (i in files.CTD) {
-  
   # Process CTD data --------------------------------------------------------
 
   # Retain just the file name (i.e., remove extension)

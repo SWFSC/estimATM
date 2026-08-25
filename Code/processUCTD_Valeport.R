@@ -13,22 +13,20 @@ library(psych)    # For computing harmonic mean
 # User Settings -----------------------------------------------------------
 
 # Directory of CTD files to process
-dir.CTD <- 'C:\\SURVEY\\2506SH\\DATA\\UCTD\\PROCESSED\\TO_ECS_PROCESS\\'
+dir.CTD <- "Y:\\2606RL\\Cruise Data\\RAW\\UCTD\\ToProcess"
+# dir.CTD <- 'C:\\SURVEY\\2506SH\\DATA\\UCTD\\PROCESSED\\TO_ECS_PROCESS\\'
 
 # Template ECS file
-ECS.template <- 'C:\\SURVEY\\2506SH\\PROCESSED\\EV\\ECS\\_2506SH_Template.ecs'
-# ECS.template <- 'C:\\Users\\AST\\Desktop\\LBC Calibration 2025\\ECHOVIEW\\ECS\\_2506LBC_Template.ecs'
+ECS.template <- "C:\\SURVEY\\2606RL\\PROCESSED\\EV\\ECS\\_2606RL_Template.ecs"
 
 # ECS output directory
-dir.ECS <- 'C:\\SURVEY\\2506SH\\PROCESSED\\EV\\ECS\\'
-# dir.ECS <- 'C:\\Users\\AST\\Desktop\\LBC Calibration 2025\\ECHOVIEW\\ECS\\'
+dir.ECS <- "C:\\SURVEY\\2606RL\\PROCESSED\\EV\\ECS"
 
 # Minimum depth for determining start of downcast (in meters)
 minDepth <- 2
 
 # Define transducer depth
-txducer.depth <- 7.35     # 7.35 for Shimada, 2 for LBC
-
+txducer.depth <- 7.35     # 7.35 for Lasker/Shimada, 2 for LBC
 
 # Read template ECS file --------------------------------------------------
 

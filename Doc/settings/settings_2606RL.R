@@ -682,8 +682,15 @@ uctd.col.names         <- list(vp2 = c("date","time","Z","P","T","C","S","Sv","D
 uctd.skip              <- c(vp2 = 79, 
                             m1  = 62)
 # Vector of file names for bad casts
-uctd.cast.rm <- c("rl2604_20260824_0380.m1",
-                  "rl2604_20260824_0434.m1")
+uctd.cast.rm <- c("rl2604_20260619_0010.m1",
+                  "rl2604_20260623_0041.m1",
+                  "rl2604_20260625_0055.m1",
+                  "rl2604_20260630_0082.m1",
+                  "rl2604_20260701_0091.m1",
+                  "rl2604_20260805_0380.m1",
+                  "rl2604_20260824_0432.m1",
+                  "rl2604_20260824_0434.m1",
+                  "rl2604_20260824_0435.m1")
 # Amount of seconds to remove from UCTD casts (e.g., MVP at surface)
 uctd.surface.rm        <- 20 
 

@@ -232,7 +232,7 @@ if (length(uctd.hdr) == 0) {
     summarise(
       time = round(sum(dt),0),
       max.depth = round(min(Z),0)) %>%
-    left_join(select(all.uctd.hdr, cast, cast.date, lag, lat, long, SOG)) %>%
+    left_join(select(all.uctd.hdr, cast, cast.date, lag, lat, long, leg, SOG)) %>%
     arrange(cast.date) %>%
     mutate(cast.num = seq(1, n()),
            leg = paste("Leg", cut(as.numeric(date(cast.date)), leg.breaks, labels = FALSE)))
@@ -633,7 +633,10 @@ if (save.figs) {
 
 ```{r i-map-uctd, out.width='100%'}
 # Create color palette for planned transects
-txPal    <- colorFactor(wpt.colors, wpt.types)
+txPal  <- colorFactor(wpt.colors, wpt.types)
+# Create color palette for transect legs
+leg.colors <- topo.colors(n_distinct(uctd.sf$leg))
+legPal <- colorFactor(leg.colors, unique(uctd.sf$leg))
 
 # Map casts
 # Add nav data
@@ -687,11 +690,19 @@ if (exists("uctd.missing.sf")) {
 if (exists("uctd.sf")) {
   i.map.uctd <- i.map.uctd %>% 
     addCircleMarkers(data = uctd.sf,
-                     radius = 5, color = "#000414", stroke = FALSE, opacity = 0.5,
-                     fillOpacity = 0.5, fillColor =  "blue", 
+                     color = ~legPal(leg),
+                     radius = 5, stroke = FALSE, opacity = 0.75,
+                     fillOpacity = 0.75,
                      label = ~cast,
                      popup = ~cast,
-                     group = "UCTD Casts")
+                     group = "UCTD Casts") %>% 
+    # Add legends
+    leaflet::addLegend("bottomleft", colors = leg.colors, 
+                       values = sort(unique(uctd.sf$leg)),
+                       labels = sort(unique(uctd.sf$leg)), 
+                       title = "Leg", 
+                       opacity = 1,
+                       group = "UCTD Casts")
 }
 
 # Plot map
@@ -1161,11 +1172,19 @@ if (exists("ctd.missing.sf")) {
 if (exists("ctd.sf")) {
   i.map.ctd <- i.map.ctd %>% 
     addCircleMarkers(data = ctd.sf,
-                     radius = 5, color = "#000414", stroke = FALSE, opacity = 0.5,
-                     fillOpacity = 0.5, fillColor =  "blue", 
+                     color = ~legPal(leg),
+                     radius = 5, stroke = FALSE, opacity = 0.5,
+                     fillOpacity = 0.5, #fillColor =  "blue", color = "#000414", 
                      label = ~cast,
                      popup = ~cast,
-                     group = "CTD Casts")
+                     group = "CTD Casts") %>% 
+    # Add legends
+    leaflet::addLegend("bottomleft", colors = leg.colors, 
+                       values = sort(unique(ctd.sf$leg)),
+                       labels = sort(unique(ctd.sf$leg)), 
+                       title = "Leg", 
+                       opacity = 1,
+                       group = "CTD Casts")
 }
 
 # Plot map

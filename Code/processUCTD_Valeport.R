@@ -13,7 +13,7 @@ library(psych)    # For computing harmonic mean
 # User Settings -----------------------------------------------------------
 
 # Directory of CTD files to process
-dir.CTD <- "C:\\SURVEY\\2606SH\\DATA\\UCTD\\Valeport\\TO_PROCESS\\"
+dir.CTD <- "C:\\SURVEY\\2606RL\\DATA\\UCTD\\Valeport\\TO_PROCESS\\"
 
 # Template ECS file
 ECS.template <- "C:\\SURVEY\\2606RL\\PROCESSED\\EV\\ECS\\_2606RL_Template.ecs"

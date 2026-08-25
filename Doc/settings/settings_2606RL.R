@@ -593,10 +593,10 @@ cluster.source <- c(OS = "cluster",
                     NS = "cluster")
 
 # Maximum distance to trawl clusters
-cum.biomass.limit      <- 0.90 # Distance used to compute max.cluster.distance
+cum.biomass.limit <- 0.90 # Distance used to compute max.cluster.distance
 
 # If limit.cluster.dist == TRUE, set proportions to zero at distances greater than max.cluster.dist
-max.cluster.dist       <- 30
+max.cluster.dist <- 30
 
 # Define transect spacing bins and values (nmi) used to characterize transect spacing
 tx.spacing.bins <- c(0,  6, 25, 35, 70, 100)
@@ -611,9 +611,9 @@ ci.buffer.dist <- 2.5 # Distance (nmi) to buffer Channel Island land mask for ne
 ci.clip.dist   <- 0.1 # Distance (nmi) to buffer Channel Island land mask for nearshore strata clipping
 
 ## Core area
-tx.ext.pct     <- 0.35   # Extension percentage constant
-tx.ext.dir     <- "east" # east (toward shore), west (away from shore), or both
-tx.buff.pct    <- 1.05  # Scaling factor for transect buffering, 1.025 in 2025
+tx.ext.pct  <- 0.35   # Extension percentage constant
+tx.ext.dir  <- "east" # east (toward shore), west (away from shore), or both
+tx.buff.pct <- 1.05  # Scaling factor for transect buffering, 1.025 in 2025
 
 ## Nearshore area
 tx.ext.pct.ns    <- 2.25      # Extension percentage constant

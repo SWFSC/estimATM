@@ -589,10 +589,10 @@ cluster.source <- c(OS = "cluster",
                     NS = "cluster")
 
 # Maximum distance to trawl clusters
-cum.biomass.limit      <- 0.90 # Distance used to compute max.cluster.distance
+cum.biomass.limit <- 0.90 # Distance used to compute max.cluster.distance
 
 # If limit.cluster.dist == TRUE, set proportions to zero at distances greater than max.cluster.dist
-max.cluster.dist       <- 30
+max.cluster.dist <- 30
 
 # Define transect spacing bins and values (nmi) used to characterize transect spacing
 tx.spacing.bins <- c(0,  6, 15, 35, 70, 100)

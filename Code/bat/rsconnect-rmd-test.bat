@@ -4,7 +4,7 @@ SET RSCRIPT_PATH="C:\Program Files\R\R-4.6.0\bin\x64\Rscript.exe"
 
 :: Set variables for your specific file and server info
 SET CONNECT_SERVER="https://test-connect.fisheries.noaa.gov/"
-SET CONNECT_API_KEY="qaFHF63Tjek5hTa3ZYQfQ7qwUU3guTSY"
+SET CONNECT_API_KEY="secret-code"
 SET RMD_DIRECTORY="C:\KLS\CODE\Github\estimATM\2606RL\Doc"
 SET RMD_FILENAME="plotSurvey.Rmd"
 SET APP_TITLE="plotSurvey-2606RL"

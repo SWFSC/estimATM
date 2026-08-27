@@ -40,8 +40,6 @@ CD /d %WORK_DIR%
 :: Name of plotSurvey Rmd
 SET RMD_FILE="plotSurvey.Rmd"
 %R_PATH% -e "rmarkdown::render('%RMD_FILE%', output_format='html_document')"
-:: Publish file to Rstudio Connect
-%Q_PATH% publish connect "%RMD_FILE%" --id "%plotSurvey_id%" --no-prompt --no-browser
 :: Open resulting file
 start "" "%~dp0..\..\Doc\plotSurvey.html"
 
@@ -69,4 +67,4 @@ SET QMD_FILE="trackSurvey.qmd"
 start "" "%~dp0..\..\Doc\trackSurvey.html"
 
 :: Keeps window open to show results
-:: pause
+pause

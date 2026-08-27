@@ -1753,7 +1753,7 @@ haul %>%
 
 \
 
-Trawl durations are examined to look at trends in deployment, recovery, and total evolution times. The top panel shows total evolution time (from netOnDeckTime - netInWaterTime; **<span style="color:green">green</span>**), while the bottom panel shows the deployment time (equilibriumTime - netInWaterTime, **<span style="color:blue">blue</span>**), fishing time (haulBackTime - equilbriumTime, **<span style="color:black">black</span>**), and recovery time (netOnDeckTime - haulBackTime, **<span style="color:red">red</span>**).
+Trawl durations are examined to look at trends in deployment, recovery, and total evolution times. The top panel shows total evolution time (from netOnDeckTime - netInWaterTime; **<span style="color:green">green</span>**), while the bottom panel shows the deployment time (equilibriumTime - netInWaterTime, **<span style="color:blue">blue</span>**), fishing time (haulBackTime - equilbriumTime, **<span style="color:black">black</span>**), and recovery time (netOnDeckTime - haulBackTime, **<span style="color:red">red</span>**). The filled circles in the Evolution Time plot indicate good (**<span style="color:green">green</span>**), poor (**<span style="color:blue">blue</span>**), and aborted tows (**<span style="color:red">red</span>**).
 
 ```{r check-trawl-duration-all}
 # Plot trawl durations

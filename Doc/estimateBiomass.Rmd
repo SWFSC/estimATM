@@ -144,7 +144,7 @@ get.bathy         <- T # Extract ETOPO1 bathymetry data in the survey footprint
 
 ### Usually FALSE
 save.imap           <- F # Save Leaflet maps
-process.csv.all     <- T # Process all acoustic backscatter files (F = new files only)
+process.csv.all     <- F # Process all acoustic backscatter files (F = new files only)
 process.csv.krill   <- F # Process krill backscatter data
 process.cufes       <- F # Process CUFES data (no CUFES sampling post-2023)
 process.cal         <- F # Process calibration results
@@ -1164,16 +1164,18 @@ Acoustic backscatter is averaged over 2,000-m intervals and plotted along each t
 (ref:map-nasc-tx) Survey transects performed aboard _`r survey.vessel`_ overlaid with the distribution of 38-kHz integrated backscattering coefficients (_s_~A~, m^2^ nmi^-2^;  averaged over 2000-m distance intervals and from `r cps.depth` to `r int.start`-m deep) ascribed to CPS. Panels are labeled with a) transect names (from Echoview files) and b) transect numbers (used to define sampling strata).
 
 ```{r map-nasc-tx, fig.cap='(ref:map-nasc-tx)'}  
-## Retain core area intervals that fall outside the nearshore mask ----------
-nasc.sf.sub <- nasc %>% 
-  st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-  st_transform(crs = crs.proj) %>% 
-  st_difference(nearshore_mask)
-
-# mapview(nasc.sf.sub) + mapview(nearshore_mask)
-
-# Keep core area acoustic intervals that intersect the nearshore mask
-nasc <- filter(nasc, id %in% nasc.sf.sub$id)
+## If estimating nearshore biomass, retain core area intervals that fall outside the nearshore mask ----------
+if (estimate.ns) {
+  nasc.sf.sub <- nasc.sf.sub <- nasc %>% 
+    st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
+    st_transform(crs = crs.proj) %>% 
+    st_difference(nearshore_mask)
+  
+  # Keep core area acoustic intervals that fall outside the nearshore mask
+  nasc <- filter(nasc, id %in% nasc.sf.sub$id)
+  
+  # mapview(nasc.sf.sub) + mapview(nearshore_mask)  
+}
 
 # Convert reduced nearshore backscatter to sf
 nasc.sf <- nasc %>% 
@@ -1796,6 +1798,7 @@ if (nrow(catch) > 0) {
   if (!has_name(haul.summ.wt, "Clupea pallasii"))       {haul.summ.wt$`Clupea pallasii`       <- 0}
   if (!has_name(haul.summ.wt, "Atherinopsis californiensis")) {haul.summ.wt$`Atherinopsis californiensis` <- 0}
   if (!has_name(haul.summ.wt, "Etrumeus acuminatus"))   {haul.summ.wt$`Etrumeus acuminatus` <- 0}
+  if (!has_name(haul.summ.wt, "Allosmerus elongatus"))  {haul.summ.wt$`Allosmerus elongatus` <- 0}
   if (!has_name(haul.summ.wt, "Other"))                 {haul.summ.wt$`Other` <- 0}
   
   # Calculate total weight of all CPS species
@@ -1834,6 +1837,7 @@ if (nrow(catch) > 0) {
                               "PacMack"    = rep(0, nrow(haul)),
                               "JackMack"   = rep(0, nrow(haul)),
                               "RndHerring" = rep(0, nrow(haul)),
+                              "Smelt"      = rep(0, nrow(haul)),
                               "Other"      = rep(0, nrow(haul)),  
                               "AllCPS"     = rep(0, nrow(haul)))) %>% 
     right_join(haul.mid)
@@ -1865,6 +1869,7 @@ haul.pie <- haul.summ.wt %>%
                   'Jack Mackerel:', JackMack, 'kg<br/>',
                   'P. herring:', PacHerring, 'kg<br/>',
                   'P. mackerel:', PacMack, 'kg<br/>',
+                  'Smelt:', Smelt, 'kg<br/>',
                   'R. herring:', RndHerring, 'kg<br/>',
                   'All CPS:', AllCPS, 'kg'))
 
@@ -1882,6 +1887,7 @@ cluster.pie <- cluster.summ.wt %>%
                   'Jack Mackerel:', JackMack, 'kg<br/>',
                   'P. herring:', PacHerring, 'kg<br/>',
                   'P. mackerel:', PacMack, 'kg<br/>',
+                  'Smelt:', Smelt, 'kg<br/>',
                   'R. herring:', RndHerring, 'kg<br/>',
                   'All CPS:', AllCPS, 'kg'))
 
@@ -1933,6 +1939,7 @@ haul.paths <- haul.paths %>%
                      'Jack Mackerel:', JackMack, 'kg<br/>',
                      'P. herring:', PacHerring, 'kg<br/>',
                      'P. mackerel:', PacMack, 'kg<br/>',
+                     'Smelt:', Smelt, 'kg<br/>',
                      'R. herring:', RndHerring, 'kg<br/>',
                      'Other:', Other, 'kg<br/>',
                      'All CPS:', AllCPS, 'kg')) 
@@ -2075,7 +2082,11 @@ haul.ts <- haul %>%
 
 # Get species present in the trawl catch
 haul.ts.spp <- sort(unique(haul.ts$scientificName))
-
+haul.ts.labels <- unname(pie.labs[names(pie.labs) %in% haul.ts.spp]
+                         [order(names(pie.labs[names(pie.labs) %in% haul.ts.spp]))])
+haul.ts.colors <- unname(pie.colors[names(pie.colors) %in% haul.ts.spp]
+                         [order(names(pie.colors[names(pie.colors) %in% haul.ts.spp]))])
+  
 # Export haul data for single-target TS estimation
 write_csv(haul.ts, here("Output/single_species_hauls.csv"), na = "")
 
@@ -2097,11 +2108,10 @@ if (save.figs) {
     geom_shadowtext(data = filter(haul.ts, !is.na(pctTotalCPS)), 
                     aes(X, Y, label = haul, colour = scientificName),
                     size = 2, bg.colour = "white", fontface = "bold") +
-    # scale_colour_discrete(name = "Species") +
     # Configure trawl scale
     scale_colour_manual(name = 'Species',
-                        labels = unname(pie.labs[names(pie.labs) %in% haul.ts.spp]),
-                        values = unname(pie.colors[names(pie.colors) %in% haul.ts.spp])) +
+                        labels = haul.ts.labels,
+                        values = haul.ts.colors) +
     coord_sf(crs = crs.proj, 
              xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
              ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
@@ -2349,6 +2359,8 @@ save(lengths.all, file = here("Output/lengths_all.Rdata"))
 lengths.all  <- lengths.all %>%
   mutate(
     totalLength_mm = case_when(
+      scientificName == "Allosmerus elongatus" ~ 
+        convert_length("Allosmerus elongatus", .$forkLength_mm, "FL", "TL"),
       scientificName == "Clupea pallasii" ~ 
         convert_length("Clupea pallasii", .$forkLength_mm, "FL", "TL"),
       scientificName == "Engraulis mordax" ~ 
@@ -2361,6 +2373,9 @@ lengths.all  <- lengths.all %>%
         convert_length("Trachurus symmetricus", .$forkLength_mm, "FL", "TL"),
       scientificName == "Etrumeus acuminatus" ~ 
         convert_length("Etrumeus acuminatus", .$forkLength_mm, "FL", "TL")))
+
+# ggplot(filter(lengths.all, scientificName == "Allosmerus elongatus")) + 
+#   geom_point(aes(totalLength_mm, weightg), colour = "red") + geom_point(aes(forkLength_mm, weightg))
 
 if ("mantleLength_mm" %in% names(lengths.all)) {
   lengths.all <- lengths.all %>% 
@@ -2546,6 +2561,9 @@ for (i in unique(L.max$scientificName)) {
   # Combine results
   lw.df <- bind_rows(lw.df, data.frame(scientificName = i, L, W))
 }
+
+# ggplot(lw.df, aes(L, W, colour = scientificName)) + 
+#   geom_line() + facet_wrap(~scientificName, scales = "free")
 
 # Save final length data frames
 save(lengths.all, lengths, lw.df,
@@ -3180,7 +3198,7 @@ ggsave(ts.theory.plot,
        filename = here("Figs/fig_ts_theoretical_scatter.png"), 
        width = ts.width, height = 2)
 
-# Create TS histrograms by species
+# Create TS histograms by species
 ts.histogram <- ggplot(lengths) + 
   geom_histogram(aes(TS.ind)) + 
   facet_wrap(~scientificName, scales = "free_x", nrow = 1) + 
@@ -3270,9 +3288,10 @@ l.summ.cluster <- l.summ.haul %>%
 
 # Create a data frame with abbreviations
 trawl.ts.names <- data.frame(
-  scientificName = c("Clupea pallasii","Engraulis mordax","Etrumeus acuminatus", 
-                     "Sardinops sagax","Scomber japonicus","Trachurus symmetricus"),
-  shortName      = c("her","anch","rher",
+  scientificName = c("Allosmerus elongatus","Clupea pallasii","Engraulis mordax",
+                     "Etrumeus acuminatus","Sardinops sagax","Scomber japonicus",
+                     "Trachurus symmetricus"),
+  shortName      = c("smelt","her","anch","rher",
                      "sar","mack","jack"))
 
 # Combine results to compare with Juan's output
@@ -3375,6 +3394,10 @@ names(ts.sub.her) <- paste(names(ts.sub.her), "her", sep = ".")
 ts.sub.rher <- filter(ts.summ, scientificName == "Etrumeus acuminatus") %>% 
   select(-scientificName)
 names(ts.sub.rher) <- paste(names(ts.sub.rher), "rher", sep = ".") 
+# Subset smelt results
+ts.sub.smelt <- filter(ts.summ, scientificName == "Allosmerus elongatus") %>% 
+  select(-scientificName)
+names(ts.sub.smelt) <- paste(names(ts.sub.smelt), "smelt", sep = ".") 
 # Subset "other" results
 ts.sub.other <- filter(ts.summ, scientificName == "Other") %>% 
   select(-scientificName)
@@ -3401,6 +3424,8 @@ clf <- cluster.mid %>%
   left_join(ts.sub.her,by  = c("cluster" = "cluster.her")) %>% 
   # Add round herring TS estimates to clf
   left_join(ts.sub.rher,by  = c("cluster" = "cluster.rher")) %>% 
+  # Add smelt TS estimates to clf
+  left_join(ts.sub.smelt,by  = c("cluster" = "cluster.smelt")) %>% 
   # Add other TS estimates to clf
   left_join(ts.sub.other,by  = c("cluster" = "cluster.other"))
 
@@ -3408,7 +3433,8 @@ clf <- cluster.mid %>%
 catch.summ.num <- clf %>% 
   group_by(cluster) %>% 
   summarise(CPS.num = sum(num.sar, num.anch, num.mack, num.jack, 
-                          num.her, num.rher, num.other, na.rm = TRUE))
+                          num.her, num.rher, num.smelt, num.other, 
+                          na.rm = TRUE))
 
 # Calculate total CPS weight in each cluster
 cluster.summ.wt <- catch %>% 
@@ -3440,31 +3466,35 @@ ts.proportions <- clf %>%
                       num.her     * sigmaindiv.her  +
                       num.mack    * sigmaindiv.mack + 
                       num.jack    * sigmaindiv.jack + 
-                      num.rher    * sigmaindiv.rher + 
+                      num.rher    * sigmaindiv.rher +
+                      num.smelt   * sigmaindiv.smelt +
                       num.other   * sigmaindiv.other),
     # Calculate the weighted weight of each species
     weighted.wg  = (meanwg.sar  * num.sar  * sigmawg.sar +
-                      meanwg.anch * num.anch * sigmawg.anch + 
-                      meanwg.her  * num.her  * sigmawg.her +
-                      meanwg.mack * num.mack * sigmawg.mack + 
-                      meanwg.jack * num.jack * sigmawg.jack + 
-                      meanwg.rher * num.rher * sigmawg.rher + 
-                      meanwg.other* num.other* sigmawg.other),
+                      meanwg.anch  * num.anch * sigmawg.anch + 
+                      meanwg.her   * num.her  * sigmawg.her +
+                      meanwg.mack  * num.mack * sigmawg.mack + 
+                      meanwg.jack  * num.jack * sigmawg.jack + 
+                      meanwg.rher  * num.rher * sigmawg.rher +
+                      meanwg.smelt * num.smelt * sigmawg.smelt +
+                      meanwg.other * num.other * sigmawg.other),
     # Calculate the proportion, by number and weight, for each species
-    prop.sar     = (num.sar     * sigmaindiv.sar)  / weighted.num,
-    prop.sar.wg  = (meanwg.sar  * sigmawg.sar  * num.sar) / weighted.wg,
-    prop.anch    = (num.anch    * sigmaindiv.anch) / weighted.num,
-    prop.anch.wg = (meanwg.anch * sigmawg.anch * num.anch) / weighted.wg,
-    prop.mack    = (num.mack    * sigmaindiv.mack) / weighted.num,
-    prop.mack.wg = (meanwg.mack * sigmawg.mack * num.mack) / weighted.wg,
-    prop.jack    = (num.jack    * sigmaindiv.jack) / weighted.num,
-    prop.jack.wg = (meanwg.jack * sigmawg.jack * num.jack) / weighted.wg,
-    prop.her     = (num.her     * sigmaindiv.her)  / weighted.num,
-    prop.her.wg  = (meanwg.her  * sigmawg.her  * num.her) / weighted.wg,
-    prop.rher    = (num.rher    * sigmaindiv.rher)  / weighted.num,
-    prop.rher.wg = (meanwg.rher * sigmawg.rher  * num.rher) / weighted.wg,
-    prop.other   = (num.other   * sigmaindiv.other)  / weighted.num,
-    prop.other.wg= (meanwg.other* sigmawg.other  * num.other) / weighted.wg) %>% 
+    prop.sar      = (num.sar      * sigmaindiv.sar)  / weighted.num,
+    prop.sar.wg   = (meanwg.sar   * sigmawg.sar  * num.sar) / weighted.wg,
+    prop.anch     = (num.anch     * sigmaindiv.anch) / weighted.num,
+    prop.anch.wg  = (meanwg.anch  * sigmawg.anch * num.anch) / weighted.wg,
+    prop.mack     = (num.mack     * sigmaindiv.mack) / weighted.num,
+    prop.mack.wg  = (meanwg.mack  * sigmawg.mack * num.mack) / weighted.wg,
+    prop.jack     = (num.jack     * sigmaindiv.jack) / weighted.num,
+    prop.jack.wg  = (meanwg.jack  * sigmawg.jack * num.jack) / weighted.wg,
+    prop.her      = (num.her      * sigmaindiv.her)  / weighted.num,
+    prop.her.wg   = (meanwg.her   * sigmawg.her  * num.her) / weighted.wg,
+    prop.rher     = (num.rher     * sigmaindiv.rher)  / weighted.num,
+    prop.rher.wg  = (meanwg.rher  * sigmawg.rher  * num.rher) / weighted.wg,
+    prop.smelt    = (num.smelt    * sigmaindiv.smelt)  / weighted.num,
+    prop.smelt.wg = (meanwg.smelt * sigmawg.smelt  * num.smelt) / weighted.wg,
+    prop.other    = (num.other    * sigmaindiv.other)  / weighted.num,
+    prop.other.wg = (meanwg.other * sigmawg.other  * num.other) / weighted.wg) %>% 
   replace(is.na(.), 0) 
 
 # Replace all NaNs with zeros
@@ -3486,6 +3516,7 @@ clf$sigmaindiv.jack[clf$prop.jack == 0]   <- 1
 clf$sigmaindiv.mack[clf$prop.mack == 0]   <- 1
 clf$sigmaindiv.sar[clf$prop.sar   == 0]   <- 1
 clf$sigmaindiv.rher[clf$prop.rher == 0]   <- 1
+clf$sigmaindiv.smelt[clf$prop.smelt == 0] <- 1
 clf$sigmaindiv.other[clf$prop.other == 0] <- 1
 
 clf$sigmawg.anch[clf$prop.anch    == 0]   <- 1
@@ -3494,6 +3525,7 @@ clf$sigmawg.jack[clf$prop.jack    == 0]   <- 1
 clf$sigmawg.mack[clf$prop.mack    == 0]   <- 1
 clf$sigmawg.sar[clf$prop.sar      == 0]   <- 1
 clf$sigmawg.rher[clf$prop.rher    == 0]   <- 1
+clf$sigmawg.smelt[clf$prop.smelt  == 0]   <- 1
 clf$sigmawg.other[clf$prop.other  == 0]   <- 1
 
 # Add sample type and adjusted to clf, for combination with seine data and for
@@ -3529,7 +3561,7 @@ source(here("Code/calculate_haul_length_frequency.R"))
 acoustic.prop.indiv <- clf %>%
   filter(!is.na(CPS.wg), CPS.wg > 0) %>% 
   select(cluster, lat, long, prop.anch, prop.jack, prop.her,
-         prop.mack, prop.sar, prop.rher, prop.other, sample.type) %>% 
+         prop.mack, prop.sar, prop.rher, prop.smelt, prop.other, sample.type) %>% 
   replace(. == 0, 0.0000001) %>% 
   project_df(to = crs.proj) %>% 
   mutate(pie.radius = pie.radius)
@@ -3539,7 +3571,7 @@ acoustic.prop.wg <- clf %>%
   select(cluster, lat, long, prop.anch = prop.anch.wg, prop.jack = prop.jack.wg, 
          prop.her = prop.her.wg, prop.mack = prop.mack.wg, 
          prop.sar = prop.sar.wg, prop.rher = prop.rher.wg, 
-         prop.other = prop.other.wg, sample.type) %>% 
+         prop.smelt = prop.smelt.wg, prop.other = prop.other.wg, sample.type) %>% 
   replace(. == 0, 0.0000001) %>% 
   project_df(to = crs.proj) %>% 
   mutate(pie.radius = pie.radius)
@@ -3565,7 +3597,7 @@ if (save.figs) {
     geom_point(data = cluster.zero, aes(X, Y),
                size = 3, shape = 21, fill = 'black', colour = 'white') +
     # Configure pie outline colors
-    scale_colour_manual(name = "Sample type", 
+    scale_colour_manual(name = "Sample type",
                         labels = c("Purse seine", "Trawl"),
                         values = c("Seine" = seine.color, "Trawl" = trawl.color),
                         guide = "none") +
@@ -3742,7 +3774,8 @@ for (i in unique(lengths$scientificName)) {
     # Length inputs are native lengths (i.e., SL for sardine and anchovy, FL for herring and mackerels)
     if (i %in% c("Sardinops sagax", "Engraulis mordax")) {
       f <- hist(lengths.sub$standardLength_mm/10, breaks = lf.breaks, plot = FALSE, right = FALSE)$density      
-    } else if (i %in% c("Scomber japonicus", "Trachurus symmetricus", "Clupea pallasii", "Etrumeus acuminatus")) {
+    } else if (i %in% c("Scomber japonicus", "Trachurus symmetricus", "Clupea pallasii", 
+                        "Etrumeus acuminatus", "Allosmerus elongatus")) {
       f <- hist(lengths.sub$forkLength_mm/10, breaks = lf.breaks, plot = FALSE, right = FALSE)$density        
     }
     # Create a vector of size class
@@ -3784,12 +3817,14 @@ for (i in unique(lengths$scientificName)) {
   lf.final <- bind_rows(lf.final, lf.df)
   
   # Reshape data frame by cluster for adding to clf
-  lf.table <- pivot_wider(lf.df, id_cols = cluster, names_from = lf.labels, values_from = counts, values_fn = sum) %>% 
+  lf.table <- pivot_wider(lf.df, id_cols = cluster, names_from = lf.labels, 
+                          values_from = counts, values_fn = sum) %>% 
     rowwise(cluster) %>%
     mutate('(all)' = sum(c_across(all_of(lf.labels)))) %>% 
     arrange(cluster)
   
-  lf.table.h <- pivot_wider(lf.df, id_cols = haul, names_from = lf.labels, values_from = counts, values_fn = sum) %>% 
+  lf.table.h <- pivot_wider(lf.df, id_cols = haul, names_from = lf.labels, 
+                            values_from = counts, values_fn = sum) %>% 
     rowwise(haul) %>%
     mutate('(all)' = sum(c_across(all_of(lf.labels)))) %>% 
     arrange(haul)
@@ -3924,12 +3959,14 @@ nasc.prop.all <- nasc %>%
          `Trachurus symmetricus` = cps.nasc*prop.jack,
          `Scomber japonicus`     = cps.nasc*prop.mack,
          `Clupea pallasii`       = cps.nasc*prop.her,
-         `Etrumeus acuminatus`   = cps.nasc*prop.rher) # %>% project_df(to = crs.proj)
+         `Etrumeus acuminatus`   = cps.nasc*prop.rher,
+         `Allosmerus elongatus`  = cps.nasc*prop.smelt) # %>% project_df(to = crs.proj)
 
 # Prepare nasc.prop.all for facet plotting
 nasc.prop.spp <- nasc.prop.all %>% 
   select(X, Y, `Engraulis mordax`, `Sardinops sagax`, `Trachurus symmetricus`,
-         `Scomber japonicus`, `Clupea pallasii`, `Etrumeus acuminatus`) %>% 
+         `Scomber japonicus`, `Clupea pallasii`, `Etrumeus acuminatus`, 
+         `Allosmerus elongatus`) %>% 
   gather(scientificName, nasc, -X, -Y)
 
 if (save.figs) {
@@ -3973,19 +4010,21 @@ For each species, biomass density is summarized by transect, and is one criteria
 # Calculate biomass density for each species (units = tons/nmi^2)
 nasc <- nasc %>% 
   mutate( 
-    anch.dens = cps.nasc*prop.anch / (4*pi*sigmawg.anch) / 1000,
-    her.dens  = cps.nasc*prop.her  / (4*pi*sigmawg.her)  / 1000,
-    jack.dens = cps.nasc*prop.jack / (4*pi*sigmawg.jack) / 1000,
-    mack.dens = cps.nasc*prop.mack / (4*pi*sigmawg.mack) / 1000,
-    sar.dens  = cps.nasc*prop.sar  / (4*pi*sigmawg.sar)  / 1000,
-    rher.dens = cps.nasc*prop.rher / (4*pi*sigmawg.rher) / 1000)
+    anch.dens  = cps.nasc*prop.anch  / (4*pi*sigmawg.anch)  / 1000,
+    her.dens   = cps.nasc*prop.her   / (4*pi*sigmawg.her)   / 1000,
+    jack.dens  = cps.nasc*prop.jack  / (4*pi*sigmawg.jack)  / 1000,
+    mack.dens  = cps.nasc*prop.mack  / (4*pi*sigmawg.mack)  / 1000,
+    sar.dens   = cps.nasc*prop.sar   / (4*pi*sigmawg.sar)   / 1000,
+    rher.dens  = cps.nasc*prop.rher  / (4*pi*sigmawg.rher)  / 1000,
+    smelt.dens = cps.nasc*prop.smelt / (4*pi*sigmawg.smelt) / 1000)
 
 # Add other.dens?
 
 # Format for plotting
 nasc.density <- nasc %>%
   select(transect, transect.orig, int, lat, long, 
-         anch.dens, her.dens, jack.dens, mack.dens, sar.dens, rher.dens) %>% 
+         anch.dens, her.dens, jack.dens, mack.dens, 
+         sar.dens, rher.dens, smelt.dens) %>% 
   # When transects have multiple sections (e.g., 041-1, 041-2), interval is not unique
   # So create a int.key for computing density along unique intervals for plotting
   mutate(int.key = paste(transect.orig, int)) %>% 
@@ -3999,7 +4038,8 @@ nasc.density <- nasc %>%
     `Trachurus symmetricus` = mean(jack.dens),
     `Scomber japonicus`     = mean(mack.dens),
     `Sardinops sagax`       = mean(sar.dens),
-    `Etrumeus acuminatus`   = mean(rher.dens)) %>% 
+    `Etrumeus acuminatus`   = mean(rher.dens),
+    `Allosmerus elongatus`  = mean(smelt.dens)) %>% 
   gather(scientificName, density, -transect, -int.key, -lat, -long) %>% 
   mutate(bin       = cut(density, dens.breaks, include.lowest = TRUE),
          bin.level = as.numeric(bin))
@@ -4035,12 +4075,13 @@ pos.clusters <- n.summ.haul %>%
     scientificName == "Sardinops sagax"  & lat >= stock.break.sar  ~ "Northern",
     scientificName == "Sardinops sagax"  & lat <  stock.break.sar  ~ "Southern",
     scientificName %in% c("Clupea pallasii","Scomber japonicus",
-                          "Trachurus symmetricus", "Etrumeus acuminatus") ~ "All"))
+                          "Trachurus symmetricus", "Etrumeus acuminatus",
+                          "Allosmerus elongatus") ~ "All"))
 
 # ggplot(pos.clusters, aes(long, lat, label = cluster, colour = stock)) + geom_point() + coord_map() + facet_wrap(~scientificName)
 ```  
 
-## Examine distances between acoustic intervals and positve trawl clusters 
+## Examine distances between acoustic intervals and positive trawl clusters 
 
 (ref:frequency-by-cluster-distance) Frequency (top) and cumulative density (bottom) of positive 100 m-long acoustic intervals (i.e., intervals with CPS backscatter present) versus distance to the nearest positive trawl cluster.
 
@@ -4049,14 +4090,15 @@ pos.clusters <- n.summ.haul %>%
 # Compute distance between NASC intervals and positive trawl clusters
 nasc.clust.hist <- nasc %>% 
   select(cluster.distance, anch.dens, her.dens, 
-         jack.dens, mack.dens, sar.dens, rher.dens) %>% 
+         jack.dens, mack.dens, sar.dens, rher.dens, smelt.dens) %>% 
   rename(     
     `Engraulis mordax`      = anch.dens,
     `Clupea pallasii`       = her.dens,
     `Trachurus symmetricus` = jack.dens,
     `Scomber japonicus`     = mack.dens,
     `Sardinops sagax`       = sar.dens,
-    `Etrumeus acuminatus`   = rher.dens,) %>% 
+    `Etrumeus acuminatus`   = rher.dens,
+    `Allosmerus elongatus`  = smelt.dens) %>% 
   gather(species, density, -cluster.distance)
 
 # Export nasc cluster histogram data
@@ -4187,7 +4229,7 @@ tx.mid <- nasc %>%
                                                 "")))
 
 # Create a data frame for results
-rm(tx.nn)
+if (exists("tx.nn")) rm(tx.nn)
 
 # Compute distance to nearest transect
 ## Must be improved for variably spaced transects
@@ -4219,9 +4261,38 @@ for (i in unique(tx.mid$transect)) {
 tx.nn <- st_set_geometry(tx.nn, NULL)
 
 # Add transect number and computed spacing 
-tx.sampled <- transects.sf %>% 
-  filter(Type == "Compulsory", Transect %in% tx.mid$transect.orig) %>%
-  left_join(select(tx.nn, Transect = transect.orig, transect, min.dist)) 
+# Get easternmost nasc interval
+stratum.tx.i <- nasc %>% 
+  group_by(transect) %>% 
+  summarise(
+    lat  = lat[which.max(long)],
+    long = max(long)) %>% 
+  st_as_sf(coords = c("long","lat"), crs = crs.geog)
+
+# Get westernmost nasc interval
+stratum.tx.o <- nasc %>% 
+  group_by(transect) %>% 
+  summarise(
+    lat  = lat[which.min(long)],
+    long = min(long)) %>% 
+  st_as_sf(coords = c("long","lat"), crs = crs.geog)
+
+# Combine waypoints and create sampled transects
+stratum.transects <- stratum.tx.i %>% 
+  bind_rows(stratum.tx.o) %>% 
+  group_by(transect) %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("LINESTRING") %>% 
+  ungroup() %>% 
+  mutate(distance = round(as.numeric(st_length(.))/1852,1)) %>% 
+  mutate(Type = "Compulsory")
+
+# mapview(stratum.transects, zcol = "transect") + mapview(tx.mid)
+
+# Create sampled transects sf object
+tx.sampled <- stratum.transects %>% 
+  # filter(Type == "Compulsory", Transect %in% tx.mid$transect.orig) %>%
+  left_join(select(tx.nn, transect, min.dist)) 
 
 if (exists("tx.spacing.manual")) {
   tx.sampled <- tx.sampled %>% 
@@ -4278,7 +4349,7 @@ for (i in unique(tx.sampled$Type)) {
       # Add attributes
       extended.line <- extended.line %>% 
         mutate(Type      = tx.sub$Type,
-               Region    = tx.sub$Region,
+               # Region    = tx.sub$Region,
                transect  = tx.sub$transect,
                min.dist  = tx.sub$min.dist,
                buff.dist = tx.sub$buff.dist)
@@ -4572,7 +4643,7 @@ View results of strata definition algorithm compared to transect spacing, biomas
 landmarks <- data.frame(
   name = c("U.S.-Mexico", "Pt. Conception", "Cape Mendocino", "Cape Flattery"),
   lat.start = c(32.529, 34.46, 40.44, 48.490),
-  y = rep(0,4)) %>% 
+  y = rep(0, 4)) %>% 
   filter(lat.start > min(nasc.density$lat),
          lat.start < max(nasc.density$lat))
 
@@ -5083,7 +5154,8 @@ for (i in unique(strata.final$scientificName)) {
       i == "Sardinops sagax"  & lat >= stock.break.sar  ~ "Northern",
       i == "Sardinops sagax"  & lat <  stock.break.sar  ~ "Southern",
       i %in% c("Clupea pallasii","Scomber japonicus",
-               "Trachurus symmetricus","Etrumeus acuminatus") ~ "All"),
+               "Trachurus symmetricus","Etrumeus acuminatus",
+               "Allosmerus elongatus") ~ "All"),
       scientificName = i) %>% 
     select(transect, stock, scientificName) %>% 
     distinct()
@@ -6801,8 +6873,8 @@ if (extrapolate.biomass) {
       survey.summ.temp <- nasc.nse %>% 
         group_by(stratum, stock) %>% 
         summarise(
-          nTransects     = n_distinct(transect),
-          Distance       = length(Interval)*100/1852) %>% 
+          nTransects = n_distinct(transect),
+          Distance   = length(Interval)*100/1852) %>% 
         mutate(Species = i) %>% 
         left_join(stratum.cluster.spp) %>% 
         rename(Stratum = stratum)
@@ -7590,6 +7662,9 @@ for (i in unique(strata.final$scientificName)) {
   } else if (i == "Etrumeus acuminatus") {
     nasc.temp <- nasc.temp %>% 
       mutate(num.abund = (cps.nasc*prop.rher)/(4*pi*sigmaindiv.rher))
+  } else if (i == "Allosmerus elongatus") {
+    nasc.temp <- nasc.temp %>% 
+      mutate(num.abund = (cps.nasc*prop.smelt)/(4*pi*sigmaindiv.smelt))
   }
   
   # % contribution per stratum is the sum(numeric density/interval)/sum(numeric density/stratum)
@@ -9202,14 +9277,166 @@ if ("Etrumeus acuminatus" %in% unique(abund.summ$Species)) {
 }
 ```
 
+## Results for whitebait smelt (_Allosmerus elongatus_)
+#### Biomass estimates
+
+(ref:biomass-smelt) Biomass estimates (metric tons, t) and their precisions (upper and lower 95% confidence intervals, CI~95%~; and coefficients of variation, CVs) for Whitebait Smelt (_Allosmerus elongatus_) in the core and nearshore survey regions. Stratum areas are nmi^2^.
+
+```{r biomass-smelt}
+be.table.sub.all <- be.table.summ %>% 
+  filter(Name == "Allosmerus elongatus") %>% 
+  mutate(Region = "All")
+
+be.table.sub <- be.table %>% 
+  filter(Name == "Allosmerus elongatus") %>% 
+  mutate(Region = "Core") 
+
+if (exists("be.table.ns")) {
+  be.table.sub.ns <- be.table.ns %>%
+    filter(Name == "Allosmerus elongatus") %>% 
+    mutate(Region = "Nearshore")
+  
+  be.table.sub <- be.table %>% 
+    filter(Name == "Allosmerus elongatus") %>% 
+    mutate(Region = "Core") %>% 
+    bind_rows(be.table.sub.ns) %>% 
+    bind_rows(be.table.sub.all) %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+} else {
+  be.table.sub <- be.table %>% 
+    filter(Name == "Allosmerus elongatus") %>% 
+    mutate(Region = "Core") %>% 
+    ungroup() %>% 
+    select(Region, everything(), -Name, -Stock)
+}
+
+# Write results to CSV for stock assessors
+be.table.sub %>% 
+  rename("point_estimate" = "$\\hat{B}$",
+         "ci_lower" = "CI$_{L,95\\%}$",
+         "ci_upper" =	"CI$_{U,95\\%}$") %>%
+  write_csv(file = here("Output/biomass_final_Allosmerus elongatus_All.csv"),
+            na = "")
+
+if (nrow(be.table.sub) != 0) {
+  if (doc.type == "docx") {
+    regulartable(be.table.sub) %>% 
+      merge_v(j = c("Region")) %>%
+      add_header(Region  = "",
+                 # Stock    = "",
+                 Number   = "Stratum", Area = "Stratum", Transects = "Stratum", Distance = "Stratum",
+                 Clusters = "Trawl", Individuals = "Trawl",
+                 "$\\hat{B}$" = "Biomass", "CI$_{L,95\\%}$" = "Biomass", "CI$_{U,95\\%}$" = "Biomass",
+                 CV = "Biomass") %>% 
+      merge_h(part = "header") %>% 
+      align(align = "center",part = "header") %>% 
+      autofit()
+  } else {
+    kable(be.table.sub, format = knitr.format, booktabs = FALSE, escape = FALSE,
+          align           = c(rep("l", 1), rep("r",ncol(be.table.sub) - 2)),
+          digits          = c(0),
+          format.args     = list(big.mark = ","),
+          caption = '(ref:biomass-smelt)') %>% 
+      kable_styling(latex_options = c("hold_position","scale_down"),
+                    position = "center",
+                    font_size = 8) %>% 
+      row_spec(nrow(be.table.sub), bold = T) %>% 
+      collapse_rows(columns = 1, valign = "top") %>%
+      add_header_above(c("Stratum" = 5, "Trawl" = 2, "Biomass" = 4))
+  }
+} else {
+  print("No results for this species/subpopulation.")
+}
+```  
+
+#### Biomass density
+
+(ref:biom-dens-smelt) Biomass densities of whitebait smelt (_Allosmerus elongatus_), per strata, throughout the survey region. The blue numbers represent the locations of trawl clusters with at least one herring. The gray line represents the vessel track.
+
+```{r biom-dens-smelt,fig.cap='(ref:biom-dens-smelt)',out.height='100%',fig.pos='H'}
+if (combine.regions) {
+  if (file.exists(here("Figs/fig_biomass_dens_combo_Allosmerus elongatus-All.png"))) {
+    include_graphics(here("Figs/fig_biomass_dens_combo_Allosmerus elongatus-All.png"))  
+  } else {
+    print("No data for this stock.")
+  }
+} else {
+  if (file.exists(here("Figs/fig_biomass_dens_Allosmerus elongatus-All.png"))) {
+    include_graphics(here("Figs/fig_biomass_dens_Allosmerus elongatus-All.png"))  
+  } else {
+    print("No data for this stock.")
+  }
+}
+```
+
+#### Length-disaggregated abundance
+
+(ref:l-disagg-smelt) Abundance versus standard length (upper panel) and biomass (kg) versus standard length (lower panel) for whitebait smelt (_Allosmerus elongatus_) in the survey area.
+
+```{r l-disagg-smelt,fig.cap='(ref:l-disagg-smelt)',out.height='100%',fig.pos='H'}
+# Insert disaggregated abundance plots for smelt
+if (combine.regions) {
+  if (file.exists(here("Figs/fig_L_disagg_combo_Allosmerus elongatus-All.png"))) {
+    include_graphics(here("Figs/fig_L_disagg_combo_Allosmerus elongatus-All.png"))  
+  } else {
+    print("No data for this stock.")
+  } 
+} else {
+  if (file.exists(here("Figs/fig_L_disagg_Allosmerus elongatus-All.png"))) {
+    include_graphics(here("Figs/fig_L_disagg_Allosmerus elongatus-All.png"))  
+  } else {
+    print("No data for this stock.")
+  }
+}
+```
+
+#### Abundance-by-length table
+
+(ref:l-freq-summ-smelt) Abundance versus standard length (cm) for for whitebait smelt (_Allosmerus elongatus_).
+
+```{r l-freq-summ-smelt}
+# Print table for round herring
+if ("Allosmerus elongatus" %in% unique(abund.summ$Species)) {
+  abund.summ.table <- abund.summ %>% 
+    filter(Species == "Allosmerus elongatus", Stock == "All") %>% 
+    select(Stock, SL, abundance) %>% 
+    rename(Abundance = abundance,
+           '$L_S$' = SL) %>%
+    ungroup()
+  
+  if (nrow(abund.summ.table) != 0) {
+    if (doc.type == "docx") {
+      regulartable(abund.summ.table) %>% 
+        align(align = "center",part = "header") %>% 
+        # set_formatter(SL = function(x) sprintf("%.0f", x),
+        #               Abundance = function(x) sprintf("%.0f", x)) %>% 
+        autofit()
+    } else {
+      kable(abund.summ.table, booktabs = FALSE,escape = FALSE,longtable = T,
+            digits = c(0),
+            format.args = list(big.mark = ","),
+            caption = '(ref:l-freq-summ-smelt)') %>%
+        kable_styling(latex_options = c("striped","repeat_headers")) %>%
+        column_spec(1, italic = T) %>% 
+        collapse_rows(columns = c(1:2)) %>%
+        row_spec(0, align = c("c"))    
+    }
+  }
+} else {
+  print("No whitebait smelt present.")
+}
+```
+
+
 #### Cluster-specific length distributions
 
-(ref:rlf-rher) Standard length frequency distributions of round herring (_Etrumeus acuminatus_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum and across all strata (i.e., for the entire survey).
+(ref:rlf-smelt) Standard length frequency distributions of whitebait smelt (_Allosmerus elongatus_) per nighttime trawl cluster, annotated with the number of individuals caught and their percentage contributions to the abundance in each stratum and across all strata (i.e., for the entire survey).
 
-```{r rlf-rher,out.height='100%',fig.pos='H'}
+```{r rlf-smelt,out.height='100%',fig.pos='H'}
 # Insert relative length frequency plot for round herring
-if (file.exists(here("Figs/fig_cluster_relative_length_frequency_Etrumeus acuminatus.png"))) {
-  include_graphics(here("Figs/fig_cluster_relative_length_frequency_Etrumeus acuminatus.png"))  
+if (file.exists(here("Figs/fig_cluster_relative_length_frequency_Allosmerus elongatus.png"))) {
+  include_graphics(here("Figs/fig_cluster_relative_length_frequency_Allosmerus elongatus.png"))  
 } else {
   print("No data for this stock.")
 }
@@ -9508,7 +9735,8 @@ if (do.imap) {
                         "CUFES Egg Density-Squid", "CUFES (Negative)",
                         "Biomass (Anchovy)", "Biomass (Sardine)",
                         "Biomass (J. mackerel)", "Biomass (P. mackerel)", 
-                        "Biomass (Herring)", "Biomass (R. herring)"),
+                        "Biomass (P. herring)", "Biomass (R. herring)", 
+                        "Biomass (Smelt)"),
       options = layersControlOptions(collapsed = FALSE)) %>% 
     fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
               imap.bounds$range.lon[2], imap.bounds$range.lat[2])
@@ -9559,17 +9787,17 @@ if (do.imap) {
                   weight = 2, color = "#000414", fillColor = ~cpsPal(scientificName),
                   # weight = 2, color =  ~cpsPal(scientificName), fillColor = ~cpsPal(scientificName),
                   fillOpacity = 0.25,
-                  group = "Biomass (Herring)") %>% 
+                  group = "Biomass (P. herring)") %>% 
       addCircleMarkers(data = filter(nasc.density.sf, scientificName == "Clupea pallasii"),
                        radius = ~bin.level*2, color = "#000414", stroke = TRUE, weight = 1,
                        fillOpacity = 0.75, fillColor =  ~densPal(bin.level),
                        label = ~label, popup = ~popup, 
-                       group = "Biomass (Herring)") %>% 
+                       group = "Biomass (P. herring)") %>% 
       addLegend("bottomleft", colors = dens.colors,
                 values = sort(unique(nasc.density.sf$bin.level)),
                 labels = dens.labels,
                 title = "Biomass Density (Herring) <br/> (t nmi<sup>-2</sup>)",
-                opacity = 1, group = "Biomass (Herring)") 
+                opacity = 1, group = "Biomass (P. herring)") 
   
   if(nrow(filter(strata.primary.sub, scientificName == "Engraulis mordax")) > 0)
     i.map <- i.map %>%
@@ -9663,6 +9891,25 @@ if (do.imap) {
                 opacity = 1,
                 group = "Biomass (R. herring)")
   
+  if(nrow(filter(strata.primary.sub, scientificName == "Allosmerus elongatus")) > 0)
+    i.map <- i.map %>%
+      addPolygons(data = filter(strata.primary.sub, scientificName == "Allosmerus elongatus"),
+                  weight = 2, color = "#000414", fillColor = ~cpsPal(scientificName),
+                  # weight = 2, color =  ~cpsPal(scientificName), fillColor = ~cpsPal(scientificName),
+                  fillOpacity = 0.25,
+                  group = "Biomass (Smelt)") %>%
+      addCircleMarkers(data = filter(nasc.density.sf, scientificName == "Allosmerus elongatus"),
+                       radius = ~bin.level*2, color = "#000414", stroke = TRUE, weight = 1,
+                       label = ~label, popup = ~popup,
+                       fillOpacity = 0.75, fillColor =  ~densPal(bin.level),
+                       group = "Biomass (Smelt)") %>%
+      addLegend("bottomleft", colors = dens.colors,
+                values = sort(unique(nasc.density.sf$bin.level)),
+                labels = dens.labels,
+                title = "Biomass Density (Round Herring) <br/> (t nmi<sup>-2</sup>)",
+                opacity = 1,
+                group = "Biomass (Smelt)")
+  
   # Add nearshore biomass polygons
   if (exists("strata.nearshore")){
   if(nrow(filter(strata.nearshore.sub, scientificName == "Clupea pallasii")) > 0)
@@ -9670,17 +9917,17 @@ if (do.imap) {
       addPolygons(data = filter(strata.nearshore.sub, scientificName == "Clupea pallasii"), 
                   weight = 2, color = "#000414", fillColor = ~cpsPal(scientificName),
                   # weight = 2, color = ~cpsPal(scientificName), fillColor = ~cpsPal(scientificName),
-                  fillOpacity = 0.5, group = "Biomass (Herring)") %>% 
+                  fillOpacity = 0.5, group = "Biomass (P. herring)") %>% 
       addCircleMarkers(data = filter(nasc.density.ns.sf, scientificName == "Clupea pallasii"),
                        radius = ~bin.level*2, color = "white", stroke = TRUE, weight = 1,
                        fillOpacity = 0.75, fillColor =  ~densPal(bin.level),
                        label = ~label, popup = ~popup, 
-                       group = "Biomass (Herring)") %>% 
+                       group = "Biomass (P. herring)") %>% 
       addLegend("bottomleft", colors = dens.colors,
                 values = sort(unique(nasc.density.ns.sf$bin.level)),
                 labels = dens.labels,
                 title = "Biomass Density (Herring) <br/> (t nmi<sup>-2</sup>)",
-                opacity = 1, group = "Biomass (Herring)")
+                opacity = 1, group = "Biomass (P. herring)")
   
   if(nrow(filter(strata.nearshore.sub, scientificName == "Engraulis mordax")) > 0)
     i.map <- i.map %>% 
@@ -9750,6 +9997,40 @@ if (do.imap) {
                 labels = dens.labels,
                 title = "Biomass Density (J. mackerel) <br/> (t nmi<sup>-2</sup>)",
                 opacity = 1, group = "Biomass (J. mackerel)")
+  
+  if(nrow(filter(strata.nearshore.sub, scientificName == "Etrumeus acuminatus")) > 0)
+    i.map <- i.map %>% 
+      addPolygons(data = filter(strata.nearshore.sub, scientificName == "Etrumeus acuminatus"), 
+                  weight = 2, color = "#000414", fillColor = ~cpsPal(scientificName),
+                  # weight = 2, color = ~cpsPal(scientificName), fillColor = ~cpsPal(scientificName),
+                  fillOpacity = 0.5, group = "Biomass (R. herring)")  %>% 
+      addCircleMarkers(data = filter(nasc.density.ns.sf, scientificName == "Etrumeus acuminatus"),
+                       radius = ~bin.level*2, color = "white", stroke = TRUE, weight = 1,
+                       fillOpacity = 0.75, fillColor =  ~densPal(bin.level),
+                       label = ~label, popup = ~popup, 
+                       group = "Biomass (R. herring)") %>% 
+      addLegend("bottomleft", colors = dens.colors,
+                values = sort(unique(nasc.density.ns.sf$bin.level)),
+                labels = dens.labels,
+                title = "Biomass Density (R. herring) <br/> (t nmi<sup>-2</sup>)",
+                opacity = 1, group = "Biomass (R. herring)")
+  
+  if(nrow(filter(strata.nearshore.sub, scientificName == "Allosmerus elongatus")) > 0)
+    i.map <- i.map %>% 
+      addPolygons(data = filter(strata.nearshore.sub, scientificName == "Allosmerus elongatus"), 
+                  weight = 2, color = "#000414", fillColor = ~cpsPal(scientificName),
+                  # weight = 2, color = ~cpsPal(scientificName), fillColor = ~cpsPal(scientificName),
+                  fillOpacity = 0.5, group = "Biomass (Smelt)")  %>% 
+      addCircleMarkers(data = filter(nasc.density.ns.sf, scientificName == "Allosmerus elongatus"),
+                       radius = ~bin.level*2, color = "white", stroke = TRUE, weight = 1,
+                       fillOpacity = 0.75, fillColor =  ~densPal(bin.level),
+                       label = ~label, popup = ~popup, 
+                       group = "Biomass (Smelt)") %>% 
+      addLegend("bottomleft", colors = dens.colors,
+                values = sort(unique(nasc.density.ns.sf$bin.level)),
+                labels = dens.labels,
+                title = "Biomass Density (Smelt) <br/> (t nmi<sup>-2</sup>)",
+                opacity = 1, group = "Biomass (Smelt)")
   }
   
   # Add CUFES data
@@ -9795,7 +10076,6 @@ if (do.imap) {
                          fillOpacity = 0.75, fillColor =  pac.mack.color, label = ~label,
                          popup = ~popup, group = "CUFES Egg Density-Other")  
   }
-  
   
   # Add backscatter data
   ## Core area
@@ -9890,7 +10170,8 @@ if (do.imap) {
       "Trawl Cluster Polygons",
       "Biomass (Anchovy)", "Biomass (Sardine)",
       "Biomass (J. mackerel)", "Biomass (P. mackerel)", 
-      "Biomass (Herring)", "Biomass (R. herring)", "CTD Casts"))
+      "Biomass (P. herring)", "Biomass (R. herring)",
+      "Biomass (Smelt)", "CTD Casts"))
   
   # Display map
   i.map

@@ -317,7 +317,7 @@ pie.cols.prop <- c("Engraulis mordax" = "prop.anch", "Trachurus symmetricus" = "
                    "Atherinopsis californiensis" = "prop.jsmelt", "Clupea pallasii" = "prop.her", 
                    "Scomber japonicus" = "prop.mack", "Etrumeus acuminatus" = "prop.rher", 
                    "Sardinops sagax" = "prop.sar", "Sardinops melanosticta" = "prop.sar.jap",
-                   "Alllosmerus elongatus" = "prop.smelt")
+                   "Allosmerus elongatus" = "prop.smelt")
 
 # Species labels
 pie.labs <- c("Engraulis mordax" = "Anchovy", "Trachurus symmetricus" = "J. Mackerel", 
@@ -739,8 +739,9 @@ length.min <- 1 # Minimum length bin for length frequencies
 # (max. anchovy = 20 cm, sardine & herrings = 30 cm, Pac. mack = 40, and jack mack. = 60)
 length.max <- data.frame("species" = c("Clupea pallasii", "Engraulis mordax",
                                        "Sardinops sagax", "Scomber japonicus",
-                                       "Trachurus symmetricus", "Etrumeus acuminatus"),
-                         "sl" = c(30, 20, 30, 50, 60, 30))
+                                       "Trachurus symmetricus", "Etrumeus acuminatus",
+                                       "Allosmerus elongatus"),
+                         "sl" = c(30, 20, 30, 50, 60, 30, 30))
 
 # Species to generate point estimates
 point.est.spp          <- c("Clupea pallasii","Engraulis mordax","Sardinops sagax",
@@ -864,7 +865,7 @@ if ("SD" %in% nasc.vessels) {
 }
 
 # Stock boundaries --------------------------------------------------------
-stock.break.anch <- c("Cape Mendocino" = 40.80)  # Latitude of Cape Mendocino
+stock.break.anch <- c("Cape Mendocino" = 40.96)  # Latitude of Cape Mendocino; 40.80 is actual Cape Mendocino
 stock.break.sar  <- c("Pt. Conception" = 34.55) # Latitude of ~Pt. Conception, base off 2023 habitat map
 
 # Transects used to define stock boundaries (primary or other)

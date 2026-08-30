@@ -124,7 +124,8 @@ Options in this section of the settings file control the execution of the variou
 ```{r user-controls, echo = TRUE}
 # Processing controls (T/F) ---------------------------------------------------
 ### Usually TRUE
-get.db            <- ifelse(Sys.info()['nodename'] %in% c("SWC-KSTIERHOFF-"), F, T) 
+get.db            <- ifelse(Sys.info()['nodename'] %in% 
+                              c("SWC-KSTIERHOFF-"), F, T) 
 get.nav           <- T # Download primary vessel nav data from ERDDAP
 get.nav.sd        <- F # Download Saildrone nav data from ERDDAP
 get.nav.sh        <- F # Download NOAA Ship nav data
@@ -133,13 +134,13 @@ process.csv       <- T # Process Echoview files
 save.figs         <- T # Draw new figures and maps
 download.hab      <- F # Download habitat map
 process.scs       <- F # Process SCS data
-plot.time.series  <- F # Plot biomass time series 
+plot.time.series  <- T # Plot biomass time series 
 get.db.ts         <- T # Get biomass time series data from database
 do.bootstrap      <- T # Generate bootstrap estimates
 do.imap           <- T # Create interactive Leaflet map
 overwrite.files   <- T # Overwrite files (TRUE if files have changed)
 overwrite.csv     <- T # Overwrite CSV files (TRUE if files have changed)
-do.ggiraph        <- F # Use ggiraph interactive figures instead of ggplot
+do.ggiraph        <- T # Use ggiraph interactive figures instead of ggplot
 get.bathy         <- T # Extract ETOPO1 bathymetry data in the survey footprint
 
 ### Usually FALSE

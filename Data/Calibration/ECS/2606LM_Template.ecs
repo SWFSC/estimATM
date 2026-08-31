@@ -1,0 +1,82 @@
+﻿#========================================================================================#
+#ECHOVIEW CALIBRATION SUPPLEMENT (.ECS) FILE (Simrad EK80, ES80, WBAT, EKAuto or Kongsberg EA640)#
+#                                 6/20/2026 17:53:59.2360                                #
+#========================================================================================#
+#       +----------+   +-----------+   +----------+   +-----------+   +----------+       #
+#       | Default  |-->| Data File |-->| Fileset  |-->| SourceCal |-->| LocalCal |       #
+#       | Settings |   | Settings  |   | Settings |   | Settings  |   | Settings |       #
+#       +----------+   +-----------+   +----------+   +-----------+   +----------+       #
+# - Settings to the right override those to their left.                                  #
+# - See the Help file page "About calibration".                                          #
+#========================================================================================#
+
+Version 1.00
+
+
+#========================================================================================#
+#                                    FILESET SETTINGS                                    #
+#========================================================================================#
+
+CtdDepthProfile =  1;2;3;4;5;6;7;8;9;10;11;12;13;14;15 # (meters)
+SoundSpeedProfile =  1529.68;1529.70;1529.57;1529.34;1529.24;1529.26;1529.28;1528.53;1528.55;1528.56;1528.32;1528.49;1528.50;1528.66;1528.68 # Sound speed (m/s) at corresponding CTD depths
+Temperature = 15.2 	# Average temperature (C) between transducers and sphere
+Salinity = 31.8 		# Average salinity (ppt) between transducers and sphere
+AbsorptionDepth = 6 	# Average depth (m) between transducers and sphere
+SoundSpeed = 1503.72 	# Average sound speed (m/s) between transducers and sphere
+
+#========================================================================================#
+#                                   SOURCECAL SETTINGS                                   #
+#========================================================================================#
+
+SourceCal T1
+	MajorAxis3dbBeamAngle = 6.52
+	MajorAxisAngleOffset = 0.00
+	MinorAxis3dbBeamAngle = 6.43
+	MinorAxisAngleOffset = -0.09
+	SaCorrectionFactor = -0.0281
+	TransducerGain = 26.5841
+	TwoWayBeamAngle = -20.283114
+    # Frequency = 38.00 # (kilohertz) [0.01..10000.00]
+    # PulseDuration = 1.024 # (milliseconds) [0.001..200.000]
+    # TransmittedPower = 2000.00000 # (watts) [0.10000..30000.00000]
+
+SourceCal T2
+	MajorAxis3dbBeamAngle = 6.77
+	MajorAxisAngleOffset = 0.03
+	MinorAxis3dbBeamAngle = 6.76
+	MinorAxisAngleOffset = -0.13
+	SaCorrectionFactor = -0.0735
+	TransducerGain = 27.8359
+	TwoWayBeamAngle = -20.395575
+    # Frequency = 70.00 # (kilohertz) [0.01..10000.00]
+    # PulseDuration = 1.024 # (milliseconds) [0.001..200.000]
+    # TransmittedPower = 600.00000 # (watts) [0.10000..30000.00000]
+
+SourceCal T3
+	MajorAxis3dbBeamAngle = 6.69
+	MajorAxisAngleOffset = -0.02
+	MinorAxis3dbBeamAngle = 6.72
+	MinorAxisAngleOffset = -0.04
+	SaCorrectionFactor = -0.0615
+	TransducerGain = 26.5765
+	TwoWayBeamAngle = -20.397329
+    # Frequency = 120.00 # (kilohertz) [0.01..10000.00]
+    # PulseDuration = 1.024 # (milliseconds) [0.001..200.000]
+    # TransmittedPower = 200.00000 # (watts) [0.10000..30000.00000]
+
+SourceCal T4
+	MajorAxis3dbBeamAngle = 6.44
+	MajorAxisAngleOffset = 0.01
+	MinorAxis3dbBeamAngle = 6.58
+	MinorAxisAngleOffset = -0.07
+	SaCorrectionFactor = -0.0491
+	TransducerGain = 26.1928
+	TwoWayBeamAngle = -20.386743
+    # Frequency = 200.00 # (kilohertz) [0.01..10000.00]
+    # PulseDuration = 1.024 # (milliseconds) [0.001..200.000]
+    # TransmittedPower = 90.00000 # (watts) [0.10000..30000.00000]
+
+#========================================================================================#
+#                                    LOCALCAL SETTINGS                                   #
+#========================================================================================#
+

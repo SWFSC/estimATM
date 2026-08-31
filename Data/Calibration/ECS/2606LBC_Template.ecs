@@ -1,0 +1,71 @@
+#========================================================================================#
+#ECHOVIEW CALIBRATION SUPPLEMENT (.ECS) FILE (Simrad EK80, ES80, WBAT, EKAuto or Kongsberg EA640)#
+#                                 6/23/2026 04:52:08.3810                                #
+#========================================================================================#
+#       +----------+   +-----------+   +----------+   +-----------+   +----------+       #
+#       | Default  |-->| Data File |-->| Fileset  |-->| SourceCal |-->| LocalCal |       #
+#       | Settings |   | Settings  |   | Settings |   | Settings  |   | Settings |       #
+#       +----------+   +-----------+   +----------+   +-----------+   +----------+       #
+# - Settings to the right override those to their left.                                  #
+# - See the Help file page "About calibration".                                          #
+#========================================================================================#
+
+Version 1.00
+
+
+#========================================================================================#
+#                                    FILESET SETTINGS                                    #
+#========================================================================================#
+
+CtdDepthProfile =  1;2;3;4;5;6;7;8;9;10;11;12;13 # (meters)
+SoundSpeedProfile =  1523.2;1523.2;1523.2;1523.2;1522.9;1522.6;1522.4;1522.4;1522.3;1522.3;1522.3;1522.3;1522.3 #
+Temperature = 18.0 #
+Salinity = 34.5 #
+AbsorptionDepth = 5 #
+SoundSpeed = 1515.31 #
+
+#========================================================================================#
+#                                   SOURCECAL SETTINGS                                   #
+#========================================================================================#
+
+SourceCal T1
+	MajorAxis3dbBeamAngle = 13.31
+	MajorAxisAngleOffset = -0.02
+	MinorAxis3dbBeamAngle = 13.50
+	MinorAxisAngleOffset = -0.02
+	SaCorrectionFactor = -0.1183
+	TransducerGain = 21.7220
+	TwoWayBeamAngle = -15.6681
+
+SourceCal T2
+	MajorAxis3dbBeamAngle = 6.75
+	MajorAxisAngleOffset = 0.07
+	MinorAxis3dbBeamAngle = 6.65
+	MinorAxisAngleOffset = -0.04
+	SaCorrectionFactor = -0.0878
+	TransducerGain = 27.4210
+	TwoWayBeamAngle = -20.258183
+
+SourceCal T3
+	MajorAxis3dbBeamAngle = 6.62
+	MajorAxisAngleOffset = 0.00
+	MinorAxis3dbBeamAngle = 6.63
+	MinorAxisAngleOffset = -0.06
+	SaCorrectionFactor = -0.0754
+	TransducerGain = 26.4392
+	TwoWayBeamAngle = -20.158183
+
+SourceCal T4
+	MajorAxis3dbBeamAngle = 6.76
+	MajorAxisAngleOffset = -0.05
+	MinorAxis3dbBeamAngle = 6.76
+	MinorAxisAngleOffset = -0.08
+	SaCorrectionFactor = -0.0564
+	TransducerGain = 26.3519
+	TwoWayBeamAngle = -20.087102
+
+
+#========================================================================================#
+#                                    LOCALCAL SETTINGS                                   #
+#========================================================================================#
+

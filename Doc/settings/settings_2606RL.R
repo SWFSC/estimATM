@@ -904,10 +904,10 @@ cufes.threshold.anchovy <-  1   # egg density, eggs per minute
 cufes.threshold.sardine <-  0.3 # egg density, eggs per minute
 
 # # Calibration information ------------------------------------------------
-cal.vessels        <- NA # c("RL","LBC","LM") 
-cal.dir            <- c(RL  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW",
-                        LM  = "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW",
-                        LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS/DATA/EK80/CALIBRATION/RESULTS/Final-CW")
+cal.vessels        <- c("RL","LBC","LM") # c("RL","LBC","LM") 
+cal.dir            <- c(RL  = "G://Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/DATA/EK80/CALIBRATION/ECHOVIEW",
+                        LM  = "G://Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS - Lisa Marie (2606LM)/DATA/EK80/CALIBRATION/Calibration_07232026_KLS/ECHOVIEW/RESULTS",
+                        LBC = "G://Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS - Long Beach Carnage (2606LBC)/DATA/EK80/CALIBRATION/RESULTS")
 # Location of Lasker (or primary vessel) calibration single-target detections (for polar plots)
 single.targets.dir <- c(RL =  "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/EV_PROCESSING/CSV/singleTargets",
                         LM =  "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS/DATA/EK80/CALIBRATION/POST-SURVEY/EV/singleTargets",

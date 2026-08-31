@@ -917,6 +917,7 @@ sphere.TS <- list(RL  = list("18" = -42.41, "38" = -42.40, "70" = -41.64, "120" 
                   LBC = list("38" = -42.41, "70" = -41.62, "120" = -39.74, "200" = -38.84))
 # Named vector of EK80 FM-mode calibration directories
 cal.dir.fm         <- c(RL  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS/Final-FM") 
+
 cal.datetime       <- c(RL = "15 June")    # Date/time of calibration
 cal.plot.date      <- c(RL = "2026-06-15") # Date of the calibration, used to plot cal time series
 cal.window         <- c(RL = 75)           # Number of days around calibration date to look for results

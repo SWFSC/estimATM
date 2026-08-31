@@ -32,15 +32,9 @@ be.db.export <- be.db.export %>%
 # Combine with current survey results
 biomass.ts <- biomass.ts %>% 
   filter(!survey %in% unique(be.db.export$survey)) %>%
-  bind_rows(filter(be.db.export, region %in% estimate.regions))
-
-# # Check results
-# biomass.ts %>%
-#   # filter(survey == "2107RL") %>%
-#   filter(species == "Sardinops sagax") %>%
-#   View()
-# 
-# biomass.ts %>% group_by(species, country) %>% tally()
+  bind_rows(filter(be.db.export, region %in% estimate.regions)) %>% 
+  # Remove unmanaged stocks/species
+  filter(!species %in% c("Allosmerus elongatus", "Etrumeus acuminatus"))
 
 # All sardine biomass estimates, in US waters only
 biomass.ts.sar <- biomass.ts %>% 
@@ -55,9 +49,6 @@ biomass.ts.sar.rm <- biomass.ts %>%
   summarise(biomass.rm = sum(biomass),
             cil.rm = sum(biomass_ci_lower),
             ciu.rm = sum(biomass_ci_upper))
-
-# biomass.ts.sar <- biomass.ts.sar %>% 
-#   left_join(biomass.ts.sar.rm)
 
 # Summarise results across regions
 biomass.ts.var <- biomass.ts %>% 
@@ -169,7 +160,7 @@ save(biomass.ts, biomass.comm.summ, biomass.spp.summ, biomass.ts.sar,
      file = here("Output/biomass_timeseries_final.Rdata"))
 
 # Create plots ------------------------------------------------------------------
-# Create line plot - single
+## Create line plot - single
 biomass.ts.line <- ggplot(filter(biomass.ts, biomass != 0), 
                           aes(x = date_start, y = biomass, 
                               colour = group, shape = group,
@@ -178,22 +169,22 @@ biomass.ts.line <- ggplot(filter(biomass.ts, biomass != 0),
   geom_path() +
   geom_point(size = 2, fill = "white") +
   scale_colour_manual(name = 'Species',
-                    labels = c("Allosmerus elongatus", "Clupea pallasii", 
+                    labels = c("Clupea pallasii", 
                                "Engraulis mordax (Central)", "Engraulis mordax (Northern)",
-                               "Etrumeus acuminatus", "Sardinops sagax (Northern)", 
+                               "Sardinops sagax (Northern)", 
                                "Sardinops sagax (Southern)", "Scomber japonicus", 
                                "Trachurus symmetricus"),
-                    values = c(smelt.color,pac.herring.color, anchovy.color, "#93F09F",
-                               rnd.herring.color, sardine.color, "#FF7256",
+                    values = c(pac.herring.color, anchovy.color, "#93F09F",
+                               sardine.color, "#FF7256",
                                pac.mack.color, jack.mack.color)) +
   scale_shape_manual(name = 'Species',
-                      labels = c("Allosmerus elongatus", "Clupea pallasii", 
+                      labels = c("Clupea pallasii", 
                                  "Engraulis mordax (Central)", "Engraulis mordax (Northern)",
-                                 "Etrumeus acuminatus", "Sardinops sagax (Northern)", 
+                                 "Sardinops sagax (Northern)", 
                                  "Sardinops sagax (Southern)", "Scomber japonicus", 
                                  "Trachurus symmetricus"),
-                      values = c(22, 21, 22, 23,
-                                 21, 22, 23,
+                      values = c(21, 22, 23,
+                                 22, 23,
                                  21, 22)) +
   scale_x_datetime(name = "Year", date_breaks = "2 years", date_labels = "%Y") +
   scale_y_continuous(expression(Biomass~(italic(t))), labels = scales::comma) +
@@ -240,22 +231,22 @@ biomass.ts.line.facet <- ggplot(biomass.ts,
   scale_x_datetime(name = "Year", date_breaks = "2 years", date_labels = "%Y") +
   scale_y_continuous(expression(Biomass~(italic(t))), labels = scales::comma) +
   scale_colour_manual(name = 'Species',
-                      labels = c("Allosmerus elongatus", "Clupea pallasii", 
+                      labels = c("Clupea pallasii", 
                                  "Engraulis mordax (Central)", "Engraulis mordax (Northern)",
-                                 "Etrumeus acuminatus", "Sardinops sagax (Northern)", 
+                                 "Sardinops sagax (Northern)", 
                                  "Sardinops sagax (Southern)", "Scomber japonicus", 
                                  "Trachurus symmetricus"),
-                      values = c(smelt.color, pac.herring.color, anchovy.color, "#93F09F",
-                                 rnd.herring.color, sardine.color, "#FF7256",
+                      values = c(pac.herring.color, anchovy.color, "#93F09F",
+                                 sardine.color, "#FF7256",
                                  pac.mack.color, jack.mack.color)) +
   scale_shape_manual(name = 'Species',
-                     labels = c("Allosmerus elongatus", "Clupea pallasii", 
+                     labels = c("Clupea pallasii", 
                                 "Engraulis mordax (Central)", "Engraulis mordax (Northern)",
-                                "Etrumeus acuminatus", "Sardinops sagax (Northern)", 
+                                "Sardinops sagax (Northern)", 
                                 "Sardinops sagax (Southern)", "Scomber japonicus", 
                                 "Trachurus symmetricus"),
-                     values = c(22, 21, 22, 23,
-                                21, 22, 23,
+                     values = c(21, 22, 23,
+                                22, 23,
                                 21, 22)) +
   theme_bw() +
   theme(axis.text.x        = element_text(angle = 45, vjust = 0.5),
@@ -273,13 +264,13 @@ biomass.ts.bar <- ggplot(biomass.ts,
                          aes(x = date_start, y = biomass, fill = group)) + 
   geom_bar(colour = "black", position = "stack", stat = "identity") +
   scale_fill_manual(name = 'Species',
-                      labels = c("Allosmerus elongatus", "Clupea pallasii", 
+                      labels = c("Clupea pallasii", 
                                  "Engraulis mordax (Central)", "Engraulis mordax (Northern)",
-                                 "Etrumeus acuminatus", "Sardinops sagax (Northern)", 
+                                 "Sardinops sagax (Northern)", 
                                  "Sardinops sagax (Southern)", "Scomber japonicus", 
                                  "Trachurus symmetricus"),
-                      values = c(smelt.color, pac.herring.color, anchovy.color, "#93F09F",
-                                 rnd.herring.color, sardine.color, "#FF7256",
+                      values = c(pac.herring.color, anchovy.color, "#93F09F",
+                                 sardine.color, "#FF7256",
                                  pac.mack.color, jack.mack.color)) +
   scale_x_datetime(name = "Year", date_breaks = "2 years", date_labels = "%Y") +
   scale_y_continuous(expression(Biomass~(italic(t))), labels = scales::comma) +

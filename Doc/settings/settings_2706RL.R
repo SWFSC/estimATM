@@ -135,6 +135,7 @@ survey.twilight        <- "none"          # Sunset type for computing day/night 
 survey.twilight.offset <- 30              # Twilight offset; minutes before sunrise/after sunset
 survey.twilight.remove <- FALSE           # Remove twilight period (T/F)
 daynight.filter        <- c("Day","Night")# A character string including "Day", "Night", or both
+safe.depth.fsv         <- 30              # Shallowest depth (m) sampled by the FSV
 
 # Inport dates for classifying data by cruise leg (if desired) -----------------
 # Use start dates of each leg + end date of last leg
@@ -909,6 +910,7 @@ cal.lon.dd         <- c(RL = -117.15278) # Cal location longitude in decimal deg
 cal.lat            <- dd2decmin(cal.lat.dd)
 cal.lon            <- dd2decmin(cal.lon.dd)
 cal.sphere         <- c(RL = "38.1-mm diameter sphere made from tungsten carbide (WC) with 6% cobalt binder material (WC38.1)") # Cal sphere info
+cal.sphere.fm      <- c(RL = "25-mm WC sphere (WC25)") # Cal sphere info for additional FM calibrations
 cal.sphere.name    <- c(RL = "_Lasker_ sphere #1")
 cal.sphere.z       <- c(RL = 6) # Nominal depth of calibration sphere below the transducer
 cal.imp.anal       <- c(RL = "Agilent 4294A Precision Impedance Analyzer") # Info about impedance analyzer

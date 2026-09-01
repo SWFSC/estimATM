@@ -18,7 +18,7 @@ if (!require("pak")) install.packages("pak")
 pacman::p_load(tidyverse,swfscMisc,lubridate,sp,mapview,RODBC,xts,
                knitr,geosphere,ggrepel,cowplot,sf,leaflet, htmltools,
                odbc,kableExtra,rnaturalearth,shadowtext,here,fs, RSQLite,
-               ggspatial,janitor,DT)
+               ggspatial,janitor,DT,xml2)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pak::pkg_install("SWFSC/atm")
@@ -66,7 +66,6 @@ source(here("Doc/settings", prj.settings))
 get.db     <- F
 get.nav    <- T
 do.spatial <- T
-nav.source <- "ERDDAP" # Navigation data source: ERDDAP or SCS
 save.figs  <- T
 resize.map <- F # Resize map during survey; if T, uses anticipated bounds of survey area
 
@@ -74,7 +73,7 @@ resize.map <- F # Resize map during survey; if T, uses anticipated bounds of sur
 sampling.cufes <- F
 ```
 
-```{r get-nav}
+```{r get-nav, include=FALSE}
 # Source code to get nav data from ERDDAP, RosePoint, or SCS
 if (nav.source == "ERDDAP") {
   source(here("Code/get_nav_erddap.R"))

@@ -63,10 +63,9 @@ source(here("Doc/settings", prj.settings))
 
 ```{r user-controls}
 # Processing settings
-get.db     <- T
+get.db     <- F
 get.nav    <- T
 do.spatial <- T
-nav.source <- "ERDDAP" # Navigation data source: ERDDAP or SCS
 save.figs  <- T
 resize.map <- F # Resize map during survey; if T, uses anticipated bounds of survey area
 
@@ -119,7 +118,7 @@ protected.spp <- filter(spp.codes, species %in% c(salmon, eulachon))
 # Extract catch containing protected species
 catch.psit <- catch.all %>% 
   left_join(spp.codes) %>% 
-  left_join(select(haul.all, haul, orderOcc, netInWaterTime, 
+  left_join(select(haul.all, haul, netInWaterTime, 
                    lat = startLatDecimal, long = startLongDecimal)) %>%
   filter(species %in% protected.spp$species) %>% 
   select(cruise,ship,haul,collection,species,commonName,scientificName,netInWaterTime,lat,long,
@@ -136,11 +135,11 @@ write_csv(catch.psit,
 # Extract specimens from protected species
 lengths.psit <- lengths.all %>% 
   left_join(spp.codes) %>% 
-  left_join(select(haul.all, haul, orderOcc, netInWaterTime, equilibriumTime, 
+  left_join(select(haul.all, haul, netInWaterTime, equilibriumTime, 
                    lat = startLatDecimal, long = startLongDecimal)) %>% 
   filter(species %in% protected.spp$species) %>% 
   select(cruise,ship,haul,collection,species,scientificName,commonName,specimenNumber,
-         orderOcc,netInWaterTime,equilibriumTime,lat,long,individual_ID,
+         netInWaterTime,equilibriumTime,lat,long,individual_ID,
          forkLength_mm,weightg,notes,isAlive,
          otolithNumber,DNAvialNumber,adiposeCondition,hasDNAfinClip,hasTag)
 

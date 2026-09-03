@@ -341,7 +341,7 @@ include_graphics(here("Images/img_carnage_mta4.jpg"))
 include_graphics(here("Images/img_lisa-marie_transducer-blister.png"))
 ``` 
 
-```{r process-cal,eval=FALSE}
+```{r process-cal}
 # Process calibration results from CW- and FM-mode calibrations. Vessel, procedure, and directory info is configured in the settings file for each survey.
 
 if (process.cal) {
@@ -373,7 +373,7 @@ The echosounder systems aboard _`r survey.vessel`_ were calibrated on `r cal.dat
 ```{r cal-results, results='asis'}
 if (exists(paste("all.output", survey.vessel.primary, sep = "."))) {
   # Copy calibration results
-  cal.results <- all.output.SH
+  cal.results <- get(paste("all.output", survey.vessel.primary, sep = "."))
   
   # Get number of columns for table formatting
   cal.cols <- ncol(cal.results)
@@ -408,7 +408,7 @@ The WBTs installed on _Long Beach Carnage_ were calibrated on `r cal.datetime["L
 ```{r cal-results-lbc,results='asis'}
 if (exists("all.output.LBC")) {
   # Copy calibration results
-  cal.results <- all.output.LBC
+  cal.results <- get("all.output.LBC")
   
   # Get number of columns for table formatting
   cal.cols <- ncol(cal.results)
@@ -440,11 +440,9 @@ The WBTs aboard _Lisa Marie_ were calibrated prior to the survey on `r cal.datet
 (ref:cal-results-lm) Wideband Transceiver (Simrad EK80 WBT; Kongsberg) and transducer information (above horizontal line) and beam model results (below horizontal line) estimated from calibration of the echosounders aboard _Lisa Marie_ using a WC38.1 standard sphere.
 
 ```{r cal-results-lm,results='asis'}
-# entered into the WBT control software (Simrad EK80; Kongsberg)
-
 if (exists("all.output.LM")) {
   # Copy calibration results
-  cal.results <- all.output.LM 
+  cal.results <- get("all.output.LM") 
   
   # Get number of columns for table formatting
   cal.cols <- ncol(cal.results)

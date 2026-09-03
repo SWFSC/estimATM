@@ -905,9 +905,10 @@ cufes.threshold.sardine <-  0.3 # egg density, eggs per minute
 
 # # Calibration information ------------------------------------------------
 cal.vessels        <- c("RL") # c("RL","LBC","LM") 
-cal.dir            <- c(RL  = here("Data/Calibration/ECS"),
-                        LM  = here("Data/Calibration/ECS"),
-                        LBC = here("Data/Calibration/ECS"))
+cal.vessels.fm     <- NA # c("RL") 
+cal.dir            <- c(RL  = here("Data/Calibration/ECS/2606RL"),
+                        LM  = here("Data/Calibration/ECS/2606RL"),
+                        LBC = here("Data/Calibration/ECS/2606RL"))
 # Location of Lasker (or primary vessel) calibration single-target detections (for polar plots)
 single.targets.dir <- c(RL =  "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/EV_PROCESSING/CSV/singleTargets",
                         LM =  "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS/DATA/EK80/CALIBRATION/POST-SURVEY/EV/singleTargets",

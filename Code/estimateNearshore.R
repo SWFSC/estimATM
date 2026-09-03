@@ -107,8 +107,13 @@ if (process.nearshore) {
       # # Remove deep backscatter from cps.nasc for deep.nasc.vessels defined in settings
       # # Deep backscatter will be apportioned separately below 30m and species-specific density will
       # # be added back prior to biomass estimation
-      # Set cps.nasc to a fixed depth value (nasc.depth.deep)
-      mutate(cps.nasc = purrr::pluck(., nasc.depth.deep))
+      # Set cps.nasc to a fixed depth value (nasc.depth.deep), and compute deep CPS NASC as the
+      # difference between all CPS nasc (cps.nasc.orig) and shallow nasc (e.g., NASC.20)
+      mutate(cps.nasc = purrr::pluck(., nasc.depth.deep),
+             cps.nasc.deep = cps.nasc.orig - cps.nasc)
+    
+    # Check that the correction is correct
+    # cps.nasc.deep + cps.nasc == cps.nasc.orig
     
     # Compare cps.nasc and deep.cps.nasc to look for potential errors
     check.deep.nasc <- ggplot(nasc.nearshore, aes(cps.nasc, cps.nasc.deep)) + 

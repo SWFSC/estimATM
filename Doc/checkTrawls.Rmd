@@ -20,7 +20,8 @@ if (!require("pak")) install.packages("pak")
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,lubridate,mapview,kableExtra,leaflet,gdtools,xml2,
                here,bookdown,odbc,DBI,knitr,DT,fs,sf,leafem,naniar,ggiraph,
-               cowplot,RSQLite,xts,rnaturalearth,htmltools,janitor,lwgeom)
+               cowplot,RSQLite,xts,rnaturalearth,htmltools,janitor,lwgeom,
+               RPostgres)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pak::pkg_install("SWFSC/atm")

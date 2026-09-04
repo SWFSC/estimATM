@@ -904,8 +904,8 @@ cufes.threshold.anchovy <-  1   # egg density, eggs per minute
 cufes.threshold.sardine <-  0.3 # egg density, eggs per minute
 
 # # Calibration information ------------------------------------------------
-cal.vessels        <- c("RL") # c("RL","LBC","LM") 
-cal.vessels.fm     <- NA # c("RL") 
+cal.vessels        <- c("RL","LBC","LM") # NULL
+cal.vessels.fm     <- NULL # c("RL") 
 cal.dir            <- c(RL  = here("Data/Calibration/ECS/2606RL"),
                         LM  = here("Data/Calibration/ECS/2606RL"),
                         LBC = here("Data/Calibration/ECS/2606RL"))
@@ -913,9 +913,9 @@ cal.dir            <- c(RL  = here("Data/Calibration/ECS/2606RL"),
 single.targets.dir <- c(RL =  "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/EV_PROCESSING/CSV/singleTargets",
                         LM =  "//swc-storage4-s/AST4/SURVEYS/20250725_LISA-MARIE_SummerCPS/DATA/EK80/CALIBRATION/POST-SURVEY/EV/singleTargets",
                         LBC = "//swc-storage4-s/AST4/SURVEYS/20250617_CARNAGE_SummerCPS/DATA/EK80/CALIBRATION/EV/CSV")
-sphere.TS <- list(RL  = list("18" = -42.41, "38" = -42.40, "70" = -41.64, "120" = -39.80, "200" = -38.82, "333" = -36.78),
-                  LM  = list("38" = -42.36, "70" = -41.40, "120" = -39.72, "200" = -41.45),
-                  LBC = list("38" = -42.41, "70" = -41.62, "120" = -39.74, "200" = -38.84))
+# sphere.TS <- list(RL  = list("18" = -42.41, "38" = -42.40, "70" = -41.64, "120" = -39.80, "200" = -38.82, "333" = -36.78),
+#                   LM  = list("38" = -42.36, "70" = -41.40, "120" = -39.72, "200" = -41.45),
+#                   LBC = list("38" = -42.41, "70" = -41.62, "120" = -39.74, "200" = -38.84))
 # Named vector of EK80 FM-mode calibration directories
 cal.dir.fm         <- c(RL  = "//swc-storage4-s/AST4/SURVEYS/20250603_SHIMADA_IWCPS/DATA/EK80/CALIBRATION/RESULTS/Final-FM") 
 

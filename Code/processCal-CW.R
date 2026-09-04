@@ -4,7 +4,7 @@
 # File locations are set in the corresponding survey settings file (e.g., Doc/settings/settings_2407RL.R)
 # Results for each vessel saved to .Rdata
 
-if (!is.na(cal.vessels)) {
+if (!is.null(cal.vessels)) {
   # Cycle through each vessel
   for (i in cal.vessels) {
     

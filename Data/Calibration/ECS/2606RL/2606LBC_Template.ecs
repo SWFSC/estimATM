@@ -29,6 +29,13 @@ SoundSpeed = 1515.31 #
 #========================================================================================#
 
 SourceCal T1
+	# Frequency = 38.00 #
+	# TxducerModel = ES38-12 #
+	# TxducerSerialNumber = 28075 #
+    # TransmittedPower = 1000.00000 # (watts)
+    # PulseDuration = 1.024 # (milliseconds)
+	# RMSError = 0.0969 #
+	# SphereTS = -42.4206 # (dB)
 	MajorAxis3dbBeamAngle = 13.31
 	MajorAxisAngleOffset = -0.02
 	MinorAxis3dbBeamAngle = 13.50
@@ -38,6 +45,13 @@ SourceCal T1
 	TwoWayBeamAngle = -15.6681
 
 SourceCal T2
+	# Frequency = 70.00 #
+	# TxducerModel = ES70-7C #
+	# TxducerSerialNumber = 234 #
+    # TransmittedPower = 600.00000 # (watts)
+    # PulseDuration = 1.024 # (milliseconds)
+	# RMSError = 0.0638 #
+	# SphereTS = -41.5987 # (dB)
 	MajorAxis3dbBeamAngle = 6.75
 	MajorAxisAngleOffset = 0.07
 	MinorAxis3dbBeamAngle = 6.65
@@ -47,6 +61,13 @@ SourceCal T2
 	TwoWayBeamAngle = -20.258183
 
 SourceCal T3
+	# Frequency = 120.00 #
+	# TxducerModel = ES120-7C #
+	# TxducerSerialNumber = 813 #
+    # TransmittedPower = 200.00000 # (watts)
+    # PulseDuration = 1.024 # (milliseconds)
+	# RMSError = 0.0867 #
+	# SphereTS = -39.6940 # (dB)
 	MajorAxis3dbBeamAngle = 6.62
 	MajorAxisAngleOffset = 0.00
 	MinorAxis3dbBeamAngle = 6.63
@@ -56,6 +77,13 @@ SourceCal T3
 	TwoWayBeamAngle = -20.158183
 
 SourceCal T4
+	# Frequency = 200.00 #
+	# TxducerModel = ES200-7C #
+	# TxducerSerialNumber = 616 #
+    # TransmittedPower = 90.00000 # (watts)
+    # PulseDuration = 1.024 # (milliseconds)
+	# RMSError = 0.0876 #
+	# SphereTS = -38.8687 # (dB)
 	MajorAxis3dbBeamAngle = 6.76
 	MajorAxisAngleOffset = -0.05
 	MinorAxis3dbBeamAngle = 6.76

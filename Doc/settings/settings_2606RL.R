@@ -148,7 +148,7 @@ tx.breaks <- c(0, 22, 42, 64, 88)
 
 # Define nav source depending on location of computer
 ## Options are: SCS (usually on the ship) or ERDDAP (usually on shore; 24h update rate)
-if (Sys.info()['nodename'] %in% c("SWC-KSTIERHOFF-")) { #("SWC-FRD-AST1-D",
+if (Sys.info()['nodename'] %in% c("SWC-KSTIERHOF-L")) { #("SWC-FRD-AST1-D",
   nav.source    <- "RosePoint" # SCS, ERDDAP, or RosePoint
   nav.path.nob  <- "C:/SURVEY/2606RL/DATA/NAV/2606RL-12.5-nmi-spacing_final.nob" 
   nav.source.ns <- "GPX"
@@ -159,7 +159,7 @@ if (Sys.info()['nodename'] %in% c("SWC-KSTIERHOFF-")) { #("SWC-FRD-AST1-D",
 }
 
 # Define hakeML directory depending on location of computer
-if (Sys.info()['nodename'] %in% c("SWC-KSTIERHOFF-")) { #("SWC-FRD-AST1-D",
+if (Sys.info()['nodename'] %in% c("SWC-KSTIERHOF-L")) { #("SWC-FRD-AST1-D",
   hakeML.dir    <- "C:/SURVEY/2606RL/DATA/EK80" 
 } else {
   hakeML.dir    <- "//10.15.115.10/data_import/Cruise Data/RL2604 IWCPS/transect_info"
@@ -655,7 +655,7 @@ trawl.performance      <- c("Aborted") # Character vector; trawl performance to 
 trawl.haul.rm          <- NA # c(24) # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)
 
 # Location of trawl database
-if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERHOFF-")) {
+if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERHOF-L")) {
   trawl.dir <- "DATA/BIOLOGICAL/HAUL"
 } else if (Sys.info()['nodename'] %in% c("RL4433188-CHL1")) {
   trawl.dir <- ""

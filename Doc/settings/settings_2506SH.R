@@ -127,7 +127,7 @@ tx.breaks <- c(0, 12, 28, 45, 59, 68)
 
 # Define nav source depending on location of computer
 ## Options are: SCS (usually on the ship) or ERDDAP (usually on shore; 24h update rate)
-if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L","SWC-KSTIERHOFF-")) {
+if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERH1-L","SWC-KSTIERHOF-L")) {
   nav.source    <- "SCS"
   nav.source.ns <- "GPX"
 } else {

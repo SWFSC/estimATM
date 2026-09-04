@@ -125,7 +125,7 @@ Options in this section of the settings file control the execution of the variou
 # Processing controls (T/F) ---------------------------------------------------
 ### Usually TRUE
 get.db            <- ifelse(Sys.info()['nodename'] %in% 
-                              c("SWC-KSTIERHOFF-"), F, T) 
+                              c("SWC-KSTIERHOF-L"), F, T) 
 get.nav           <- T # Download primary vessel nav data from ERDDAP
 get.nav.sd        <- F # Download Saildrone nav data from ERDDAP
 get.nav.sh        <- F # Download NOAA Ship nav data

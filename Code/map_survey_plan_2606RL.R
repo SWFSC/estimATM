@@ -2,7 +2,7 @@
 # Summer 2026 Integrated West Coast Pelagics Survey (2606RL)
 
 # Define nearshore transects
-lbc.transects <- c(1:57, 284:347)
+lbc.transects <- c(1:63, 284:347)
 lbc.transects.jz <- c(1:27,327:347) # Subset for Juan
 lm.transects  <- c(58:152)
 
@@ -78,7 +78,7 @@ if (nrow(filter(transects, Type == "Nearshore", Transect %in% lbc.transects)) > 
   
   # Save the base map
   ggsave(lbc.map.plain2, file = here("Figs", paste0("fig_survey_plan_LBC_plain2.png")),
-         height = map.height.region["central"], width = map.width["central"])
+         height = map.height.region["central"]*0.5, width = map.width["central"]*0.5)
 }
 
 # Map subset of LBC transects for Juan's proposal

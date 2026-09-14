@@ -701,6 +701,7 @@ survey.map <- base.map +
            xlim = c(map.bounds["xmin"], map.bounds["xmax"]), 
            ylim = c(map.bounds["ymin"], map.bounds["ymax"]))
 
+# Add any existing CTD stations to the survey map
 if (nrow(ctd.sf) > 0) {
   survey.map <- survey.map +
     geom_sf(data = ctd.sf, shape = 21, size = 1, fill = "blue") +
@@ -709,6 +710,7 @@ if (nrow(ctd.sf) > 0) {
              ylim = c(map.bounds["ymin"], map.bounds["ymax"]))  
 }
 
+# Add any existing UCTD stations to the survey map
 if (nrow(uctd.sf) > 0) {
   survey.map <- survey.map +
     geom_sf(data = uctd.sf, shape = 24, size = 1.5, fill = "orange") +
@@ -717,6 +719,7 @@ if (nrow(uctd.sf) > 0) {
              ylim = c(map.bounds["ymin"], map.bounds["ymax"]))  
 }
 
+# Add any existing surface eDNA stations to the survey map
 if (nrow(eDNA.sf) > 0) {
   survey.map <- survey.map +
     geom_sf(data = eDNA.sf, shape = 21, size = 1, fill = "green") +
@@ -725,6 +728,7 @@ if (nrow(eDNA.sf) > 0) {
              ylim = c(map.bounds["ymin"], map.bounds["ymax"]))  
 }
 
+# Add any existing pairovet stations to the survey map
 if (nrow(pairovets.sf) > 0) {
   survey.map <- survey.map +
     geom_sf(data = pairovets.sf, aes(fill = type), shape = 21, size = 1) +

@@ -54,22 +54,28 @@ prj.settings <- settings.files[str_detect(settings.files, paste0("settings_", pr
 source(here("Doc/settings", prj.settings))
 ```
 
-Specified files are processed and plotted at any time, but ideally prior to being processed using plotSurvey, estimateBiomass, etc. 
-
 ```{r file-settings}
 # Controls
+## Get navigation data
+get.nav <- T
 ## Process CSV files, or just re-generate HTML/plots
-process.csv <- T 
+process.csv <- F 
 ## Scale map to survey extent
 resize.map  <- F 
-## Get nav data
-get.nav <- T
 
 # Vessel-specific info
 vessel.name = "LBC"
+
 # Define nav source
 if(vessel.name %in% c("LBC","LM")) nav.source <- "GPX"
 ```
+
+Specified files are processed and plotted at any time, but ideally prior to being processed using plotSurvey, estimateBiomass, etc. Below are specifics about the vessel and settings used:
+
+Vessel: **`r vessel.name`**  
+Process CSV: **`r process.csv`**  
+Get nav: **`r get.nav`**  
+Nav source: **`r nav.source`**  
 
 ```{r list-files}
 if (process.csv) {
@@ -122,7 +128,8 @@ nasc <- nasc %>%
 # Define cps.nasc
 nasc <- nasc %>% 
   mutate(cps.nasc = purrr::pluck(., nasc.depth.cps),
-         cps.nasc.source = nasc.depth.cps)
+         cps.nasc.source = nasc.depth.cps) %>% 
+  mutate(transect.orig = transect)
 
 # Remove numbers from transect names (e.g., 105-1, 105-2, etc.)
 if (strip.tx.nums[vessel.name]) {
@@ -149,15 +156,15 @@ nasc.summ <- nasc %>%
 # Average cps.nasc over defined interval
 # Summarize by filename, not transect, so that renamed (i.e., strip.tx.chars == T) transects get included.
 nasc.sf <- nasc %>%
-  select(filename, transect, int, dist_m, datetime, lat, long, cps.nasc) %>% 
-  group_by(filename, transect, int) %>% 
+  select(filename, transect, transect.orig, int, dist_m, datetime, lat, long, cps.nasc) %>% 
+  group_by(filename, transect, transect.orig, int) %>% 
   summarise(
     lat   = lat[1],
     long  = long[1],
     NASC  = mean(cps.nasc),
-    label = paste0('Transect: ', transect[1], "; ",
+    label = paste0('Transect: ', transect.orig[1], "; ",
                    'Distance: ', round(min(dist_m)), "-", round(max(dist_m)), ' m'),
-    popup = paste0('<b>Transect: </b>', transect[1], '<br/>',
+    popup = paste0('<b>Transect: </b>', transect.orig[1], '<br/>',
                    '<b>Time: </b>', min(datetime), " - ", max(datetime), ' UTC<br/>',
                    '<b>Distance: </b>', round(min(dist_m)), "-", round(max(dist_m)), ' m<br/>',
                    '<b>NASC: </b>', round(mean(NASC)), ' m<sup>2</sup> nmi<sup>-2</sup>')) %>%
@@ -174,8 +181,6 @@ nasc.paths <- nasc %>%
   group_by(transect) %>% 
   summarise(do_union = F) %>% 
   st_cast("LINESTRING") 
-
-
 ```
 
 ```{r find-big-nasc}
@@ -184,9 +189,9 @@ big.nasc <- nasc %>%
   arrange(desc(NASC)) %>%
   mutate(NASC  = NASC/19,
          rank  = seq(n()),
-         label = paste0('Transect: ', transect, 
+         label = paste0('Transect: ', transect.orig, 
                         ' - Distance: ', round(dist_m), " m"),
-         popup = paste0('<b>Transect: </b>', transect, '<br/>', 
+         popup = paste0('<b>Transect: </b>', transect.orig, '<br/>', 
                         '<b>Time: </b>', min(datetime), "-", max(datetime), ' UTC<br/>',
                         '<b>Distance: </b>', round(dist_m), ' m<br/>',
                         '<b>NASC: </b>', round(NASC), ' m<sup>2</sup> nmi<sup>-2</sup>')) %>% 

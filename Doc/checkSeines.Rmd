@@ -208,14 +208,15 @@ seine.wt.indiv <- set.catch %>%
   group_by(scientificName) %>% 
   summarise(totalWeight = sum(totalWeightkg, na.rm = TRUE),
             totalNum    = sum(totalNum, na.rm = TRUE)) %>% 
-  mutate(indivWeight = totalWeight/totalNum)
+  mutate(indivWeight = round(totalWeight/totalNum, 3))
 
 # Add mean individual weight and compute missing weights
 set.catch <- set.catch %>% 
   left_join(select(seine.wt.indiv, scientificName, indivWeight)) %>% 
   mutate(totalWeight = case_when(
     is.na(totalWeightkg) ~ totalNum * indivWeight,
-    TRUE ~ totalWeightkg))
+    TRUE ~ totalWeightkg)) %>% 
+  mutate(totalWeight = round(totalWeight, 3))
 
 if (nrow(set.catch) > 0) {
   # Summarize trawl catch by species
@@ -359,8 +360,8 @@ if (nrow(set.pos) > 0) {
 }
 
 ggsave(set.pie.wt,
-         filename = here("Figs/fig_seine_proportion_set_wt.png"),
-         width = map.width, height = map.height) 
+       filename = here("Figs/fig_seine_proportion_set_wt.png"),
+       width = map.width, height = map.height) 
 ```
 
 ```{r summarise-sets}
@@ -399,6 +400,9 @@ set.lengths.all <- set.lengths.all %>%
   # Standardize sex values
   mutate(sex = tolower(trimws(sex)),
          binned = FALSE) %>% 
+  mutate(sex = case_when(
+    !sex %in% c("male","female","unknown") ~ "missing",
+    TRUE ~ sex)) %>% 
   # Find missing lengths
   mutate(
     missing.length = case_when(
@@ -1488,6 +1492,8 @@ lw.plot.final <- ggplot() +
   geom_line(data = filter(lw.df, scientificName %in% unique(set.lengths$scientificName)), 
             aes(totalLength_mm, weightg), 
             alpha = 0.75, colour = "gray20", linetype = 'dashed') +
+  scale_colour_manual(name = "Sex", values = c("female" = "pink", "male" = "lightblue",
+                                               "unknown" = "#FFC926", "missing" = "purple")) +
   # Facet by species
   facet_wrap(~scientificName, scales = "free") +
   # Format plot
@@ -1556,6 +1562,8 @@ mpaPalWC <- colorFactor(topo.colors(10), unique(wc_mpas$Design))
 ## National Marine Sanctuaries
 mpaPalNMS  <- colorFactor(topo.colors(10), as.factor(unique(nms_bounds$Site_Nm)))
 
+txPal    <- colorFactor(wpt.colors, wpt.types)
+
 # Provider tiles info: http://leaflet-extras.github.io/leaflet-providers/preview/index.html
 if (exists("set.catch.sf")) {
   i.map <- leaflet() %>% 
@@ -1582,6 +1590,30 @@ if (exists("set.catch.sf")) {
     addPolygons(data = wc_mpas, color = "#000414", weight = 2, fillColor =  ~mpaPalWC(Design),
                 fillOpacity = 0.3, label = ~htmlEscape(Site_Nm), 
                 group = "State MPAs") %>%
+    # Add core planned transects
+    addPolylines(data = filter(transects.sf, Type %in% c("Compulsory", "Adaptive")),
+                 color = ~txPal(Type), weight = 3, opacity = 0.5,
+                 label = ~htmlEscape(paste(Type, Transect)),
+                 popup = ~popup,
+                 group = "Planned Transects (Core)") %>%
+    addCircleMarkers(data = filter(wpts.sf, Type %in% c("Compulsory", "Adaptive")),
+                     radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
+                     fillOpacity = 0.5, fillColor =  ~txPal(Type), 
+                     label = ~htmlEscape(paste(Type, Waypoint)),
+                     popup = ~popup,
+                     group = "Planned Transects (Core)") %>%
+    # Add ancillary planned transects
+    addPolylines(data = filter(transects.sf, !Type %in% c("Compulsory", "Adaptive")),
+                 color = ~txPal(Type), weight = 3, opacity = 0.5,
+                 # label = ~htmlEscape(paste(Type, Transect)),
+                 popup = ~popup,
+                 group = "Planned Transects (Ancillary)") %>%
+    addCircleMarkers(data = filter(wpts.sf, !Type %in% c("Compulsory", "Adaptive")),
+                     radius = 3, color = "#000414", stroke = FALSE, opacity = 0.5,
+                     fillOpacity = 0.5, fillColor =  ~txPal(Type),
+                     # label = ~htmlEscape(paste(Type, Waypoint)),
+                     popup = ~popup,
+                     group = "Planned Transects (Ancillary)") %>%
     # Add scale bar
     addScaleBar(position = "bottomright") %>%
     # Add map coordinates
@@ -1598,6 +1630,7 @@ if (exists("set.catch.sf")) {
                      "Esri.WorldImagery","Esri.WorldStreetMap","OpenStreetMap.Mapnik"),
       overlayGroups = c("U.S. MPAs","State MPAs", "State Waters", 
                         "Bathymetry Contours","Graticule",
+                        "Planned Transects (Core)", "Planned Transects (Ancillary)",
                         "Sets", "Vessel Paths"),
       options = layersControlOptions(collapsed = FALSE))%>% 
     fitBounds(imap.bounds$range.lon[1], imap.bounds$range.lat[1],
@@ -1605,7 +1638,7 @@ if (exists("set.catch.sf")) {
   
   if (exists("nav.ns"))
     i.map <- i.map %>% 
-      addPolylines(data = nav.ns, color = "#000000", stroke = TRUE, weight = 2,
+      addPolylines(data = nav.ns, color = "#000414", stroke = TRUE, weight = 1,
                    opacity = 0.8, fillOpacity = 1,
                    group =  "Vessel Paths")
   

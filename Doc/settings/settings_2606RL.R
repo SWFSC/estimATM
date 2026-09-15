@@ -471,13 +471,13 @@ Sv.max                 <- NULL # Max Sv value (dB); Set to -14 after testing is 
 # If seine catches were believed to be representative, TRUE
 # Else, FALSE (e.g., if sets were non-random or otherwise believed to be biased)
 use.seine.data  <- TRUE
-seine.source    <- "Access"
+seine.source    <- "SQL-dev" # "SQL"
 seine.dir       <- "DATA/BIOLOGICAL/SEINE"
 seine.db.name   <- "SeineDataEntry2606RL.accdb"
 seine.xlsx.name <- "Nearshore_LBC_2606RL.xlsx"
 seine.tz        <- "America/Los_Angeles"
 seine.types     <- c("survey", "research", NA)
-seine.gpx.name  <- "lbc_nav.gpx" # "nav_nearshore.gpx"
+seine.gpx.name  <- "nav_nearshore.gpx" 
 
 # Survey vessels that collected purse seine data
 seine.vessels          <- c("LBC" ,"LM")

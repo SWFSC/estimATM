@@ -15,7 +15,6 @@ if (seine.source == "Excel") {
   spp.codes       <- readxl::read_xlsx(file.path(survey.dir[survey.vessel.primary],
                                                  seine.dir, seine.xlsx.name), sheet = "species_codes")
 } else {
-  
   # Extract tables from appropriate database
   if (seine.source == "SQL") {
     # Configure ODBC connection to TRAWL database
@@ -23,6 +22,14 @@ if (seine.source == "Excel") {
                                  DRIVER="SQL Server",
                                  Encrypt = "Optional",
                                  DATABASE="Trawl",
+                                 Trusted_Connection= "Yes",
+                                 SERVER = trawl.db.server)
+  } else if (seine.source == "SQL-dev") {
+    # Configure ODBC connection to TRAWL database
+    seine.con  <- DBI::dbConnect(odbc::odbc(),
+                                 DRIVER="SQL Server",
+                                 Encrypt = "Optional",
+                                 DATABASE="Trawl_dev",
                                  Trusted_Connection= "Yes",
                                  SERVER = trawl.db.server)
   } else if (seine.source == "Access") {
@@ -39,13 +46,14 @@ if (seine.source == "Excel") {
                                  DBQ = file.path(here::here("Data/Seine"), seine.db.name))
   } 
   
+  # List database tables
+  table.list <- DBI::dbListTables(seine.con)
+  
   # Import trawl database tables
-  sets.all        <- dplyr::tbl(seine.con,"Nearshore_Set") %>% dplyr::collect()
-  set.catch.all   <- dplyr::tbl(seine.con,"Nearshore_Catch") %>% dplyr::collect()
-  set.lengths.all <- dplyr::tbl(seine.con,"Nearshore_Specimen") %>% dplyr::collect()
-  if (DBI::dbExistsTable(seine.con, "LengthFrequency"))
-    lengthFreq.all <- dplyr::tbl(seine.con,"LengthFrequency") %>% dplyr::collect()
-  spp.codes      <- dplyr::tbl(seine.con,"SpeciesCodes") %>% dplyr::collect()
+  sets.all        <- dplyr::tbl(seine.con, grep("Nearshore_Set", table.list, value = TRUE)) %>% dplyr::collect()
+  set.catch.all   <- dplyr::tbl(seine.con, grep("Nearshore_Catch", table.list, value = TRUE)) %>% dplyr::collect()
+  set.lengths.all <- dplyr::tbl(seine.con, grep("Nearshore_Specimen", table.list, value = TRUE)) %>% dplyr::collect()
+  spp.codes       <- dplyr::tbl(seine.con, grep("SpeciesCodes", table.list, value = TRUE)) %>% dplyr::collect()
   
   # Close database channel
   DBI::dbDisconnect(seine.con)

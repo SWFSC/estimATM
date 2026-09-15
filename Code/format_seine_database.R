@@ -4,7 +4,7 @@
 # Trawl data are extracted using Code/collect_trawl_database.R
 # Intended to be run following collect_trawl_database.R in scripts that also load settings from Doc/settings
 
-if (seine.source %in% c("SQL", "Excel")) {
+if (seine.source %in% c("SQL", "SQL-dev", "Excel")) {
   # Format set data
   sets.all <- sets.all %>% 
     mutate(datetime = datetime_UTC) %>% 

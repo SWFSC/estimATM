@@ -71,7 +71,7 @@ dir_create(here(c("Figs", "Output")))
 ```{r user-settings}
 # User-specified settings
 get.db     <- T # Extract data from trawl database (F for testing)
-get.nav    <- F # Download nearshore vessel nav data
+get.nav    <- T # Download nearshore vessel nav data
 resize.map <- T # Adjust map boundaries to data
 do.ggiraph <- T # Set to F if having issues rendering Leaflet maps
 ```
@@ -206,16 +206,16 @@ set.catch <- set.catch.all %>%
 # Compute mean individual weights for each seine species
 seine.wt.indiv <- set.catch %>% 
   group_by(scientificName) %>% 
-  summarise(totalWt = sum(weight_lbs,na.rm = TRUE),
-            totalNum = sum(totalNum, na.rm = TRUE)) %>% 
-  mutate(indivWeight = totalWt/totalNum)
+  summarise(totalWeight = sum(totalWeightkg, na.rm = TRUE),
+            totalNum    = sum(totalNum, na.rm = TRUE)) %>% 
+  mutate(indivWeight = totalWeight/totalNum)
 
 # Add mean individual weight and compute missing weights
 set.catch <- set.catch %>% 
   left_join(select(seine.wt.indiv, scientificName, indivWeight)) %>% 
   mutate(totalWeight = case_when(
-    is.na(totalWeight) ~ totalNum * indivWeight,
-    TRUE ~ totalWeight))
+    is.na(totalWeightkg) ~ totalNum * indivWeight,
+    TRUE ~ totalWeightkg))
 
 if (nrow(set.catch) > 0) {
   # Summarize trawl catch by species
@@ -230,7 +230,8 @@ if (nrow(set.catch) > 0) {
   if (!has_name(set.summ.wt, "Trachurus symmetricus")) {set.summ.wt$`Trachurus symmetricus` <- 0}
   if (!has_name(set.summ.wt, "Clupea pallasii"))       {set.summ.wt$`Clupea pallasii`       <- 0}
   if (!has_name(set.summ.wt, "Atherinopsis californiensis")) {set.summ.wt$`Atherinopsis californiensis` <- 0}
-  if (!has_name(set.summ.wt, "Etrumeus acuminatus"))   {set.summ.wt$`Etrumeus acuminatus` <- 0}
+  if (!has_name(set.summ.wt, "Allosmerus elongatus"))       {set.summ.wt$`Allosmerus elongatus` <- 0}
+  if (!has_name(set.summ.wt, "Etrumeus acuminatus"))   {set.summ.wt$`Etrumeus acuminatus`   <- 0}
   if (!has_name(set.summ.wt, "Other"))                 {set.summ.wt$`Other` <- 0}
   
   # Calculate total weight of all CPS species
@@ -256,6 +257,7 @@ if (nrow(set.catch) > 0) {
                              "PacMack"    = rep(0, nrow(sets)),
                              "JackMack"   = rep(0, nrow(sets)),
                              "RndHerring" = rep(0, nrow(sets)),
+                             "Smelt"      = rep(0, nrow(sets)),
                              "AllCPS"     = rep(0, nrow(sets)))) %>% 
     right_join(select(sets, set, ship, key, set_type, datetime, long, lat)) %>% 
     replace(is.na(.), 0) %>%
@@ -316,9 +318,6 @@ pie.cols.ns <- set.pos %>%
 # Get species present in the nearshore catch
 pie.spp.ns <- sort(names(pie.cols)[pie.cols %in% pie.cols.ns])
 
-# Get species present in the nearshore catch
-# pie.spp.ns <- sort(unique(set.catch$scientificName))
-
 if (nrow(set.pos) > 0) {
   # Create trawl haul figure
   set.pie.wt <- base.map +
@@ -378,6 +377,7 @@ set.catch.sf <- set.catch.pie %>%
                   'P. herring:', PacHerring, 'kg<br/>',
                   'P. mackerel:', PacMack, 'kg<br/>',
                   'R. herring:', RndHerring, 'kg<br/>',
+                  'Smelt:', Smelt, 'kg<br/>',
                   'All CPS:', AllCPS, 'kg'))
 ```
 
@@ -447,6 +447,8 @@ set.lengths.all  <- set.lengths.all %>%
         convert_length("Trachurus symmetricus", .$forkLength_mm, "FL", "TL"),
       scientificName == "Etrumeus acuminatus" ~ 
         convert_length("Etrumeus acuminatus", .$forkLength_mm, "FL", "TL"),
+      scientificName == "Allosmerus elongatus" ~ 
+        convert_length("Allosmerus elongatus", .$forkLength_mm, "FL", "TL"),
       scientificName == "Merluccius productus" ~ forkLength_mm, # There is no FL to TL conversion yet
       scientificName == "Doryteuthis opalescens" ~  as.numeric(mantleLength_mm))) %>% 
   mutate(totalLength_mm = round(totalLength_mm),
@@ -668,8 +670,7 @@ set.lengths %>%
 Specimens with missing length measurements. It is expected that standard length is measured for Pacific Sardine and Northern Anchovy, and that fork length is measured for Pacific Herring, Pacific Mackerel, and Jack Mackerel. If missing, length is estimated from the measured weight.
 
 ```{r missing-lengths}
-# Select only outliers that have not yet been flagged
-# Select outliers
+# Select specimens with missing lengths
 set.lengths %>% 
   filter(missing.length == TRUE, is.na(flaggedData)) %>% 
   select(ship, date, set, scientificName, specimenNumber, SL = standardLength_mm, 
@@ -684,8 +685,7 @@ set.lengths %>%
 Self explanatory; weight is missing and estimated from total length.
 
 ```{r missing-weights}
-# Select only outliers that have not yet been flagged
-# Select outliers
+# Select specimens with missing weights
 set.lengths %>% 
   filter(missing.weight == TRUE, is.na(flaggedData)) %>% 
   select(ship, date, set, scientificName, specimenNumber, SL = standardLength_mm, 
@@ -1080,6 +1080,74 @@ Fork length (mm) vs. weight (g).
 ```{r herring-data}
 # Select species
 scientificName.sub <- "Clupea pallasii"
+
+# Subset lengths and models
+lengths.sub     <- filter(set.lengths, scientificName == scientificName.sub)
+lengths.all.sub <- filter(set.lengths.all, 
+                          scientificName == scientificName.sub,
+                          season ==  tolower(survey.season))
+
+lw.df.sub <- filter(lw.df, scientificName == scientificName.sub) %>% 
+  pivot_longer(totalLength_mm:standardLength_mm, names_to = "length_type", values_to = "length_mm")
+
+if (nrow(lengths.sub) > 0) {
+  # Plot L/W data from past and current survey -----------------------------------
+  lw.plot <- ggplot() +
+    # Plot L/W data from all years/surveys
+    geom_point_interactive(data = lengths.all.sub,
+                           aes(forkLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           colour = "gray70", alpha = 0.3) +
+    # Plot seasonal length models for each species
+    geom_line_interactive(data = lw.df.sub, aes(length_mm, weightg, 
+                                                group = length_type, tooltip = length_type),
+                          alpha = 0.75, colour = "gray20", linetype = 'dashed') +
+    # Plot L/W data for current survey
+    geom_point_interactive(data = lengths.sub,
+                           aes(forkLength_mm, weightg, fill = sex,
+                               colour = outlier,
+                               data_id = label, tooltip = label),
+                           shape = 21, alpha = 0.9) +
+    scale_fill_manual(name = "Sex", values = c("female" = "pink", "male" = "lightblue",
+                                               "unknown" = "#FFC926", "missing" = "purple")) +
+    scale_colour_manual(name = "Flagged", values = c("NA" = NA, "TRUE" = "black")) +
+    # Plot individuals with missing lengths and weights
+    geom_point_interactive(data = filter(lengths.sub, missing.length == TRUE),
+                           aes(totalLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'red',  size = 2.5, colour = NA, alpha = 0.5) +
+    geom_point_interactive(data = filter(lengths.sub, missing.weight == TRUE),
+                           aes(forkLength_mm, weightg, 
+                               data_id = label, tooltip = label),
+                           shape = 21, fill = 'blue', size = 2.5, colour = NA, alpha = 0.5) +
+    # Format plot
+    xlab("Length (mm)") + ylab("Mass (g)")
+  
+  if (do.ggiraph) {
+    # Create interactive plot
+    lw.plot.interactive <- ggiraph::girafe(
+      ggobj = lw.plot,
+      dependencies = list(liberationsansHtmlDependency())
+    )
+    
+    # Print interactive plot
+    lw.plot.interactive
+  } else {
+    lw.plot
+  }
+  
+} else {
+  print("No specimens present.")
+}
+```
+
+## Smelt (Whitebait)  
+
+Fork length (mm) vs. weight (g).  
+
+```{r smelt-data}
+# Select species
+scientificName.sub <- "Allosmerus elongatus"
 
 # Subset lengths and models
 lengths.sub     <- filter(set.lengths, scientificName == scientificName.sub)
@@ -1612,7 +1680,7 @@ Summary of catch weight by set (kg), including CPS and all other species weighed
 
 ```{r plot-weight-summary-all}
 # Format data for plotting
-set.catch.bar <- set.catch.all %>% 
+set.catch.bar <- set.catch %>% 
   left_join(select(spp.codes, species, scientificName, commonName)) %>% 
   filter(cruise %in% cruise.name & ship %in% seine.vessels) %>% 
   left_join(select(sets, ship, set, key, datetime)) %>% 
@@ -1631,31 +1699,30 @@ set.catch.bar <- set.catch.all %>%
   arrange(datetime, totalWeight)
 
 # Species labels
-bar.labs <- c("Atherinopsis californiensis" = "Jacksmelt", "Clupea pallasii" = "P. herring",
+bar.labs <- c("Allosmerus elongatus" = "Whitebait smelt", 
+              "Atherinopsis californiensis" = "Jacksmelt", "Clupea pallasii" = "P. herring",
               "Engraulis mordax" = "Anchovy", "Etrumeus acuminatus" = "R. herring", 
               "Merluccius productus" = "P. hake", "Other" = "Other",
               "Sardinops melanosticta" = "J. Sardine", "Sardinops sagax" = "Sardine",
               "Scomber japonicus" = "P. mackerel", "Trachurus symmetricus" = "J. mackerel")
 
 # Species colors
-bar.colors <- c("Atherinopsis californiensis" = jacksmelt.color, "Clupea pallasii" = pac.herring.color,
+bar.colors <- c("Allosmerus elongatus" = smelt.color,
+                "Atherinopsis californiensis" = jacksmelt.color, "Clupea pallasii" = pac.herring.color,
                 "Engraulis mordax" = anchovy.color, "Etrumeus acuminatus" = rnd.herring.color,
-                "Merluccius productus" = "purple", "Other" = "gray70",
+                "Merluccius productus" = hake.color, "Other" = other.color,
                 "Sardinops melanosticta" = jap.sardine.color, "Sardinops sagax" = sardine.color,
-                "Scomber japonicus" = pac.mack.color, "Trachurus symmetricus" = jack.mack.color) 
+                "Scomber japonicus" = pac.mack.color, "Trachurus symmetricus" = jack.mack.color)
 
 bar.spp <- sort(unique(set.catch.bar$group))
 
 # Plot catch 
 catch.bar.plot.all <- ggplot(set.catch.bar, aes(label, totalWeight, fill = group)) +
   geom_bar(colour = "black", position = "stack", stat = "identity") + 
-  # geom_hline(yintercept = 150, linetype = "dashed", colour = "gray50") +
   facet_grid(leg~ship, scales = "free") +
-  # facet_wrap(~leg, scales = "free", ncol = 1) +
   scale_fill_manual(name = 'Species',
                     labels = unname(bar.labs[names(bar.labs) %in% bar.spp]),
                     values = unname(bar.colors[names(bar.colors) %in% bar.spp])) +
-  # scale_x_continuous(breaks = seq(0, 500, 2)) +
   theme(axis.text.x        = element_text(angle = 45, size = 6, vjust = 0.5)) +
   labs(x = "\nSet", y = "Total Weight (kg)")
 

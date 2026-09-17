@@ -471,7 +471,7 @@ seine.source    <- "Excel"
 seine.dir       <- "DATA/BIOLOGICAL/SEINE"
 seine.db.name   <- "SeineDataEntry2606RL.accdb"
 seine.xlsx.name <- "Nearshore_LBC_2606RL.xlsx"
-seine.tz        <- "America/Los_Angeles"
+seine.db.tz     <- "UTC"
 seine.types     <- c("survey", "research", NA)
 seine.gpx.name  <- "nav_nearshore.gpx"
 

@@ -7,7 +7,7 @@
 if (seine.source %in% c("SQL", "SQL-dev", "Excel")) {
   # Format set data
   sets.all <- sets.all %>% 
-    mutate(datetime = datetime_UTC) %>% 
+    mutate(datetime = ymd_hms(datetime_UTC, tz = seine.db.tz)) %>% 
     arrange(datetime) %>% 
     mutate(season = case_when(
       month(datetime) < 6 ~ "spring",
@@ -20,7 +20,7 @@ if (seine.source %in% c("SQL", "SQL-dev", "Excel")) {
 
 } else if (seine.source == "Access") {
   sets.all <- sets.all %>% 
-    mutate(datetime = with_tz(mdy_hm(paste(date, time), tz = seine.tz), 
+    mutate(datetime = with_tz(mdy_hm(paste(date, time), tz = seine.db.tz), 
                               tzone = "UTC")) %>% 
     arrange(datetime) %>% 
     mutate(season = case_when(

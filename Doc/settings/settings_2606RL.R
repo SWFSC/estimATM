@@ -414,11 +414,11 @@ sounder.type           <- c(RL  = "EK80")
 # Location of survey data on AST1, AST2, etc. (a vector of file paths)
 # Root directory where survey data are stored; other paths relative to this
 if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D")) {
-  survey.dir           <- c(RL  = "C:/SURVEY/2606RL",
+  survey.dir           <- c(RL  = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)",
                             LBC = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606LBC)",
                             LM  = "C:/SURVEY/2606LM")
 } else {
-  survey.dir           <- c(RL  = "C:/SURVEY/2606RL",
+  survey.dir           <- c(RL  = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)",
                             LBC = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606LBC)",
                             LM  = "C:/SURVEY/2606LM")
 }
@@ -471,11 +471,11 @@ Sv.max                 <- NULL # Max Sv value (dB); Set to -14 after testing is 
 # If seine catches were believed to be representative, TRUE
 # Else, FALSE (e.g., if sets were non-random or otherwise believed to be biased)
 use.seine.data  <- TRUE
-seine.source    <- "SQL-dev" # "SQL"
+seine.source    <- "SQL" # "SQL-dev"
 seine.dir       <- "DATA/BIOLOGICAL/SEINE"
 seine.db.name   <- "SeineDataEntry2606RL.accdb"
 seine.xlsx.name <- "Nearshore_LBC_2606RL.xlsx"
-seine.tz        <- "America/Los_Angeles"
+seine.db.tz     <- "UTC"
 seine.types     <- c("survey", "research", NA)
 seine.gpx.name  <- "nav_nearshore.gpx" 
 
@@ -655,12 +655,12 @@ trawl.performance      <- c("Aborted") # Character vector; trawl performance to 
 trawl.haul.rm          <- NA # c(24) # Numeric vector; haul numbers to exclude (e.g., for incomplete catch, etc.; NA if include all)
 
 # Location of trawl database
-if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D","SWC-KSTIERHOF-L")) {
-  trawl.dir <- "DATA/BIOLOGICAL/HAUL"
+if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D", "SWC-KSTIERHOF-L")) {
+  trawl.dir <- "DATA/BIOLOGICAL"
 } else if (Sys.info()['nodename'] %in% c("RL4433188-CHL1")) {
   trawl.dir <- ""
 } else {
-  trawl.dir <- "DATA/BIOLOGICAL/HAUL"
+  trawl.dir <- "DATA/BIOLOGICAL"
 }
 
 # CTD data

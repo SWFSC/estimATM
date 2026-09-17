@@ -92,7 +92,8 @@ if (nav.source.ns == "ERDDAP") {
   # Extract trackline points from GPX file
   nav.ns.points <- read_GPX(here("Data/Nav", seine.gpx.name))$track_points %>% 
     project_sf(crs = 4326) %>% 
-    select(time, lat = Y, long = X)
+    select(time, lat = Y, long = X) %>% 
+    mutate(time = force_tz(time, "UTC"))
 }
 
 # Read transect waypoints

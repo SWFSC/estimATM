@@ -91,9 +91,9 @@ if (is.null(doc.name)) {doc.name <- "estimateBiomass.Rmd"}
 
 ```{r loop-controls}
 # User-defined loop controls
-process.csv      <- F # Read CSV files for summarizing NASC
-get.db           <- F # Get trawl data
-get.nav          <- F # Get nav data
+process.csv      <- T # Read CSV files for summarizing NASC
+get.db           <- T # Get trawl data
+get.nav          <- T # Get nav data
 combine.regions  <- T # Combine core and nearshore biomass plots
 process.cal      <- T # Process, format, and plot echosounder calibration results
 save.figs        <- T # Save figures

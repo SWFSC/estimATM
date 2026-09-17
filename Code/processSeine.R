@@ -210,6 +210,7 @@ if (!has_name(set.summ.wt, "Scomber japonicus"))     {set.summ.wt$`Scomber japon
 if (!has_name(set.summ.wt, "Trachurus symmetricus")) {set.summ.wt$`Trachurus symmetricus` <- 0}
 if (!has_name(set.summ.wt, "Clupea pallasii"))       {set.summ.wt$`Clupea pallasii`       <- 0}
 if (!has_name(set.summ.wt, "Etrumeus acuminatus"))   {set.summ.wt$`Etrumeus acuminatus`   <- 0}
+if (!has_name(set.summ.wt, "Allosmerus elongatus"))   {set.summ.wt$`Allosmerus elongatus`   <- 0}
 if (!has_name(set.summ.wt, "Atherinopsis californiensis")) {set.summ.wt$`Atherinopsis californiensis` <- 0}
 if (!has_name(set.summ.wt, "Other"))                 {set.summ.wt$`Other` <- 0}
 
@@ -220,6 +221,7 @@ if (!has_name(set.summ.wt.deep, "Scomber japonicus"))     {set.summ.wt.deep$`Sco
 if (!has_name(set.summ.wt.deep, "Trachurus symmetricus")) {set.summ.wt.deep$`Trachurus symmetricus` <- 0}
 if (!has_name(set.summ.wt.deep, "Clupea pallasii"))       {set.summ.wt.deep$`Clupea pallasii`       <- 0}
 if (!has_name(set.summ.wt.deep, "Etrumeus acuminatus"))   {set.summ.wt.deep$`Etrumeus acuminatus`   <- 0}
+if (!has_name(set.summ.wt, "Allosmerus elongatus"))   {set.summ.wt$`Allosmerus elongatus`   <- 0}
 if (!has_name(set.summ.wt.deep, "Atherinopsis californiensis")) {set.summ.wt.deep$`Atherinopsis californiensis` <- 0}
 if (!has_name(set.summ.wt.deep, "Other"))                 {set.summ.wt.deep$`Other` <- 0}
 
@@ -236,6 +238,7 @@ set.summ.wt <- set.summ.wt %>%
          "PacMack"    = "Scomber japonicus",
          "JackMack"   = "Trachurus symmetricus",
          "RndHerring" = "Etrumeus acuminatus",
+         "Smelt"      = "Allosmerus elongatus",
          "Other"      = "Other") %>% 
   left_join(select(set.clusters, key.set, cluster, haul)) %>% 
   select(-vessel.name, -lat, -long, -AllCPS) %>%

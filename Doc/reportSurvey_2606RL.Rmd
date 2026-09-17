@@ -1,5 +1,5 @@
 ---
-# title: "DISTRIBUTION, BIOMASS, AND DEMOGRAPHICS OF COASTAL PELAGIC FISHES IN THE CALIFORNIA CURRENT ECOSYSTEM DURING SUMMER 2025 BASED ON ACOUSTIC-TRAWL SAMPLING"
+# title: "DISTRIBUTION, BIOMASS, AND DEMOGRAPHICS OF COASTAL PELAGIC FISHES IN THE CALIFORNIA CURRENT ECOSYSTEM DURING SUMMER 2026 BASED ON ACOUSTIC-TRAWL SAMPLING"
 # author:
 # date: '`r format(Sys.time(), format = "%F %T", tz = "UTC", usetz = TRUE)`'
 output:
@@ -43,14 +43,18 @@ if (!require("pak")) install.packages("pak")
 
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,grid,gridExtra,pander,flextable,lubridate,knitr,here,
-               png,devtools,forcats,jpeg,bookdown,magick,tmaptools,sf,
-               DBI,odbc,cowplot,mapview,fs,patchwork,gt,tcltk)
+               png,devtools,forcats,jpeg,bookdown,magick,tmaptools,sf,rnaturalearth,
+               DBI,odbc,cowplot,mapview,fs,patchwork,gt,tcltk,xml2,scatterpie)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pak::pkg_install("SWFSC/atm")
 if (!require("surveyR")) pak::pkg_install("SWFSC/surveyR")
 pacman::p_load_gh("SWFSC/atm")
 pacman::p_load_gh("SWFSC/surveyR")
+
+# rnaturalearth data
+pacman::p_load_gh("ropenscilabs/rnaturalearthdata")
+pacman::p_load_gh("ropenscilabs/rnaturalearthhires")
 
 # kableExtra - for R >= 4.3.0
 pacman::p_load_gh("kupietz/kableExtra")
@@ -78,15 +82,20 @@ if (doc.type == "latex") {
   knitr.format <- "html" 
 }
 
-# global pander options
-panderOptions('table.style','rmarkdown'); panderOptions('table.split.table', Inf); panderOptions('digits', 6);
-panderOptions('round', 6); panderOptions('keep.trailing.zeros', T); panderOptions('missing', "")
+# Define method of table generation (whether kable or xtable) for best formatting
+doc.type <- knitr::opts_knit$get('rmarkdown.pandoc.to')
+doc.name <- knitr::current_input()
+if (is.null(doc.type)) {doc.type <- "html"}
+if (is.null(doc.name)) {doc.name <- "estimateBiomass.Rmd"}
 ```
 
 ```{r loop-controls}
 # User-defined loop controls
+process.csv      <- F # Read CSV files for summarizing NASC
+get.db           <- F # Get trawl data
+get.nav          <- F # Get nav data
 combine.regions  <- T # Combine core and nearshore biomass plots
-process.cal      <- F # Process, format, and plot echosounder calibration results
+process.cal      <- T # Process, format, and plot echosounder calibration results
 save.figs        <- T # Save figures
 ```
 
@@ -145,18 +154,18 @@ The `r survey.name.long` (`r survey.name`) was conducted by the Fisheries Resour
 
 The objectives for the survey were to: 
 
-  1. Acoustically map the distributions, measure the species compositions and size-frequency distributions, and estimate the abundances and biomasses of CPS present in the survey area, e.g., Pacific Sardine *Sardinops sagax*, Northern Anchovy *Engraulis mordax*, Pacific Herring *Clupea pallasii*, Round Herring *Etrumeus acuminatus*, Pacific Mackerel *Scomber japonicus*, and Jack Mackerel *Trachurus symmetricus*; 
-  2. Describe the distribution and abundance of CPS species using surface water collections of eDNA in the Southern California Bight (SCB); 
-  3. Gather information regarding their life histories and population genetics; and 
-  4. Characterize and investigate linkages to their biotic and abiotic environments. 
-  
+1. Acoustically map the distributions, measure the species compositions and size-frequency distributions, and estimate the abundances and biomasses of CPS present in the survey area, e.g., Pacific Sardine *Sardinops sagax*, Northern Anchovy *Engraulis mordax*, Pacific Herring *Clupea pallasii*, Round Herring *Etrumeus acuminatus*, Pacific Mackerel *Scomber japonicus*, and Jack Mackerel *Trachurus symmetricus*; 
+2. Describe the distribution and abundance of CPS species using surface water collections of eDNA in the Southern California Bight (SCB); 
+3. Gather information regarding their life histories and population genetics; and 
+4. Characterize and investigate linkages to their biotic and abiotic environments. 
+
 [**UPDATE**]The planned survey domain, San Diego, CA to Cape Flattery, WA, was defined primarily by the historically observed distribution of the northern subpopulation (stock) of Pacific Sardine [@Zwolinski2011]. This area was chosen to encompass the anticipated distribution of the northern stock of Pacific Sardine and the central and northern stocks of Northern Anchovy, but also spanning portions of the distributions of Pacific Mackerel, Jack Mackerel, Pacific Herring, and the southern stock of Pacific Sardine.
 
-This report provides an overview of the survey objectives and a summary of the survey equipment, sampling protocols, and data collections. This report does not include estimates of the animal distributions and biomasses, which are documented separately [@Stierhoff2026]. 
+This report provides an overview of the survey objectives and a summary of the survey equipment, sampling protocols, and data collections. This report does not include estimates of the animal distributions and biomasses, which are documented separately **[Stierhoff2026]**. 
 
-(ref:vessel-pic) NOAA Ship _`r survey.vessel`_ (top), F/V _Lisa Marie_ (bottom left), F/V _Long Beach Carnage_ (bottom middle), and an uncrewed surface vehicle (Saildrone USV, bottom right). NOAA Ship _Shimada_ not pictured.
+(ref:vessel-pic) NOAA Ship _`r survey.vessel`_ (top), F/V _Lisa Marie_ (bottom left), F/V _Long Beach Carnage_ (bottom middle), and an uncrewed surface vehicle (Saildrone USV, bottom right).
 
-```{r vessel-pic, fig.cap='(ref:vessel-pic)', out.height='5.0in', fig.pos='H'}
+```{r vessel-pic, fig.cap='(ref:vessel-pic)', out.width='3.5in', fig.pos='H'}
 include_graphics(here("Images/img_vessels_2407RL.png"))
 ```  
 
@@ -190,9 +199,9 @@ The collection and analysis of the survey data were conducted by members of 1-NO
 **Purse-seine Sampling:**  
 
 * _Lisa Marie_
-  + Z. Calef^7^ and K. Hinton^7^
++ Z. Calef^7^ and K. Hinton^7^
 * _Long Beach Carnage_
-  + J. van Noord^8^
++ J. van Noord^8^
 
 \newpage  
 
@@ -211,7 +220,7 @@ For _`r survey.vessel`_, the offshore extent of transects was to be extended by 
 
 (ref:survey-plan) [**UPDATE**]Planned core-region (solid black lines) and adaptive (dashed red lines) transects to be sampled by _`r survey.vessel`_; core-region transects to be sampled in Baja California, MX by _Carranza_ (solid green lines); interstitial transects to be sampled by USVs (dashed cyan lines); and nearshore transect lines to be sampled by fishing vessels (solid magenta lines). Isobaths (light gray lines) are at 50, 200, 500, and 2,000 m (or approximately 25, 100, 250, and 1,000 ftm).
 
-```{r survey-plan, fig.cap='(ref:survey-plan)', out.height='8in',fig.align='center',fig.pos='H'}
+```{r survey-plan, fig.cap='(ref:survey-plan)',out.width="50%",fig.align='center',fig.pos='H'}
 include_graphics(file.path(fig.dir, "fig_survey_plan.png"))
 ```  
 
@@ -236,7 +245,7 @@ On _Lisa Marie_, multi-frequency Wideband Transceivers (Simrad EK80 WBTs; Kongsb
 
 (ref:cb-config-lm) Transducer locations mounted on the hull of _Lisa Marie_.
 
-```{r cb-config-lm,fig.cap='(ref:cb-config-lm)',out.width = '6.5in',fig.align='center',fig.pos='H'}
+```{r cb-config-lm,fig.cap='(ref:cb-config-lm)',out.width="45%",fig.align='center',fig.pos='H'}
 include_graphics(here("Images/img_lisa-marie_transducer-blister.png"))
 ```  
 
@@ -244,7 +253,7 @@ On _Long Beach Carnage_, the SWFSC's multi-frequency Wideband Transceivers (Simr
 
 (ref:cb-config-lbc) Transducer locations on the bottom of the pole-mounted multi-transducer array (MTA4) installed on the F/V _Long Beach Carnage_.
 
-```{r cb-config-lbc,fig.cap='(ref:cb-config-lbc)',out.height = '5in',fig.align='center',fig.pos='H'}
+```{r cb-config-lbc,fig.cap='(ref:cb-config-lbc)',out.width="45%",fig.align='center',fig.pos='H'}
 include_graphics(here("Images/img_carnage_MTA4.jpg"))
 ```
 
@@ -413,79 +422,239 @@ All analyses presented here were performed using R software [@Rcore2025], includ
 
 ## Sampling effort and allocation {#results-sampling-effort}
 
+```{r get-nav-data}
+# Source code to get nav data from ERDDAP, RosePoint, or SCS
+if (nav.source == "ERDDAP") {
+  source(here("Code/get_nav_erddap.R"))
+} else if (nav.source == "SCS") {
+  source(here("Code", scs.nav.script))
+} else if (nav.source == "RosePoint") {
+  source(here("Code/get_nav_rosepoint.R"))
+}
+
+# Read transect waypoints
+wpts <- read_csv(here("Data/Nav", wpt.filename), lazy = FALSE) %>% 
+  rename(lat = Latitude, long = Longitude) %>% 
+  project_df(to = crs.proj)
+
+wpts.sf <- wpts %>% 
+  filter(Type %in% wpt.types, Region %in% wpt.regions) %>%  
+  st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
+  mutate(
+    label    = paste("Transect", Transect),
+    popup    = paste('<b>Transect:</b>', Transect, Type))
+
+if(is.null(wpts.sf$Region)) wpts.sf$Region = "All"
+
+# Create transect lines from waypoint files and add line bearing
+transects.sf <- wpts.sf %>% 
+  group_by(Type, Transect, Region) %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("LINESTRING") %>% 
+  ungroup() %>% 
+  mutate(distance = round(as.numeric(st_length(.))/1852,1),
+         brg      = 360 + stplanr::line_bearing(.),
+         label    = paste("Transect", Transect),
+         popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
+                          'Distance:', distance, 'nmi<br/>')) 
+```
+
+```{r configure-base-map, include=FALSE}
+# Get map data -------------------------------
+# Import landmarks
+locations <- filter(read.csv(here("Data/Map/locations.csv")), name %in% label.list) %>% 
+  project_df(to = crs.proj)
+
+# Get land features --------------------------
+# Get state data
+states <- ne_states(country = 'United States of America', returnclass = 'sf')
+ca     <- filter(states, name == "California")
+
+# Get countries
+countries <- ne_countries(scale = "large", returnclass = "sf") %>%
+  filter(subregion %in% c("Northern America","Central America"))
+
+# Read bathy contours shapefile 
+bathy <- st_read(here("Data/GIS/bathy_contours.shp")) %>% 
+  st_transform(crs.geog) %>% 
+  rename(Depth = Contour)
+
+# Read isoline
+bathy_5m_line <- st_read(here("Data/GIS/bathy_us_wc_5m.shp")) %>% 
+  st_transform(crs.geog) %>% 
+  rename(Depth = CONTOUR)
+
+# Read 5m bathymetry points shapefile
+bathy_5m_points <- st_read(here("Data/GIS/isobath_5m_final.shp"))
+
+# Read 5m bathymetry polygon
+bathy_5m_poly <- bathy_5m_points %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("POLYGON") %>% 
+  st_make_valid()
+
+# Read 20m bathymetry polygon
+bathy_20m_poly <- st_read(here("Data/GIS/bathy_20m_polygon.shp"))
+
+# Create a reduced coastline for nearshore point estimation
+bathy_5m_df <- bathy_5m_points %>%
+  mutate(
+    long = as.data.frame(st_coordinates(.))$X,
+    lat = as.data.frame(st_coordinates(.))$Y) %>% 
+  st_set_geometry(NULL)
+
+# Set padding around data  
+map.bounds <- transects.sf %>%
+  st_transform(crs = crs.proj) %>%
+  st_bbox()
+
+# Determine map aspect ratio and set height and width
+map.aspect <- (map.bounds$xmax - map.bounds$xmin)/(map.bounds$ymax - map.bounds$ymin)
+map.width  <- map.height*map.aspect
+
+# Create base map
+base.map <- get_basemap(nav.paths.sf, states, countries, locations, bathy, map.bounds, crs = crs.proj)
+```  
+
+```{r process-csv-cps, include=FALSE}
+# List acoustic survey vessels
+nasc.vessels <- c("RL") # ,"LBC","LM"
+
+# Create data frame for all backscatter data
+nasc.all <- data.frame()
+
+if (process.csv) {
+  for (i in nasc.vessels) {
+    # i = "RL"
+    
+    # List full file paths
+    csv.files <- c(dir_ls(file.path(survey.dir[i], nasc.dir[i]),
+                          regexp = nasc.pattern.cps[i]))
+    
+    # Create data frame for results
+    nasc <- data.frame()
+    
+    # Configure progress bar
+    pb <- winProgressBar(title = "CSV File Processing Progress - CPS", 
+                         label = "0% done", min = 0, max = 100, initial = 0)
+    
+    # Process all .CSV files
+    for (ii in 1:length(csv.files)) {
+      # Process i-th file
+      nasc <- bind_rows(nasc, extract_csv(csv.files[ii]), Sv.max = Sv.max)
+      
+      # Update the progress bar
+      info <- sprintf("%d%% done", round((ii / length(csv.files)) * 100))
+      setWinProgressBar(pb, round((ii / length(csv.files)) * 100), label = info)
+    }
+    close(pb)
+    
+    # Calculate summary interval
+    nasc <- nasc %>%
+      mutate(int = cut(Interval, seq(1, max(Interval) + nasc.summ.interval, nasc.summ.interval),
+                       labels = F, include.lowest = T)) %>% 
+      mutate(vessel = i)
+    
+    # Save results
+    save(nasc, file = here("Output", paste0("nasc_reportSurvey_", i, ".Rdata")))
+    
+    # Get intervals with bad lat/long values
+    bad.nasc <- filter(nasc, lat == 999, long == 999)
+    
+    # Remove data with bad positions
+    nasc <- nasc %>%
+      filter(lat != 999, long != 999)
+    
+    # Define cps.nasc
+    nasc <- nasc %>% 
+      mutate(cps.nasc = purrr::pluck(., nasc.depth.cps),
+             cps.nasc.source = nasc.depth.cps) %>% 
+      mutate(transect.orig = transect)
+    
+    # Remove numbers from transect names (e.g., 105-1, 105-2, etc.)
+    if (strip.tx.nums[i]) {
+      nasc$transect <- gsub(tx.num.pattern[i], "", nasc$transect)
+    }
+    
+    # Remove letters from transect names (e.g., 105A, 105B, etc.)
+    if (strip.tx.chars[i]) {
+      nasc$transect <- gsub(tx.char.pattern[i], "", nasc$transect)  
+    }
+    
+    # Combine nasc
+    nasc.all <- bind_rows(nasc.all, nasc)
+  }
+  
+  # Save NASC data
+  saveRDS(nasc.all, here("Output/nasc_all.rds"))
+} else {
+  nasc.all <- readRDS(here("Output/nasc_all.rds"))
+}
+
+# average NASC.70 data over new intervals or number of intervals in a 2 km radius
+nasc.summ <- nasc.all %>%
+  group_by(vessel, transect) %>%
+  summarise(
+    start    = min(datetime),
+    end      = max(datetime),
+    duration = difftime(end, start, units = "hours"),
+    n_int    = length(Interval),
+    distance = length(Interval)*nasc.interval/1852,
+    lat      = lat[which.min(long)],
+    long     = long[which.min(long)],
+    bins     = length(int),
+    bin.mid  = as.integer(round(bins / 2)),
+    NASC     = mean(cps.nasc)
+  ) %>% 
+  arrange(desc(NASC))
+
+# Average cps.nasc over defined interval
+# Summarize by file name, not transect, so that renamed (i.e., strip.tx.chars == T) transects get included.
+nasc.sf <- nasc.all %>%
+  select(filename, vessel, transect, transect.orig, int, dist_m, datetime, lat, long, cps.nasc) %>% 
+  group_by(filename, vessel, transect, transect.orig, int) %>% 
+  summarise(
+    lat   = lat[1],
+    long  = long[1],
+    NASC  = mean(cps.nasc),
+    label = paste0('Transect: ', transect.orig[1], "; ",
+                   'Distance: ', round(min(dist_m)), "-", round(max(dist_m)), ' m'),
+    popup = paste0('<b>Transect: </b>', transect.orig[1], '<br/>',
+                   '<b>Time: </b>', min(datetime), " - ", max(datetime), ' UTC<br/>',
+                   '<b>Distance: </b>', round(min(dist_m)), "-", round(max(dist_m)), ' m<br/>',
+                   '<b>NASC: </b>', round(mean(NASC)), ' m<sup>2</sup> nmi<sup>-2</sup>')) %>%
+  # Create bins for defining point size in NASC plots
+  mutate(bin       = cut(NASC, nasc.breaks, include.lowest = T),
+         bin.level =  as.numeric(bin)) %>% 
+  filter(!is.na(bin)) %>% 
+  st_as_sf(coords = c("long","lat"), crs = crs.geog) 
+
+nasc.plot <- project_sf(nasc.sf, crs.proj)
+
+nasc.paths <- nasc.all %>% 
+  st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
+  group_by(vessel, transect, transect.orig) %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("LINESTRING") 
+```
+
 ```{r get-survey-distances}
-# Summarise survey distance (nmi) by vessel
-
-# Read nasc.summ CSV file
-nasc.summ <- read.csv(here("Output/nasc_summ_tx.csv"))
-
+# Summarize survey distance (nmi) by vessel
 ## Core survey area
 dist.summ <- nasc.summ %>%
-  mutate(vessel = case_when(
-    str_detect(transect.name, "RL")  ~ "RL",
-    str_detect(transect.name, "SD")  ~ "SD",
-    str_detect(transect.name, "LBC") ~ "LBC",
-    str_detect(transect.name, "LM")  ~ "LM",
-    str_detect(transect.name, "SH")  ~ "SH",
-    TRUE ~ "Other")) %>%
   group_by(vessel) %>%
   summarise(distance = round(sum(distance)),
             n.tx     = n(),
             mean.tx.dist = distance/n.tx)
 
-## Nearshore survey area
-nasc.summ.lbc.ns <- data.frame()
-nasc.summ.lm.ns <- data.frame()
-if (exists("nasc.summ.ns")) {
-  dist.summ.ns <- nasc.summ.ns %>%
-    mutate(vessel = case_when(
-      str_detect(transect.name, "RL")  ~ "RL",
-      str_detect(transect.name, "SD")  ~ "SD",
-      str_detect(transect.name, "LBC") ~ "LBC",
-      str_detect(transect.name, "LM")  ~ "LM",
-      str_detect(transect.name, "SH")  ~ "SH",
-      TRUE ~ "Other")) %>%
-    group_by(vessel) %>%
-    summarise(distance = round(sum(distance)),
-              n.tx     = n(),
-              mean.tx.dist = distance/n.tx)
-}
-
-## Offshore survey area
-if (exists("nasc.summ.os")) {
-  dist.summ.os <- nasc.summ.os %>%
-    mutate(vessel = case_when(
-      str_detect(transect.name, "RL")  ~ "RL",
-      str_detect(transect.name, "SD")  ~ "SD",
-      str_detect(transect.name, "LBC") ~ "LBC",
-      str_detect(transect.name, "LM")  ~ "LM",
-      str_detect(transect.name, "SH")  ~ "SH",
-      TRUE ~ "Other")) %>%
-    group_by(vessel) %>%
-    summarise(distance = round(sum(distance)),
-              n.tx     = n(),
-              mean.tx.dist = distance/n.tx)
-}
-```
-
-[**DELETE THIS IF NOT NEEDED**]
-```{r get-nearshore-nasc}
 if ("Nearshore" %in% estimate.regions) {
-  load(here("Output/purse_seine_sets.Rdata"))
-  load(here("Output/nasc_summ_tx_ns.Rdata"))
-
-  nasc.summ.lbc.ns <- filter(nasc.summ.ns, vessel.name == "LBC")
-  nasc.summ.lm.ns  <- filter(nasc.summ.ns, vessel.name == "LM")
+  nasc.summ.lbc.ns <- filter(nasc.summ, vessel == "LBC")
+  nasc.summ.lm.ns  <- filter(nasc.summ, vessel == "LM")
 }
 ```
 
 ```{r get-nav-summary}
 # Get navigation summary for all of the sampling platforms
-
-get.nav <- TRUE
-source(here("Code/get_nav_erddap.R"))
-
-
 # Summarize Lasker days at sea
 if (file.exists(here("Data/Nav/nav_data_raw.rds"))) {
   nav.fsv <- readRDS(here("Data/Nav/nav_data_raw.rds"))
@@ -498,7 +667,7 @@ if (file.exists(here("Data/Nav/lm_nav.gpx"))) {
   nav.lm <- read_GPX(here("Data/Nav/lm_nav.gpx"))$track_points %>%
     project_sf(crs = 4326) %>%
     select(time, lat = Y, long = X)
-
+  
   das.lm <- n_distinct(date(nav.lm$time))
 }
 
@@ -508,70 +677,339 @@ if (file.exists(here("Data/Nav/lbc_nav.gpx"))) {
   nav.lbc <- read_GPX(here("Data/Nav/lbc_nav.gpx"))$track_points %>%
     project_sf(crs = 4326) %>%
     select(time, lat = Y, long = X)
-
+  
   das.lbc <- n_distinct(date(nav.lbc$time))
 }
 ```
+
 [**NEED TO ADD CODE TO SUMMARIZE TRAWL CATCH**]
 ```{r get-trawl-data}
-
-get.db <- F
-
 # If getting data directly from the database
 if (get.db) {
   # Source script to collect data from trawl database
   source(here("Code/collect_trawl_database.R"))
   
-# Otherwise, load data that has already been read and stored in an R file. This
-# is data that has not yet gone through format_trawl_database()
+  # Otherwise, load data that has already been read and stored in an R file. This
+  # is data that has not yet gone through format_trawl_database()
 } else {
   # Load trawl data
-  load("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output/haul_info.Rdata")
   load(here("Data/Trawl/trawl_data_raw.Rdata"))
+  # load("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output/haul_info.Rdata")
+  # load(here("Data/Trawl/trawl_data_raw.Rdata"))
+}
+
+# Source script to format data from trawl database
+source(here("Code/format_trawl_database.R"))
+
+# Get only hauls from current survey
+# Select bad trawls
+haul.bad <- haul.all %>% 
+  filter(cruise %in% cruise.name,
+         trawlPerformance %in% trawl.performance | # Aborted hauls, etc.
+           haul %in% trawl.haul.rm | # Manually excluded hauls
+           # Missing data that will cause errors in nav matching
+           is.na(collection) |
+           is.na(equilibriumTime) | 
+           is.na(haulBackTime))
+
+# Get only hauls from current survey
+haul <- filter(haul.all, cruise %in% cruise.name & ship %in% cruise.ship) %>% 
+  filter(!haul %in% haul.bad$haul) %>%
+  # Manually remove hauls
+  filter(!haul %in% trawl.haul.rm) %>% 
+  mutate(duration = round(difftime(haulBackTime, equilibriumTime, units = "mins"), 1), # Calculate duration
+         cluster  = cumsum(c(0, diff(equilibriumTime, units = "hours")) > 12) + 1, # Assign cluster
+         sample.type = "Trawl")
+
+# Find midpoint of each haul as the mean lat/lon
+haul.mid <- haul %>% 
+  group_by(cluster, haul, sample.type) %>% 
+  summarise(
+    lat  = mean(c(startLatDecimal, stopLatDecimal)),
+    long = mean(c(startLongDecimal, stopLongDecimal)))
+
+# Convert to sf for plotting
+haul.mid.sf <- haul.mid %>% 
+  mutate(label = paste("Haul", haul)) %>% 
+  st_as_sf(coords = c("long","lat"), crs = crs.geog) 
+
+# Find midpoint of each haul cluster as the average of haul midpoints
+cluster.mid <- haul.mid %>% 
+  group_by(cluster, sample.type) %>% 
+  summarise(
+    lat  = mean(lat),
+    long = mean(long)) %>% 
+  ungroup() %>% 
+  project_df(to = crs.proj)
+
+# Convert to sf for plotting
+cluster.mid.sf <- cluster.mid %>% 
+  mutate(label = paste("Cluster", cluster)) %>% 
+  st_as_sf(coords = c("long","lat"), crs = crs.geog) 
+
+# Get only catches from current survey
+catch <- catch.all %>% 
+  left_join(select(spp.codes, species, scientificName, commonName)) %>% 
+  filter(cruise %in% cruise.name & ship %in% cruise.ship & 
+           scientificName %in% cps.spp & netSampleType == 'codend') %>% 
+  filter(!presenceOnly == "Y") %>%
+  filter(!flaggedData %in% c("excludedFromBiomass")) %>% 
+  inner_join(select(haul, haul, cluster)) %>% 
+  mutate(key = paste(haul, scientificName),
+         sample.type = "Trawl")
+
+# Summarize haul catches
+haul.summ.wt <- catch %>%  
+  select(haul, cluster, sample.type, scientificName, totalWeight) %>% 
+  pivot_wider(names_from = scientificName, values_from = totalWeight, values_fn = sum, values_fill = 0)
+
+# Add species with zero total weight
+if (!has_name(haul.summ.wt, "Engraulis mordax"))      {haul.summ.wt$`Engraulis mordax`      <- 0}
+if (!has_name(haul.summ.wt, "Sardinops sagax"))       {haul.summ.wt$`Sardinops sagax`       <- 0}
+# if (!has_name(haul.summ.wt, "Sardinops melanosticta")){haul.summ.wt$`Sardinops melanosticta`<- 0}
+if (!has_name(haul.summ.wt, "Scomber japonicus"))     {haul.summ.wt$`Scomber japonicus`     <- 0}
+if (!has_name(haul.summ.wt, "Trachurus symmetricus")) {haul.summ.wt$`Trachurus symmetricus` <- 0}
+if (!has_name(haul.summ.wt, "Clupea pallasii"))       {haul.summ.wt$`Clupea pallasii`       <- 0}
+if (!has_name(haul.summ.wt, "Atherinopsis californiensis")) {haul.summ.wt$`Atherinopsis californiensis` <- 0}
+if (!has_name(haul.summ.wt, "Etrumeus acuminatus"))   {haul.summ.wt$`Etrumeus acuminatus` <- 0}
+if (!has_name(haul.summ.wt, "Allosmerus elongatus"))  {haul.summ.wt$`Allosmerus elongatus` <- 0}
+if (!has_name(haul.summ.wt, "Other"))                 {haul.summ.wt$`Other` <- 0}
+
+# Calculate total weight of all CPS species
+haul.summ.wt <- haul.summ.wt %>% 
+  replace(is.na(.), 0) %>%
+  ungroup() %>% 
+  mutate(AllCPS = rowSums(select(., -haul, -cluster, -sample.type))) %>%
+  arrange(haul)
+
+# Summarize catch by cluster
+cluster.summ.wt <- haul.summ.wt %>% 
+  select(-haul, -AllCPS, -sample.type) %>% 
+  group_by(cluster) %>% 
+  summarise_all(list(sum)) %>% 
+  mutate(AllCPS = rowSums(select(., -cluster))) %>% 
+  right_join(cluster.mid) %>% 
+  rename(any_of(pie.spp)) %>%
+  replace(is.na(.), 0)
+
+# Add lat/long to haul summary for plotting
+haul.summ.wt <- haul.summ.wt %>% 
+  right_join(haul.mid) %>% 
+  rename(any_of(pie.spp)) %>%
+  replace(is.na(.), 0) %>% 
+  arrange(haul)
+
+# Filter length data for current cruise and vessel
+lengths <- lengths.all %>% 
+  # Add scientific and common names
+  left_join(select(spp.codes, species, scientificName, commonName)) %>%
+  # Filter for cruise specific data
+  filter(cruise %in% cruise.name & ship %in% cruise.ship & 
+           scientificName %in% cps.spp & toupper(isRandomSample) == "Y") %>% 
+  filter(!haul %in% trawl.haul.rm)
+```
+
+```{r}
+# Prepare catch data for plotting ----------------------------------------------
+# Select and rename trawl data for pie charts
+haul.pie <- haul.summ.wt %>% 
+  select(haul, long, lat, any_of(names(pie.spp)), AllCPS, sample.type) %>%
+  mutate(bin       = cut(AllCPS, trawl.breaks, include.lowest = TRUE),
+         bin.level = as.numeric(bin)) %>% 
+  arrange(haul) %>% 
+  project_df(to = crs.proj) %>% 
+  mutate(
+    label = paste("Haul", haul),
+    popup = paste('<b>Cluster:', haul, '</b><br/>',
+                  'Anchovy:', Anchovy, 'kg<br/>',
+                  'Sardine:', Sardine, 'kg<br/>',
+                  # 'J. Sardine:', JapSardine, 'kg<br/>',
+                  'Jack Mackerel:', JackMack, 'kg<br/>',
+                  'P. herring:', PacHerring, 'kg<br/>',
+                  'P. mackerel:', PacMack, 'kg<br/>',
+                  'Smelt:', Smelt, 'kg<br/>',
+                  'R. herring:', RndHerring, 'kg<br/>',
+                  'All CPS:', AllCPS, 'kg'))
+
+cluster.pie <- cluster.summ.wt %>% 
+  select(cluster, long, lat, any_of(names(pie.spp)), AllCPS, sample.type) %>%
+  mutate(bin       = cut(AllCPS, trawl.breaks, include.lowest = TRUE),
+         bin.level = as.numeric(bin)) %>% 
+  project_df(to = crs.proj) %>% 
+  mutate(
+    label = paste("Cluster", cluster),
+    popup = paste('<b>Cluster:', cluster, '</b><br/>',
+                  'Anchovy:', Anchovy, 'kg<br/>',
+                  'Sardine:', Sardine, 'kg<br/>',
+                  # 'J. Sardine:', JapSardine, 'kg<br/>',
+                  'Jack Mackerel:', JackMack, 'kg<br/>',
+                  'P. herring:', PacHerring, 'kg<br/>',
+                  'P. mackerel:', PacMack, 'kg<br/>',
+                  'Smelt:', Smelt, 'kg<br/>',
+                  'R. herring:', RndHerring, 'kg<br/>',
+                  'All CPS:', AllCPS, 'kg'))
+
+# Filter for empty trawls
+haul.zero    <- filter(haul.pie, AllCPS == 0)
+
+cluster.zero <- filter(cluster.pie, AllCPS == 0)
+
+# Calculate pie radius based on latitude range
+pie.radius <- as.numeric(abs(map.bounds$ymin - map.bounds$ymax)*pie.scale)
+
+# Calculate pie radius of each pie, based on All CPS landings
+if (scale.pies) {
+  haul.pie$r    <- pie.radius*log(haul.pie$bin.level+1)
+  cluster.pie$r <- pie.radius*log(cluster.pie$bin.level+1)
+} else {
+  haul.pie$r    <- pie.radius
+  cluster.pie$r <- pie.radius
+}
+
+# Filter for positive hauls and clusters
+haul.pos <- filter(haul.pie, AllCPS > 0) %>% 
+  arrange(X)
+
+cluster.pos <- filter(cluster.pie, AllCPS > 0) %>% 
+  arrange(X)
+
+# Substitute very small value for species with zero catch, just for pie charts
+if (nrow(haul.pos) > 0) {
+  haul.pos <- haul.pos %>% 
+    replace(. == 0, 0.0000001) 
+  
+  cluster.pos <- cluster.pos %>% 
+    replace(. == 0, 0.0000001) 
 }
 ```
 
-
 ```{r get-seine-data}
-
-# Load LBC .RData file into an isolated environment then convert to a vessel-specific list
-temp_env <- new.env()
-load("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606LBC)/DATA/seine_data_raw.Rdata", envir = temp_env)
-seine.lbc <- as.list(temp_env)
-
-# Do the same when Lisa Marie data are available
-
-# Summarize Lisa Marie catch
-if (exists("set.lengths")) {
-  seine.summ.lm <- set.lengths %>%
-    filter(vessel.name == "LM") %>%
-    group_by(scientificName) %>%
-    summarise(
-      total.wt = sum(weightg)/1000,
-      total.ct = n()
-    )
-
-  # Summarize Long Beach Carnage catch
-  seine.summ.lbc <- set.lengths %>%
-    filter(vessel.name == "LBC", landing != 160) %>%
-    group_by(scientificName) %>%
-    summarise(
-      total.wt = sum(weightg)/1000,
-      total.ct = n()
-    )
+if (get.db) {
+  # Source script to collect data from trawl database
+  source(here("Code/collect_seine_database.R"))
+  
+} else {
+  # Load trawl data
+  load(here("Data/Seine/seine_data_raw.Rdata"))
+  
 }
 
+# Source script to format data from trawl database
+source(here("Code/format_seine_database.R"))
+
+# Get only sets from current survey
+sets <- filter(sets.all, cruise %in% cruise.name) %>% 
+  mutate(vessel.name = ship,
+         vessel_name = seine.vessels.long[ship],
+         key.set = paste(ship, date, set),
+         sample.type = "Purse seine")
+
+# Create set cluster file
+set.clusters <- select(sets, key.set, date, datetime, vessel.name, lat, long, sample.type) %>%
+  filter(vessel.name %in% seine.vessels) %>% 
+  arrange(vessel.name, datetime) %>% 
+  # Begin clustering after primary survey vessel clusters
+  mutate(cluster = max(cluster.mid$cluster) + as.numeric(as.factor(key.set)),
+         haul    = max(haul.mid$haul) + as.numeric(as.factor(key.set)),
+         sample.type = "Purse seine") %>%
+  project_df(to = crs.proj)
+
+## Process catch data ------------------------------------------------
+set.catch <- set.catch.all %>% 
+  left_join(select(spp.codes, species, commonName, scientificName)) %>% 
+  # Retain only target CPS species
+  filter(scientificName %in% cps.spp) %>% 
+  mutate(vessel.name = ship,
+         vessel_name = seine.vessels.long[ship],
+         key.set = paste(ship, date, set)) %>% 
+  filter(key.set %in% sets$key.set) 
+
+# Filter length data for current cruise and vessel
+set.lengths <- set.lengths.all %>%
+  # Add scientific and common names
+  left_join(select(spp.codes, species, scientificName, commonName)) %>%
+  filter(cruise %in% cruise.name & ship %in% seine.vessels & 
+           scientificName %in% c(cps.spp, "Merluccius productus")) 
+
+# Summarize sets
 if (exists("sets")) {
   ## Summarize sets by vessel using `sets`
   set.summ <- sets %>%
     group_by(vessel.name) %>%
     tally()
 }
+
+# Summarize catches
+# Summarize Lisa Marie catch
+if (exists("set.lengths")) {
+  seine.summ.lm <- set.lengths %>%
+    filter(ship == "LM") %>%
+    group_by(scientificName) %>%
+    summarise(
+      total.wt = sum(weightg, na.rm = TRUE)/1000,
+      total.ct = n()
+    )
+  
+  # Summarize Long Beach Carnage catch
+  seine.summ.lbc <- set.lengths %>%
+    filter(ship == "LBC") %>%
+    group_by(scientificName) %>%
+    summarise(
+      total.wt = sum(weightg, na.rm = TRUE)/1000,
+      total.ct = n()
+    )
+}
+
+# Summarize catch data ------------------------------------------------
+set.catch.summ <- set.catch %>%
+  select(key.set, scientificName, totalWeight = totalWeightkg) %>% 
+  tidyr::spread(scientificName, totalWeight) %>% 
+  right_join(select(sets, key.set, vessel.name, lat, long)) %>% # Add all sets, incl. empty hauls
+  arrange(key.set) 
+
+# Summarise catch by weight -----------------------------------------------
+set.summ.wt <- set.catch.summ %>% 
+  filter(vessel.name %in% seine.vessels)
+
+# Add species with zero total weight
+if (!has_name(set.summ.wt, "Engraulis mordax"))      {set.summ.wt$`Engraulis mordax`      <- 0}
+if (!has_name(set.summ.wt, "Sardinops sagax"))       {set.summ.wt$`Sardinops sagax`       <- 0}
+if (!has_name(set.summ.wt, "Scomber japonicus"))     {set.summ.wt$`Scomber japonicus`     <- 0}
+if (!has_name(set.summ.wt, "Trachurus symmetricus")) {set.summ.wt$`Trachurus symmetricus` <- 0}
+if (!has_name(set.summ.wt, "Clupea pallasii"))       {set.summ.wt$`Clupea pallasii`       <- 0}
+if (!has_name(set.summ.wt, "Etrumeus acuminatus"))   {set.summ.wt$`Etrumeus acuminatus`   <- 0}
+if (!has_name(set.summ.wt, "Allosmerus elongatus"))   {set.summ.wt$`Allosmerus elongatus`   <- 0}
+if (!has_name(set.summ.wt, "Atherinopsis californiensis")) {set.summ.wt$`Atherinopsis californiensis` <- 0}
+if (!has_name(set.summ.wt, "Other"))                 {set.summ.wt$`Other` <- 0}
+
+# Calculate total weight of all CPS species
+set.summ.wt <- set.summ.wt %>%  
+  ungroup() %>% 
+  replace(is.na(.), 0) %>% 
+  select(key.set, vessel.name, lat, long, everything()) %>% 
+  mutate(AllCPS = rowSums(select(., -(key.set:long)))) %>%
+  rename("Jacksmelt"  = "Atherinopsis californiensis",
+         "PacHerring" = "Clupea pallasii",
+         "Anchovy"    = "Engraulis mordax",
+         "Sardine"    = "Sardinops sagax",
+         "PacMack"    = "Scomber japonicus",
+         "JackMack"   = "Trachurus symmetricus",
+         "RndHerring" = "Etrumeus acuminatus",
+         "Smelt"      = "Allosmerus elongatus",
+         "Other"      = "Other") %>% 
+  left_join(select(set.clusters, key.set, cluster, haul)) %>% 
+  select(-vessel.name, -lat, -long, -AllCPS) %>%
+  group_by(key.set, cluster, haul) %>% 
+  summarise_all(list(sum)) %>% 
+  ungroup() %>% 
+  mutate(AllCPS = rowSums(select(., -key.set, -cluster, -haul))) %>% 
+  replace(is.na(.), 0) %>% 
+  right_join(select(set.clusters, key.set, vessel.name, datetime, long, lat, sample.type))
 ```
 
 The core region of the `r tolower(survey.season)` `r survey.year` survey spanned the continental shelf from San Diego to Cape Flattery, between `r format(ymd(erddap.survey.start),"%d %B")` and `r format(ymd(erddap.survey.end),"%d %B %Y")`, and included most of the potential habitat for the northern subpopulation of Pacific Sardine at the time of the survey^[https://coastwatch.pfeg.noaa.gov/erddap/griddap/sardine_habitat_modis.html] [**UPDATE URL**]. In this region, _`r survey.vessel`_ sampled `r nrow(nasc.summ)` east-west transects totaling `r prettyNum(sum(nasc.summ$distance), digits = 1, big.mark = ",")` nmi during `r das.fsv-5` DAS [**THIS SUBTRACTS 5. DETERMINE WHY**] (**Fig. \@ref(fig:nasc-trawl)**). Catches from a total of `r nrow(haul)` nighttime surface trawls were obtained.
 
-The nearshore region spanned an area from 5-m depth to approximately 5 nmi from the continental coast, or 2.5 nmi from the Santa Cruz and Santa Catalina Islands, between San Diego and Cape Flattery. _Long Beach Carnage_ surveyed from approximately San Diego to Half Moon Bay, CA [**UPDATE**] and around the Santa Cruz and Santa Catalina Islands, with `r nrow(nasc.summ.lbc.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lbc.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LBC"]` purse-seine sets during `r das.lbc` DAS (**Fig. \@ref(fig:nasc-seine-lbc)**). _Lisa Marie_ surveyed from Half Moon Bay [**UPDATE**] to Cape Flattery, WA with `r nrow(nasc.summ.lm.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lm.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LM"]` purse-seine sets during `r das.lm` DAS (**Fig. \@ref(fig:nasc-seine-lm)**).
+The nearshore region spanned an area from 5-m depth to approximately 5 nmi from the continental coast, or 2.5 nmi from the Santa Cruz and Santa Catalina Islands, between San Diego and Cape Flattery. _Long Beach Carnage_ surveyed from approximately San Diego to Half Moon Bay, CA [**UPDATE**] and around the Santa Cruz and Santa Catalina Islands, with `nrow(nasc.summ.lbc.ns)` east-west transects totaling `sprintf("%.0f",sum(nasc.summ.lbc.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LBC"]` purse-seine sets during `r das.lbc` DAS (**Fig. \@ref(fig:nasc-seine-lbc)**). _Lisa Marie_ surveyed from Half Moon Bay [**UPDATE**] to Cape Flattery, WA with `nrow(nasc.summ.lm.ns)` east-west transects totaling `sprintf("%.0f",sum(nasc.summ.lm.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LM"]` purse-seine sets during `r das.lm` DAS (**Fig. \@ref(fig:nasc-seine-lm)**).
 
 ## Core area survey aboard _`r survey.vessel`_
 
@@ -605,24 +1043,32 @@ From 22 July to 3 August, _Lisa Marie_ sampled nearshore transects 53 to 109, be
 
 ## Trawl catch {#results-trawl-catch}
 
-Trawl catches from _`r survey.vessel`_ were composed of mostly Northern Anchovy between San Diego and Point Arena, CA; Jack Mackerel between Monterey and the US-Mexico border, and between Point Arena, CA and Cape Flattery, WA; and Pacific Herring between Coos Bay, OR and Cape Flattery, WA (**Fig. \@ref(fig:nasc-trawl)b**). Pacific Sardine and Pacific Mackerel were scarce throughout the survey area. Overall, the `r nrow(haul)` trawls captured a combined `r prettyNum(sum(cluster.summ.wt$AllCPS),big.mark=",",digits=3)` kg of CPS (`r prettyNum(sum(cluster.summ.wt$'Anchovy'),big.mark=",",digits=3)` kg of Northern Anchovy, `r prettyNum(sum(cluster.summ.wt$'JackMack'),big.mark=",",digits=3)` kg of Jack Mackerel, `r prettyNum(sum(cluster.summ.wt$'PacHerring'),big.mark=",",digits=3)` kg of Pacific Herring,  `r prettyNum(sum(cluster.summ.wt$'PacMack'),big.mark=",",digits=3)` kg of Pacific Mackerel, and `r prettyNum(sum(cluster.summ.wt$'Sardine'),big.mark=",",digits=3)` kg of Pacific Sardine; **Appendix \@ref(appendix-trawl-sampling)**).
+Trawl catches from _`r survey.vessel`_ were composed of mostly Northern Anchovy between San Diego and Point Arena, CA; Jack Mackerel between Monterey and the US-Mexico border, and between Point Arena, CA and Cape Flattery, WA; and Pacific Herring between Coos Bay, OR and Cape Flattery, WA (**Fig. \@ref(fig:nasc-trawl)b**). Pacific Sardine and Pacific Mackerel were scarce throughout the survey area. Overall, the `r nrow(haul)` trawls captured a combined `r prettyNum(sum(cluster.summ.wt$AllCPS),big.mark=",",digits=3)` kg of CPS (`r prettyNum(sum(cluster.summ.wt$'Anchovy'),big.mark=",",digits=3)` kg of Northern Anchovy, `r prettyNum(sum(cluster.summ.wt$'JackMack'),big.mark=",",digits=3)` kg of Jack Mackerel, `r prettyNum(sum(cluster.summ.wt$'PacHerring'),big.mark=",",digits=3)` kg of Pacific Herring,  `r prettyNum(sum(cluster.summ.wt$'PacMack'),big.mark=",",digits=3)` kg of Pacific Mackerel,   `r prettyNum(sum(cluster.summ.wt$'Smelt'),big.mark=",",digits=3)` kg of Whitebait Smelt, and `r prettyNum(sum(cluster.summ.wt$'Sardine'),big.mark=",",digits=3)` kg of Pacific Sardine; **Appendix \@ref(appendix-trawl-sampling)**).
 
 ## Purse-seine catch {#results-seine-catch}
 ### _Long Beach Carnage_
 
-Purse-seine catches from _Long Beach Carnage_ in the nearshore region were composed mostly of Pacific Sardine and Northern Anchovy collected in the SCB, and Pacific Sardine and Jack Mackerel in Monterey Bay (**Fig. \@ref(fig:seine-lbc)b**). Relatively few Pacific Mackerel were present in purse-seine samples (**Fig. \@ref(fig:seine-lbc)b**). No purse seine samples were obtained between Santa Maria and Monterey Bay due primarily to the absence of CPS schools, but also due to schools consisting of Northern Anchovy that were too small for the seine net or inclement weather. Overall, dip-net samples from `r set.summ$n[set.summ$vessel.name == "LBC"]` seines totaled `r prettyNum(sum(seine.summ.lbc$total.wt),big.mark=",",digits=3)` kg of CPS (`r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Sardinops sagax"],big.mark=",",digits=3)` kg of Pacific Sardine, `r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Scomber japonicus"],big.mark=",",digits=3)` kg of Pacific Mackerel, `r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Engraulis mordax"],big.mark=",",digits=2)` kg of Northern Anchovy, and `r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Trachurus symmetricus"],big.mark=",",digits=2)` kg of Jack Mackerel, **Appendix \@ref(appendix-seine-sampling-lbc)**).
+Purse-seine catches from _Long Beach Carnage_ in the nearshore region were composed mostly of Pacific Sardine and Northern Anchovy collected in the SCB, and Pacific Sardine and Jack Mackerel in Monterey Bay (**Fig. \@ref(fig:seine-lbc)b**). Relatively few Pacific Mackerel were present in purse-seine samples (**Fig. \@ref(fig:seine-lbc)b**). No purse seine samples were obtained between Santa Maria and Monterey Bay due primarily to the absence of CPS schools, but also due to schools consisting of Northern Anchovy that were too small for the seine net or inclement weather. Overall, dip-net samples from `r set.summ$n[set.summ$ship == "LBC"]` seines totaled `r prettyNum(sum(seine.summ.lbc$total.wt),big.mark=",",digits=3)` kg of CPS (`r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Sardinops sagax"],big.mark=",",digits=3)` kg of Pacific Sardine, `r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Scomber japonicus"],big.mark=",",digits=3)` kg of Pacific Mackerel, `r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Engraulis mordax"],big.mark=",",digits=2)` kg of Northern Anchovy, and `r prettyNum(seine.summ.lbc$total.wt[seine.summ.lbc$scientificName == "Trachurus symmetricus"],big.mark=",",digits=2)` kg of Jack Mackerel, **Appendix \@ref(appendix-seine-sampling-lbc)**).
 
 ### _Lisa Marie_ {#results-seine-catch-lm}
 
 [**NEED TO UPDATE AFTER GETTING LM CATCH DATA**]
-Purse-seine catches from _Lisa Marie_ in the nearshore were composed mostly of Pacific Herring, except Northern Anchovy collected between Half Moon Bay and Bodega Bay, several catches of Pacific Sardine between Pt. Arena and Eureka, CA, and a few catches of Jack Mackerel near Crescent City and north of Tillamook, OR (**Fig. \@ref(fig:seine-lm)b**). Purse-seine sampling between Cape Mendocino and Tillamook was sparse due to few CPS targets, the presence of marine mammals that did not permit the deployment of the purse-seine gear, or both. Many of the purse-seine sets north of Cape Mendocino contained no CPS (**Fig. \@ref(fig:seine-lm)b**). Overall, the dip-net samples from `r set.summ$n[set.summ$vessel.name == "LM"]` purse-seine sets totaled `r prettyNum(sum(seine.summ.lm$total.wt),big.mark=",",digits=3)` kg of CPS (`r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Trachurus symmetricus"],big.mark=",",digits=3)` kg of Jack Mackerel, `r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Sardinops sagax"],big.mark=",",digits=3)` kg of Pacific Sardine, `r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Clupea pallasii"],big.mark=",",digits=3)` kg of Pacific Herring, and `r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Engraulis mordax"],big.mark=",",digits=3)` kg of Northern Anchovy, **Appendix \@ref(appendix-seine-sampling-lm)**).
+Purse-seine catches from _Lisa Marie_ in the nearshore were composed mostly of Pacific Herring, except Northern Anchovy collected between Half Moon Bay and Bodega Bay, several catches of Pacific Sardine between Pt. Arena and Eureka, CA, and a few catches of Jack Mackerel near Crescent City and north of Tillamook, OR (**Fig. \@ref(fig:seine-lm)b**). Purse-seine sampling between Cape Mendocino and Tillamook was sparse due to few CPS targets, the presence of marine mammals that did not permit the deployment of the purse-seine gear, or both. Many of the purse-seine sets north of Cape Mendocino contained no CPS (**Fig. \@ref(fig:seine-lm)b**). Overall, the dip-net samples from `r set.summ$n[set.summ$ship == "LM"]` purse-seine sets totaled `r prettyNum(sum(seine.summ.lm$total.wt),big.mark=",",digits=3)` kg of CPS (`r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Trachurus symmetricus"],big.mark=",",digits=3)` kg of Jack Mackerel, `r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Sardinops sagax"],big.mark=",",digits=3)` kg of Pacific Sardine, `r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Clupea pallasii"],big.mark=",",digits=3)` kg of Pacific Herring, and `r prettyNum(seine.summ.lm$total.wt[seine.summ.lm$scientificName == "Engraulis mordax"],big.mark=",",digits=3)` kg of Northern Anchovy, **Appendix \@ref(appendix-seine-sampling-lm)**).
 
 \newpage
 
 (ref:FSV-trawl) Spatial distributions sampled by _`r survey.vessel`_ of proportion of CPS trawl catch, by weight, for each haul.
 
-```{r FSV-trawl, fig.cap='(ref:FSV-trawl)',out.width='100%',fig.pos='H'}
+```{r FSV-trawl, fig.cap='(ref:FSV-trawl)',out.width="50%",fig.pos='H'}
 # out.width='8.5in'
+# Map trawl species proportions -------------------------------------------------------
+if (save.figs) {
+  # Create trawl haul and cluster proportion figures
+  source(here("Code/plot_haul_proportion_wt.R"))
+} else {
+  load(here("Output/trawl_species_proportion_map.Rdata"))
+}
+
 include_graphics(file.path(fig.dir, "fig_trawl_proportion_haul_wt.png"))
 ```
 
@@ -691,6 +1137,8 @@ Relative beam-compensated target strength ($TS_{rel}$, dB re 1 m^2^) measurement
 ```{r tsc-plot-rl, out.width='7in',fig.align='center',fig.pos='H'}
 if (file.exists(here("Figs/fig_cal_TSrel_scatter_SH.png"))) {
   include_graphics(here("Figs/fig_cal_TSrel_scatter_SH.png"))
+} else {
+  print("No scatter plot figure present for FSV.")
 }
 ```
 
@@ -705,6 +1153,8 @@ Measurements of on-axis gain ($G_0$, dB); alongship ($\alpha_\mathrm{-3dB}$, cya
 # Plots generated using Code/processCal-FM.R
 if (file.exists(here("Figs/fig_cal_FM_AllFreqs_SH.png"))) {
   include_graphics(here("Figs/fig_cal_FM_AllFreqs_SH.png"))
+} else {
+  print("No FM calibration figure present for FSV.")
 }
 ```
 
@@ -718,6 +1168,8 @@ Relative beam-compensated target strength ($TS_{rel}$, dB re 1 m^2^) measurement
 ```{r tsc-plot-lm, out.width='6.5in',fig.align='center',fig.pos='H'}
 if (file.exists(here("Figs/fig_cal_TSrel_scatter_LM.png"))) {
   include_graphics(here("Figs/fig_cal_TSrel_scatter_LM.png"))
+} else {
+  print("No scatter plot figure present for Lisa Marie.")
 }
 ```
 
@@ -730,6 +1182,8 @@ Relative beam-compensated target strength ($TS_{rel}$, dB re 1 m^2^) measurement
 ```{r tsc-plot-lbc, out.width='6.5in',fig.align='center',fig.pos='H'}
 if (file.exists(here("Figs/fig_cal_TSrel_scatter_LBC.png"))) {
   include_graphics(here("Figs/fig_cal_TSrel_scatter_LBC.png"))
+} else {
+  print("No scatter plot figure present for Long Beach Carnage.")
 }
 ```
 
@@ -741,8 +1195,17 @@ Times and locations of conductivity and temperature versus depth casts while on 
 
 ```{r process-ctd-stations, results='asis'}
 # Read and format CTD and UCTD station info; generated from plotCTD
-ctd.table <- read_csv(here("Output/ctd_summary_table.csv")) %>% mutate(cast.type = "CTD")
-uctd.table <- read_csv(here("Output/uctd_summary_table.csv")) %>% mutate(cast.type = "UCTD")
+if (file.exists(here("Output/ctd_summary_table.csv"))) {
+  ctd.table <- read_csv(here("Output/ctd_summary_table.csv")) %>% mutate(cast.type = "CTD")  
+} else {
+  ctd.table <- data.frame()
+}
+
+if (file.exists(here("Output/uctd_summary_table.csv"))) {
+  uctd.table <- read_csv(here("Output/uctd_summary_table.csv")) %>% mutate(cast.type = "UCTD")
+} else {
+  uctd.table <- data.frame()
+}
 
 # Combine and format for printing
 all.ctds.table <- bind_rows(ctd.table, uctd.table) %>%
@@ -769,6 +1232,7 @@ if (doc.type == "docx") {
 ```
 
 \newpage
+\blandscape
 
 # Trawl sample summary {#appendix-trawl-sampling}
 
@@ -783,7 +1247,7 @@ trawl.summ <- haul.summ.wt %>%
   # Format column names
   select(Haul = haul, Date, Latitude, Longitude, "N. Anchovy" = Anchovy, "P. Sardine" = Sardine,
          "P. Mackerel" = PacMack, "J. Mackerel" = JackMack, "P. Herring" = PacHerring,
-         "R. Herring" = RndHerring,
+         "R. Herring" = RndHerring, Smelt,
          Jacksmelt, "All CPS" = AllCPS) %>%
   # Reformat the date
   mutate(Date = format(Date, "%m/%d/%Y %H:%M")) %>%
@@ -844,7 +1308,7 @@ seine.summ <- set.summ.wt %>%
   select(Vessel, Set, Date, Latitude = lat, Longitude = long,
          "N. Anchovy" = Anchovy, "P. Sardine" = Sardine,
          "P. Mackerel" = PacMack, "J. Mackerel" = JackMack, "P. Herring" = PacHerring,
-         "R. Herring" = RndHerring,
+         "R. Herring" = RndHerring, Smelt,
          Jacksmelt, "All CPS" = AllCPS) %>%
   # Order by haul number
   arrange(Vessel, Set)

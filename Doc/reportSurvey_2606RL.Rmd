@@ -335,9 +335,9 @@ ggsave(here("Figs/fig_survey_plan_reportSurvey.png"), survey.plan,
        height = map.height, width = map.width)
 ```
 
-(ref:survey-plan) [**UPDATE**] Planned core-region (solid black lines) and adaptive (dashed red lines) transects to be sampled by _`r survey.vessel`_; core-region transects to be sampled in Baja California, MX by _Carranza_ (solid green lines); interstitial transects to be sampled by USVs (dashed cyan lines); and nearshore transect lines to be sampled by fishing vessels (solid magenta lines). Isobaths (light gray lines) are at 50, 200, 500, and 2,000 m (or approximately 25, 100, 250, and 1,000 ftm).
+(ref:survey-plan) Planned core-region (solid black lines) transects to be sampled by _`r survey.vessel`_ and nearshore transect lines to be sampled by fishing vessels (solid magenta lines). Isobaths (light gray lines) are at 50, 200, 500, and 2,000 m (or approximately 25, 100, 250, and 1,000 ftm).
 
-```{r survey-plan, fig.cap='(ref:survey-plan)',out.width="50%",fig.align='center',fig.pos='H'}
+```{r survey-plan, fig.cap='(ref:survey-plan)',out.width="3.5in",fig.align='center',fig.pos='H'}
 include_graphics(here("Figs/fig_survey_plan_reportSurvey.png"))
 ```  
 
@@ -362,7 +362,7 @@ On _Lisa Marie_, multi-frequency Wideband Transceivers (Simrad EK80 WBTs; Kongsb
 
 (ref:cb-config-lm) Transducer locations mounted on the hull of _Lisa Marie_.
 
-```{r cb-config-lm,fig.cap='(ref:cb-config-lm)',out.width="45%",fig.align='center',fig.pos='H'}
+```{r cb-config-lm,fig.cap='(ref:cb-config-lm)',out.width="5in",fig.align='center',fig.pos='H'}
 include_graphics(here("Images/img_lisa-marie_transducer-blister.png"))
 ```  
 
@@ -370,7 +370,7 @@ On _Long Beach Carnage_, the SWFSC's multi-frequency Wideband Transceivers (Simr
 
 (ref:cb-config-lbc) Transducer locations on the bottom of the pole-mounted multi-transducer array (MTA4) installed on the F/V _Long Beach Carnage_.
 
-```{r cb-config-lbc,fig.cap='(ref:cb-config-lbc)',out.width="45%",fig.align='center',fig.pos='H'}
+```{r cb-config-lbc,fig.cap='(ref:cb-config-lbc)',out.width="5in",fig.align='center',fig.pos='H'}
 include_graphics(here("Images/img_carnage_MTA4.jpg"))
 ```
 

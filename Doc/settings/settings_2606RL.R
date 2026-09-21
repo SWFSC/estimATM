@@ -101,7 +101,7 @@ region.vec <- c(0, 32.5353, 34.7, 41.99, 48.490, 55)
 
 ## Used by formatCoastalExplorerNotebook.R ------
 ### Coastal (.nob)X file location
-nob.dir          <- here("Data/Nav")
+nob.dir          <- "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/DATA/NAV"
 nob.file         <- "2606RL-12.5-nmi-spacing_20260421.nob"
 nob.file.final   <- "2606RL-12.5-nmi-spacing_final.nob"
 
@@ -150,11 +150,11 @@ tx.breaks <- c(0, 22, 42, 64, 88)
 ## Options are: SCS (usually on the ship) or ERDDAP (usually on shore; 24h update rate)
 if (Sys.info()['nodename'] %in% c("SWC-KSTIERHOF-L")) { #("SWC-FRD-AST1-D",
   nav.source    <- "RosePoint" # SCS, ERDDAP, or RosePoint
-  nav.path.nob  <- "C:/SURVEY/2606RL/DATA/NAV/2606RL-12.5-nmi-spacing_final.nob" 
+  nav.path.nob  <- file.path(nob.dir, nob.file.final) 
   nav.source.ns <- "GPX"
 } else {
   nav.source    <- "RosePoint" # SCS, ERDDAP, or RosePoint
-  nav.path.nob  <- "C:/SURVEY/2606RL/DATA/NAV/2606RL-12.5-nmi-spacing_final.nob" 
+  nav.path.nob  <- file.path(nob.dir, nob.file.final)
   nav.source.ns <- "GPX"
 }
 

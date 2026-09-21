@@ -91,9 +91,9 @@ if (is.null(doc.name)) {doc.name <- "estimateBiomass.Rmd"}
 
 ```{r loop-controls}
 # User-defined loop controls
-process.csv      <- T # Read CSV files for summarizing NASC
-get.db           <- T # Get trawl data
-get.nav          <- T # Get nav data
+process.csv      <- F # Read CSV files for summarizing NASC
+get.db           <- F # Get trawl data
+get.nav          <- F # Get nav data
 combine.regions  <- T # Combine core and nearshore biomass plots
 process.cal      <- T # Process, format, and plot echosounder calibration results
 save.figs        <- T # Save figures
@@ -159,13 +159,13 @@ The objectives for the survey were to:
 3. Gather information regarding their life histories and population genetics; and 
 4. Characterize and investigate linkages to their biotic and abiotic environments. 
 
-[**UPDATE**]The planned survey domain, San Diego, CA to Cape Flattery, WA, was defined primarily by the historically observed distribution of the northern subpopulation (stock) of Pacific Sardine [@Zwolinski2011]. This area was chosen to encompass the anticipated distribution of the northern stock of Pacific Sardine and the central and northern stocks of Northern Anchovy, but also spanning portions of the distributions of Pacific Mackerel, Jack Mackerel, Pacific Herring, and the southern stock of Pacific Sardine.
+[**UPDATE**] The planned survey domain, San Diego, CA to Cape Flattery, WA, was defined primarily by the historically observed distribution of the northern subpopulation (stock) of Pacific Sardine [@Zwolinski2011]. This area was chosen to encompass the anticipated distribution of the northern stock of Pacific Sardine and the central and northern stocks of Northern Anchovy, but also spanning portions of the distributions of Pacific Mackerel, Jack Mackerel, Pacific Herring, and the southern stock of Pacific Sardine.
 
 This report provides an overview of the survey objectives and a summary of the survey equipment, sampling protocols, and data collections. This report does not include estimates of the animal distributions and biomasses, which are documented separately **[Stierhoff2026]**. 
 
 (ref:vessel-pic) NOAA Ship _`r survey.vessel`_ (top), F/V _Lisa Marie_ (bottom left), F/V _Long Beach Carnage_ (bottom middle), and an uncrewed surface vehicle (Saildrone USV, bottom right).
 
-```{r vessel-pic, fig.cap='(ref:vessel-pic)', out.width='3.5in', fig.pos='H'}
+```{r vessel-pic, fig.cap='(ref:vessel-pic)', out.width='5in', fig.pos='H'}
 include_graphics(here("Images/img_vessels_2407RL.png"))
 ```  
 
@@ -198,10 +198,10 @@ The collection and analysis of the survey data were conducted by members of 1-NO
 
 **Purse-seine Sampling:**  
 
-* _Lisa Marie_
-+ Z. Calef^7^ and K. Hinton^7^
-* _Long Beach Carnage_
-+ J. van Noord^8^
+* _Lisa Marie_  
+  + Z. Calef^7^ and K. Hinton^7^
+* _Long Beach Carnage_  
+  + J. van Noord^8^
 
 \newpage  
 
@@ -218,10 +218,127 @@ For _`r survey.vessel`_, the offshore extent of transects was to be extended by 
 
 \newpage  
 
-(ref:survey-plan) [**UPDATE**]Planned core-region (solid black lines) and adaptive (dashed red lines) transects to be sampled by _`r survey.vessel`_; core-region transects to be sampled in Baja California, MX by _Carranza_ (solid green lines); interstitial transects to be sampled by USVs (dashed cyan lines); and nearshore transect lines to be sampled by fishing vessels (solid magenta lines). Isobaths (light gray lines) are at 50, 200, 500, and 2,000 m (or approximately 25, 100, 250, and 1,000 ftm).
+```{r get-nav-data}
+# Source code to get nav data from ERDDAP, RosePoint, or SCS
+if (nav.source == "ERDDAP") {
+  source(here("Code/get_nav_erddap.R"))
+} else if (nav.source == "SCS") {
+  source(here("Code", scs.nav.script))
+} else if (nav.source == "RosePoint") {
+  source(here("Code/get_nav_rosepoint.R"))
+}
+
+# Read transect waypoints
+wpts <- read_csv(here("Data/Nav", wpt.filename), lazy = FALSE) %>% 
+  rename(lat = Latitude, long = Longitude) %>% 
+  project_df(to = crs.proj)
+
+wpts.sf <- wpts %>% 
+  filter(Type %in% wpt.types, Region %in% wpt.regions) %>%  
+  st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
+  mutate(
+    label    = paste("Transect", Transect),
+    popup    = paste('<b>Transect:</b>', Transect, Type))
+
+if(is.null(wpts.sf$Region)) wpts.sf$Region = "All"
+
+# Create transect lines from waypoint files and add line bearing
+transects.sf <- wpts.sf %>% 
+  group_by(Type, Transect, Region) %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("LINESTRING") %>% 
+  ungroup() %>% 
+  mutate(distance = round(as.numeric(st_length(.))/1852,1),
+         brg      = 360 + stplanr::line_bearing(.),
+         label    = paste("Transect", Transect),
+         popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
+                          'Distance:', distance, 'nmi<br/>')) 
+```
+
+```{r configure-base-map, include=FALSE}
+# Get map data -------------------------------
+# Import landmarks
+locations <- filter(read.csv(here("Data/Map/locations.csv")), name %in% label.list) %>% 
+  project_df(to = crs.proj)
+
+# Get land features --------------------------
+# Get state data
+states <- ne_states(country = 'United States of America', returnclass = 'sf')
+ca     <- filter(states, name == "California")
+
+# Get countries
+countries <- ne_countries(scale = "large", returnclass = "sf") %>%
+  filter(subregion %in% c("Northern America","Central America"))
+
+# Read bathy contours shapefile 
+bathy <- st_read(here("Data/GIS/bathy_contours.shp")) %>% 
+  st_transform(crs.geog) %>% 
+  rename(Depth = Contour)
+
+# Read isoline
+bathy_5m_line <- st_read(here("Data/GIS/bathy_us_wc_5m.shp")) %>% 
+  st_transform(crs.geog) %>% 
+  rename(Depth = CONTOUR)
+
+# Read 5m bathymetry points shapefile
+bathy_5m_points <- st_read(here("Data/GIS/isobath_5m_final.shp"))
+
+# Read 5m bathymetry polygon
+bathy_5m_poly <- bathy_5m_points %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("POLYGON") %>% 
+  st_make_valid()
+
+# Read 20m bathymetry polygon
+bathy_20m_poly <- st_read(here("Data/GIS/bathy_20m_polygon.shp"))
+
+# Create a reduced coastline for nearshore point estimation
+bathy_5m_df <- bathy_5m_points %>%
+  mutate(
+    long = as.data.frame(st_coordinates(.))$X,
+    lat = as.data.frame(st_coordinates(.))$Y) %>% 
+  st_set_geometry(NULL)
+
+# Set padding around data  
+map.bounds <- transects.sf %>%
+  st_transform(crs = crs.proj) %>%
+  st_bbox()
+
+# Determine map aspect ratio and set height and width
+map.aspect <- (map.bounds$xmax - map.bounds$xmin)/(map.bounds$ymax - map.bounds$ymin)
+map.width  <- map.height*map.aspect
+
+# Create base map
+base.map <- get_basemap(nav.paths.sf, states, countries, locations, bathy, map.bounds, crs = crs.proj)
+```  
+
+```{r map-survey-plan}
+# Map planned transects and station samples
+survey.plan <- base.map +   
+  geom_sf(data = transects.sf, aes(colour = Type, linetype = Type), 
+          show.legend = "line") +
+  # geom_shadowtext(data = filter(tx.labels, Type %in% c("Compulsory", "Adaptive")),
+  #                 aes(X, Y, label = transect.name,
+  #                     angle = brg),
+  #                 hjust = 1, size = 1.25, fontface = 'bold.italic',
+  #                 colour = "black", bg.colour = "white") +
+  scale_colour_manual("Type", 
+                      values = wpt.colors) +
+  scale_linetype_manual("Type", 
+                        values = wpt.linetypes) +
+  coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
+           xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])), 
+           ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"])))
+
+# Save survey plan map
+ggsave(here("Figs/fig_survey_plan_reportSurvey.png"), survey.plan,
+       height = map.height, width = map.width)
+```
+
+(ref:survey-plan) [**UPDATE**] Planned core-region (solid black lines) and adaptive (dashed red lines) transects to be sampled by _`r survey.vessel`_; core-region transects to be sampled in Baja California, MX by _Carranza_ (solid green lines); interstitial transects to be sampled by USVs (dashed cyan lines); and nearshore transect lines to be sampled by fishing vessels (solid magenta lines). Isobaths (light gray lines) are at 50, 200, 500, and 2,000 m (or approximately 25, 100, 250, and 1,000 ftm).
 
 ```{r survey-plan, fig.cap='(ref:survey-plan)',out.width="50%",fig.align='center',fig.pos='H'}
-include_graphics(file.path(fig.dir, "fig_survey_plan.png"))
+include_graphics(here("Figs/fig_survey_plan_reportSurvey.png"))
 ```  
 
 \newpage  
@@ -422,104 +539,7 @@ All analyses presented here were performed using R software [@Rcore2025], includ
 
 ## Sampling effort and allocation {#results-sampling-effort}
 
-```{r get-nav-data}
-# Source code to get nav data from ERDDAP, RosePoint, or SCS
-if (nav.source == "ERDDAP") {
-  source(here("Code/get_nav_erddap.R"))
-} else if (nav.source == "SCS") {
-  source(here("Code", scs.nav.script))
-} else if (nav.source == "RosePoint") {
-  source(here("Code/get_nav_rosepoint.R"))
-}
-
-# Read transect waypoints
-wpts <- read_csv(here("Data/Nav", wpt.filename), lazy = FALSE) %>% 
-  rename(lat = Latitude, long = Longitude) %>% 
-  project_df(to = crs.proj)
-
-wpts.sf <- wpts %>% 
-  filter(Type %in% wpt.types, Region %in% wpt.regions) %>%  
-  st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-  mutate(
-    label    = paste("Transect", Transect),
-    popup    = paste('<b>Transect:</b>', Transect, Type))
-
-if(is.null(wpts.sf$Region)) wpts.sf$Region = "All"
-
-# Create transect lines from waypoint files and add line bearing
-transects.sf <- wpts.sf %>% 
-  group_by(Type, Transect, Region) %>% 
-  summarise(do_union = FALSE) %>% 
-  st_cast("LINESTRING") %>% 
-  ungroup() %>% 
-  mutate(distance = round(as.numeric(st_length(.))/1852,1),
-         brg      = 360 + stplanr::line_bearing(.),
-         label    = paste("Transect", Transect),
-         popup    = paste('<b>Transect:</b>', Transect, Type, '<br/>',
-                          'Distance:', distance, 'nmi<br/>')) 
-```
-
-```{r configure-base-map, include=FALSE}
-# Get map data -------------------------------
-# Import landmarks
-locations <- filter(read.csv(here("Data/Map/locations.csv")), name %in% label.list) %>% 
-  project_df(to = crs.proj)
-
-# Get land features --------------------------
-# Get state data
-states <- ne_states(country = 'United States of America', returnclass = 'sf')
-ca     <- filter(states, name == "California")
-
-# Get countries
-countries <- ne_countries(scale = "large", returnclass = "sf") %>%
-  filter(subregion %in% c("Northern America","Central America"))
-
-# Read bathy contours shapefile 
-bathy <- st_read(here("Data/GIS/bathy_contours.shp")) %>% 
-  st_transform(crs.geog) %>% 
-  rename(Depth = Contour)
-
-# Read isoline
-bathy_5m_line <- st_read(here("Data/GIS/bathy_us_wc_5m.shp")) %>% 
-  st_transform(crs.geog) %>% 
-  rename(Depth = CONTOUR)
-
-# Read 5m bathymetry points shapefile
-bathy_5m_points <- st_read(here("Data/GIS/isobath_5m_final.shp"))
-
-# Read 5m bathymetry polygon
-bathy_5m_poly <- bathy_5m_points %>% 
-  summarise(do_union = FALSE) %>% 
-  st_cast("POLYGON") %>% 
-  st_make_valid()
-
-# Read 20m bathymetry polygon
-bathy_20m_poly <- st_read(here("Data/GIS/bathy_20m_polygon.shp"))
-
-# Create a reduced coastline for nearshore point estimation
-bathy_5m_df <- bathy_5m_points %>%
-  mutate(
-    long = as.data.frame(st_coordinates(.))$X,
-    lat = as.data.frame(st_coordinates(.))$Y) %>% 
-  st_set_geometry(NULL)
-
-# Set padding around data  
-map.bounds <- transects.sf %>%
-  st_transform(crs = crs.proj) %>%
-  st_bbox()
-
-# Determine map aspect ratio and set height and width
-map.aspect <- (map.bounds$xmax - map.bounds$xmin)/(map.bounds$ymax - map.bounds$ymin)
-map.width  <- map.height*map.aspect
-
-# Create base map
-base.map <- get_basemap(nav.paths.sf, states, countries, locations, bathy, map.bounds, crs = crs.proj)
-```  
-
 ```{r process-csv-cps, include=FALSE}
-# List acoustic survey vessels
-nasc.vessels <- c("RL") # ,"LBC","LM"
-
 # Create data frame for all backscatter data
 nasc.all <- data.frame()
 
@@ -901,7 +921,7 @@ source(here("Code/format_seine_database.R"))
 sets <- filter(sets.all, cruise %in% cruise.name) %>% 
   mutate(vessel.name = ship,
          vessel_name = seine.vessels.long[ship],
-         key.set = paste(ship, date, set),
+         key.set = paste(vessel.name, date, set),
          sample.type = "Purse seine")
 
 # Create set cluster file
@@ -921,7 +941,7 @@ set.catch <- set.catch.all %>%
   filter(scientificName %in% cps.spp) %>% 
   mutate(vessel.name = ship,
          vessel_name = seine.vessels.long[ship],
-         key.set = paste(ship, date, set)) %>% 
+         key.set = paste(vessel.name, date, set)) %>% 
   filter(key.set %in% sets$key.set) 
 
 # Filter length data for current cruise and vessel

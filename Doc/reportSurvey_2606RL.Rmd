@@ -1215,14 +1215,17 @@ Times and locations of conductivity and temperature versus depth casts while on 
 
 ```{r process-ctd-stations, results='asis'}
 # Read and format CTD and UCTD station info; generated from plotCTD
-if (file.exists(here("Output/ctd_summary_table.csv"))) {
+if (file.exists(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
+                          "ctd_summary_table.csv"))) {
   ctd.table <- read_csv(here("Output/ctd_summary_table.csv")) %>% mutate(cast.type = "CTD")  
 } else {
   ctd.table <- data.frame()
 }
 
-if (file.exists(here("Output/uctd_summary_table.csv"))) {
-  uctd.table <- read_csv(here("Output/uctd_summary_table.csv")) %>% mutate(cast.type = "UCTD")
+if (file.exists(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
+                          "uctd_summary_table.csv"))) {
+  uctd.table <- read_csv(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
+                          "uctd_summary_table.csv")) %>% mutate(cast.type = "UCTD")
 } else {
   uctd.table <- data.frame()
 }

@@ -152,10 +152,14 @@ if (Sys.info()['nodename'] %in% c("SWC-KSTIERHOF-L")) { #("SWC-FRD-AST1-D",
   nav.source    <- "RosePoint" # SCS, ERDDAP, or RosePoint
   nav.path.nob  <- file.path(nob.dir, nob.file.final) 
   nav.source.ns <- "GPX"
+  nav.path.gpx  <- c("LBC" = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606LBC)/DATA/NAV",
+                     "LM" = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606LM)/DATA/NAV")
 } else {
   nav.source    <- "RosePoint" # SCS, ERDDAP, or RosePoint
   nav.path.nob  <- file.path(nob.dir, nob.file.final)
   nav.source.ns <- "GPX"
+  nav.path.gpx  <- c("LBC" = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606LBC)/DATA/NAV",
+                     "LM" = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606LM)/DATA/NAV")
 }
 
 # Define hakeML directory depending on location of computer

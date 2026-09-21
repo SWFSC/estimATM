@@ -682,9 +682,9 @@ if (file.exists(here("Data/Nav/nav_data_raw.rds"))) {
 }
 
 # Summarize Lisa Marie days at sea
-if (file.exists(here("Data/Nav/lm_nav.gpx"))) {
+if (file.exists(file.path(nav.path.gpx["LM"], "lm_nav.gpx"))) {
   # Extract trackline points from GPX file
-  nav.lm <- read_GPX(here("Data/Nav/lm_nav.gpx"))$track_points %>%
+  nav.lm <- read_GPX(file.path(nav.path.gpx["LM"], "lm_nav.gpx"))$track_points %>%
     project_sf(crs = 4326) %>%
     select(time, lat = Y, long = X)
   
@@ -692,9 +692,9 @@ if (file.exists(here("Data/Nav/lm_nav.gpx"))) {
 }
 
 # Summarize Long Beach Carnage days at sea
-if (file.exists(here("Data/Nav/lbc_nav.gpx"))) {
+if (file.exists(file.path(nav.path.gpx["LBC"], "lbc_nav.gpx"))) {
   # Extract trackline points from GPX file
-  nav.lbc <- read_GPX(here("Data/Nav/lbc_nav.gpx"))$track_points %>%
+  nav.lbc <- read_GPX(file.path(nav.path.gpx["LBC"], "lbc_nav.gpx"))$track_points %>%
     project_sf(crs = 4326) %>%
     select(time, lat = Y, long = X)
   

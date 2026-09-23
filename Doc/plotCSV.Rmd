@@ -59,7 +59,7 @@ source(here("Doc/settings", prj.settings))
 ## Get navigation data
 get.nav <- T
 ## Process CSV files, or just re-generate HTML/plots
-process.csv <- F 
+process.csv <- T 
 ## Scale map to survey extent
 resize.map  <- F 
 

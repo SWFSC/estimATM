@@ -16,34 +16,35 @@ library(psych)    # For computing harmonic mean
 
 # User Settings -----------------------------------------------------------
 
+# 'G:\\Shared drives\\NMFS SWFSC FRD AST\\Surveys\\2026 Summer IWCPS (2606LM)\\DATA\\CTD'
+
 # Directory of CTD files to process
-dir.CTD <- '\\\\swc-storage4-s\\AST4\\SURVEYS\\20250725_LISA-MARIE_SummerCPS\\DATA\\CTD\\CTD_to_Process\\'
+dir.CTD <- 'G:\\Shared drives\\NMFS SWFSC FRD AST\\Surveys\\2026 Summer IWCPS (2606LM)\\DATA\\CTD\\ToProcess\\'
 
 # Directory to store processed data results
-dir.output <- '\\\\swc-storage4-s\\AST4\\SURVEYS\\20250725_LISA-MARIE_SummerCPS\\DATA\\CTD\\Processed\\'
+dir.output <- 'G:\\Shared drives\\NMFS SWFSC FRD AST\\Surveys\\2026 Summer IWCPS (2606LM)\\DATA\\CTD\\PROCESSED\\'
 
 # Directory containing SBEDataProcessing Program Setup (.psa) files
-dir.PSA <- '\\\\swc-storage4-s\\AST4\\SURVEYS\\20250725_LISA-MARIE_SummerCPS\\DATA\\CTD\\PSA\\'
+dir.PSA <- 'G:\\Shared drives\\NMFS SWFSC FRD AST\\Surveys\\2026 Summer IWCPS (2606LM)\\DATA\\CTD\\PSA\\'
 
 # CTD configuration file
-file.con <- '\\\\swc-storage4-s\\AST4\\SURVEYS\\20250725_LISA-MARIE_SummerCPS\\DATA\\CTD\\SBE19plusV2_7572.xmlcon'
+file.con <- 'G:\\Shared drives\\NMFS SWFSC FRD AST\\Surveys\\2026 Summer IWCPS (2606LM)\\DATA\\CTD\\SBE19plusV2_7572_useme.xmlcon'
 
 # Directory of Seabird SBEDataProcessing programs
 dir.SBE <- 'C:\\Program Files (x86)\\Sea-Bird\\SBEDataProcessing-Win32\\'
 
 # Template ECS file
-ECS.template <- '\\\\swc-storage4-s\\AST4\\SURVEYS\\20250725_LISA-MARIE_SummerCPS\\PROCESSED\\ECS\\_2507LM_Template.ecs'
+ECS.template <- 'G:\\Shared drives\\NMFS SWFSC FRD AST\\Surveys\\2026 Summer IWCPS (2606LM)\\PROCESSED\\EV\\ECS\\_2606LM_Template.ecs'
 
 # ECS output directory
-dir.ECS <- '\\\\swc-storage4-s\\AST4\\SURVEYS\\20250725_LISA-MARIE_SummerCPS\\PROCESSED\\ECS\\'
+dir.ECS <- 'G:\\Shared drives\\NMFS SWFSC FRD AST\\Surveys\\2026 Summer IWCPS (2606LM)\\PROCESSED\\EV\\ECS\\'
 
-# Time to pause between SBADataProcessing programs, in seconds
+# Time to pause between SBEDataProcessing programs, in seconds
 pause <- 1
 
 # Define transducer depth. This will be used to estimate the sound speed at the
 # transducer for compensating the calibration parameters
 tx.depth <- 4
-
 
 # Read template ECS file --------------------------------------------------
 
@@ -54,16 +55,15 @@ ECS <- read_file(ECS.template)
 c_0 <- as.numeric(str_match(ECS, "SoundSpeed\\s*=\\s*([^\\s]+)")[,2])
 
 # Get calibration parameters that can be adjusted with sound speed
-g_0 <- as.numeric(str_match_all(ECS, "TransducerGain\\s*=\\s*([^\\s]+)")[[1]][,2])
-EBA_0 <- as.numeric(str_match_all(ECS, "TwoWayBeamAngle\\s*=\\s*([^\\s]+)")[[1]][,2])
+g_0        <- as.numeric(str_match_all(ECS, "TransducerGain\\s*=\\s*([^\\s]+)")[[1]][,2])
+EBA_0      <- as.numeric(str_match_all(ECS, "TwoWayBeamAngle\\s*=\\s*([^\\s]+)")[[1]][,2])
 BW_minor_0 <- as.numeric(str_match_all(ECS, "MinorAxis3dbBeamAngle\\s*=\\s*([^\\s]+)")[[1]][,2])
 BW_major_0 <- as.numeric(str_match_all(ECS, "MajorAxis3dbBeamAngle\\s*=\\s*([^\\s]+)")[[1]][,2])
-
 
 # Process CTD data --------------------------------------------------------
 
 # Find all raw data files in CTD directory
-files.CTD <- list.files(path = dir.CTD, pattern = "*.cnv")
+files.CTD <- list.files(path = dir.CTD, pattern = "*.cnv", recursive = TRUE)
 
 # Loop through each file
 for (i in files.CTD) {
@@ -154,7 +154,6 @@ for (i in files.CTD) {
                  paste(dir.PSA, 'SeaPlot.psa', sep = ''))
   system("cmd.exe", input = cmd)
   Sys.sleep(pause)
-  
   
   # Load results from processed CTD data
   data <- read.csv(paste(dir.output, file.name, '_processed.asc', sep = ''), 

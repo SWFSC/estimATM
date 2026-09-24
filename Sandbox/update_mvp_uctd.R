@@ -2,7 +2,7 @@ library(atm)
 library(tidyverse)
 library(ggoce)
 
-header.filename <- "C:/KLS/CODE/Github/estimATM/2606RL/Data/UCTD/mvp_2022-10-09_002331.m1"
+header.filename <- "C:/KLS/CODE/Github/estimATM/2606RL/Data/UCTD/rl2604_20260712_0110.m1"
 cast.filename <- header.filename
 
 # Extract cast info -------------------------
@@ -60,15 +60,14 @@ ggplot(
   )
 
 ggplot(
-  ctd,
+  dat.ctd,
   aes(
     x = salinity,
     y = oce::swTheta(
       salinity,
       temperature,
       pressure
-    ),
-    colour = timeS
+    )
   )
 ) +
   geom_isopycnal() +

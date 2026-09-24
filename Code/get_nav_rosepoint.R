@@ -122,7 +122,8 @@ if (get.nav) {
       Leg = cut(as.numeric(date(time)), 
                 leg.breaks, 
                 labels = FALSE)) %>% 
-    arrange(time)
+    arrange(time) %>% 
+    filter(!is.na(Leg))
   
   # Convert nav to spatial
   nav.sf <- st_as_sf(nav, coords = c("long","lat"), crs = crs.geog) 

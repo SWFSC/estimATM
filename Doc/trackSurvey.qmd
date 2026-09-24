@@ -292,12 +292,11 @@ nasc.cps <- nasc.cps %>%
                    labels = FALSE)) %>% 
   mutate(Transect = as.numeric(str_extract(transect, "\\d{3}"))) %>% 
   filter(!is.na(leg))
-  # filter(!is.na(leg), leg %% 2 != 0)
 
 # Summarize latitude by vessel and date
 nasc.summ.all <- nasc.cps %>% 
   mutate(date.pdt = with_tz(datetime, tzone = "America/Los_Angeles")) %>%
-  mutate(date = date(date.pdt),
+  mutate(date = date(datetime),
          vessel.name = survey.vessel.primary) %>% 
   mutate(vessel = case_when(
     vessel.name == "SH"  ~ "Shimada",
@@ -311,7 +310,7 @@ nasc.summ.all <- nasc.cps %>%
 # Summarize nautical miles sampled by vessel and date
 nasc.summ.all.dist <- nasc.cps %>% 
   mutate(date.pdt = with_tz(datetime, tzone = "America/Los_Angeles")) %>%
-  mutate(date = date(date.pdt),
+  mutate(date = date(datetime),
          vessel.name = survey.vessel.primary) %>% 
   mutate(vessel = case_when(
     vessel.name == "SH"  ~ "Shimada",
@@ -327,7 +326,7 @@ nasc.summ.all.dist <- nasc.cps %>%
 nav.summ.fsv <- nav %>% 
   mutate(time.pdt = with_tz(time, tzone = "America/Los_Angeles")) %>% 
   mutate(vessel = survey.vessel,
-         date = date(time.pdt)) %>% 
+         date = date(time)) %>% 
   group_by(vessel, date) %>% 
   summarise(lat = mean(lat),
             SOG = round(mean(SOG, na.rm = TRUE),1)) %>% 
@@ -340,7 +339,7 @@ nav.summ.fsv <- nav %>%
 nav.summ.all <- nav.summ.fsv #%>% bind_rows(nav.summ.lbc) %>% bind_rows(nav.summ.lm) 
 
 # Format leg breaks
-leg.breaks <- data.frame(
+leg.breaks.plot <- data.frame(
   # Get leg end dates
   date = ymd(leg.ends[c(1, seq(2, length(leg.ends), 2))]),
   # Get leg labels
@@ -403,21 +402,13 @@ vessel.progress.plot <- ggplot() +  #nav.summ.all, aes(date, lat, group = vessel
             linewidth = 1, linetype = "dashed", colour = "gray50") +
   geom_point(data = tx.plan, aes(date, Latitude), inherit.aes = FALSE,
              size = 2, shape = 21, colour = "gray50", fill = "white") +
-  # # planned transects - revised
-  # geom_line(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
-  #           linewidth = 1, linetype = "dashed", colour = "blue") +
-  # geom_point(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
-  #            size = 2, shape = 21, colour = "blue", fill = "white") +
-  geom_vline(xintercept = leg.breaks$date, linetype = "dashed") +
+  geom_vline(xintercept = leg.breaks.plot$date, linetype = "dashed") +
   geom_hline(yintercept = tx.goals$Latitude, linetype = "dashed") +
-  geom_text(data = leg.breaks, aes(date.label, 31, label = leg), 
+  geom_text(data = leg.breaks.plot, aes(date.label, 31, label = leg), 
             hjust = 0.5, inherit.aes = FALSE) +
   geom_text(data = tx.goals, aes(date, Latitude + 0.4, label = label),
             inherit.aes = FALSE) +
-  # geom_text(data = landmarks, aes(date, lat+0.25, label = name), inherit.aes = FALSE) +
   geom_line(data = nav.summ.all, aes(date, lat, group = vessel, colour = vessel)) + 
-  # geom_line(data = nav.summ.all, aes(date, lat, group = vessel, colour = vessel),
-  #           linewidth = 1, linetype = "dashed") + 
   geom_point(data = nav.summ.all, 
              aes(date, lat, group = vessel, colour = vessel, fill = sampling), 
              size = 2, shape = 21) +
@@ -444,9 +435,9 @@ vessel.progress.plot.dist <- ggplot() +
             linewidth = 1, linetype = "dashed", colour = "gray50") +
   geom_point(data = tx.plan, aes(date, dist.cum), inherit.aes = FALSE,
              size = 2, shape = 21, colour = "gray50", fill = "white") +
-  geom_vline(xintercept = leg.breaks$date, linetype = "dashed") +
+  geom_vline(xintercept = leg.breaks.plot$date, linetype = "dashed") +
   geom_hline(yintercept = tx.goals$dist.cum, linetype = "dashed") +
-  geom_text(data = leg.breaks, aes(date.label, 500, label = leg), 
+  geom_text(data = leg.breaks.plot, aes(date.label, 500, label = leg), 
             hjust = 0.5, inherit.aes = FALSE) +
   geom_text(data = tx.goals, aes(date, dist.cum + 400, label = label), inherit.aes = FALSE) +
   geom_line(data = nasc.summ.all.dist, aes(date, dist.cum, group = vessel, colour = vessel)) + 
@@ -471,13 +462,17 @@ nasc.cps.sf <- nasc.cps %>%
   st_cast("LINESTRING") %>% 
   ungroup()
 
+# Keep only Compulsory or Adaptive transects
+transects.sf <- transects.sf %>% 
+  filter(Type %in% c("Compulsory","Adaptive"))
+
 # Define manual color palette
 legPalette <- c("#FF0000", "#FFA500", "#0fb00c", 
                 "#130ce8", "#8907b0", "#FFFF00")[1:n_distinct(transects.sf$Leg)]
 
 # Map planned transects
 map.plan <- base.map + 
-  geom_sf(data = filter(transects.sf, !is.na(Leg), Type %in% c("Compulsory","Adaptive")), 
+  geom_sf(data = transects.sf, 
           aes(colour = factor(Leg)),
           linewidth = 1) + 
   # Plot acoustic transect labels N of Cape Flattery
@@ -500,17 +495,19 @@ map.progress <- base.map +
   geom_sf(data = filter(transects.sf, !is.na(Leg), Type %in% c("Compulsory","Adaptive")), 
           colour = "gray50",
           linewidth = 0.5, linetype = "dashed") + 
-  geom_sf(data = nav.paths.sf, aes(colour = factor(Leg)),
+  geom_sf(data = filter(nav.paths.sf, Leg %in% unique(transects.sf$Leg)), 
+          aes(colour = factor(Leg)),
           linewidth = 0.5, alpha = 0.4) + 
-  geom_sf(data = nasc.cps.sf, aes(colour = factor(leg)),
+  geom_sf(data = filter(nasc.cps.sf, leg %in% unique(transects.sf$Leg)), 
+          aes(colour = factor(leg)),
           linewidth = 1) + 
-  geom_sf(data = nav.now, aes(colour = factor(Leg)), 
+  geom_sf(data = nav.now,  
           shape = 23, size = 3, fill = "white") + 
   # Plot acoustic transect labels N of Cape Flattery
   geom_shadowtext(data = tx.labels,
                   aes(X, Y, label = transect.name,
                       angle = brg),
-                  size = 2.5, 
+                  size = 2.5,
                   fontface = 'bold.italic',
                   colour = "black",
                   bg.colour = "white") +
@@ -679,7 +676,6 @@ if (exists("nav.paths.sf"))
   # Add nav data
   addPolylines(data = nav.paths.sf, 
                color = ~txPalLeg(Leg), weight = 3, opacity = 0.5,
-               # color = "#000414", weight = 1, 
                label = ~leg, group = "Vessel Track") %>%
   addMarkers(data = nav.now, label = ~label, popup = ~popup, icon = ~oceanIcons["ship"],
              group = "Vessel Positions")
@@ -744,54 +740,37 @@ das.planned <- data.frame(
 
 # Summarise actual DAS
 das.actual <- nav %>% 
-  # Calculate legs using the actual leg dates
-  mutate(leg2 = cut(as.numeric(date(time)), 
-                    as.numeric(leg.ends),
-                    labels = FALSE)) %>% 
-  filter(!is.na(Leg), leg2 %% 2 != 0) %>% 
-  # filter(SOG > 1) %>% 
-  group_by(leg2) %>% 
+  group_by(Leg) %>% 
   summarise(
-    actual.start = min(date(time)),
-    actual.end = max(date(time)),
+    actual.start = date(min(time)),
+    actual.end = date(max(time)),
     das.actual = n_distinct(date(time))) %>% 
-  mutate(Leg = seq_along(leg2)) %>% 
-  select(Leg, everything(), -leg2)
+  select(Leg, everything())
 
-# Load acoustic data, to summarise actual survey days
-# load(here("Output/nasc_cps.Rdata"))
-
+# Summarize survey days (i.e., conducting transect sampling)
 das.survey <- nasc.cps %>% 
-  # Calculate legs using the actual leg dates
-  mutate(leg2 = cut(as.numeric(date(datetime)), 
-                    as.numeric(leg.ends),
-                    labels = FALSE)) %>% 
-  filter(leg2 %% 2 != 0) %>% 
-  group_by(leg2) %>% 
+  group_by(leg) %>% 
   summarise(
     survey.start = min(date(datetime)),
     survey.end = max(date(datetime)),
     das.survey = n_distinct(date(datetime))) %>% 
-  mutate(Leg = seq_along(leg2)) %>% 
-  select(Leg, everything(), -leg2)
+  mutate(Leg = leg) %>% 
+  select(Leg, everything(), -leg)
 
 # Export data used to compute days doing surveys
 nasc.survey <- nasc.cps %>% 
-  # Calculate legs using the actual leg dates
-  mutate(leg2 = cut(as.numeric(date(datetime)), 
-                    as.numeric(leg.ends),
-                    labels = FALSE)) %>% 
-  filter(leg2 %% 2 != 0, !lat == 999, !long == 999) %>% 
-  mutate(Leg = as.numeric(as.factor(leg2)),
+  mutate(Leg = leg,
          transect.num = as.numeric(
            substr(transect, 1,3))) %>% 
   select(Interval:time, datetime, transect, transect.num, Leg) 
 
+# Combine summaries
 das.summary <- das.planned %>% 
   left_join(das.actual) %>% 
   left_join(das.survey) %>% 
   mutate(delta.das = das.planned - das.actual,
-         delta.survey = das.planned - das.survey)
+         delta.survey = das.planned - das.survey) %>% 
+  filter(Leg %in% unique(transects.sf$Leg))
 
 # Save data frame with transect goals
 tx.goals <- data.frame(
@@ -845,13 +824,13 @@ das.summary %>%
   mutate(
     actual.start = cell_spec(
       actual.start, knitr.format, color = "black",
-      background = ifelse(actual.start >= planned.start, "red", "white")),
+      background = ifelse(actual.start == planned.start, "green", "red")),
     actual.end = cell_spec(
       actual.end, knitr.format, color = "black",
       background = case_when(
         status == "Ongoing" ~ "yellow",
-        actual.end < planned.end ~ "red",
-        TRUE ~ "white")),
+        actual.end == planned.end ~ "green",
+        TRUE ~ "red")),
     survey.start = cell_spec(
       survey.start, knitr.format, color = "black",
       background = ifelse(survey.start > planned.start + days(das.survey.transit),
@@ -862,8 +841,8 @@ das.summary %>%
                           "red", "white")),
     status = cell_spec(
       status, knitr.format, bold = TRUE,
-      background = ifelse(status == "Completed", "white", "green"),
-      color      = ifelse(status == "Completed", "black", "white")),
+      background = ifelse(status == "Completed", "green", "yellow"),
+      color      = ifelse(status == "Completed", "white", "black")),
     das.actual = cell_spec(
       das.actual, knitr.format, color = "black",
       background = case_when(
@@ -919,7 +898,7 @@ das.summary %>%
   mutate(
     actual.start = cell_spec(
       actual.start, knitr.format, color = "black",
-      background = ifelse(actual.start >= planned.start, "red", "white")),
+      background = ifelse(actual.start > planned.start, "red", "white")),
     actual.end = cell_spec(
       actual.end, knitr.format, color = "black",
       background = ifelse(actual.end < planned.end, "red", "white")),
@@ -931,88 +910,6 @@ das.summary %>%
   kable(format = knitr.format,booktabs = TRUE, escape = FALSE) %>% 
   kable_styling(bootstrap_options = c("striped","hover","condensed"), 
                 full_width = FALSE) 
-```
-
-```{r survey-summary, eval=FALSE}
-# ## Planned vs. actual **survey** days at sea (DAS)
-# 
-# How many days has the ship been conducting acoustic transect sampling versus how many days were planned? This is derived from the acoustic data collected along planned transects, and excludes transits between transects and to/from ports of call. Red cells indicate differences between scheduled and accomplished values. These values allow for **`r das.survey.transit`** DAS for transit at the beginning and end of each survey leg, when acoustic transect sampling may not actually be conducted. Values in [**red**]{style="color:red"} below are a potential reason for concern.
-
-# Summarize the planned vs. actual survey DAS
-das.summ.planned <- das.summary %>% 
-  filter(!is.na(actual.start))
-
-das.summary %>% 
-  filter(!is.na(actual.start)) %>%
-  filter(!is.na(survey.start)) %>%
-  mutate(
-    survey.start = cell_spec(
-      survey.start, knitr.format, color = "black",
-      background = ifelse(survey.start > planned.start + days(das.survey.transit),
-                          "red", "white")),
-    survey.end = cell_spec(
-      survey.end, knitr.format, color = "black",
-      background = ifelse(survey.end < planned.end - days(das.survey.transit),
-                          "red", "white")),
-    delta.survey = cell_spec(
-      delta.survey, knitr.format, color = "black",
-      # 2 DAS seems like  reasonable number of transit days at the beginning/end
-      # of a survey leg, so anything greater than that is reason for concern.
-      background = ifelse(delta.survey > das.survey.transit*2, "red", "white"))) %>%
-  select(Leg, planned.start, survey.start, planned.end, survey.end, 
-         das.planned, das.survey, delta.survey) %>%
-  kable(format = knitr.format,booktabs = TRUE, escape = FALSE) %>% 
-  kable_styling(bootstrap_options = c("striped","hover","condensed"), 
-                full_width = FALSE) 
-
-# According to our calculations, a total of **`r sum(das.summary.sub$das.survey, na.rm = T)`** DAS were accomplished of the `r sum(das.summary.sub$das.planned, na.rm = T)` DAS scheduled, resulting in **`r sum(das.summary.sub$delta.survey, na.rm = T)`** fewer days of acoustic sampling than what was scheduled.
-```
-
-```{r survey-summary-rev,eval=FALSE}
-# ## Planned vs. actual **survey** days at sea (DAS)
-# 
-# How many days has the ship been conducting acoustic transect sampling versus how many days were planned? This is derived from the acoustic data collected along planned transects, and excludes transits between transects and to/from ports of call. Red cells indicate differences between scheduled and accomplished values. These values allow for **`r das.survey.transit`** DAS for transit at the beginning and end of each survey leg, when acoustic transect sampling may not actually be conducted. Values in [**red**]{style="color:red"} below are a potential reason for concern.
-
-# Summarize the planned vs. actual survey DAS
-das.summ.planned <- das.summary %>% 
-  filter(!is.na(actual.start))
-
-das.summary %>% 
-  filter(!is.na(actual.start)) %>%
-  filter(!is.na(survey.start)) %>%
-  mutate(
-    actual.start = cell_spec(
-      actual.start, knitr.format, color = "black",
-      background = ifelse(actual.start >= planned.start, "red", "white")),
-    actual.end = cell_spec(
-      actual.end, knitr.format, color = "black",
-      background = ifelse(actual.end < planned.end, "red", "white")),
-    survey.start = cell_spec(
-      survey.start, knitr.format, color = "black",
-      background = ifelse(survey.start > planned.start + days(das.survey.transit),
-                          "red", "white")),
-    survey.end = cell_spec(
-      survey.end, knitr.format, color = "black",
-      background = ifelse(survey.end < planned.end - days(das.survey.transit),
-                          "red", "white")),
-    das.actual = cell_spec(
-      das.actual, knitr.format, color = "black",
-      background = ifelse(das.actual < das.planned, "red", "white")),
-    das.survey = cell_spec(
-      das.survey, knitr.format, color = "black",
-      background = ifelse(das.survey < das.planned - 2*das.survey.transit, "red", "white"))) %>%
-  select(Leg, planned.start, actual.start, planned.end, actual.end, 
-         das.planned, das.actual, das.survey) %>%
-  kable(format = knitr.format,booktabs = TRUE, escape = FALSE,
-        col.names = c("Leg", 
-                      "Planned", "Actual", 
-                      "Planned", "Actual", 
-                      "Planned", "Actual", "Survey")) %>% 
-  add_header_above(c(" " = 1, "Start date" = 2, "End date" = 2, "Days at Sea" = 3)) %>%
-  kable_styling(bootstrap_options = c("striped","hover","condensed"), 
-                full_width = FALSE) 
-
-# **NOTE:** If the `planned.end` date for the current leg is greater than **`r date(Sys.time())`**, then the survey leg is still ongoing and these calculations will not accurately reflect the actual results.
 ```
 
 # Interactive data explorer

@@ -115,6 +115,8 @@ waypointIcon      <- c(ctd = "Blue Box", uctd = "White Box", eDNA = "Green Box")
 ## Used by estimateAcousticKm.Rmd ------
 # Get nearshore vessels
 nav.vessels.ns <- c("LM","LBC")
+# Set limits on nav data, if needed
+nav.limits <- as.Date(c("2026-06-15","2026-09-01"))
 
 # Survey information ------------------------------------------------------
 # Full survey name; only used in report title

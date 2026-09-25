@@ -91,8 +91,8 @@ if (get.nav) {
       speed_kmh   = speed_mps * 3.6,
       speed_knots = speed_kmh / 1.852)  %>%  
     mutate(SOG = case_when(
-      speed_knots > 11 ~ NA,
-      TRUE ~ speed_knots
+      speed_mps > 6.17333 ~ NA,
+      TRUE ~ speed_mps
     ))
     
   

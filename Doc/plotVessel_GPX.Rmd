@@ -9,7 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 pacman::p_load(tidyverse, sf, here, mapview, tmaptools)
-pacman::p_load_gh("kstierhoff/atm")
+pacman::p_load_gh("SWFSC/atm")
+pacman::p_load_gh("SWFSC/surveyR")
 
 # global knitr chunk options
 knitr::opts_chunk$set(
@@ -19,37 +20,62 @@ knitr::opts_chunk$set(
 knitr::opts_chunk$set(cache = FALSE)
 ```
 
-## Quick plot of vessel path
+```{r project-info, include=FALSE}
+# Get project name from directory
+prj.name <- last(unlist(str_split(here(),"/")))
 
-```{r}
+# Get all settings files
+settings.files <- dir(here("Doc/settings"))
+
+# Source survey settings file
+prj.settings <- settings.files[str_detect(settings.files, paste0("settings_", prj.name, ".R"))]
+source(here("Doc/settings", prj.settings))
+```
+
+```{r process-files, out.width="100%"}
+# Survey type (Core or Nearshore)
+tx.types <- c("Nearshore") # c("Compulsory","Adaptive")
+# Down-sample points?
+downsample.points <- TRUE
+# Buffer distance (nmi) for retaining nav points
+buffer.dist <- 0.2
+
 # GPX file name
-gpx.file <- here::here("Data/Nav", "lm_tracks.gpx")
-waypoint.file <- here("Data/Nav", "waypoints_2407RL.csv")
+ctd.file <- here::here("Data/Nav", "lm_ctd.gpx")
+nav.file <- here::here("Data/Nav", "lm_nav.gpx")
+waypoint.file <- here("Data/Nav", wpt.filename)
 
 # Extract route
-vessel.route <- tmaptools::read_GPX(gpx.file)
+nav.gpx <- tmaptools::read_GPX(nav.file)
 
-ctds <- tmaptools::read_GPX(here::here("Data/Nav", "lm_ctds.gpx"))$waypoints %>% 
-  atm::project_sf(crs = 4326) %>% 
-  select(lon = X, lat = Y, name, time) %>% 
-  arrange(time) %>% 
-  st_as_sf(coords = c("lon","lat"), crs = 4326)
+if (exists("ctd.file")) {
+  ctds <- tmaptools::read_GPX(ctd.file)$waypoints %>% 
+    atm::project_sf(crs = 4326) %>% 
+    select(lon = X, lat = Y, name, time) %>% 
+    arrange(time) %>% 
+    st_as_sf(coords = c("lon","lat"), crs = 4326)  
+}
 
 # Convert to points
-vessel.points <- vessel.route$track_points %>% 
+nav.points <- nav.gpx$track_points %>% 
   atm::project_sf(crs = 4326) %>% 
-  select(lon = X, lat = Y, name, time) %>% 
+  select(time, long = X, lat = Y) %>% 
   arrange(time) %>% 
-  st_as_sf(coords = c("lon","lat"), crs = 4326) %>% 
+  st_as_sf(coords = c("long","lat"), crs = 4326) %>% 
   mutate(date = date(time),
          hour = hour(time),
-         minute = minute(time)) %>% 
-  # Downsample by minute
-  group_by(date, hour, minute) %>% 
-  slice(1)
+         minute = minute(time)) 
 
-vessel.path <- vessel.points %>% 
-  summarise(do_union = FALSE) %>% 
+if (downsample.points) {
+  nav.points <- nav.points %>% 
+    # Downsample by minute
+    group_by(date, hour, minute) %>% 
+    slice(1) 
+}
+
+nav.path <- nav.points %>% 
+  ungroup() %>% 
+  summarise(do_union = F) %>% 
   st_cast("LINESTRING")
 
 # Read transect waypoints
@@ -75,32 +101,68 @@ transects.sf <- wpts.sf %>%
                      'Distance:', distance, 'nmi<br/>')
   )
 
-if (file.exists(here("Data/Map/basemap.Rdata"))) {
-  load(file = here("Data/Map/basemap.Rdata"))
-  load(file = here("Output/basemap_bounds.Rdata"))
+# Filter transects by type
+tx.buffer <- transects.sf %>% 
+  filter(Type %in% tx.types) %>% 
+  st_buffer(dist = buffer.dist/60,endCapStyle = "FLAT")
 
-  sets.proj <- project_df(sets, to = 3310) %>%
-    filter(vessel.name == "LM")
+# Filter nav that intersects planned transects
+nav.tx <- nav.points %>% 
+  st_intersection(tx.buffer)
 
-  lm.map.2407RL <- base.map +
-    geom_sf(data = vessel.points, size = 0.1, colour = "blue") +
-    geom_sf(data = ctds, shape = 23, fill = "red") +
-    geom_point(data = sets.proj, aes(X, Y), shape = 21, fill = "white") +
-    # Format axes and titles
-    xlab("Longitude") + ylab("Latitude") +
-    coord_sf(crs = crs.proj, # CA Albers Equal Area Projection
-             xlim = unname(c(map.bounds["xmin"], map.bounds["xmax"])),
-             ylim = unname(c(map.bounds["ymin"], map.bounds["ymax"]))) +
-    theme_bw()
+# mapview(nav.path) + mapview(tx.buffer) + mapview(nav.tx, zcol = "Transect")
+```
 
-  # Save the base map
-  ggsave(lm.map.2407RL,
-         file = here("Figs/fig_Lisa_Marie_nav_2407RL.png"),
-         height = map.height, width = map.width)
+## Interactive map
 
+An interactive map showing the locations of planned transects, the vessel path, vessel locations that fall within a **`r buffer.dist`** nmi buffer around each planned transect.
+
+```{r interactive-map}
+# Plot map
+i.map <- mapview(filter(tx.buffer, Transect %in% unique(nav.tx$Transect))) + 
+  mapview(filter(transects.sf, 
+                 Type %in% tx.types,
+                 Transect %in% unique(nav.tx$Transect)), 
+          zcol = "Type") + 
+  mapview(nav.path, color = "black") + 
+  mapview(nav.tx) 
+
+if (exists("ctds")) {
+  i.map <- i.map +
+  mapview(ctds, col.regions = "white", color = "red")
 }
 
-# Plot map
-mapview(transects.sf, zcol = "Type") + mapview(vessel.points) 
+# Display map
+i.map
 ```
+
+## Output table
+
+A table showing the start and end time of each transect and the nearest CTD cast, which is useful for selecting the appropriate ECS file for Echoview processing.
+
+```{r tx-summary-table}
+nav.summ <- nav.tx %>% 
+  group_by(Transect) %>% 
+  summarise(start = min(time),
+            end = max(time)) %>% 
+  st_set_geometry(NULL)
+
+# Match transect to nearest CTD cast
+transects.sf$ctd <- ctds$name[st_nearest_feature(transects.sf, ctds)]
+
+nav.ctd <- transects.sf %>% 
+  filter(Transect %in% unique(nav.tx$Transect),
+                 Type %in% tx.types) %>% 
+  select(Transect, ctd) %>% 
+  st_set_geometry(NULL)
+
+nav.summ <- left_join(nav.summ, nav.ctd) %>% 
+  select(Transect, ctd, start, end)
+
+write_csv(nav.summ, here("Output/plotVessel_GPX.csv"))
+
+DT::datatable(nav.summ)
+```
+
+
 

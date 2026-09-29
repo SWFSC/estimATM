@@ -129,7 +129,7 @@ i.map <- mapview(filter(tx.buffer, Transect %in% unique(nav.tx$Transect))) +
 
 if (exists("ctds")) {
   i.map <- i.map +
-  mapview(ctds, col.regions = "white", color = "red")
+    mapview(ctds, col.regions = "white", color = "red")
 }
 
 # Display map
@@ -148,16 +148,18 @@ nav.summ <- nav.tx %>%
   st_set_geometry(NULL)
 
 # Match transect to nearest CTD cast
-transects.sf$ctd <- ctds$name[st_nearest_feature(transects.sf, ctds)]
-
-nav.ctd <- transects.sf %>% 
-  filter(Transect %in% unique(nav.tx$Transect),
-                 Type %in% tx.types) %>% 
-  select(Transect, ctd) %>% 
-  st_set_geometry(NULL)
-
-nav.summ <- left_join(nav.summ, nav.ctd) %>% 
-  select(Transect, ctd, start, end)
+if (exists("ctds")) {
+  transects.sf$ctd <- ctds$name[st_nearest_feature(transects.sf, ctds)]
+  
+  nav.ctd <- transects.sf %>% 
+    filter(Transect %in% unique(nav.tx$Transect),
+           Type %in% tx.types) %>% 
+    select(Transect, ctd) %>% 
+    st_set_geometry(NULL)
+  
+  nav.summ <- left_join(nav.summ, nav.ctd) %>% 
+    select(Transect, ctd, start, end) 
+}
 
 write_csv(nav.summ, here("Output/plotVessel_GPX.csv"))
 

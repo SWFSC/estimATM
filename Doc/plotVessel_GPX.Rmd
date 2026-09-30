@@ -43,6 +43,7 @@ buffer.dist <- 0.2
 # GPX file name
 ctd.file <- here::here("Data/Nav", "lm_ctd.gpx")
 nav.file <- here::here("Data/Nav", "lm_nav.gpx")
+# nav.file <- here::here("Data/Nav", "lbc_nav.gpx")
 waypoint.file <- here("Data/Nav", wpt.filename)
 
 # Extract route
@@ -65,6 +66,17 @@ nav.points <- nav.gpx$track_points %>%
   mutate(date = date(time),
          hour = hour(time),
          minute = minute(time)) 
+
+# Extract coordinates into a matrix
+coords <- st_coordinates(nav.points)
+
+# Compute bearings between successive rows (Point i to Point i+1)
+bearings <- 180 - geosphere::bearing(
+  p1 = coords[-nrow(coords), , drop = FALSE], 
+  p2 = coords[-1, , drop = FALSE]
+)
+
+nav.points$brg <- c(bearings[1], bearings)
 
 if (downsample.points) {
   nav.points <- nav.points %>% 
@@ -110,7 +122,13 @@ tx.buffer <- transects.sf %>%
 nav.tx <- nav.points %>% 
   st_intersection(tx.buffer)
 
+# Filter nav during transits based on bearing
+nav.tx <- nav.tx %>% 
+  filter(!between(brg, 125, 240) & !between(brg, 320, 359) & !between(brg, 0, 60))
+
 # mapview(nav.path) + mapview(tx.buffer) + mapview(nav.tx, zcol = "Transect")
+# mapview(nav.path) + mapview(tx.buffer) + mapview(nav.tx, zcol = "brg")
+# mapview(nav.path) + mapview(tx.buffer) + mapview(nav.tx2, zcol = "brg")
 ```
 
 ## Interactive map
@@ -125,7 +143,7 @@ i.map <- mapview(filter(tx.buffer, Transect %in% unique(nav.tx$Transect))) +
                  Transect %in% unique(nav.tx$Transect)), 
           zcol = "Type") + 
   mapview(nav.path, color = "black") + 
-  mapview(nav.tx) 
+  mapview(nav.tx, zcol = "brg") 
 
 if (exists("ctds")) {
   i.map <- i.map +
@@ -144,7 +162,8 @@ A table showing the start and end time of each transect and the nearest CTD cast
 nav.summ <- nav.tx %>% 
   group_by(Transect) %>% 
   summarise(start = min(time),
-            end = max(time)) %>% 
+            end = max(time), 
+            duration = round(difftime(end, start, units = "mins")), 1) %>% 
   st_set_geometry(NULL)
 
 # Match transect to nearest CTD cast
@@ -158,7 +177,9 @@ if (exists("ctds")) {
     st_set_geometry(NULL)
   
   nav.summ <- left_join(nav.summ, nav.ctd) %>% 
-    select(Transect, ctd, start, end) 
+    select(Transect, ctd, start, end, duration) %>% 
+    mutate(start = format(start, "%m-%d-%Y %H:%M:%S"),
+           end   = format(end, "%m-%d-%Y %H:%M:%S"))
 }
 
 write_csv(nav.summ, here("Output/plotVessel_GPX.csv"))

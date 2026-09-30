@@ -140,17 +140,11 @@ Santa Cruz, CA 95064, USA
 
 \newpage
 
-\listoftables
-
-\listoffigures
-
-\newpage
-
 \pagenumbering{arabic}
 
 # Introduction {#introduction}  
 
-The `r survey.name.long` (`r survey.name`) was conducted by the Fisheries Resources Division (FRD) of the Southwest Fisheries Science Center (SWFSC) aboard NOAA Ship *`r survey.vessel.long`* (hereafter *`r survey.vessel`*), `r survey.start` to `r survey.end` `r survey.year`, and augmented by data collected from the fishing vessels _Lisa Marie_ and _Long Beach Carnage_ (**Fig.** \@ref(fig:vessel-pic)). The Acoustic-Trawl Method (ATM) is routinely used to assess coastal pelagic fish species (CPS) within the California Current Ecosystem (CCE), typically between Vancouver Island, British Columbia and San Diego, CA. Starting in 2021, and as resources have allowed, the survey has extended southward to include central Baja California, Mexico. Data were collected using multi-frequency echosounders, surface trawls, purse seines, conductivity-temperature-depth probes (CTDs), and environmental DNA (eDNA) sampling.
+The `r survey.name.long` (`r survey.name`) was conducted by the Fisheries Resources Division (FRD) of the Southwest Fisheries Science Center (SWFSC) aboard NOAA Ship *`r survey.vessel.long`* (hereafter *`r survey.vessel`*), `r survey.start` to `r survey.end` `r survey.year`, and augmented by data collected from the fishing vessels _Lisa Marie_ and _Long Beach Carnage_ (**Fig.** \@ref(fig:vessel-pic)). The Acoustic-Trawl Method (ATM) is routinely used to assess coastal pelagic fish species (CPS) within the California Current Ecosystem (CCE), typically between San Diego, CA and Vancouver Island, British Columbia. In 2021, 2022, and 2024, the survey extended southward to include central Baja California, Mexico. Data were collected using multi-frequency echosounders, surface trawls, purse seines, conductivity-temperature-depth probes (CTDs), and environmental DNA (eDNA) sampling.
 
 The objectives for the survey were to: 
 
@@ -159,13 +153,11 @@ The objectives for the survey were to:
 3. Gather information regarding their life histories and population genetics; and 
 4. Characterize and investigate linkages to their biotic and abiotic environments. 
 
-[**UPDATE**] The planned survey domain, San Diego, CA to Cape Flattery, WA, was defined primarily by the historically observed distribution of the northern subpopulation (stock) of Pacific Sardine [@Zwolinski2011]. This area was chosen to encompass the anticipated distribution of the northern stock of Pacific Sardine and the central and northern stocks of Northern Anchovy, but also spanning portions of the distributions of Pacific Mackerel, Jack Mackerel, Pacific Herring, and the southern stock of Pacific Sardine.
-
 This report provides an overview of the survey objectives and a summary of the survey equipment, sampling protocols, and data collections. This report does not include estimates of the animal distributions and biomasses, which are documented separately **[Stierhoff2026]**. 
 
-(ref:vessel-pic) NOAA Ship _`r survey.vessel`_ (top), F/V _Lisa Marie_ (bottom left), F/V _Long Beach Carnage_ (bottom middle), and an uncrewed surface vehicle (Saildrone USV, bottom right).
+(ref:vessel-pic) NOAA Ship _`r survey.vessel`_ (left), F/V _Lisa Marie_ (top right), and F/V _Long Beach Carnage_ (bottom right).
 
-```{r vessel-pic, fig.cap='(ref:vessel-pic)', out.width='5in', fig.pos='H'}
+```{r vessel-pic, fig.cap='(ref:vessel-pic)', out.width='\\linewidth', fig.pos='H'}
 include_graphics(here("Images/img_vessels_2407RL.png"))
 ```  
 
@@ -208,11 +200,11 @@ The collection and analysis of the survey data were conducted by members of 1-NO
 # Methods {#methods}
 ## Survey region and design {#methods-survey-design}
 
-The SWFSC’s ATM surveys of CPS in the CCE began in 2006 with a focus on the northern stock of Pacific Sardine. Since then, they have expanded in scope and objectives to include the larger forage-fish assemblage and krill. This evolution, and the migratory behavior of Pacific Sardine, serve to explain the present survey region and design. During `r tolower(survey.season)` `r survey.year`, the west coast of the U.S., from `r survey.landmark.s` to `r survey.landmark.n`, was to be surveyed using _`r survey.vessel`_ and fishing vessels _Lisa Marie_, _Long Beach Carnage_.    
+The SWFSC’s ATM surveys of CPS in the CCE began in 2006 with a focus on the northern stock of Pacific Sardine. Since then, they have expanded in scope and objectives to include the larger forage-fish assemblage and krill [**INCLUDE KRILL?**]. The survey domain, San Diego, CA to Cape Flattery, WA, was therefore defined primarily by the historically observed distribution of the northern stock of Pacific Sardine [@Zwolinski2011], but evolved to also encompass the anticipated distributions of the central and northern stocks of Northern Anchovy, and portions of the distributions of Pacific Mackerel, Jack Mackerel, Pacific Herring, and the southern stock of Pacific Sardine. This evolution, and the migratory behavior of Pacific Sardine, serve to explain the present survey region and design. During `r tolower(survey.season)` `r survey.year`, the west coast of the U.S., from `r survey.landmark.s` to `r survey.landmark.n`, was to be surveyed using _`r survey.vessel`_ and fishing vessels _Lisa Marie_, _Long Beach Carnage_.    
 
-The core-region transects (**Fig. \@ref(fig:survey-plan)**), to be sampled by _`r survey.vessel`_, spanned the latitudinal extent, based on historical observations, of the anticipated distributions of the northern stock of Pacific Sardine and the central and northern stocks of Northern Anchovy. The planned transects ranged from `r survey.landmark.s` to `r survey.landmark.n`, were perpendicular to the coast, and spaced `r tx.spacing.fsv` nmi apart.  
+The core-region transects (**Fig. \@ref(fig:survey-plan)**), to be sampled by _`r survey.vessel`_, spanned the latitudinal extent of the anticipated distributions of the northern stock of Pacific Sardine and the central and northern stocks of Northern Anchovy based on historical observations. The planned transects ranged from `r survey.landmark.s` to `r survey.landmark.n`, were perpendicular to the coast, and spaced `r tx.spacing.fsv` nmi apart.  
 
-To estimate the nearshore CPS biomass in coastal regions where it is too shallow to safely navigate NOAA ships, sampling from _`r survey.vessel`_ was to be augmented with nearshore-region transects using echosounder and purse-seine sampling from _Long Beach Carnage_ between San Diego, CA to Half Moon Bay, CA, including around Santa Cruz and Santa Catalina Islands; and from _Lisa Marie_ between Half Moon Bay, CA to `r survey.landmark.n` (**Fig. \@ref(fig:survey-plan)**). 
+To estimate the CPS biomass in coastal regions where it is too shallow to safely navigate NOAA Fisheries Survey Vessels, sampling from _`r survey.vessel`_ was to be augmented with nearshore-region transects using echosounder and purse-seine sampling from _Long Beach Carnage_ between San Diego, CA to Half Moon Bay, CA, including around Santa Cruz and Santa Catalina Islands; and from _Lisa Marie_ between Half Moon Bay, CA to `r survey.landmark.n` (**Fig. \@ref(fig:survey-plan)**). 
 
 For _`r survey.vessel`_, the offshore extent of transects was to be extended by 5-nmi segments if CPS backscatter were observed during the last 3 nmi of the transect or additional segment, for up to a total extension of 50 nmi. If a transect was extended, the ensuing transect was to be extended by the same amount.
 
@@ -335,7 +327,7 @@ ggsave(here("Figs/fig_survey_plan_reportSurvey.png"), survey.plan,
        height = map.height, width = map.width)
 ```
 
-(ref:survey-plan) Planned core-region (solid black lines) transects to be sampled by _`r survey.vessel`_ and nearshore transect lines to be sampled by fishing vessels (solid magenta lines). Isobaths (light gray lines) are at 50, 200, 500, and 2,000 m (or approximately 25, 100, 250, and 1,000 ftm).
+(ref:survey-plan) Planned core-region transects (solid black lines), to be sampled by _`r survey.vessel`_, and nearshore transects (solid magenta lines), to be sampled by the fishing vessels. Isobaths (light gray lines) are at 50, 200, 500, and 2,000 m (or approximately 25, 100, 250, and 1,000 ftm).
 
 ```{r survey-plan, fig.cap='(ref:survey-plan)',out.width="3.5in",fig.align='center',fig.pos='H'}
 include_graphics(here("Figs/fig_survey_plan_reportSurvey.png"))
@@ -345,8 +337,9 @@ include_graphics(here("Figs/fig_survey_plan_reportSurvey.png"))
 
 ## Acoustic sampling {#methods-acoustic-sampling}
 ### Echosounders {#methods-echosounders}  
+#### _`r survey.vessel`_ 
 
-On _`r survey.vessel`_, multi-frequency Wideband Transceivers (Simrad EK80 WBTs; Kongsberg) were configured with split-beam transducers (Simrad ES18, ES38-7, ES70-7C, ES120-7C, ES200-7C, and ES333-7C; Kongsberg). The transducers were mounted on the bottom of a retractable keel or "centerboard" (**Fig. \@ref(fig:cb-config)**). The keel was retracted (transducers ~`r cb.retracted`-m depth) during calibration, and extended to the intermediate position (transducers ~`r cb.intermediate`-m depth) during the survey. [**REMOVE IF NOT EVER CHANGED**]Exceptions were made during shallow water operations, when the keel was retracted; or during times of heavy weather, when the keel was extended (transducers ~`r cb.extended`-m depth) to provide extra stability and reduce the effect of weather-generated noise (**Appendix \@ref(appendix-cb-pos)**). Transducer position and motion were measured at 5 Hz using an inertial motion unit (Applanix POS-MV; Trimble).  
+On _`r survey.vessel`_, multi-frequency Wideband Transceivers (Simrad EK80 WBTs; Kongsberg) were configured with split-beam transducers (Simrad ES18, ES38-7, ES70-7C, ES120-7C, ES200-7C, and ES333-7C; Kongsberg). The transducers were mounted on the bottom of a retractable keel or "centerboard" (**Fig. \@ref(fig:cb-config)**). The keel was retracted (transducers ~`r cb.retracted` m depth) during calibration, and extended to the intermediate position (transducers ~`r cb.intermediate` m depth) during the survey. [**REMOVE IF NOT EVER CHANGED**]Exceptions were made during shallow water operations, when the keel was retracted; or during times of heavy weather, when the keel was extended (transducers ~`r cb.extended` m depth) to provide extra stability and reduce the effect of weather-generated noise (**Appendix \@ref(appendix-cb-pos)**). Transducer position and motion were measured at 5 Hz using an inertial motion unit (Applanix POS-MV; Trimble).  
 
 (ref:cb-config) Transducer locations on the bottom of the centerboard aboard _`r survey.vessel`_.
 
@@ -358,19 +351,25 @@ if (survey.vessel.primary == "RL") {
 }
 ```  
 
-On _Lisa Marie_, multi-frequency Wideband Transceivers (Simrad EK80 WBTs; Kongsberg) were connected to the vessel's hull-mounted split-beam transducers (Simrad ES38-7, ES70-7C, ES120-7C, and ES200-7C; Kongsberg; **Fig. \@ref(fig:cb-config-lm)**).
+#### _Lisa Marie_ 
+
+On _Lisa Marie_, multi-frequency Wideband Transceivers (Simrad EK80 WBTs; Kongsberg) were connected to the vessel's hull-mounted split-beam transducers (Simrad ES38-7, ES70-7C, ES120-7C, and ES200-7C; Kongsberg). The transducers were mounted in a blister on the hull at a water depth of ~4 m (**Fig. \@ref(fig:cb-config-lm)**).
+
+#### _Long Beach Carnage_ 
+
+On _Long Beach Carnage_, the SWFSC's multi-frequency Wideband Transceivers (Simrad EK80 WBTs; Kongsberg) were configured with the SWFSC's split-beam transducers (Simrad ES38-12, ES70-7C, ES120-7C and ES200-7C; Kongsberg) mounted in a multi-frequency transducer array (MTA4) on the bottom of a pole (**Fig. \@ref(fig:cb-config-lbc)**). The transducers were at a water depth of approximately 2 m.
+
+\newpage
 
 (ref:cb-config-lm) Transducer locations mounted on the hull of _Lisa Marie_.
 
-```{r cb-config-lm,fig.cap='(ref:cb-config-lm)',out.width="5in",fig.align='center',fig.pos='H'}
+```{r cb-config-lm,fig.cap='(ref:cb-config-lm)',out.width="4in",fig.align='center',fig.pos='H'}
 include_graphics(here("Images/img_lisa-marie_transducer-blister.png"))
 ```  
 
-On _Long Beach Carnage_, the SWFSC's multi-frequency Wideband Transceivers (Simrad EK80 WBTs; Kongsberg) were configured with the SWFSC's split-beam transducers (Simrad ES38-12, ES70-7C, ES120-7C and ES200-7C; Kongsberg) mounted in a multi-frequency transducer array (MTA4) on the bottom of a pole (**Fig. \@ref(fig:cb-config-lbc)**).  
-
 (ref:cb-config-lbc) Transducer locations on the bottom of the pole-mounted multi-transducer array (MTA4) installed on the F/V _Long Beach Carnage_.
 
-```{r cb-config-lbc,fig.cap='(ref:cb-config-lbc)',out.width="5in",fig.align='center',fig.pos='H'}
+```{r cb-config-lbc,fig.cap='(ref:cb-config-lbc)',out.width="4in",fig.align='center',fig.pos='H'}
 include_graphics(here("Images/img_carnage_MTA4.jpg"))
 ```
 
@@ -378,14 +377,14 @@ include_graphics(here("Images/img_carnage_MTA4.jpg"))
 
 ### Calibrations {#methods-echosounder-calibration}  
 
-The echosounder systems on each vessel were calibrated using the standard sphere technique [@Foote1987;@Demer2015]. On _`r survey.vessel`_, each WBT was calibrated in both CW (continuous wave or narrowband mode) and FM modes (frequency modulation or broadband mode). For both modes, the reference target was a `r cal.sphere`. For FM mode, additional calibrations were conducted for the 120, 200, and 333-kHz echosounders using a smaller 25-mm WC sphere. Calibrations for _Lisa Marie_ and _Long Beach Carnage_ were all conducted using a WC38.1. The calibration parameters for all vessels were derived in Echoview (see **Section \@ref(results-echosounder-calibration)**). For each echosounder, the calibrated Equivalent Two-Way Beam Angle (EBA) was derived by compensating the factory-measured EBA by the change in local sound speed [@Demer2015;@Bodholt2002]; when processing the survey transects, the calibrated measures of transducer gain, beamwidths, and EBA were then also compensated by the changes in local sound speed.
+The echosounder systems on each vessel were calibrated using the standard sphere technique [@Foote1987;@Demer2015]. On _`r survey.vessel`_, each WBT was calibrated in both CW (continuous wave or narrowband mode) and FM modes (frequency modulation or broadband mode). For both modes, the reference target was a `r cal.sphere[survey.vessel.primary]`. For FM mode, additional calibrations were conducted for the 120, 200, and 333 kHz echosounders using a smaller 25 mm WC sphere. Calibrations for _Lisa Marie_ and _Long Beach Carnage_ were all conducted using a WC38.1. The calibration parameters for all vessels were derived in Echoview (see **Section \@ref(results-echosounder-calibration)**). For each echosounder, the calibrated Equivalent Two-Way Beam Angle (EBA) was derived by compensating the factory-measured EBA by the change in local sound speed [@Demer2015;@Bodholt2002]; when processing the survey transects, the calibrated measures of transducer gain, beamwidths, and EBA were then also compensated by the changes in local sound speed.
 
 
 ### Data collection {#methods-acoustic-data-collection}  
 
-On _`r survey.vessel`, the computer clocks were synchronized with the GPS clock (UTC) using synchronization software (NetTime^[http://timesynctool.com]). The EK80 echosounders were controlled by the EK80 Adaptive Logger [EAL^[https://www.fisheries.noaa.gov/west-coast/science-data/ek80-adaptive-logger/], @Renfree2016], which optimizes the pulse interval based on the seabed depth while avoiding aliased seabed echoes. Acoustic sampling for CPS-density estimation along the pre-determined transects was limited to daylight hours (approximately between sunrise and sunset).
+On _`r survey.vessel`_, the computer clocks were synchronized with the GPS clock (UTC) using synchronization software (NetTime^[http://timesynctool.com]). The EK80 echosounders were controlled by the EK80 Adaptive Logger [EAL^[https://www.fisheries.noaa.gov/west-coast/science-data/ek80-adaptive-logger/], @Renfree2016], which optimizes the pulse interval based on the seabed depth while avoiding aliased seabed echoes. Acoustic sampling for CPS-density estimation along the pre-determined transects was limited to daylight hours (approximately between sunrise and sunset).
 
-For transects north of Point Conception, and to accommodate the goals of the IWCPS [**Check if this has been defined yet**], the EK80 data were collected in varying configurations to optimize sampling for either Pacific Hake or CPS. In regions where Pacific Hake were expected to be observed (~50 to 750-m seabed depth), the goal was to record enough data beyond the initial seabed echo in order to accurately estimate the background noise level and characterize the seabed for classification of rockfish (_Sebastes_ spp.) habitat. Outside of the 50–350-m range, in which Pacific Hake were not expected to be observed, the goal was to minimize the logging range needed for CPS in order to maximize the sampling resolution. To accomplish this, the logging ranges were continually adjusted via the EAL according to the scheme in **Table \@ref(tab:logging-ranges)**, with maximum logging ranges for the 18-, 38-, 70-, 120-, 200-, and 333-kHz echosounders set to 750, 750, 750, 600, 300, and 200 m, respectively [**UPDATE THESE**]. South of Point Conception, the 18-, 38-, and 70-kHz maximum logging ranges were set to 500 m [**CHECK THESE**].
+For transects north of Point Conception, and to accommodate the goals of the IWCPS [**Check if this has been defined yet**], the EK80 data were collected in varying configurations to optimize sampling for either Pacific Hake or CPS. In regions where Pacific Hake were expected to be observed (~50 to 750 m seabed depth), the goal was to record enough data beyond the initial seabed echo in order to accurately estimate the background noise level and characterize the seabed for classification of rockfish (_Sebastes_ spp.) habitat. Outside of the 50–350-m range, in which Pacific Hake were not expected to be observed, the goal was to minimize the logging range needed for CPS in order to maximize the sampling resolution. To accomplish this, the logging ranges were continually adjusted via the EAL according to the scheme in **Table \@ref(tab:logging-ranges)**, with maximum logging ranges for the 18-, 38-, 70-, 120-, 200-, and 333-kHz echosounders set to 750, 750, 750, 600, 300, and 200 m, respectively [**UPDATE THESE**]. South of Point Conception, the 18-, 38-, and 70-kHz maximum logging ranges were set to 500 m [**CHECK THESE**].
 
 (ref:logging-ranges) EK80 logging range as a function of seabed depth for transects north of Point Conception, in order to accommodate desired sampling for both Pacific Hake and CPS in their expected habitats.
 
@@ -400,12 +399,15 @@ kable(logging.ranges,
       align = c("l","l"),
       booktabs = TRUE, linesep = "", escape = FALSE,
       caption = '(ref:logging-ranges)') %>% 
-  kable_styling(position = "center", latex_options = c("scale_down","hold_position")) 
+  kable_styling(position = "center", 
+                latex_options = c("scale_down","hold_position"),
+                font_size = 9) 
 ```
 
 During daytime aboard _`r survey.vessel`_, measurements of volume backscattering strength ($S_v$; dB re 1 m^2^ m^-3^), indexed by time and geographic positions provided by GPS receivers, were stored with a `r raw.size`-GB maximum file size, in Simrad-EK80 .raw format. The prefix for the file names was a concatenation of the survey name (e.g.,  `r survey.name`) and the logging commencement date and time from the EK80 software. For example, a file generated by the EK80 software (`r ek80.version`) for a WBT is named `RL2604-D20260720-T183149.raw`.  
 
 To minimize acoustic interference, transmit pulses from all echosounders and sonars (i.e., EK80, ME70, SX90, and ADCP) were triggered using a synchronization system (Simrad K-Sync; Kongsberg). The K-Sync trigger rate, and thus echosounder ping interval, was modulated by the EAL using an external depth input equivalent to the desired ping rate. During both day and night, the ME70, SX90, and ADCP were operated and recorded continuously whenever possible. All other instruments that produce sound within the echosounder bandwidths were secured during daytime survey operations. Exceptions were made during stations (e.g., plankton sampling and fish trawling) or in shallow water when the vessel's command occasionally operated the bridge's 50- and 200-kHz echosounders (Furuno), the Doppler velocity log (SRD-500A; Sperry Marine), or both. Data results from the ME70, SX90, and ADCP are not presented in this report.  
+
 On _Lisa Marie_ and _Long Beach Carnage_, the EK80 was set to "auto-range" mode to adjust the maximum ping rate and recording range. Because transmit pulses from the echosounders and fishing sonars were not synchronized, the latter were secured during daytime acoustic transects to avoid interference.
 
 ## Biological sampling {#methods-trawl-sampling}  

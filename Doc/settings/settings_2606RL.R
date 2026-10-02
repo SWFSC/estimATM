@@ -943,10 +943,10 @@ cal.lon.dd         <- c(RL  = -117.15278, # Cal location longitude in decimal de
                         LM  = -122.0120) # At anchor in Monterey Bay, near Santa Cruz
 cal.lat            <- dd2decmin(cal.lat.dd)
 cal.lon            <- dd2decmin(cal.lon.dd)
-cal.sphere         <- c(RL  = "38.1-mm diameter sphere made from tungsten carbide (WC) with 6% cobalt binder material (WC38.1)",
-                        LBC = "38.1-mm diameter sphere made from tungsten carbide (WC) with 6% cobalt binder material (WC38.1)",
-                        LM  = "38.1-mm diameter sphere made from tungsten carbide (WC) with 6% cobalt binder material (WC38.1)") # Cal sphere info
-cal.sphere.fm      <- c(RL = "25-mm WC sphere (WC25)") # Cal sphere info for additional FM calibrations
+cal.sphere         <- c(RL  = "38.1 mm-diameter sphere made from tungsten carbide (WC) with 6% cobalt binder material (WC38.1)",
+                        LBC = "38.1 mm-diameter sphere made from tungsten carbide (WC) with 6% cobalt binder material (WC38.1)",
+                        LM  = "38.1 mm-diameter sphere made from tungsten carbide (WC) with 6% cobalt binder material (WC38.1)") # Cal sphere info
+cal.sphere.fm      <- c(RL = "25 mm-WC sphere (WC25)") # Cal sphere info for additional FM calibrations
 cal.sphere.name    <- c(RL  = "SWFSC Sphere #10",
                         LBC = "SWFSC Sphere #10",
                         LM  = "SWFSC Sphere #10")

@@ -422,11 +422,11 @@ sounder.type           <- c(RL  = "EK80")
 if (Sys.info()['nodename'] %in% c("SWC-FRD-AST1-D")) {
   survey.dir           <- c(RL  = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)",
                             LBC = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606LBC)",
-                            LM  = "C:/SURVEY/2606LM")
+                            LM  = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606LM)")
 } else {
   survey.dir           <- c(RL  = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)",
                             LBC = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606LBC)",
-                            LM  = "C:/SURVEY/2606LM")
+                            LM  = "G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606LM)")
 }
 
 # Backscatter data (within survey.dir, typically)

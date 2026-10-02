@@ -1420,11 +1420,24 @@ if (nrow(lengths.sub) > 0) {
 Total lengths (or mantle length, for Market Squid) vs. weight for all specimens, symbolized by cruise leg.  
 
 ```{r length-weight-leg}
+# Get lengths from all surveys
+lengths.all.sub <- filter(set.lengths.all,
+                          scientificName %in% unique(set.lengths$scientificName),
+                          season ==  tolower(survey.season))
+
+# Subset L/W models for species present
 lw.df.sub <- lw.df %>% 
-  pivot_longer(totalLength_mm:standardLength_mm, names_to = "length_type", values_to = "length_mm")
+  pivot_longer(totalLength_mm:standardLength_mm, 
+               names_to = "length_type", values_to = "length_mm") %>% 
+  filter(scientificName %in% unique(set.lengths$scientificName))
 
 # Examine length differences by leg
 lw.plot.leg <- ggplot() +
+  # Plot L/W data from all years/surveys
+  geom_point_interactive(data = lengths.all.sub,
+                         aes(nativeLength_mm, weightg, 
+                             data_id = label, tooltip = label),
+                         colour = "gray70", alpha = 0.3) +
   # Plot seasonal length models for each species
   geom_line_interactive(data = lw.df.sub, aes(length_mm, weightg, 
                                               group = length_type, tooltip = length_type), 
@@ -1476,8 +1489,12 @@ if (do.ggiraph) {
 For the purposes of computing biomass, total length is used to estimate target strength. Here, total length vs. weight is plotted along with the models from Palance et al. [-@Palance2019].
 
 ```{r final-length-weight}
-# Examine length differences by leg
+# Examine length differences by species
 lw.plot.final <- ggplot() +
+  # Plot L/W data from all years/surveys
+  geom_point(data = lengths.all.sub,
+             aes(totalLength_mm, weightg),
+             colour = "gray70", alpha = 0.3) +
   # Plot L/W data for current survey
   geom_point(data = set.lengths,
              aes(totalLength_mm, weightg, group = sex, colour = sex), 
@@ -1505,6 +1522,40 @@ lw.plot.final <- ggplot() +
 
 # Save length/weight plot
 ggsave(lw.plot.final, filename = here("Figs/fig_LW_plots_final_seine.png"),
+       width = 10, height = 7) 
+
+# Examine length differences by vessel
+lw.plot.vessel <- ggplot() +
+  # Plot L/W data from all years/surveys
+  geom_point(data = lengths.all.sub,
+             aes(totalLength_mm, weightg),
+             colour = "gray70", alpha = 0.3) +
+  # Plot L/W data for current survey
+  geom_point(data = set.lengths,
+             aes(totalLength_mm, weightg, group = ship, colour = ship), 
+             alpha = 0.75) +
+  # Plot individuals with missing lengths and weights
+  geom_point(data = filter(set.lengths, missing.length == TRUE),
+             aes(totalLength_mm, weightg),
+             shape = 21, fill = 'red',  size = 2.5) +
+  geom_point(data = filter(set.lengths, missing.weight == TRUE),
+             aes(totalLength_mm, weightg),
+             shape = 21, fill = 'blue', size = 2.5) +
+  # Plot seasonal length models for each species
+  geom_line(data = filter(lw.df, scientificName %in% unique(set.lengths$scientificName)), 
+            aes(totalLength_mm, weightg), 
+            alpha = 0.75, colour = "gray20", linetype = 'dashed') +
+  scale_colour_discrete(name = "Vessel") +
+  # Facet by species
+  facet_wrap(~scientificName, scales = "free") +
+  # Format plot
+  xlab("Total length (mm)") + ylab("Mass (g)") +
+  theme_bw() +
+  theme(strip.background.x = element_blank(),
+        strip.text.x = element_text(face = "bold.italic"))
+
+# Save length/weight plot
+ggsave(lw.plot.vessel, filename = here("Figs/fig_LW_plots_final_seine_vessel.png"),
        width = 10, height = 7) 
 
 include_graphics(here("Figs/fig_LW_plots_final_seine.png"))
@@ -1925,6 +1976,32 @@ if (nrow(specimen.comp.errors) > 0) {
   print("Hooray, no (obvious) errors!")
 }
 ```
+
+# Effort summary
+
+Summaries of total sets conducted (nSets) and specimens processed (nSpecimens).
+
+```{r summarize-effort}
+# Summarize sets
+sets.summ <- sets %>% 
+  group_by(ship) %>% 
+  summarise(nSets = n())
+
+# Summarise specimens
+lengths.summ <- set.lengths %>% 
+  group_by(ship) %>% 
+  summarise(nSpecimens = n())
+
+# Combine and print table
+sets.summ %>% 
+  left_join(lengths.summ) %>% 
+  kable(format = knitr.format,booktabs = TRUE, escape = FALSE,
+          align = c("l","r","r"),
+          digits = 0,
+          format.args = list(big.mark = ",")) %>% 
+    kable_styling(bootstrap_options = c("striped","hover","condensed"), full_width = FALSE) 
+```
+
 
 # Survey Area Maps
 ## Southern CA Bight

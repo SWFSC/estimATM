@@ -147,11 +147,6 @@ tx.plan <- read_csv(here("Data/Nav/transect_plan_2606RL.csv")) %>%
          Transect = floor(tx.plan)) %>% 
   left_join(select(wpt.summ, Transect, Latitude))
 
-# tx.plan2 <- read_csv(here("Data/Nav/transect_plan_2606RL.csv")) %>% 
-#   mutate(date = mdy(date),
-#          Transect = floor(tx.plan2)) %>% 
-#   left_join(select(wpt.summ, Transect, Latitude))
-
 goals <- wpts %>% 
   filter(Transect %in% tx.breaks, Type %in% c("Compulsory")) %>% 
   group_by(Transect) %>% 
@@ -163,32 +158,21 @@ goals <- wpts %>%
     label == "Leg 0" ~ "Start",
     TRUE ~ label
   ))
-  
-vessel.coord.plot <- ggplot() +  #nav.summ.all, aes(date, lat, group = vessel, colour = vessel)
+
+# Plot vessel coordination
+vessel.coord.plot <- ggplot() +  
   geom_line(linewidth = 1, linetype = "dashed") + 
-  # planned transects
   geom_line(data = tx.plan, aes(date, Latitude), inherit.aes = FALSE,
             linewidth = 1, linetype = "dashed", colour = "gray50") +
   geom_point(data = tx.plan, aes(date, Latitude), inherit.aes = FALSE,
              size = 2, shape = 21, colour = "gray50", fill = "white") +
-  # # planned transects - revised
-  # geom_line(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
-  #           linewidth = 1, linetype = "dashed", colour = "blue") +
-  # geom_point(data = tx.plan2, aes(date, Latitude), inherit.aes = FALSE,
-  #            size = 2, shape = 21, colour = "blue", fill = "white") +
   geom_vline(xintercept = leg.breaks$date, linetype = "dashed") +
   geom_hline(yintercept = goals$Latitude, linetype = "dashed") +
   geom_text(data = leg.breaks, aes(date, 31, label = leg), inherit.aes = FALSE) +
   geom_text(data = goals, aes(date, Latitude + 0.4, label = label), inherit.aes = FALSE) +
-  # geom_text(data = landmarks, aes(date, lat+0.25, label = name), inherit.aes = FALSE) +
   geom_line(data = nav.summ.all, aes(date, lat, group = vessel, colour = vessel)) + 
-  # geom_line(data = nav.summ.all, aes(date, lat, group = vessel, colour = vessel),
-  #           linewidth = 1, linetype = "dashed") + 
   geom_point(data = nav.summ.all, aes(date, lat, group = vessel, colour = vessel, fill = sampling), 
              size = 2, shape = 21) +
-  # geom_point(data = filter(nav.summ.all, SOG < 1), 
-  #            aes(date, lat, group = vessel, colour = vessel), 
-  #            fill = "blue", size = 2, shape = 21, show.legend = FALSE) +
   scale_colour_discrete(name = "Vessel") +
   scale_fill_manual(name = "Sampling", values = c("TRUE" = 'black', "FALSE" = 'white')) +
   scale_x_date(date_breaks = "10 days") + 

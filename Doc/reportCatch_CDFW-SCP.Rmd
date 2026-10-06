@@ -655,10 +655,23 @@ if (exists("set.catch.table")) {
 
 A summary of samples taken from trawl specimens collected in CA.
 
-```{r specimen-summary}
+```{r specimen-summary-trawl}
 if (nrow(specimen.summ) > 0) {
   specimen.summ %>% 
     adorn_totals() %>% 
+    datatable(rownames = FALSE)  
+} else {
+  print("No specimens to date.")
+}
+```
+
+## Seine
+
+A summary of samples taken from seine specimens collected in CA.
+
+```{r specimen-summary-seine}
+if (nrow(set.specimen.summ) > 0) {
+  set.specimen.summ %>% 
     datatable(rownames = FALSE)  
 } else {
   print("No specimens to date.")

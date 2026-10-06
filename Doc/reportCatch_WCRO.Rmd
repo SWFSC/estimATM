@@ -15,7 +15,7 @@ if (!require("pak")) install.packages("pak")
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,grid,gridExtra,pander,flextable,lubridate, knitr,here,
                png,devtools,kableExtra,forcats,jpeg,bookdown,magick,RSQLite,
-               odbc,cowplot,mapview,fs,sf,rnaturalearth,ggspatial)
+               odbc,cowplot,mapview,fs,sf,rnaturalearth,ggspatial,xml2)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pak::pkg_install("SWFSC/atm")
@@ -65,7 +65,6 @@ source(here("Doc/settings", prj.settings))
 get.db     <- F
 get.nav    <- T
 do.spatial <- T
-nav.source <- "ERDDAP" # Navigation data source: ERDDAP or SCS
 save.figs  <- T
 resize.map <- F # Resize map during survey; if T, uses anticipated bounds of survey area
 
@@ -73,7 +72,7 @@ resize.map <- F # Resize map during survey; if T, uses anticipated bounds of sur
 sampling.cufes <- F
 ```
 
-```{r get-nav}
+```{r get-nav,include=FALSE}
 # Source code to get nav data from ERDDAP, RosePoint, or SCS
 if (nav.source == "ERDDAP") {
   source(here("Code/get_nav_erddap.R"))
@@ -129,9 +128,6 @@ if (get.db) {
 ```{r format-trawl-data}
 # Source script to format data from trawl database
 source(here("Code/format_trawl_database.R"))
-
-# # Remove duplicate round herring entry 
-# spp.codes <- filter(spp.codes, species != 161746)
 ```
 
 ```{r process-trawl-data}

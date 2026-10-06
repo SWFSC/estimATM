@@ -63,7 +63,7 @@ source(here("Doc/settings", prj.settings))
 
 ```{r user-controls}
 # Processing settings
-get.db     <- F
+get.db     <- T
 get.nav    <- T
 do.spatial <- T
 save.figs  <- T
@@ -150,13 +150,101 @@ write_csv(lengths.psit,
 ```
 
 ```{r seine-catch}
-# Load seine data
-if (file.exists(here("Output/purse_seine_sets.Rdata")))
-  load(here("Output/purse_seine_sets.Rdata"))
-if (file.exists(here("Output/purse_seine_catch.Rdata")))
-  load(here("Output/purse_seine_catch.Rdata"))
-if (file.exists(here("Output/purse_seine_lengths.Rdata")))
-  load(here("Output/purse_seine_lengths.Rdata"))
+# Import seine data ------------------------------------------------------------------
+if (get.db) {
+  # Source script to collect data from trawl database
+  source(here("Code/collect_seine_database.R"))
+  
+  # Format seine data -----------------------------------------------
+  # Source script to format data from trawl database
+  source(here("Code/format_seine_database.R"))
+  
+  # Additional processing for biomass estimation
+  ## Process set data ------------------------------------------------
+  ### Get only sets from current survey
+  sets <- filter(sets.all, cruise %in% cruise.name) %>% 
+    mutate(vessel.name = ship,
+           vessel_name = seine.vessels.long[ship],
+           key.set = paste(ship, date, set),
+           sample.type = "Purse seine") 
+  
+  # Manually remove "bad" sets (defined in settings)
+  if(exists("key.set.rm")) {
+    sets <- filter(sets, !key.set %in% key.set.rm)
+  }
+  
+  # Create set cluster file
+  set.clusters <- select(sets, key.set, date, datetime, vessel.name, lat, long, sample.type) %>%
+    filter(vessel.name %in% seine.vessels) %>% 
+    arrange(vessel.name, datetime) %>% 
+    # Begin clustering after primary survey vessel clusters
+    mutate(sample.type = "Purse seine") %>%
+    project_df(to = crs.proj)
+  
+  ## Process catch data ------------------------------------------------
+  set.catch <- set.catch.all %>% 
+    left_join(select(spp.codes, species, commonName, scientificName)) %>% 
+    # Retain only target CPS species
+    filter(scientificName %in% cps.spp) %>% 
+    mutate(vessel.name = ship,
+           vessel_name = seine.vessels.long[ship],
+           key.set = paste(ship, date, set)) %>% 
+    filter(key.set %in% sets$key.set) 
+  
+  ## Process specimen data ------------------------------------------------
+  set.lengths <- set.lengths.all %>% 
+    left_join(select(spp.codes, species, commonName, scientificName)) %>% 
+    # Retain only target CPS species
+    filter(scientificName %in% cps.spp) %>% 
+    mutate(vessel.name = ship,
+           vessel_name = seine.vessels.long[ship],
+           key.set = paste(ship, date, set),
+           label = paste("Date:", date, "Set:", set, "Specimen:", specimenNumber),
+           missing.weight = case_when(is.na(weightg) ~ TRUE, TRUE ~ FALSE)) %>%
+    filter(key.set %in% sets$key.set) %>% 
+    mutate(
+      totalLength_mm = case_when(
+        scientificName == "Clupea pallasii" ~
+          convert_length("Clupea pallasii", .$forkLength_mm, "FL", "TL"),
+        scientificName == "Engraulis mordax" ~
+          convert_length("Engraulis mordax", .$standardLength_mm, "SL", "TL"),
+        scientificName == "Sardinops sagax" ~
+          convert_length("Sardinops sagax", .$standardLength_mm, "SL", "TL"),
+        scientificName == "Scomber japonicus" ~
+          convert_length("Scomber japonicus", .$forkLength_mm, "FL", "TL"),
+        scientificName == "Trachurus symmetricus" ~
+          convert_length("Trachurus symmetricus", .$forkLength_mm, "FL", "TL"),
+        scientificName == "Etrumeus acuminatus" ~ 
+          convert_length("Etrumeus acuminatus", .$forkLength_mm, "FL", "TL"))) %>%
+    mutate(
+      weightg = case_when(
+        is.na(weightg) ~ estimate_weight(.$scientificName, .$totalLength_mm, season = tolower(survey.season)),
+        TRUE  ~ weightg),
+      totalLength_mm = case_when(
+        is.na(totalLength_mm) ~ estimate_length(.$scientificName, .$weightg, season = tolower(survey.season)),
+        TRUE ~ totalLength_mm),
+      K = round((weightg/totalLength_mm*10^3)*100))
+  
+  # Save seine data ----------------------------------------------------
+  ## Save set info
+  save(sets, set.clusters, 
+       file = here("Output/purse_seine_sets.Rdata"))
+  ## Save set catch info
+  save(set.catch, 
+       file = here("Output/purse_seine_catch.Rdata"))
+  ## Save set specimen info
+  save(set.lengths, 
+       file = here("Output/purse_seine_lengths.Rdata"))
+} else {
+  # Load seine data
+  if (file.exists(here("Output/purse_seine_sets.Rdata")))
+    load(here("Output/purse_seine_sets.Rdata"))
+  if (file.exists(here("Output/purse_seine_catch.Rdata")))
+    load(here("Output/purse_seine_catch.Rdata"))
+  if (file.exists(here("Output/purse_seine_lengths.Rdata")))
+    load(here("Output/purse_seine_lengths.Rdata"))
+  
+}
 ```
 
 ```{r extract-catch-seine}

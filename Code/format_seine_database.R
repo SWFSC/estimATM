@@ -16,7 +16,8 @@ if (seine.source %in% c("SQL", "SQL-dev", "Excel")) {
   
   # Format catch data
   set.catch.all <- set.catch.all %>% 
-    mutate(key = paste(cruise, ship, date, set))
+    mutate(key = paste(cruise, ship, date, set)) %>% 
+    rename(totalWeight = totalWeightkg)
 
 } else if (seine.source == "Access") {
   sets.all <- sets.all %>% 

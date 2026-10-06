@@ -547,6 +547,10 @@ set.lengths <- set.lengths %>%
 
 # Save length measurements
 saveRDS(set.lengths, file = here("Output/lw_data_checkSeines.rds"))
+
+# Save all data
+save(sets, set.catch, set.lengths, 
+     file = here("Data/Seine/all_seine_data-final.Rdata"))
 ```
 
 # Overview

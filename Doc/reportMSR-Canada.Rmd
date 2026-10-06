@@ -14,7 +14,7 @@ if (!require("pak")) install.packages("pak")
 pacman::p_load(tidyverse,lubridate,knitr,maps,rnaturalearth,
                cowplot,kableExtra,devtools,scatterpie,here,leaflet,
                mapview,fs,DT,lwgeom,DBI,odbc,bookdown,sf,
-               data.table,xts,mapproj,RSQLite)
+               data.table,xts,mapproj,RSQLite,xml2)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pak::pkg_install("SWFSC/atm")
@@ -72,14 +72,14 @@ copy.files      <- T # Copy trawl database
 overwrite.files <- T # Overwrite files
 ```
 
-```{r get-nav}
-# Get nav data
+```{r get-nav,include=FALSE}
+# Source code to get nav data from ERDDAP, RosePoint, or SCS
 if (nav.source == "ERDDAP") {
-  # Source code to get nav data from ERDDAP
   source(here("Code/get_nav_erddap.R"))
 } else if (nav.source == "SCS") {
-  # Source code to get nav data from SCS
-  source(here("Code",  scs.nav.script))
+  source(here("Code", scs.nav.script))
+} else if (nav.source == "RosePoint") {
+  source(here("Code/get_nav_rosepoint.R"))
 }
 
 # Read transect waypoints

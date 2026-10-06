@@ -366,7 +366,7 @@ if (exists("set.catch")) {
 
 \blandscape  
 
-# Trawl catch summary for the `r survey.name.long` (`r survey.name` )
+# Catch summary for the `r survey.name.long` (`r survey.name` )
 
 ## NOAA Fisheries-Southwest Fisheries Science Center
 

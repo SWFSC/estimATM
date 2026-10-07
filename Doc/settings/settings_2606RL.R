@@ -382,7 +382,7 @@ lf.ncols <- 5
 # Data sources ------------------------------------------------------------
 # Backscatter data info
 # Survey vessels that collected acoustic data (a character vector of vessel abbreviations)
-nasc.vessels           <- c("RL") #c("RL","LBC","LM") 
+nasc.vessels           <- c("RL","LBC","LM") 
 nasc.vessels.offshore  <- NA # c("SD")
 nasc.vessels.nearshore <- c("LBC", "LM")
 nasc.vessels.krill     <- c("RL")

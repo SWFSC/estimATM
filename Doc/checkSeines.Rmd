@@ -207,7 +207,7 @@ set.catch <- set.catch.all %>%
 # Compute mean individual weights for each seine species
 seine.wt.indiv <- set.catch %>% 
   group_by(scientificName) %>% 
-  summarise(totalWeight = sum(totalWeightkg, na.rm = TRUE),
+  summarise(totalWeight = sum(totalWeight, na.rm = TRUE),
             totalNum    = sum(totalNum, na.rm = TRUE)) %>% 
   mutate(indivWeight = round(totalWeight/totalNum, 3))
 
@@ -215,8 +215,8 @@ seine.wt.indiv <- set.catch %>%
 set.catch <- set.catch %>% 
   left_join(select(seine.wt.indiv, scientificName, indivWeight)) %>% 
   mutate(totalWeight = case_when(
-    is.na(totalWeightkg) ~ totalNum * indivWeight,
-    TRUE ~ totalWeightkg)) %>% 
+    is.na(totalWeight) ~ totalNum * indivWeight,
+    TRUE ~ totalWeight)) %>% 
   mutate(totalWeight = round(totalWeight, 3))
 
 if (nrow(set.catch) > 0) {

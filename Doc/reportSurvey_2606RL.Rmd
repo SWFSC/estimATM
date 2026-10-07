@@ -679,7 +679,8 @@ if ("Nearshore" %in% estimate.regions) {
 # Get navigation summary for all of the sampling platforms
 # Summarize Lasker days at sea
 if (file.exists(here("Data/Nav/nav_data_raw.rds"))) {
-  nav.fsv <- readRDS(here("Data/Nav/nav_data_raw.rds"))
+  nav.fsv <- readRDS(here("Data/Nav/nav_data_raw.rds")) %>% 
+    filter(between(date(time), as.Date(erddap.survey.start), as.Date(erddap.survey.end)))
   das.fsv <- n_distinct(date(nav.fsv$time))
 }
 

@@ -91,7 +91,7 @@ if (is.null(doc.name)) {doc.name <- "estimateBiomass.Rmd"}
 
 ```{r loop-controls}
 # User-defined loop controls
-process.csv      <- T # Read CSV files for summarizing NASC
+process.csv      <- F # Read CSV files for summarizing NASC
 get.db           <- F # Get trawl data
 get.nav          <- F # Get nav data
 combine.regions  <- T # Combine core and nearshore biomass plots
@@ -110,6 +110,9 @@ source(here("Doc/settings", prj.settings))
 
 # Define figure directory for referencing estimATM figures
 fig.dir <-"G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Figures"
+
+# Define regions to present in main Results. That is, if nearshore data exists, make sure it's defined in this list.
+estimate.regions   <- c("Core", "Nearshore")
 
 # copy.files        <- T # Copy data files to local directory 
 # process.csv       <- T # Process Echoview files
@@ -168,7 +171,7 @@ include_graphics(here("Images/img_vessels_2407RL.png"))
 
 The SWFSC’s ATM surveys of CPS in the CCE began in 2006 with a focus on the northern stock of Pacific Sardine. Since then, they have expanded in scope and objectives to include the larger forage-fish assemblage and krill [**INCLUDE KRILL?**]. The survey domain, San Diego, CA to Cape Flattery, WA, was therefore defined primarily by the historically observed distribution of the northern stock of Pacific Sardine [@Zwolinski2011], but evolved to also encompass the anticipated distributions of the central and northern stocks of Northern Anchovy, and portions of the distributions of Pacific Mackerel, Jack Mackerel, Pacific Herring, and the southern stock of Pacific Sardine. This evolution, and the migratory behavior of Pacific Sardine, serve to explain the present survey region and design. During `r tolower(survey.season)` `r survey.year`, the west coast of the U.S., from `r survey.landmark.s` to `r survey.landmark.n`, was to be surveyed using _`r survey.vessel`_ and fishing vessels _Lisa Marie_, _Long Beach Carnage_.    
 
-The core-region transects (**Fig. \@ref(fig:survey-plan)**), to be sampled by _`r survey.vessel`_, spanned the latitudinal extent of the anticipated distributions of the northern stock of Pacific Sardine and the central and northern stocks of Northern Anchovy based on historical observations, ranging from `r survey.landmark.s` to `r survey.landmark.n`. The planned transects were perpendicular to the coast, spaced `r tx.spacing.fsv` nmi apart, and extended from the shallowest navigable depth (~20 m) to either a distance of 35 nmi or to the 1,000-fathom isobath, whichever was farther offshore. Transects were extended by 5 nmi segments if CPS backscatter were observed during the last 3 nmi of the transect or additional segment, for up to a total extension of 50 nmi. If a transect was extended, the ensuing transect was to be extended by the same amount. Sampling by _`r survey.vessel`_ was to be conducted over 64 days-at-sea (DAS) divided into four ~16 DAS legs.
+The core-region transects (**Fig. \@ref(fig:survey-plan)**), to be sampled by _`r survey.vessel`_, spanned the latitudinal extent of the anticipated distributions of the northern stock of Pacific Sardine and the central and northern stocks of Northern Anchovy based on historical observations, ranging from `r survey.landmark.s` to `r survey.landmark.n`. The planned transects were perpendicular to the coast, spaced `r tx.spacing.fsv` nmi apart, and extended from the shallowest navigable depth (~20 m) to either a distance of 35 nmi or to the 1,000-fathom isobath, whichever was farther offshore. Transects were extended by 5 nmi segments if CPS backscatter were observed during the last 3 nmi of the transect or additional segment, for up to a total extension of 50 nmi. If a transect was extended, the ensuing transect was to be extended by the same amount. In regions with  Sampling by _`r survey.vessel`_ was to be conducted over 64 days-at-sea (DAS) divided into four ~16 DAS legs.
 
 To estimate the CPS biomass in coastal regions where it is too shallow to safely navigate NOAA Fisheries Survey Vessels, sampling from _`r survey.vessel`_ was to be augmented with nearshore-region transects using echosounder and purse-seine sampling from _Long Beach Carnage_ between San Diego, CA to Half Moon Bay, CA, including around Santa Cruz and Santa Catalina Islands; and from _Lisa Marie_ between Half Moon Bay, CA to `r survey.landmark.n` (**Fig. \@ref(fig:survey-plan)**). 
 
@@ -375,8 +378,13 @@ include_graphics(here("Images/img_carnage_MTA4.jpg"))
 
 ### Calibrations {#methods-echosounder-calibration}  
 
-The echosounder systems on each vessel were calibrated using the standard sphere technique [@Foote1987;@Demer2015]. On _`r survey.vessel`_, each WBT was calibrated in both CW (continuous wave or narrowband mode) and FM modes (frequency modulation or broadband mode). For both modes, the reference target was a `r cal.sphere[survey.vessel.primary]`. For FM mode, additional calibrations were conducted for the 120, 200, and 333 kHz echosounders using a smaller 25 mm-WC sphere. Calibrations for _Lisa Marie_ and _Long Beach Carnage_ were all conducted using a WC38.1. The calibration parameters for all vessels were derived in Echoview (see **Section \@ref(results-echosounder-calibration)**). For each echosounder, the calibrated Equivalent Two-Way Beam Angle (EBA) was derived by compensating the factory-measured EBA by the change in local sound speed [@Demer2015;@Bodholt2002]; when processing the survey transects, the calibrated measures of transducer gain, beamwidths, and EBA were then also compensated by the changes in local sound speed.
+The echosounder systems on each vessel were calibrated using the standard sphere technique [@Foote1987;@Demer2015]. Calibration parameters for all vessels were derived using the Calibration Assistant in Echoview (see **Section \@ref(results-echosounder-calibration)**). To characterize the environment, profiles of the water column were conducted to obtain measures of temperature, salinity, and sound speed. For each echosounder, the calibrated Equivalent Two-Way Beam Angle (EBA) was derived by compensating the factory-measured EBA by the change in local sound speed [@Demer2015;@Bodholt2002]; when processing the survey transects, the calibrated measures of transducer gain, beamwidths, and EBA were then also compensated by the changes in local sound speed. 
 
+The EK80s on _`r survey.vessel`_ were calibrated with the ship docked at 10th Avenue Marine Terminal in San Diego, CA. During the calibration, the centerboard was put in the Retracted position, placing the transducers at a depth of ~5 m. Measurements of temperature and salinity were conducted using a handheld probe (YSI 2030). Each EK80 WBT was then calibrated in both CW (continuous wave or narrowband mode) and FM modes (frequency modulation or broadband mode). For both modes, the reference target was a `r cal.sphere[survey.vessel.primary]`. For FM mode, additional calibrations were conducted for the 120, 200, and 333 kHz echosounders using a smaller 25 mm-WC sphere. 
+
+The EK80s on _Lisa Marie_ were initially calibrated with the ship anchored near Gig Harbor, WA on July 7, 2026. After unsuccessful results, it was deemed that EK80 transducers likely had significant biofouling that negatively affected the measurements. A second calibration was therefore conducted on July 23, 2026 with the ship anchored off Santa Cruz, CA. Measurements of temperature and salinity were conducted using a handheld probe (YSI 2030). Each EK80 WBT was then calibrated in CW mode using a 38.1 mm WC sphere.
+
+The EK80s on _Long Beach Carnage_ were calibrated on April 9, 2026 in the SWFSC Technology Tank. Measurements of temperature and salinity were conducted using a handheld probe (YSI 2030). Each EK80 WBT was calibrated in both CW and FM modes using a 38.1 mm WC sphere. Prior to the survey, the calibrated EK80s and MTA-4 array were then installed on the _Long Beach Carnage_.
 
 ### Data collection {#methods-acoustic-data-collection}  
 
@@ -477,18 +485,8 @@ include_graphics(file.path(fig.dir, "TDR/2606RL_TDR_All_031.png"))
 
 ### Quality Assurance and Quality Control {#methods-trawl-qaqc}  
 
-On _`r survey.vessel`_, trawl data were entered into an Oracle database using the Catch Logger for Acoustic Midwater Surveys software (CLAMS, NOAA/NMFS/AFSC^[https://github.com/noaa-afsc-mace/CLAMS]). During and following the survey, data were exported to an SQLite database, further checked, and verified or corrected as needed. Missing length ($L_{miss}$) and weight ($W_{miss}$) measurements were estimated as $W_{miss} = \beta_0{L}^{\beta_1}$ and $L_{miss} = (W/\beta_0)^{(1/\beta_1)}$, respectively, where values for $\beta_0$ and $\beta_1$ are species- and season-specific parameters of the length-versus-weight relationships described in Palance et al. [-@Palance2019]. To identify measurement or data-entry errors, length and weight data were graphically compared to measurements from previous surveys and models of season-specific length-versus-weight from previous surveys from Palance et al. [-@Palance2019, **Fig.** \@ref(fig:lw-plot)]. Outliers were flagged, reviewed, and corrected if errors were identified. Catch data from aborted trawl hauls were not included.    
+On _`r survey.vessel`_, trawl data were entered into an Oracle database using the Catch Logger for Acoustic Midwater Surveys software (CLAMS, NOAA/NMFS/AFSC^[https://github.com/noaa-afsc-mace/CLAMS]). During and following the survey, data were exported to an SQLite database, further checked, and verified or corrected as needed. Missing length ($L_{miss}$) and weight ($W_{miss}$) measurements were estimated as $W_{miss} = \beta_0{L}^{\beta_1}$ and $L_{miss} = (W/\beta_0)^{(1/\beta_1)}$, respectively, where values for $\beta_0$ and $\beta_1$ are species- and season-specific parameters of the length-versus-weight relationships described in Palance et al. [-@Palance2019]. To identify measurement or data-entry errors, length and weight data were graphically compared to measurements from previous surveys and models of season-specific length-versus-weight from previous surveys from Palance et al. [-@Palance2019]. Outliers were flagged, reviewed, and corrected if errors were identified. Catch data from aborted trawl hauls were not included.    
 
-\newpage
-\blandscape
-
-(ref:lw-plot) Specimen weight versus length from the current survey (colored points, by sex) compared to those from previous SWFSC surveys during the same season (gray points) and length-weight models from Palance et al. [-@Palance2019] (dashed lines). 
-
-```{r lw-plot, fig.cap='(ref:lw-plot)',out.width='8in',fig.pos='H'}
-include_graphics(file.path(fig.dir, "fig_LW_plots.png"))
-```  
-
-\elandscape
 \newpage
 
 ## Environmental DNA (eDNA) sampling {#methods-edna-sampling}
@@ -967,7 +965,7 @@ if (exists("set.lengths")) {
 
 # Summarize catch data ------------------------------------------------
 set.catch.summ <- set.catch %>%
-  select(key.set, scientificName, totalWeight = totalWeightkg) %>% 
+  select(key.set, scientificName, totalWeight = totalWeight) %>% 
   tidyr::spread(scientificName, totalWeight) %>% 
   right_join(select(sets, key.set, vessel.name, lat, long)) %>% # Add all sets, incl. empty hauls
   arrange(key.set) 
@@ -1011,6 +1009,7 @@ set.summ.wt <- set.summ.wt %>%
   replace(is.na(.), 0) %>% 
   right_join(select(set.clusters, key.set, vessel.name, datetime, long, lat, sample.type))
 ```
+
 ```{r process-ctd-stations, results='asis'}
 # Read and format CTD and UCTD station info; generated from plotCTD
 if (file.exists(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
@@ -1020,9 +1019,6 @@ if (file.exists(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summ
   ctd.table <- data.frame()
 }
 
-<<<<<<< Updated upstream
-The core region of the `r tolower(survey.season)` `r survey.year` survey spanned the continental shelf from San Diego to Cape Flattery, between `r format(ymd(erddap.survey.start),"%d %B")` and `r format(ymd(erddap.survey.end),"%d %B %Y")`, and included most of the potential habitat for the northern subpopulation of Pacific Sardine at the time of the survey^[https://coastwatch.pfeg.noaa.gov/erddap/griddap/sardine_habitat_modis.html] [**UPDATE URL**]. In this region, _`r survey.vessel`_ sampled `r nrow(nasc.summ)` east-west transects totaling `r prettyNum(sum(nasc.summ$distance), digits = 1, big.mark = ",")` nmi during `r das.fsv` DAS (**Fig. \@ref(fig:nasc-trawl)**). Catches from a total of `r nrow(haul)` nighttime surface trawls were obtained.
-=======
 if (file.exists(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
                           "uctd_summary_table.csv"))) {
   uctd.table <- read_csv(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
@@ -1030,7 +1026,6 @@ if (file.exists(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summ
 } else {
   uctd.table <- data.frame()
 }
->>>>>>> Stashed changes
 
 # Combine and format for printing
 all.ctds.table <- bind_rows(ctd.table, uctd.table) %>%
@@ -1039,7 +1034,7 @@ all.ctds.table <- bind_rows(ctd.table, uctd.table) %>%
 
 ```
 
-The core region of the `r tolower(survey.season)` `r survey.year` survey spanned the continental shelf from San Diego to Cape Flattery, between `r format(ymd(erddap.survey.start),"%d %B")` and `r format(ymd(erddap.survey.end),"%d %B %Y")`, and included most of the potential habitat for the northern subpopulation of Pacific Sardine at the time of the survey^[https://coastwatch.pfeg.noaa.gov/erddap/griddap/sardine_habitat_modis.html] [**UPDATE URL and/or decide if we should keep this**]. In this region, _`r survey.vessel`_ sampled `r nrow(nasc.summ)` east-west transects totaling `r prettyNum(sum(nasc.summ$distance), digits = 1, big.mark = ",")` nmi during `r das.fsv-5` DAS [**THIS SUBTRACTS 5. DETERMINE WHY**] (**Fig. \@ref(fig:nasc-trawl)**), and conducted `r nrow(haul)` nighttime surface trawls [**INSERT REFERENCE TO SUMMARY TABLE IN APPENDIX**], `r nrow(uctd.table)` underway CTD casts (**Appendix \@ref(appendix-ctd-sampling)**), and [**INSERT # OF EDNA STATIONS**] eDNA stations [**ADD SECTION IN APPENDIX WITH LOCATIONS**]. 
+The core region of the `r tolower(survey.season)` `r survey.year` survey spanned the continental shelf from San Diego to Cape Flattery, between `r format(ymd(erddap.survey.start),"%d %B")` and `r format(ymd(erddap.survey.end),"%d %B %Y")`, and included most of the potential habitat for the northern subpopulation of Pacific Sardine at the time of the survey^[https://coastwatch.pfeg.noaa.gov/erddap/griddap/sardine_habitat_modis_v2.html] [**SHOULD WE KEEP THIS?**]. In this region, _`r survey.vessel`_ sampled `r nrow(nasc.summ)` east-west transects totaling `r prettyNum(sum(nasc.summ$distance), digits = 1, big.mark = ",")` nmi during `r das.fsv` DAS [**THIS SUBTRACTS 5. DETERMINE WHY**] (**Fig. \@ref(fig:nasc-trawl)**), and conducted `r nrow(haul)` nighttime surface trawls (**Appendix \@ref(trawl-catch-summary)**), `r nrow(uctd.table)` underway CTD casts (**Appendix \@ref(appendix-ctd-sampling)**), and [**INSERT # OF EDNA STATIONS**] eDNA stations [**ADD SECTION IN APPENDIX WITH LOCATIONS**]. 
 
 The nearshore region spanned an area from 5 m depth to approximately 5 nmi from the continental coast, or 2.5 nmi from the Santa Cruz and Santa Catalina Islands, between San Diego and Cape Flattery. _Long Beach Carnage_ surveyed from approximately San Diego to Santa Cruz, CA and around the Santa Cruz and Santa Catalina Islands, with `r nrow(nasc.summ.lbc.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lbc.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LBC"]` purse-seine sets during `r das.lbc` DAS (**Fig. \@ref(fig:nasc-seine-lbc)**). _Lisa Marie_ surveyed from Santa Cruz to Cape Flattery, WA with `r nrow(nasc.summ.lm.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lm.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LM"]` purse-seine sets during `r das.lm` DAS (**Fig. \@ref(fig:nasc-seine-lm)**).
 
@@ -1049,7 +1044,7 @@ The nearshore region spanned an area from 5 m depth to approximately 5 nmi from 
 
 **Leg I**
 
-On 18 June, following a one day delay due to needed repairs on Generator #2, _`r survey.vessel`_ departed from 10th Avenue Marine Terminal in San Diego, CA at ~1700 (all times UTC). The first day of operations included a certification of the newly repaired bow thruster outside of San Diego Bay, after which the ABS inspectors were put ashore via small craft. For the remainder of 18 June, engineers from AML Oceanographic conducted testing and training of a newly installed Moving Vessel Profiler (MVP200). At 1230 on 19 June, the AML engineers disembarked via small craft outside Mission Bay. _`r survey.vessel`_ then transited to the first nearshore station, arriving at ~1500 to begin acoustic sampling along transect 001. Transect sampling then progressed northward throughout the Southern California Bight, utilizing regional sampling in order to ensure adequate trawl coverage in both the inshore and offshore regions. No surface trawls were conducted on the night of 30 June due to recent catches of marine mammals that approached the authorized take limit [**INCLUDE?**]. On 1 July, the final acoustic and eDNA sampling of Leg 1 was conducted, completing all sampling through transect 014 off Point Conception, CA. _`r survey.vessel`_ then transited to San Diego, arriving at 10th Avenue Marine Terminal at ~2100 on 2 July to complete Leg 1.
+On 18 June, following a one day delay due to needed repairs on Generator #2, _`r survey.vessel`_ departed from 10th Avenue Marine Terminal in San Diego, CA at ~1700 (all times UTC). The first day of operations included a certification of the newly-repaired bow thruster outside of San Diego Bay, after which the ABS inspectors were put ashore via small craft. For the remainder of 18 June, engineers from AML Oceanographic conducted testing and training of a newly-installed Moving Vessel Profiler (MVP200). At 1230 on 19 June, the AML engineers disembarked via small craft outside Mission Bay. _`r survey.vessel`_ then transited to the first nearshore station, arriving at ~1500 to begin acoustic sampling along transect 001. Transect sampling then progressed northward throughout the Southern California Bight, utilizing regional sampling in order to ensure adequate trawl coverage in both the inshore and offshore regions. No surface trawls were conducted on the night of 30 June due to recent catches of marine mammals that approached the authorized take limit [**INCLUDE?**]. On 1 July, the final acoustic and eDNA sampling of Leg 1 was conducted, completing all sampling through transect 014 off Point Conception, CA. _`r survey.vessel`_ then transited to San Diego, arriving at 10th Avenue Marine Terminal at ~2100 on 2 July to complete Leg 1.
 
 **Leg II**
 
@@ -1073,9 +1068,130 @@ On 22 June, _Long Beach Carnage_ was mobilized with EK80 echosounders at Point L
 [**UPDATE AFTER RECEIVING LISA MARIE LOGBOOK**]
 From 22 July to 3 August, _Lisa Marie_ sampled nearshore transects 53 to 109, between Half Moon Bay and Coos Bay, where they called port to end the first half of their survey, reprovision the vessel, and exchange crew. On 13 August, _Lisa Marie_ resumed sampling nearshore sampling along transects 110 to 139 before calling port in Westport, WA on 24 August to refuel. On 25 August, _Lisa Marie_ resumed sampling transects 140 to 152, between Westport and Cape Flattery, before completing acoustic sampling and concluding the nearshore survey at 1600 on 28 August.
 
+## Echosounder calibrations {#results-echosounder-calibration}  
+### _`r survey.vessel`_
+
+The echosounder systems aboard _`r survey.vessel`_ were calibrated on `r cal.datetime["SH"]` while the vessel was docked at `r cal.loc["SH"]` (`r cal.lat.dd["SH"]` $^{\circ}\textrm{N}$, `r cal.lon.dd["SH"]` $^{\circ}\textrm{W}$) using the standard sphere technique [@Foote1987; @Demer2015]. Each WBT was calibrated in CW mode (i.e., continuous wave or narrowband mode), FM mode (i.e., frequency modulation or broadband mode), or both. For both CW and FM mode calibrations, the reference target was a `r cal.sphere["SH"]`; for FM mode, additional calibrations were conducted for the 70, 120, and 200 kHz echosounders using a `r cal.sphere.fm["SH"]`. Prior to the calibrations, temperature and salinity were measured to a depth of 10 m using a handheld probe (Pro2030, YSI) to estimate sound speeds at the transducer and sphere depths, and the time-averaged sound speed and absorption coefficients for the range between them. The theoretical target strength ($TS$; dB re 1 m^2^) of the sphere was calculated using values for the sphere, sound-pulse, and seawater properties. The sphere was positioned throughout the main lobe of each of the transducer beams using three motorized downriggers, two on the port side of the vessel and one on the starboard side. The calibration parameters for all vessels were derived in Echoview. For each echosounder, the calibrated Equivalent Two-Way Beam Angle (EBA) was derived by compensating the factory-measured EBA by the change in local sound speed [@Demer2015;@Bodholt2002]; when processing the survey transects, the calibrated measures of transducer gain, beamwidths, and EBA were then also compensated by the changes in local sound speed. Calibration results for _`r survey.vessel`_ are presented in **Table \@ref(tab:cal-results)**, and were used to process the acoustic data used to estimate biomasses. Calibration plots for WBTs in CW and FM mode are presented in  **Appendix \@ref(appendix-calibration-plots-sh-cw)** and **Appendix \@ref(appendix-calibration-plots-sh-fm)**, respectively.  
+
+(ref:cal-results) Wide-Bandwidth Transceiver (Simrad EK80 WBT; Kongsberg) information, pre-calibration settings, and post-calibration beam model results (below the horizontal line) estimated from calibration of the echosounders aboard _`r survey.vessel`_ using a WC38.1 standard sphere.
+
+```{r cal-results, results='asis'}
+if (exists("all.output.SH")) {
+  # Copy calibration results
+  cal.results <- all.output.SH
+  
+  # Get number of columns for table formatting
+  cal.cols <- ncol(cal.results)
+  
+  if (doc.type == "docx") {
+    # create kable object (for Word)
+    regulartable(cal.results)
+  } else {
+    # print LaTeX table for HTML or PDF
+    kable(cal.results, 
+          format = knitr.format, 
+          align = c("l","l",rep("c", cal.cols - 2)),
+          booktabs = TRUE, linesep = "", escape = FALSE,
+          caption = '(ref:cal-results)') %>% 
+      kable_styling(position = "center", latex_options = c("scale_down","hold_position")) %>%
+      add_header_above(c(" " = 2, "Frequency (kHz)" = cal.cols - 2)) %>% 
+      row_spec(7, hline_after = TRUE)
+  }
+} else {
+  print("No calibration results to present.")
+}
+```  
+
+\newpage
+
+### _Lisa Marie_  
+
+The WBTs aboard _Lisa Marie_ were calibrated prior to the survey on `r cal.datetime["LM"]` using the standard sphere technique [@Foote1987; @Demer2015] while the vessel was anchored off `r cal.loc["LM"]` (`r cal.lat.dd["LM"]` $^{\circ}\textrm{N}$, `r cal.lon.dd["LM"]` $^{\circ}\textrm{W}$). Calibration results for _Lisa Marie_ are presented in **Table \@ref(tab:cal-results-lm)**, and were used to process the acoustic data used to estimate biomasses.  Calibration plots for WBTs in CW mode are presented in **Appendix \@ref(appendix-calibration-plots-lm)**.  
+
+(ref:cal-results-lm) Wideband Transceiver (Simrad EK80 WBT; Kongsberg) and transducer information (above horizontal line) and beam model results (below horizontal line) estimated from calibration of the echosounders aboard _Lisa Marie_ using a WC38.1 standard sphere.
+
+```{r cal-results-lm,results='asis'}
+# entered into the WBT control software (Simrad EK80; Kongsberg)
+
+if (exists("all.output.LM")) {
+  # Copy calibration results
+  cal.results <- all.output.LM 
+  
+  # Get number of columns for table formatting
+  cal.cols <- ncol(cal.results)
+  
+  if (doc.type == "docx") {
+    # create kable object (for Word)
+    pander(cal.results)
+  } else {
+    kable(cal.results, 
+          format = knitr.format, 
+          align = c("l","l",rep("c", cal.cols - 2)),
+          booktabs = TRUE, linesep = "", escape = FALSE,
+          caption = '(ref:cal-results-lm)') %>% 
+      kable_styling(position = "center", latex_options = c("scale_down","hold_position")) %>%
+      add_header_above(c(" " = 2, "Frequency (kHz)" = cal.cols - 2)) %>% 
+      row_spec(7, hline_after = TRUE)
+  }
+} else {
+  print("No calibration results to present.")
+}
+```  
+
+### _Long Beach Carnage_
+
+The WBTs installed on _Long Beach Carnage_ were calibrated on `r cal.datetime["LBC"]`, using the standard sphere technique [@Foote1987; @Demer2015] in a tank at the SWFSC [@Demer2015]. Calibration results for _Long Beach Carnage_ are presented in **Table \@ref(tab:cal-results-lbc)**, and were used to process the acoustic data used to estimate biomasses. Calibration plots for WBTs in CW mode are presented in **Appendix \@ref(appendix-calibration-plots-lbc)**.
+
+(ref:cal-results-lbc) Wideband Transceiver (Simrad EK80 WBT; Kongsberg) and transducer information (above horizontal line) and beam model results (below horizontal line) estimated from a tank calibration, using a WC38.1 standard sphere, of the echosounders later installed and used aboard _Long Beach Carnage_.
+
+```{r cal-results-lbc,results='asis'}
+if (exists("all.output.LBC")) {
+  # Copy calibration results
+  cal.results <- all.output.LBC
+  
+  # Get number of columns for table formatting
+  cal.cols <- ncol(cal.results)
+  
+  if (doc.type == "docx") {
+    # create kable object (for Word)
+    pander(cal.results)
+  } else {
+    kable(cal.results, 
+          format = knitr.format, 
+          align = c("l","l",rep("c", cal.cols - 2)),
+          booktabs = TRUE, linesep = "", escape = FALSE,
+          caption = '(ref:cal-results-lbc)') %>% 
+      kable_styling(position = "center", latex_options = c("scale_down","hold_position")) %>%
+      add_header_above(c(" " = 2, "Frequency (kHz)" = cal.cols - 2)) %>% 
+      row_spec(7, hline_after = TRUE)
+  }
+} else {
+  print("No calibration results to present.")
+}
+``` 
+
+\newpage
+
+
+\newpage
+
 ## Trawl catch {#results-trawl-catch}
 
 Trawl catches from _`r survey.vessel`_ were composed of mostly Northern Anchovy between San Diego and Point Arena, CA; Jack Mackerel between Monterey and the US-Mexico border, and between Point Arena, CA and Cape Flattery, WA; and Pacific Herring between Coos Bay, OR and Cape Flattery, WA (**Fig. \@ref(fig:FSV-trawl)**). Pacific Sardine and Pacific Mackerel were scarce throughout the survey area. Overall, the `r nrow(haul)` trawls captured a combined `r prettyNum(sum(cluster.summ.wt$AllCPS),big.mark=",",digits=3)` kg of CPS (`r prettyNum(sum(cluster.summ.wt$'Anchovy'),big.mark=",",digits=3)` kg of Northern Anchovy, `r prettyNum(sum(cluster.summ.wt$'JackMack'),big.mark=",",digits=3)` kg of Jack Mackerel, `r prettyNum(sum(cluster.summ.wt$'PacHerring'),big.mark=",",digits=3)` kg of Pacific Herring, `r prettyNum(sum(cluster.summ.wt$'Smelt'),big.mark=",",digits=3)` kg of Whitebait Smelt, `r prettyNum(sum(cluster.summ.wt$'PacMack'),big.mark=",",digits=3)` kg of Pacific Mackerel, and `r prettyNum(sum(cluster.summ.wt$'Sardine'),big.mark=",",digits=3)` kg of Pacific Sardine; **Appendix \@ref(appendix-trawl-sampling)**).
+
+[**ADD INFO ABOUT QA/QC AND INCLUDE L/W PLOT**](**Fig. \@ref(fig:lw-plot)**)
+
+\newpage
+\blandscape
+
+(ref:lw-plot) [**FIX COLORS IN THIS FIGURE**]Specimen weight versus length from the `r tolower(survey.season)` `r survey.year` survey (colored points, by sex) compared to those from previous SWFSC surveys during the same season (gray points) and length-weight models from Palance et al. [-@Palance2019] (dashed lines). 
+
+```{r lw-plot, fig.cap='(ref:lw-plot)',out.width='8in',fig.pos='H'}
+include_graphics(file.path(fig.dir, "fig_LW_plots.png"))
+```  
+
+\elandscape
+\newpage
 
 ## Purse-seine catch {#results-seine-catch}
 ### _Long Beach Carnage_

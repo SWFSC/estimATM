@@ -37,14 +37,14 @@ waypoint.file <- here("Data/Nav", wpt.filename)
 
 ```{r user-settings}
 ## Survey vessel
-gpx.vessel <- "LM"
+gpx.vessel <- "LBC"
 ## Filter nav with particular bearings?
 filter.nav <- c("LM" = TRUE, "LBC" = FALSE)
 # Survey type (Core or Nearshore)
 tx.types <- c("Nearshore") # c("Compulsory","Adaptive")
-# Down-sample points?
+## Down-sample points?
 downsample.points <- TRUE
-# Buffer distance (nmi) for retaining nav points
+## Buffer distance (nmi) for retaining nav points
 buffer.dist <- 0.2
 ```
 

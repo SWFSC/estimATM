@@ -152,8 +152,7 @@ An interactive map showing the locations of planned transects, the vessel path, 
 # Plot map
 i.map <- mapview(filter(tx.buffer, Transect %in% unique(nav.tx$Transect))) + 
   mapview(filter(transects.sf, 
-                 Type %in% tx.types,
-                 Transect %in% unique(nav.tx$Transect)), 
+                 Type %in% tx.types), 
           zcol = "Type") + 
   mapview(nav.path, color = "black") + 
   mapview(select(nav.tx, Transect, time, brg), zcol = "brg") 

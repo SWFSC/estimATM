@@ -171,7 +171,7 @@ include_graphics(here("Images/img_vessels_2407RL.png"))
 
 The SWFSC’s ATM surveys of CPS in the CCE began in 2006 with a focus on the northern stock of Pacific Sardine. Since then, they have expanded in scope and objectives to include the larger forage-fish assemblage and krill [**INCLUDE KRILL?**]. The survey domain, San Diego, CA to Cape Flattery, WA, was therefore defined primarily by the historically observed distribution of the northern stock of Pacific Sardine [@Zwolinski2011], but evolved to also encompass the anticipated distributions of the central and northern stocks of Northern Anchovy, and portions of the distributions of Pacific Mackerel, Jack Mackerel, Pacific Herring, and the southern stock of Pacific Sardine. This evolution, and the migratory behavior of Pacific Sardine, serve to explain the present survey region and design. During `r tolower(survey.season)` `r survey.year`, the west coast of the U.S., from `r survey.landmark.s` to `r survey.landmark.n`, was to be surveyed using _`r survey.vessel`_ and fishing vessels _Lisa Marie_, _Long Beach Carnage_.    
 
-The core-region transects (**Fig. \@ref(fig:survey-plan)**), to be sampled by _`r survey.vessel`_, spanned the latitudinal extent of the anticipated distributions of the northern stock of Pacific Sardine and the central and northern stocks of Northern Anchovy based on historical observations, ranging from `r survey.landmark.s` to `r survey.landmark.n`. The planned transects were perpendicular to the coast, spaced `r tx.spacing.fsv` nmi apart, and extended from the shallowest navigable depth (~20 m) to either a distance of 35 nmi or to the 1,000-fathom isobath, whichever was farther offshore. Transects were extended by 5 nmi segments if CPS backscatter were observed during the last 3 nmi of the transect or additional segment, for up to a total extension of 50 nmi. If a transect was extended, the ensuing transect was to be extended by the same amount. In regions with  Sampling by _`r survey.vessel`_ was to be conducted over 64 days-at-sea (DAS) divided into four ~16 DAS legs.
+The core-region transects (**Fig. \@ref(fig:survey-plan)**), to be sampled by _`r survey.vessel`_, spanned the latitudinal extent of the anticipated distributions of the northern stock of Pacific Sardine and the central and northern stocks of Northern Anchovy based on historical observations, ranging from `r survey.landmark.s` to `r survey.landmark.n`. The planned transects were perpendicular to the coast, spaced `r tx.spacing.fsv` nmi apart, and extended from the shallowest navigable depth (~20 m) to either a distance of 35 nmi or to the 1,000-fathom isobath, whichever was farther offshore. Transects were extended by 5 nmi segments if CPS backscatter were observed during the last 3 nmi of the transect or additional segment, for up to a total extension of 50 nmi. If a transect was extended, the ensuing transect was to be extended by the same amount. In regions with  long transects (> ~60 nmi), such as in the Southern California Bight, a regional sampling approach could be employed to ensure adequate sampling in both areas with high CPS backscatter and spanning the inshore and offshore regions. In this approach, transects are divided into shorter sections, then three to four adjacent sections (e.g., the inshore sections) sampled in a given day (**Fig. \@ref(fig:regional-sampling)**). Sampling by _`r survey.vessel`_ was to be conducted over 64 days-at-sea (DAS) divided into four ~16 DAS legs.
 
 To estimate the CPS biomass in coastal regions where it is too shallow to safely navigate NOAA Fisheries Survey Vessels, sampling from _`r survey.vessel`_ was to be augmented with nearshore-region transects using echosounder and purse-seine sampling from _Long Beach Carnage_ between San Diego, CA to Half Moon Bay, CA, including around Santa Cruz and Santa Catalina Islands; and from _Lisa Marie_ between Half Moon Bay, CA to `r survey.landmark.n` (**Fig. \@ref(fig:survey-plan)**). 
 
@@ -302,6 +302,12 @@ include_graphics(here("Figs/fig_survey_plan_reportSurvey.png"))
 
 \newpage
 
+(ref:regional-sampling) Example of regional sampling [**UPDATE DESCRIPTION**].
+
+```{r regional-sampling, fig.cap='(ref:regional-sampling)',out.width="100%",fig.align='center',fig.pos='H'}
+include_graphics(here("Images/img_regional_sampling.png"))
+```  
+
 ## Scientific Personnel {#introduction-personnel}
 The collection and analysis of the survey data were conducted by members of 1-NOAA, 2-CU Boulder/CIRES, 3-UCSC/CIMEAS, 4-OAI, 5-UCSD/SIO, 6-NOAA Teacher at Sea, 7-WDFW, and 8-CWPA. For each leg, ^\*^ denotes the Chief Scientist and ^+^ the Acoustic, Trawl, and eDNA Leads.
 
@@ -382,9 +388,9 @@ The echosounder systems on each vessel were calibrated using the standard sphere
 
 The EK80s on _`r survey.vessel`_ were calibrated with the ship docked at 10th Avenue Marine Terminal in San Diego, CA. During the calibration, the centerboard was put in the Retracted position, placing the transducers at a depth of ~5 m. Measurements of temperature and salinity were conducted using a handheld probe (YSI 2030). Each EK80 WBT was then calibrated in both CW (continuous wave or narrowband mode) and FM modes (frequency modulation or broadband mode). For both modes, the reference target was a `r cal.sphere[survey.vessel.primary]`. For FM mode, additional calibrations were conducted for the 120, 200, and 333 kHz echosounders using a smaller 25 mm-WC sphere. 
 
-The EK80s on _Lisa Marie_ were initially calibrated with the ship anchored near Gig Harbor, WA on July 7, 2026. After unsuccessful results, it was deemed that EK80 transducers likely had significant biofouling that negatively affected the measurements. A second calibration was therefore conducted on July 23, 2026 with the ship anchored off Santa Cruz, CA. Measurements of temperature and salinity were conducted using a handheld probe (YSI 2030). Each EK80 WBT was then calibrated in CW mode using a 38.1 mm WC sphere.
+The EK80s on _Lisa Marie_ were initially calibrated on July 7, 2026 with the ship anchored near Gig Harbor, WA. After unsuccessful results, it was deemed that the EK80 transducers likely had significant biofouling negatively affecting the measurements. A second calibration was therefore conducted on July 23, 2026 with the ship anchored off Santa Cruz, CA. Measurements of temperature and salinity were conducted using a handheld probe (YSI 2030). Each EK80 WBT was calibrated in CW mode using a 38.1 mm-WC sphere.
 
-The EK80s on _Long Beach Carnage_ were calibrated on April 9, 2026 in the SWFSC Technology Tank. Measurements of temperature and salinity were conducted using a handheld probe (YSI 2030). Each EK80 WBT was calibrated in both CW and FM modes using a 38.1 mm WC sphere. Prior to the survey, the calibrated EK80s and MTA-4 array were then installed on the _Long Beach Carnage_.
+The EK80s on _Long Beach Carnage_ were calibrated on April 9, 2026 in the SWFSC Technology Tank. Measurements of temperature and salinity were conducted using a handheld probe (YSI 2030). Each EK80 WBT was calibrated in both CW and FM modes using a 38.1 mm-WC sphere. The calibrated EK80s and MTA-4 array were then installed on the _Long Beach Carnage_ prior to the survey.
 
 ### Data collection {#methods-acoustic-data-collection}  
 
@@ -486,8 +492,6 @@ include_graphics(file.path(fig.dir, "TDR/2606RL_TDR_All_031.png"))
 ### Quality Assurance and Quality Control {#methods-trawl-qaqc}  
 
 On _`r survey.vessel`_, trawl data were entered into an Oracle database using the Catch Logger for Acoustic Midwater Surveys software (CLAMS, NOAA/NMFS/AFSC^[https://github.com/noaa-afsc-mace/CLAMS]). During and following the survey, data were exported to an SQLite database, further checked, and verified or corrected as needed. Missing length ($L_{miss}$) and weight ($W_{miss}$) measurements were estimated as $W_{miss} = \beta_0{L}^{\beta_1}$ and $L_{miss} = (W/\beta_0)^{(1/\beta_1)}$, respectively, where values for $\beta_0$ and $\beta_1$ are species- and season-specific parameters of the length-versus-weight relationships described in Palance et al. [-@Palance2019]. To identify measurement or data-entry errors, length and weight data were graphically compared to measurements from previous surveys and models of season-specific length-versus-weight from previous surveys from Palance et al. [-@Palance2019]. Outliers were flagged, reviewed, and corrected if errors were identified. Catch data from aborted trawl hauls were not included.    
-
-\newpage
 
 ## Environmental DNA (eDNA) sampling {#methods-edna-sampling}
 
@@ -1034,7 +1038,7 @@ all.ctds.table <- bind_rows(ctd.table, uctd.table) %>%
 
 ```
 
-The core region of the `r tolower(survey.season)` `r survey.year` survey spanned the continental shelf from San Diego to Cape Flattery, between `r format(ymd(erddap.survey.start),"%d %B")` and `r format(ymd(erddap.survey.end),"%d %B %Y")`, and included most of the potential habitat for the northern subpopulation of Pacific Sardine at the time of the survey^[https://coastwatch.pfeg.noaa.gov/erddap/griddap/sardine_habitat_modis_v2.html] [**SHOULD WE KEEP THIS?**]. In this region, _`r survey.vessel`_ sampled `r nrow(nasc.summ)` east-west transects totaling `r prettyNum(sum(nasc.summ$distance), digits = 1, big.mark = ",")` nmi during `r das.fsv` DAS [**THIS SUBTRACTS 5. DETERMINE WHY**] (**Fig. \@ref(fig:nasc-trawl)**), and conducted `r nrow(haul)` nighttime surface trawls (**Appendix \@ref(trawl-catch-summary)**), `r nrow(uctd.table)` underway CTD casts (**Appendix \@ref(appendix-ctd-sampling)**), and [**INSERT # OF EDNA STATIONS**] eDNA stations [**ADD SECTION IN APPENDIX WITH LOCATIONS**]. 
+The core region of the `r tolower(survey.season)` `r survey.year` survey spanned the continental shelf from San Diego to Cape Flattery, between `r format(ymd(erddap.survey.start),"%d %B")` and `r format(ymd(erddap.survey.end),"%d %B %Y")`, and included most of the potential habitat for the northern subpopulation of Pacific Sardine at the time of the survey^[https://coastwatch.pfeg.noaa.gov/erddap/griddap/sardine_habitat_modis_v2.html] [**SHOULD WE KEEP THIS?**]. In this region, _`r survey.vessel`_ sampled `r nrow(nasc.summ)` east-west transects totaling `r prettyNum(sum(nasc.summ$distance), digits = 1, big.mark = ",")` nmi during `r das.fsv` DAS (**Fig. \@ref(fig:nasc-trawl)**), and conducted `r nrow(haul)` nighttime surface trawls (**Appendix \@ref(appendix-trawl-sampling)**), `r nrow(uctd.table)` underway CTD casts (**Appendix \@ref(appendix-ctd-sampling)**), and [**INSERT # OF EDNA STATIONS**] eDNA stations [**ADD SECTION IN APPENDIX WITH LOCATIONS**]. 
 
 The nearshore region spanned an area from 5 m depth to approximately 5 nmi from the continental coast, or 2.5 nmi from the Santa Cruz and Santa Catalina Islands, between San Diego and Cape Flattery. _Long Beach Carnage_ surveyed from approximately San Diego to Santa Cruz, CA and around the Santa Cruz and Santa Catalina Islands, with `r nrow(nasc.summ.lbc.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lbc.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LBC"]` purse-seine sets during `r das.lbc` DAS (**Fig. \@ref(fig:nasc-seine-lbc)**). _Lisa Marie_ surveyed from Santa Cruz to Cape Flattery, WA with `r nrow(nasc.summ.lm.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lm.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LM"]` purse-seine sets during `r das.lm` DAS (**Fig. \@ref(fig:nasc-seine-lm)**).
 
@@ -1177,14 +1181,27 @@ if (exists("all.output.LBC")) {
 
 ## Trawl catch {#results-trawl-catch}
 
-Trawl catches from _`r survey.vessel`_ were composed of mostly Northern Anchovy between San Diego and Point Arena, CA; Jack Mackerel between Monterey and the US-Mexico border, and between Point Arena, CA and Cape Flattery, WA; and Pacific Herring between Coos Bay, OR and Cape Flattery, WA (**Fig. \@ref(fig:FSV-trawl)**). Pacific Sardine and Pacific Mackerel were scarce throughout the survey area. Overall, the `r nrow(haul)` trawls captured a combined `r prettyNum(sum(cluster.summ.wt$AllCPS),big.mark=",",digits=3)` kg of CPS (`r prettyNum(sum(cluster.summ.wt$'Anchovy'),big.mark=",",digits=3)` kg of Northern Anchovy, `r prettyNum(sum(cluster.summ.wt$'JackMack'),big.mark=",",digits=3)` kg of Jack Mackerel, `r prettyNum(sum(cluster.summ.wt$'PacHerring'),big.mark=",",digits=3)` kg of Pacific Herring, `r prettyNum(sum(cluster.summ.wt$'Smelt'),big.mark=",",digits=3)` kg of Whitebait Smelt, `r prettyNum(sum(cluster.summ.wt$'PacMack'),big.mark=",",digits=3)` kg of Pacific Mackerel, and `r prettyNum(sum(cluster.summ.wt$'Sardine'),big.mark=",",digits=3)` kg of Pacific Sardine; **Appendix \@ref(appendix-trawl-sampling)**).
+Trawl catches from _`r survey.vessel`_ were composed of mostly Northern Anchovy between San Diego and Point Arena, CA; Jack Mackerel between Monterey and the US-Mexico border, and between Point Arena, CA and Cape Flattery, WA; and Pacific Herring between Coos Bay, OR and Cape Flattery, WA (**Fig. \@ref(fig:FSV-trawl)**). Length-weight relationships were assessed and utilized for quality assurance and control (**Fig. \@ref(fig:lw-plot)**). Pacific Sardine and Pacific Mackerel were scarce throughout the survey area. Overall, the `r nrow(haul)` trawls captured a combined `r prettyNum(sum(cluster.summ.wt$AllCPS),big.mark=",",digits=3)` kg of CPS (`r prettyNum(sum(cluster.summ.wt$'Anchovy'),big.mark=",",digits=3)` kg of Northern Anchovy, `r prettyNum(sum(cluster.summ.wt$'JackMack'),big.mark=",",digits=3)` kg of Jack Mackerel, `r prettyNum(sum(cluster.summ.wt$'PacHerring'),big.mark=",",digits=3)` kg of Pacific Herring, `r prettyNum(sum(cluster.summ.wt$'Smelt'),big.mark=",",digits=3)` kg of Whitebait Smelt, `r prettyNum(sum(cluster.summ.wt$'PacMack'),big.mark=",",digits=3)` kg of Pacific Mackerel, and `r prettyNum(sum(cluster.summ.wt$'Sardine'),big.mark=",",digits=3)` kg of Pacific Sardine; **Appendix \@ref(appendix-trawl-sampling)**).
 
-[**ADD INFO ABOUT QA/QC AND INCLUDE L/W PLOT**](**Fig. \@ref(fig:lw-plot)**)
+(ref:FSV-trawl) The proportion of CPS catch, by weight, for each individual trawl haul sampled by _`r survey.vessel`_. Hauls with no CPS catches are indicated by black dots [**CONFIRM WITH KEVIN**].
+
+```{r FSV-trawl, fig.cap='(ref:FSV-trawl)',out.width="45%",fig.pos='H'}
+# out.width='8.5in'
+# Map trawl species proportions -------------------------------------------------------
+if (save.figs) {
+  # Create trawl haul and cluster proportion figures
+  source(here("Code/plot_haul_proportion_wt.R"))
+} else {
+  load(here("Output/trawl_species_proportion_map.Rdata"))
+}
+
+include_graphics(file.path(fig.dir, "fig_trawl_proportion_haul_wt.png"))
+```
 
 \newpage
 \blandscape
 
-(ref:lw-plot) [**FIX COLORS IN THIS FIGURE**]Specimen weight versus length from the `r tolower(survey.season)` `r survey.year` survey (colored points, by sex) compared to those from previous SWFSC surveys during the same season (gray points) and length-weight models from Palance et al. [-@Palance2019] (dashed lines). 
+(ref:lw-plot) [**FIX COLORS IN THIS FIGURE**]Specimen weight versus length from the `r tolower(survey.season)` `r survey.year` survey (colored points, by sex) compared to those from previous SWFSC surveys during the same season (gray points), and length-weight models from Palance et al. [-@Palance2019] (dashed lines). 
 
 ```{r lw-plot, fig.cap='(ref:lw-plot)',out.width='8in',fig.pos='H'}
 include_graphics(file.path(fig.dir, "fig_LW_plots.png"))
@@ -1205,20 +1222,7 @@ Purse-seine catches from _Lisa Marie_ in the nearshore were composed mostly of P
 
 \newpage
 
-(ref:FSV-trawl) The proportion of CPS catch, by weight, for each individual trawl haul sampled by _`r survey.vessel`_.
 
-```{r FSV-trawl, fig.cap='(ref:FSV-trawl)',out.width="50%",fig.pos='H'}
-# out.width='8.5in'
-# Map trawl species proportions -------------------------------------------------------
-if (save.figs) {
-  # Create trawl haul and cluster proportion figures
-  source(here("Code/plot_haul_proportion_wt.R"))
-} else {
-  load(here("Output/trawl_species_proportion_map.Rdata"))
-}
-
-include_graphics(file.path(fig.dir, "fig_trawl_proportion_haul_wt.png"))
-```
 
 \newpage
 
@@ -1337,28 +1341,7 @@ if (file.exists(here("Figs/fig_cal_TSrel_scatter_LBC.png"))) {
 
 \newpage
 
-# CTD and UCTD sampling locations {#appendix-ctd-sampling}
 
-Times and locations of conductivity and temperature versus depth casts while on station (CTD) and underway (UCTD) from _`r survey.vessel`_ (`r survey.vessel.primary`).
-
-```{r display-ctd-stations, results='asis'}
-
-if (doc.type == "docx") {
-  # create flextable object (for Word)
-  pander(all.ctds.table)
-} else {
-  # print LaTeX table for HTML or PDF
-  kable(all.ctds.table,
-        align = c("l","l","c","c"),
-        digits = c(0,0,4,4),
-        escape = FALSE, longtable = TRUE,
-        booktabs = TRUE) %>%
-    kable_styling(position = "center",
-                  latex_options = c("repeat_header","hold_position"))
-}
-```
-
-\newpage
 \blandscape
 
 # Trawl sample summary {#appendix-trawl-sampling}
@@ -1414,6 +1397,31 @@ if (doc.type == "docx") {
 ```
 
 \newpage
+\elandscape
+
+# CTD and UCTD sampling locations {#appendix-ctd-sampling}
+
+Times and locations of conductivity and temperature versus depth casts while on station (CTD) and underway (UCTD) from _`r survey.vessel`_ (`r survey.vessel.primary`).
+
+```{r display-ctd-stations, results='asis'}
+
+if (doc.type == "docx") {
+  # create flextable object (for Word)
+  pander(all.ctds.table)
+} else {
+  # print LaTeX table for HTML or PDF
+  kable(all.ctds.table,
+        align = c("l","l","c","c"),
+        digits = c(0,0,4,4),
+        escape = FALSE, longtable = TRUE,
+        booktabs = TRUE) %>%
+    kable_styling(position = "center",
+                  latex_options = c("repeat_header","hold_position"))
+}
+```
+
+\newpage
+\blandscape
 
 # Seine sample summary {#appendix-seine-sampling}
 ## _Long Beach Carnage_ {#appendix-seine-sampling-lbc}

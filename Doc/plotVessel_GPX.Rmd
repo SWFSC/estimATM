@@ -31,23 +31,31 @@ settings.files <- dir(here("Doc/settings"))
 prj.settings <- settings.files[str_detect(settings.files, paste0("settings_", prj.name, ".R"))]
 source(here("Doc/settings", prj.settings))
 
-# Filter nav with particular bearings?
-filter.nav <- FALSE
+# Load waypoints
+waypoint.file <- here("Data/Nav", wpt.filename)
 ```
 
-```{r process-files, out.width="100%"}
+```{r user-settings}
+## Survey vessel
+gpx.vessel <- "LM"
+## Filter nav with particular bearings?
+filter.nav <- c("LM" = TRUE, "LBC" = FALSE)
 # Survey type (Core or Nearshore)
 tx.types <- c("Nearshore") # c("Compulsory","Adaptive")
 # Down-sample points?
 downsample.points <- TRUE
 # Buffer distance (nmi) for retaining nav points
 buffer.dist <- 0.2
+```
 
-# GPX file name
-# ctd.file <- here::here("Data/Nav", "lm_ctd.gpx")
-# nav.file <- here::here("Data/Nav", "lm_nav.gpx")
-nav.file <- here::here("Data/Nav", "lbc_nav.gpx")
-waypoint.file <- here("Data/Nav", wpt.filename)
+```{r process-files, out.width="100%"}
+# Source file names
+if (gpx.vessel == "LM") {
+  ctd.file <- here::here("Data/Nav", "lm_ctd.gpx")
+  nav.file <- here::here("Data/Nav", "lm_nav.gpx")  
+} else {
+  nav.file <- here::here("Data/Nav", "lbc_nav.gpx")  
+}
 
 # Extract route
 nav.gpx <- tmaptools::read_GPX(nav.file)
@@ -127,7 +135,7 @@ nav.tx <- nav.points %>%
   st_intersection(tx.buffer)
 
 # Filter nav during transits based on bearing
-if (filter.nav) {
+if (filter.nav[gpx.vessel]) {
   nav.tx <- nav.tx %>% 
     filter(!between(brg, 125, 240) & !between(brg, 320, 359) & !between(brg, 0, 60))
 }

@@ -30,6 +30,9 @@ settings.files <- dir(here("Doc/settings"))
 # Source survey settings file
 prj.settings <- settings.files[str_detect(settings.files, paste0("settings_", prj.name, ".R"))]
 source(here("Doc/settings", prj.settings))
+
+# Filter nav with particular bearings?
+filter.nav <- FALSE
 ```
 
 ```{r process-files, out.width="100%"}
@@ -41,9 +44,9 @@ downsample.points <- TRUE
 buffer.dist <- 0.2
 
 # GPX file name
-ctd.file <- here::here("Data/Nav", "lm_ctd.gpx")
-nav.file <- here::here("Data/Nav", "lm_nav.gpx")
-# nav.file <- here::here("Data/Nav", "lbc_nav.gpx")
+# ctd.file <- here::here("Data/Nav", "lm_ctd.gpx")
+# nav.file <- here::here("Data/Nav", "lm_nav.gpx")
+nav.file <- here::here("Data/Nav", "lbc_nav.gpx")
 waypoint.file <- here("Data/Nav", wpt.filename)
 
 # Extract route
@@ -63,6 +66,7 @@ nav.points <- nav.gpx$track_points %>%
   select(time, long = X, lat = Y) %>% 
   arrange(time) %>% 
   st_as_sf(coords = c("long","lat"), crs = 4326) %>% 
+  mutate(time = with_tz(time, tzone = "UTC")) %>% 
   mutate(date = date(time),
          hour = hour(time),
          minute = minute(time)) 
@@ -123,9 +127,10 @@ nav.tx <- nav.points %>%
   st_intersection(tx.buffer)
 
 # Filter nav during transits based on bearing
-nav.tx <- nav.tx %>% 
-  filter(!between(brg, 125, 240) & !between(brg, 320, 359) & !between(brg, 0, 60))
-
+if (filter.nav) {
+  nav.tx <- nav.tx %>% 
+    filter(!between(brg, 125, 240) & !between(brg, 320, 359) & !between(brg, 0, 60))
+}
 # mapview(nav.path) + mapview(tx.buffer) + mapview(nav.tx, zcol = "Transect")
 # mapview(nav.path) + mapview(tx.buffer) + mapview(nav.tx, zcol = "brg")
 # mapview(nav.path) + mapview(tx.buffer) + mapview(nav.tx2, zcol = "brg")
@@ -143,7 +148,7 @@ i.map <- mapview(filter(tx.buffer, Transect %in% unique(nav.tx$Transect))) +
                  Transect %in% unique(nav.tx$Transect)), 
           zcol = "Type") + 
   mapview(nav.path, color = "black") + 
-  mapview(nav.tx, zcol = "brg") 
+  mapview(select(nav.tx, Transect, time, brg), zcol = "brg") 
 
 if (exists("ctds")) {
   i.map <- i.map +
@@ -158,12 +163,14 @@ i.map
 
 A table showing the start and end time of each transect and the nearest CTD cast, which is useful for selecting the appropriate ECS file for Echoview processing.
 
+Transects with a really long duration may include overlapping transits, in which case you should look at the popups in the interactive map to better identify the actualy start/stop times of each transect.  
+
 ```{r tx-summary-table}
 nav.summ <- nav.tx %>% 
   group_by(Transect) %>% 
   summarise(start = min(time),
             end = max(time), 
-            duration = round(difftime(end, start, units = "mins")), 1) %>% 
+            duration = round(difftime(end, start, units = "mins"),1)) %>% 
   st_set_geometry(NULL)
 
 # Match transect to nearest CTD cast
@@ -184,7 +191,7 @@ if (exists("ctds")) {
 
 write_csv(nav.summ, here("Output/plotVessel_GPX.csv"))
 
-DT::datatable(nav.summ)
+DT::datatable(nav.summ, rownames = FALSE)
 ```
 
 

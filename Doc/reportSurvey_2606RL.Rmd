@@ -5,7 +5,7 @@
 output:
   bookdown::pdf_document2:
     includes:
-      in_header: yaml/header_final.tex
+      in_header: yaml/header_draft.tex
     toc: false
     toc_depth: 3
     number_sections: yes
@@ -93,7 +93,7 @@ if (is.null(doc.name)) {doc.name <- "estimateBiomass.Rmd"}
 # User-defined loop controls
 process.csv      <- F # Read CSV files for summarizing NASC
 get.db           <- F # Get trawl data
-get.nav          <- F # Get nav data
+get.nav          <- T # Get nav data
 combine.regions  <- T # Combine core and nearshore biomass plots
 process.cal      <- T # Process, format, and plot echosounder calibration results
 save.figs        <- T # Save figures
@@ -336,9 +336,9 @@ The collection and analysis of the survey data were conducted by members of 1-NO
 **Purse-seine Sampling:**  
 
 * _Lisa Marie_  
-  + Z. Calef^7^ and K. Hinton^7^
++ Z. Calef^7^ and K. Hinton^7^
 * _Long Beach Carnage_  
-  + J. van Noord^8^
++ J. van Noord^8^
 
 \newpage 
 
@@ -660,31 +660,40 @@ if ("Nearshore" %in% estimate.regions) {
 
 ```{r get-nav-summary}
 # Get navigation summary for all of the sampling platforms
-# Summarize Lasker days at sea
-if (file.exists(here("Data/Nav/nav_data_raw.rds"))) {
-  nav.fsv <- readRDS(here("Data/Nav/nav_data_raw.rds")) %>% 
-    filter(between(date(time), as.Date(erddap.survey.start), as.Date(erddap.survey.end)))
-  das.fsv <- n_distinct(date(nav.fsv$time))
-}
-
-# Summarize Lisa Marie days at sea
-if (file.exists(file.path(nav.path.gpx["LM"], "lm_nav.gpx"))) {
-  # Extract trackline points from GPX file
-  nav.lm <- read_GPX(file.path(nav.path.gpx["LM"], "lm_nav.gpx"))$track_points %>%
-    project_sf(crs = 4326) %>%
-    select(time, lat = Y, long = X)
+if (get.nav) {
+  # Summarize Lasker days at sea
+  if (file.exists(here("Data/Nav/nav_data_raw.rds"))) {
+    nav.fsv <- readRDS(here("Data/Nav/nav_data_raw.rds")) %>% 
+      filter(between(date(time), as.Date(erddap.survey.start), as.Date(erddap.survey.end)))
+    das.fsv <- n_distinct(date(nav.fsv$time))
+  }
   
-  das.lm <- n_distinct(date(nav.lm$time))
-}
-
-# Summarize Long Beach Carnage days at sea
-if (file.exists(file.path(nav.path.gpx["LBC"], "lbc_nav.gpx"))) {
-  # Extract trackline points from GPX file
-  nav.lbc <- read_GPX(file.path(nav.path.gpx["LBC"], "lbc_nav.gpx"))$track_points %>%
-    project_sf(crs = 4326) %>%
-    select(time, lat = Y, long = X)
+  # Summarize Lisa Marie days at sea
+  if (file.exists(file.path(nav.path.gpx["LM"], "lm_nav.gpx"))) {
+    # Extract trackline points from GPX file
+    nav.lm <- read_GPX(file.path(nav.path.gpx["LM"], "lm_nav.gpx"))$track_points %>%
+      project_sf(crs = 4326) %>%
+      select(time, lat = Y, long = X)
+    
+    das.lm <- n_distinct(date(nav.lm$time))
+  }
   
-  das.lbc <- n_distinct(date(nav.lbc$time))
+  # Summarize Long Beach Carnage days at sea
+  if (file.exists(file.path(nav.path.gpx["LBC"], "lbc_nav.gpx"))) {
+    # Extract trackline points from GPX file
+    nav.lbc <- read_GPX(file.path(nav.path.gpx["LBC"], "lbc_nav.gpx"))$track_points %>%
+      project_sf(crs = 4326) %>%
+      select(time, lat = Y, long = X)
+    
+    das.lbc <- n_distinct(date(nav.lbc$time))
+  }
+  
+  # Save objects to speed subsequent processing
+  save(nav.fsv, nav.lm, nav.lbc, das.fsv, das.lm, das.lbc,
+       file = here("Output/nav_summary.Rdata"))
+} else {
+  # Load processed nav summaries
+  load(here("Output/nav_summary.Rdata"))
 }
 ```
 
@@ -1024,7 +1033,7 @@ if (file.exists(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summ
 if (file.exists(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
                           "uctd_summary_table.csv"))) {
   uctd.table <- read_csv(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
-                          "uctd_summary_table.csv")) %>% mutate(cast.type = "UCTD")
+                                   "uctd_summary_table.csv")) %>% mutate(cast.type = "UCTD")
 } else {
   uctd.table <- data.frame()
 }
@@ -1077,13 +1086,13 @@ From 24 to 27 July, _Lisa Marie_ sampled nearshore transects 50 to 67, from Sant
 if (file.exists(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
                           "cal_results_CW.Rdata"))) {
   load(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
-                          "cal_results_CW.Rdata"))
+                 "cal_results_CW.Rdata"))
 }
 
 if (file.exists(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
                           "cal_results_FM.Rdata"))) {
   load(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
-                          "cal_results_FM.Rdata"))
+                 "cal_results_FM.Rdata"))
 }
 
 ```
@@ -1158,13 +1167,13 @@ if (exists("all.output.LM")) {
 }
 ```  
 
+\newpage
+
 ### _Long Beach Carnage_
 
 The echosounders installed on _Long Beach Carnage_ were calibrated on `r cal.datetime["LBC"]` using the standard sphere technique [@Foote1987; @Demer2015] in the SWFSC Technology Tank [@Demer2015]. Calibrations were conducted for the WBTs operating in both CW and FM modes. CW-mode calibration results for _Long Beach Carnage_ are presented in **Table \@ref(tab:cal-results-lbc)**, and were used to process the acoustic data used to estimate biomasses. Calibration plots for WBTs in CW and FM mode are presented in **Appendix \@ref(appendix-calibration-plots-lbc-cw)** and **Appendix \@ref(appendix-calibration-plots-lbc-fm)**, respectively [**NEED TO ADD CAL PLOTS**].
 
 (ref:cal-results-lbc) Wideband Transceiver (Simrad EK80 WBT; Kongsberg) and transducer information (above horizontal line) and beam model results (below horizontal line) estimated from a tank calibration, using a WC38.1 standard sphere, of the echosounders later installed and used aboard _Long Beach Carnage_.
-
-\newpage 
 
 ```{r cal-results-lbc,results='asis'}
 if (exists("all.output.LBC")) {
@@ -1191,6 +1200,8 @@ if (exists("all.output.LBC")) {
   print("No calibration results to present.")
 }
 ``` 
+
+\newpage
 
 ## Trawl catch {#results-trawl-catch}
 

@@ -67,8 +67,8 @@ source(here("Doc/settings", prj.settings))
 
 ```{r user-controls}
 # Processing settings
-get.db     <- T
-get.nav    <- T
+get.db     <- F
+get.nav    <- F
 do.spatial <- T
 save.figs  <- T
 resize.map <- F # Resize map during survey; if T, uses anticipated bounds of survey area
@@ -404,6 +404,8 @@ base.map +
 ```{r extract-catch}
 catch.wa <- catch.all %>% 
   filter(haul %in% haul.wa$haul) %>% 
+  left_join(select(haul, haul, 
+                   lat = startLatDecimal, long = startLongDecimal)) %>% 
   left_join(spp.codes) %>% 
   filter(!subSampleWtkg == 0) 
 ```
@@ -412,6 +414,7 @@ catch.wa <- catch.all %>%
 set.catch.wa <- set.catch %>% 
   filter(key.set %in% sets.wa$key.set) %>% 
   left_join(select(spp.codes, scientificName, commonName)) %>% 
+  left_join(select(sets, key.set, lat, long)) %>%
   filter(!totalWeight == 0) 
 ```
 
@@ -602,6 +605,8 @@ Catch for each trawl sample by species.
 if (nrow(catch.wa) > 0) {
   catch.all <- catch.wa %>% 
     select(Haul = haul,
+           "Latitude" = lat,
+           "Longitude" = long,
            "Scientific Name" = scientificName,
            "Common Name" = commonName,
            "Total weight (kg)" = totalWeight, 
@@ -630,7 +635,9 @@ Catch for each purse seine sample by species.
 if (nrow(set.catch.wa) > 0) {
   set.catch.all <- set.catch.wa %>% 
     select(Vessel = vessel.name,
-           Key = key.set,
+           Set = key.set,
+           Latitude = lat,
+           Longitude = long,
            "Scientific Name" = scientificName,
            "Common Name" = commonName,
            "Total weight (kg)" = totalWeight, 
@@ -640,7 +647,7 @@ if (nrow(set.catch.wa) > 0) {
   if (nrow(set.catch.all) > 0) {
     write_csv(set.catch.all,
               here("Output", paste0(survey.name, "_catch_table_seine_WDFW.csv")),
-              na = "")   
+              na = "")
   }
   
   set.catch.all %>% 

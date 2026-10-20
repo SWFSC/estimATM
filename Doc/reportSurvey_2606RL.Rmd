@@ -514,8 +514,6 @@ On _Lisa Marie_, CTD profiles were measured down to 110 m using a Seabird SBE19p
 
 While underway, information about the position and direction (e.g., latitude, longitude, speed, course over ground, and heading), weather (air temperature, humidity, wind speed and direction, and barometric pressure), and sea-surface oceanography (e.g., temperature, salinity, and fluorescence) were measured continuously and logged using the ship's Scientific Computer System (SCS). The data from a subset of these sensors, logged with a standardized format at 1 min resolution, are typically made available on NOAA's ERDDAP data server^[`r paste0(erddap.url, erddap.vessel,".html")`].  
 
-\newpage
-
 ## Software and code
 
 All analyses presented here were performed using R software [@Rcore2025], including functions contained in the {atm} package [@Stierhoff2026a]^[https://github.com/SWFSC/atm] and scripts contained in the _estimATM_ repository [@Stierhoff2026b]^[https://github.com/SWFSC/estimATM], both of which are available on GitHub.
@@ -1040,7 +1038,7 @@ all.ctds.table <- bind_rows(ctd.table, uctd.table) %>%
 
 The core region of the `r tolower(survey.season)` `r survey.year` survey spanned the continental shelf from San Diego to Cape Flattery, between `r format(ymd(erddap.survey.start),"%d %B")` and `r format(ymd(erddap.survey.end),"%d %B %Y")`, and included most of the potential habitat for the northern subpopulation of Pacific Sardine at the time of the survey^[https://coastwatch.pfeg.noaa.gov/erddap/griddap/sardine_habitat_modis_v2.html] [**SHOULD WE KEEP THIS?**]. In this region, _`r survey.vessel`_ sampled `r nrow(nasc.summ)` east-west transects totaling `r prettyNum(sum(nasc.summ$distance), digits = 1, big.mark = ",")` nmi during `r das.fsv` DAS (**Fig. \@ref(fig:nasc-trawl)**), and conducted `r nrow(haul)` nighttime surface trawls (**Appendix \@ref(appendix-trawl-sampling)**), `r nrow(uctd.table)` underway CTD casts (**Appendix \@ref(appendix-ctd-sampling)**), and [**INSERT # OF EDNA STATIONS**] eDNA stations [**ADD SECTION IN APPENDIX WITH LOCATIONS**]. 
 
-The nearshore region spanned an area from 5 m depth to approximately 5 nmi from the continental coast, or 2.5 nmi from the Santa Cruz and Santa Catalina Islands, between San Diego and Cape Flattery. _Long Beach Carnage_ surveyed from approximately San Diego to Santa Cruz, CA and around the Santa Cruz and Santa Catalina Islands, with `r nrow(nasc.summ.lbc.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lbc.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LBC"]` purse-seine sets during `r das.lbc` DAS (**Fig. \@ref(fig:nasc-seine-lbc)**). _Lisa Marie_ surveyed from Santa Cruz to Cape Flattery, WA with `r nrow(nasc.summ.lm.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lm.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LM"]` purse-seine sets during `r das.lm` DAS (**Fig. \@ref(fig:nasc-seine-lm)**).
+The nearshore region spanned an area from 5 m depth to approximately 5 nmi from the continental coast, or 2.5 nmi from the Santa Cruz and Santa Catalina Islands, between San Diego and Cape Flattery. _Long Beach Carnage_ surveyed from approximately San Diego to Santa Cruz, CA, and around the Santa Cruz and Santa Catalina Islands, completing `r nrow(nasc.summ.lbc.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lbc.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LBC"]` purse-seine sets during `r das.lbc` DAS (**Fig. \@ref(fig:nasc-seine-lbc)**). _Lisa Marie_ surveyed from Santa Cruz to Cape Flattery, WA completing `r nrow(nasc.summ.lm.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lm.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LM"]` purse-seine sets during `r das.lm` DAS (**Fig. \@ref(fig:nasc-seine-lm)**)[**NEED KEVIN TO CREATE THESE PLOTS**].
 
 ## Core area survey aboard _`r survey.vessel`_
 
@@ -1052,7 +1050,7 @@ On 18 June, following a one day delay due to needed repairs on Generator #2, _`r
 
 **Leg II**
 
-On 6 July 1700 UTC, _`r survey.vessel`_ departed from 10th Avenue Marine Terminal to begin Leg 2. While transiting to Pt. Conception, a critical circuit breaker on the main electrical distribution bus failed but was repaired while underway. On 7 July, a bottom lander deployed near Pt. Conception during the 2025 IWCPS was successfully recovered, then a new one deployed. At 2200, acoustic sampling resumed along transect 015. Previous underway repairs to the electrical bus were not successful, requiring _`r survey.vessel`_ to call port in Port Hueneme, CA for further repairs. On 8 July at 1930, _`r survey.vessel`_ arrived at Naval Pier War 3 North, Port Hueneme. On 10 July at 1600, following successful repairs, _`r survey.vessel`_ departed Port Hueneme, then resumed acoustic sampling along transect 016 at 0215 on 11 July. On 19 July, acoustic sampling was completed along transects 038 and 037. From 0130 on 20 July until 0330 on 21 July, acoustic sampling was conducted along the remaining offshore portions of transects 036 to 032, sampling from north to south, before transiting to San Francisco Bay. On 21 July at 1645, _`r survey.vessel`_ arrived at Coast Guard Island in Alameda, CA to conclude Leg 2.
+On 6 July 1700 UTC, _`r survey.vessel`_ departed from 10th Avenue Marine Terminal to begin Leg 2. While transiting to Pt. Conception, a critical circuit breaker on the main electrical distribution bus failed but was repaired while underway. On 7 July, a bottom lander deployed near Pt. Conception during the 2025 IWCPS was successfully recovered, then a new one deployed. At 2200, acoustic sampling resumed along transect 015. Previous underway repairs to the electrical bus were unsuccessful, requiring _`r survey.vessel`_ to call port in Port Hueneme, CA for further repairs. On 8 July at 1930, _`r survey.vessel`_ arrived at Naval Pier War 3 North, Port Hueneme. On 10 July at 1600, following successful repairs, _`r survey.vessel`_ departed Port Hueneme, then resumed acoustic sampling along transect 016 at 0215 on 11 July. On 19 July, acoustic sampling was completed along transects 038 and 037. From 0130 on 20 July until 0330 on 21 July, acoustic sampling was conducted along the remaining offshore portions of transects 036 to 032, sampling from north to south, before transiting to San Francisco Bay. On 21 July at 1645, _`r survey.vessel`_ arrived at Coast Guard Island in Alameda, CA to conclude Leg 2.
 
 **Leg III**
 
@@ -1060,29 +1058,47 @@ On 26 July, _`r survey.vessel`_ departed from Alameda at 1830 to begin Leg 3. On
 
 **Leg IV**
 
-On 23 August, after a 9-day delay to repair leaks in the main propulsion motor aft heat exchanger, _`r survey.vessel`_ departed from MOC-P in Newport at 1630 and began the transit to transect 074. To mitigate the loss of sea days, the remaining transects were reduced in length by approximately 35% and the spacing between transects was increased from 12.5 to 15 nmi. Acoustic and trawl sampling resumed on 24 August along transect 074 near Astoria, OR and continued without interruption for the remainder of Leg 4. On 24 August, the MVP failed to return to the surface and had to be manually brought back on deck. The MVP system was then secured and SWFSC's UCTD utilized for the rest of leg 4. On 27 August, acoustic and trawl sampling ceased after the completion of transect 084 off Cape Flattery, WA. On 29 August, _`r survey.vessel`_ arrived at MOC-P in Newport at ~2100 to complete Leg 4 and the CPS portion of the IWCPS survey.
+On 23 August, after a 9-day delay to repair leaks in the main propulsion motor aft heat exchanger, _`r survey.vessel`_ departed from MOC-P in Newport at 1630 and began the transit to transect 074. To mitigate the loss of sea days, the remaining transects were reduced in length by approximately 35% and the spacing between transects was increased from 12.5 to 15 nmi. Acoustic and trawl sampling resumed on 24 August along transect 074 near Astoria, OR, and continued without interruption for the remainder of Leg 4. On 24 August, the MVP probe failed to return to the surface and had to be manually brought back on deck. The MVP system was then secured and SWFSC's UCTD utilized for the rest of Leg 4. On 27 August, acoustic and trawl sampling ceased after the completion of transect 084 off Cape Flattery, WA. On 29 August, _`r survey.vessel`_ arrived at MOC-P in Newport at ~2100 to complete Leg 4 and the CPS portion of the IWCPS survey.
 
 ## Nearshore survey aboard industry fishing vessels
 ### _Long Beach Carnage_
 
-On 22 June, _Long Beach Carnage_ was mobilized with EK80 echosounders at Point Loma Sportfishing in San Diego, CA. From 23 to 25 June, _Long Beach Carnage_ sampled nearshore transects 1 to 11 between San Diego and Newport Beach. _Long Beach Carnage_ then transited offshore to sample transects 327 to 347 around Santa Catalina Island from 25 to 27 June. From 27 to 30 June, _Long Beach Carnage_ sampled nearshore transects 12 to 23, between Newport Beach and Santa Barbara before transiting offshore to sample transects 284-303 around Santa Cruz Island from 30 June to 2 July. Finally, from 2 to 5 July, _Long Beach Carnage_ sampled nearshore transects 24 to 36, between Santa Barbara and Cambria, before completing nearshore sampling at 1825 on 5 July to conclude their portion of the nearshore survey.
+On 22 June, _Long Beach Carnage_ was mobilized with EK80 echosounders at Point Loma Sportfishing in San Diego, CA. From 23 to 25 June, _Long Beach Carnage_ sampled nearshore transects 1 to 11 between San Diego and Newport Beach. _Long Beach Carnage_ then transited offshore to sample transects 327 to 347 around Santa Catalina Island from 25 to 27 June. From 27 to 30 June, _Long Beach Carnage_ sampled nearshore transects 12 to 23, between Newport Beach and Santa Barbara before transiting offshore to sample transects 284-303 around Santa Cruz Island from 30 June to 2 July. Finally, from 2 to 9 July, _Long Beach Carnage_ sampled nearshore transects 24 to 49, between Santa Barbara and Santa Cruz, before completing nearshore sampling at 1610 on 9 July to conclude their portion of the nearshore survey.
 
 ### _Lisa Marie_
 
-[**UPDATE AFTER RECEIVING LISA MARIE LOGBOOK**]
-From 22 July to 3 August, _Lisa Marie_ sampled nearshore transects 53 to 109, between Half Moon Bay and Coos Bay, where they called port to end the first half of their survey, reprovision the vessel, and exchange crew. On 13 August, _Lisa Marie_ resumed sampling nearshore sampling along transects 110 to 139 before calling port in Westport, WA on 24 August to refuel. On 25 August, _Lisa Marie_ resumed sampling transects 140 to 152, between Westport and Cape Flattery, before completing acoustic sampling and concluding the nearshore survey at 1600 on 28 August.
+From 24 to 27 July, _Lisa Marie_ sampled nearshore transects 50 to 67, from Santa Cruz to Stewarts Point, CA. After encountering rough seas and high winds, _Lisa Marie_ transited to and called port in Eureka, CA from July 28 to August 4. On 5 August, _Lisa Marie_ resumed sampling, completing transects 68 to 98 through 9 August; transect 70 was skipped due to vessel traffic. The ship then transited to Port Orford where they anchored on 10 and 11 August to avoid inclement weather. After skipping transects 99 through 103 due to inclement weather, _Lisa Marie_ continued sampling from 12 to 21 August, completing transects 104 to 138. On 22 August, the ship called port in Westport, WA to refuel and conduct an oil change. On 23 August, _Lisa Marie_ left Westport and continued sampling through 24 August, completing transects 139 to 146. On 25 August, the ship anchored to avoid inclement weather. Sampling resumed on 26 August, with _Lisa Marie_ completing transects 147 through 152 before calling port in Neah Bay to conclude their portion of the nearshore survey. 
+
 
 ## Echosounder calibrations {#results-echosounder-calibration}  
+
+```{r load-cal-results}
+
+if (file.exists(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
+                          "cal_results_CW.Rdata"))) {
+  load(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
+                          "cal_results_CW.Rdata"))
+}
+
+if (file.exists(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
+                          "cal_results_FM.Rdata"))) {
+  load(file.path("G:/Shared drives/NMFS SWFSC FRD AST/Surveys/2026 Summer IWCPS (2606RL)/ANALYSIS/estimATM/2606RL/Output",
+                          "cal_results_FM.Rdata"))
+}
+
+```
+
 ### _`r survey.vessel`_
 
-The echosounder systems aboard _`r survey.vessel`_ were calibrated on `r cal.datetime["SH"]` while the vessel was docked at `r cal.loc["SH"]` (`r cal.lat.dd["SH"]` $^{\circ}\textrm{N}$, `r cal.lon.dd["SH"]` $^{\circ}\textrm{W}$) using the standard sphere technique [@Foote1987; @Demer2015]. Each WBT was calibrated in CW mode (i.e., continuous wave or narrowband mode), FM mode (i.e., frequency modulation or broadband mode), or both. For both CW and FM mode calibrations, the reference target was a `r cal.sphere["SH"]`; for FM mode, additional calibrations were conducted for the 70, 120, and 200 kHz echosounders using a `r cal.sphere.fm["SH"]`. Prior to the calibrations, temperature and salinity were measured to a depth of 10 m using a handheld probe (Pro2030, YSI) to estimate sound speeds at the transducer and sphere depths, and the time-averaged sound speed and absorption coefficients for the range between them. The theoretical target strength ($TS$; dB re 1 m^2^) of the sphere was calculated using values for the sphere, sound-pulse, and seawater properties. The sphere was positioned throughout the main lobe of each of the transducer beams using three motorized downriggers, two on the port side of the vessel and one on the starboard side. The calibration parameters for all vessels were derived in Echoview. For each echosounder, the calibrated Equivalent Two-Way Beam Angle (EBA) was derived by compensating the factory-measured EBA by the change in local sound speed [@Demer2015;@Bodholt2002]; when processing the survey transects, the calibrated measures of transducer gain, beamwidths, and EBA were then also compensated by the changes in local sound speed. Calibration results for _`r survey.vessel`_ are presented in **Table \@ref(tab:cal-results)**, and were used to process the acoustic data used to estimate biomasses. Calibration plots for WBTs in CW and FM mode are presented in  **Appendix \@ref(appendix-calibration-plots-sh-cw)** and **Appendix \@ref(appendix-calibration-plots-sh-fm)**, respectively.  
+The echosounder systems aboard _`r survey.vessel`_ were calibrated on `r cal.datetime["RL"]` while the vessel was docked at `r cal.loc["RL"]` (`r cal.lat.dd["RL"]` $^{\circ}\textrm{N}$, `r cal.lon.dd["RL"]` $^{\circ}\textrm{W}$) using the standard sphere technique [@Foote1987; @Demer2015]. Each WBT was calibrated in both CW (i.e., continuous wave or narrowband mode) and FM (i.e., frequency modulation or broadband mode) modes. For both modes, the reference target was a `r cal.sphere["RL"]`; for FM mode, additional calibrations were conducted for the 70, 120, and 200 kHz echosounders using a `r cal.sphere.fm["RL"]`. Prior to the calibrations, temperature and salinity were measured to a depth of 15 m using a handheld probe (Pro2030, YSI) to estimate sound speeds at the transducer and sphere depths, and the time-averaged sound speed and absorption coefficients for the range between them. The theoretical target strength ($TS$; dB re 1 m^2^) of the sphere was calculated using values for the sphere, sound-pulse, and seawater properties. The sphere was positioned throughout the main lobe of each of the transducer beams using three motorized downriggers, two on the port side of the vessel and one on the starboard side. The calibration parameters for all vessels were derived in Echoview. For each echosounder, the calibrated Equivalent Two-Way Beam Angle (EBA) was derived by compensating the factory-measured EBA by the change in local sound speed [@Demer2015;@Bodholt2002]; when processing the survey transects, the calibrated measures of transducer gain, beamwidths, and EBA were then also compensated by the changes in local sound speed. CW-mode calibration results for _`r survey.vessel`_ are presented in **Table \@ref(tab:cal-results)**, and were used to process the acoustic data used to estimate biomasses. Calibration plots for WBTs in CW and FM mode are presented in  **Appendix \@ref(appendix-calibration-plots-rl-cw)** and **Appendix \@ref(appendix-calibration-plots-rl-fm)**, respectively [**NEED TO ADD CAL PLOTS**].  
 
-(ref:cal-results) Wide-Bandwidth Transceiver (Simrad EK80 WBT; Kongsberg) information, pre-calibration settings, and post-calibration beam model results (below the horizontal line) estimated from calibration of the echosounders aboard _`r survey.vessel`_ using a WC38.1 standard sphere.
+(ref:cal-results) Wide-Bandwidth Transceiver (Simrad EK80 WBT; Kongsberg) information, configuration settings, and calibration beam model results (below the horizontal line) estimated from calibration of the echosounders aboard _`r survey.vessel`_ using a WC38.1 standard sphere.
 
 ```{r cal-results, results='asis'}
-if (exists("all.output.SH")) {
+if (exists("all.output.RL")) {
+  
   # Copy calibration results
-  cal.results <- all.output.SH
+  cal.results <- all.output.RL
   
   # Get number of columns for table formatting
   cal.cols <- ncol(cal.results)
@@ -1110,7 +1126,7 @@ if (exists("all.output.SH")) {
 
 ### _Lisa Marie_  
 
-The WBTs aboard _Lisa Marie_ were calibrated prior to the survey on `r cal.datetime["LM"]` using the standard sphere technique [@Foote1987; @Demer2015] while the vessel was anchored off `r cal.loc["LM"]` (`r cal.lat.dd["LM"]` $^{\circ}\textrm{N}$, `r cal.lon.dd["LM"]` $^{\circ}\textrm{W}$). Calibration results for _Lisa Marie_ are presented in **Table \@ref(tab:cal-results-lm)**, and were used to process the acoustic data used to estimate biomasses.  Calibration plots for WBTs in CW mode are presented in **Appendix \@ref(appendix-calibration-plots-lm)**.  
+The echosounders aboard _Lisa Marie_ were calibrated prior to the survey on `r cal.datetime["LM"]` using the standard sphere technique [@Foote1987; @Demer2015] while the vessel was anchored off `r cal.loc["LM"]` (`r cal.lat.dd["LM"]` $^{\circ}\textrm{N}$, `r cal.lon.dd["LM"]` $^{\circ}\textrm{W}$). Calibrations were only conducted for the WBTs operating in CW mode. Results for _Lisa Marie_ are presented in **Table \@ref(tab:cal-results-lm)**, and were used to process the acoustic data used to estimate biomasses.  Calibration plots are presented in **Appendix \@ref(appendix-calibration-plots-lm)** [**NEED TO ADD CAL PLOTS**].  
 
 (ref:cal-results-lm) Wideband Transceiver (Simrad EK80 WBT; Kongsberg) and transducer information (above horizontal line) and beam model results (below horizontal line) estimated from calibration of the echosounders aboard _Lisa Marie_ using a WC38.1 standard sphere.
 
@@ -1144,9 +1160,11 @@ if (exists("all.output.LM")) {
 
 ### _Long Beach Carnage_
 
-The WBTs installed on _Long Beach Carnage_ were calibrated on `r cal.datetime["LBC"]`, using the standard sphere technique [@Foote1987; @Demer2015] in a tank at the SWFSC [@Demer2015]. Calibration results for _Long Beach Carnage_ are presented in **Table \@ref(tab:cal-results-lbc)**, and were used to process the acoustic data used to estimate biomasses. Calibration plots for WBTs in CW mode are presented in **Appendix \@ref(appendix-calibration-plots-lbc)**.
+The echosounders installed on _Long Beach Carnage_ were calibrated on `r cal.datetime["LBC"]` using the standard sphere technique [@Foote1987; @Demer2015] in the SWFSC Technology Tank [@Demer2015]. Calibrations were conducted for the WBTs operating in both CW and FM modes. CW-mode calibration results for _Long Beach Carnage_ are presented in **Table \@ref(tab:cal-results-lbc)**, and were used to process the acoustic data used to estimate biomasses. Calibration plots for WBTs in CW and FM mode are presented in **Appendix \@ref(appendix-calibration-plots-lbc-cw)** and **Appendix \@ref(appendix-calibration-plots-lbc-fm)**, respectively [**NEED TO ADD CAL PLOTS**].
 
 (ref:cal-results-lbc) Wideband Transceiver (Simrad EK80 WBT; Kongsberg) and transducer information (above horizontal line) and beam model results (below horizontal line) estimated from a tank calibration, using a WC38.1 standard sphere, of the echosounders later installed and used aboard _Long Beach Carnage_.
+
+\newpage 
 
 ```{r cal-results-lbc,results='asis'}
 if (exists("all.output.LBC")) {
@@ -1173,11 +1191,6 @@ if (exists("all.output.LBC")) {
   print("No calibration results to present.")
 }
 ``` 
-
-\newpage
-
-
-\newpage
 
 ## Trawl catch {#results-trawl-catch}
 
@@ -1261,13 +1274,11 @@ The principal objectives of the Summer 2026 Integrated West Coast Pelagics Surve
 
 Due to the delays and cancellations on _Lasker_, no core-region trawl sampling was conducted between Cape Mendocino, CA and Reedsport, OR (**Fig. \@ref(fig:nasc-cufes-trawl)a**). Furthermore, sampling off Baja California, MX was only conducted by _Carranza_, and presented in a separate report by IMIPAS [@Vallarta2023]. Meanwhile, the nearshore sampling by _Lisa Marie_ and _Long Beach Carnage_ was comprehensive of the US west coast. The purse seine and acoustic sampling conducted by _Lisa Marie_ north of Cape Mendocino suggests that a small amount of CPS biomass resides in the unsampled core-region area between Cape Mendocino, CA and Reedsport, OR. 
 
-_Lisa Marie_ conducted purse seine sets during both day and night throughout the survey, allowing for comparisons of the species composition and size distributions between the two time periods (**Fig. \@ref(fig:day-vs-night-seine-comparison)**). Although _Lisa Marie_ also completed purse seine sets for comparative catch analyses with _Shimada_ trawls, they occurred approximately one month apart and may not provide reliable comparisons. Any such results from either analysis are not presented here.
-
 # Acknowledgements {-}
 
 <!-- https://docs.google.com/spreadsheets/d/1HXl-ghdcqVKPGXi9BCHrLA4kaUif0EOB/edit?gid=1997810242#gid=1997810242 -->
 
-The authors greatly appreciate that the ATM surveys require an enormous effort by multiple groups of people, particularly the SWFSC's Advanced Survey Technologies Program (Alice Beittel, Scott Mau, David Murfin, Melissa Rivera, and Steve Sessions); Life History Program (Brad Erisman, Kelsey James, Bryan Overcash, Brittany Schwartzkopf, Zach Skelton, Owyn Snodgrass, and Lanora Vasquez del Mercado); Genetics, Physiology, and Aquaculture Program (Miasara Andrew, Matt Craig, and Gary Longo), Stock Assessment Program (Peter Kuriyama); and their volunteers. We also thank our colleagues in the Northwest Fisheries Science Center's (NWFSC) Fisheries Resources and Monitoring Division (Sabrina Beyer, Alicia Billings, Steve de Blois, Julia Clemons, Elizabeth Phillips, John Pohl, Rebecca Thomas, and Amanda Vitale), Conservation Biology Division (Madison Betts, Samantha Engster, Meredith Everett, Michelle Hauer, and Krista Nichols), and T&T Division (Craig Deangelo and Melina Shak), along with our IWCPS Survey Coordinator, Melissa Liotta, for their significant contributions to the success of the inaugural Integrated West Coast Pelagics Survey. See **Appendix \@ref(appendix-scientific-personnel)** for a detailed account of all scientific personnel involved in this work. We also thank the officers and crew of _`r survey.vessel`_ and the SWFSC's Fisheries Resources Division administrative staff. The authors acknowledge that the methods used are the culmination of more than a half century of development efforts from numerous researchers from around the globe. We thank Capts. Rick Blair (_Lisa Marie_) and Rich Ashley, Tom Brinton, and Johny Marcopoulos (_Long Beach Carnage_), along with all the F/V crew members, for their coordination and cooperation during the nearshore sampling, and to Joel van Noord (CWPA) and Kristen Hinton and Alec Cravens (WDFW) for leading the at-sea collection and processing of purse-seine specimens. We thank Jennifer Topping (WDFW) for the ageing of biological samples from _Lisa Marie_. We thank Mark Fina (CWPA) and Diane Pleschner-Steele (Research Coordinator, CWPA) for contracting and coordinating the nearshore survey conducted by the _Long Beach Carnage_ off southern and central CA. Andy Blair [President, West Coast Pelagic Conservation Group (WCPCG)], Mike Okoniewski (Secretary, WCPCG), and Greg Shaughnessy (Vice President of WCPCG and Chief Operating Officer of Ocean Gold Seafoods) were integral in the permitting and planning for the nearshore sampling conducted by _Lisa Marie_ off WA, OR, and central and northern CA. We thank Sandy Diaz, Leeanne Laughlin, Heather Lee, Dane McDermott, Harrison Huang, and Trung Nguyen (CDFW) for their efforts to coordinate with and process samples from _Long Beach Carnage_, and Chelsea Protasio (CDFW) for coordinating the biological sampling and organizing, validating, and disseminating the resulting data. Critical reviews by Brittany Schwartzkopf, Caitlin Allen Akselrud, and Annie Yau improved this report.
+The authors greatly appreciate that the ATM surveys require an enormous effort by multiple groups of people, particularly the SWFSC's Advanced Survey Technologies Program (Alice Beittel, Scott Mau, David Murfin, Melissa Rivera, and Steve Sessions); Life History Program (Brad Erisman, Kelsey James, Bryan Overcash, Brittany Schwartzkopf, Zach Skelton, Owyn Snodgrass, and Lanora Vasquez del Mercado); Genetics, Physiology, and Aquaculture Program (Miasara Andrew, Matt Craig, and Gary Longo), Stock Assessment Program (Peter Kuriyama); and their volunteers. We also thank our colleagues in the Northwest Fisheries Science Center's (NWFSC) Fisheries Resources and Monitoring Division (Sabrina Beyer, Alicia Billings, Steve de Blois, Julia Clemons, Elizabeth Phillips, John Pohl, Rebecca Thomas, and Amanda Vitale), Conservation Biology Division (Madison Betts, Samantha Engster, Meredith Everett, Michelle Hauer, and Krista Nichols), and T&T Division (Craig Deangelo and Melina Shak), along with our IWCPS Survey Coordinator, Melissa Liotta, for their significant contributions to the success of the inaugural Integrated West Coast Pelagics Survey. We also thank the officers and crew of _`r survey.vessel`_ and the SWFSC's Fisheries Resources Division administrative staff. The authors acknowledge that the methods used are the culmination of more than a half century of development efforts from numerous researchers from around the globe. We thank Capts. Rick Blair (_Lisa Marie_) and Rich Ashley, Tom Brinton, and Johny Marcopoulos (_Long Beach Carnage_), along with all the F/V crew members, for their coordination and cooperation during the nearshore sampling, and to Joel van Noord (CWPA) and Kristen Hinton and Alec Cravens (WDFW) for leading the at-sea collection and processing of purse-seine specimens. We thank Jennifer Topping (WDFW) for the ageing of biological samples from _Lisa Marie_. We thank Mark Fina (CWPA) and Diane Pleschner-Steele (Research Coordinator, CWPA) for contracting and coordinating the nearshore survey conducted by the _Long Beach Carnage_ off southern and central CA. Andy Blair [President, West Coast Pelagic Conservation Group (WCPCG)], Mike Okoniewski (Secretary, WCPCG), and Greg Shaughnessy (Vice President of WCPCG and Chief Operating Officer of Ocean Gold Seafoods) were integral in the permitting and planning for the nearshore sampling conducted by _Lisa Marie_ off WA, OR, and central and northern CA. We thank Sandy Diaz, Leeanne Laughlin, Heather Lee, Dane McDermott, Harrison Huang, and Trung Nguyen (CDFW) for their efforts to coordinate with and process samples from _Long Beach Carnage_, and Chelsea Protasio (CDFW) for coordinating the biological sampling and organizing, validating, and disseminating the resulting data. Critical reviews by Brittany Schwartzkopf, Caitlin Allen Akselrud, and Annie Yau improved this report.
 
 \newpage
 
@@ -1281,10 +1292,10 @@ The authors greatly appreciate that the ATM surveys require an enormous effort b
 # Appendices {-}
 
 # Calibration plots {#appendix-calibration-plots}
-## _`r survey.vessel`_ {#appendix-calibration-plots-sh}
-### CW Mode {#appendix-calibration-plots-sh-cw}
+## _`r survey.vessel`_ {#appendix-calibration-plots-rl}
+### CW Mode {#appendix-calibration-plots-rl-cw}
 
-Relative beam-compensated target strength ($TS_{rel}$, dB re 1 m^2^) measurements of a WC38.1 sphere at `r echo.freqs["SH"]` kHz for echosounders aboard _`r survey.vessel`_. $TS_{rel}$ is calculated as the difference between the beam-compensated target strength ($TS_c$) and the theoretical target strength ($TS_{theory}$).
+Relative beam-compensated target strength ($TS_{rel}$, dB re 1 m^2^) measurements of a WC38.1 sphere at `r echo.freqs["RL"]` kHz for echosounders aboard _`r survey.vessel`_. $TS_{rel}$ is calculated as the difference between the beam-compensated target strength ($TS_c$) and the theoretical target strength ($TS_{theory}$).
 
 ```{r tsc-plot-rl, out.width='7in',fig.align='center',fig.pos='H'}
 if (file.exists(here("Figs/fig_cal_TSrel_scatter_SH.png"))) {
@@ -1297,7 +1308,7 @@ if (file.exists(here("Figs/fig_cal_TSrel_scatter_SH.png"))) {
 \newpage
 \blandscape
 
-### FM Mode {#appendix-calibration-plots-sh-fm}
+### FM Mode {#appendix-calibration-plots-rl-fm}
 
 Measurements of on-axis gain ($G_0$, dB); alongship ($\alpha_\mathrm{-3dB}$, cyan) and athwartship ($\beta_\mathrm{-3dB}$, magenta) beamwidths (deg); and alongship ($\alpha_\mathrm{0}$, cyan) and athwartship ($\beta_\mathrm{0}$, magenta) offset angles (deg) measured during calibrations of EK80 wideband transceivers aboard _`r survey.vessel`_ (WBT; 70, 120, and 200 kHz) in frequency modulation (FM, or broadband) mode.
 
@@ -1329,6 +1340,8 @@ if (file.exists(here("Figs/fig_cal_TSrel_scatter_LM.png"))) {
 
 ## _Long Beach Carnage_ {#appendix-calibration-plots-lbc}
 
+### CW Mode {#appendix-calibration-plots-lbc-cw}
+
 Relative beam-compensated target strength ($TS_{rel}$, dB re 1 m^2^) measurements of a WC38.1 sphere at `r echo.freqs["LBC"]` kHz for echosounders aboard _Long Beach Carnage_. $TS_{rel}$ is calculated as the difference between the beam-compensated target strength ($TS_c$) and the theoretical target strength ($TS_{theory}$).
 
 ```{r tsc-plot-lbc, out.width='6.5in',fig.align='center',fig.pos='H'}
@@ -1339,6 +1352,24 @@ if (file.exists(here("Figs/fig_cal_TSrel_scatter_LBC.png"))) {
 }
 ```
 
+\newpage
+
+\blandscape
+
+### FM Mode {#appendix-calibration-plots-lbc-fm}
+
+Measurements of on-axis gain ($G_0$, dB); alongship ($\alpha_\mathrm{-3dB}$, cyan) and athwartship ($\beta_\mathrm{-3dB}$, magenta) beamwidths (deg); and alongship ($\alpha_\mathrm{0}$, cyan) and athwartship ($\beta_\mathrm{0}$, magenta) offset angles (deg) measured during calibrations of EK80 wideband transceivers aboard _Long Beach Carnage_ (WBT; 38, 70, 120, and 200 kHz) in frequency modulation (FM, or broadband) mode.
+
+```{r cal-plot-lbc-fm,out.width='7in',fig.align='center',fig.pos='H'}
+# Plots generated using Code/processCal-FM.R
+if (file.exists(here("Figs/fig_cal_FM_AllFreqs_LBC.png"))) {
+  include_graphics(here("Figs/fig_cal_FM_AllFreqs_LBC.png"))
+} else {
+  print("No FM calibration figure present for FSV.")
+}
+```
+
+\elandscape
 \newpage
 
 

@@ -66,8 +66,8 @@ source(here("Doc/settings", prj.settings))
 
 ```{r user-controls}
 # Processing settings
-get.db     <- T
-get.nav    <- T
+get.db     <- F
+get.nav    <- F
 do.spatial <- T
 resize.map <- F # Resize map during survey; if T, uses anticipated bounds of survey area
 

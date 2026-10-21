@@ -12,7 +12,7 @@ combine.regions   <- F # Combine nearshore/offshore plots with those from the co
 ## This section controls and configures settings used by makeTransects and checkTransects for generating and checking survey transects
 ### Transect spacing (nautical miles)
 baseline.file   <- "baselines-iwcps.csv"
-tx.spacing.fsv  <- c("central" = 12.5, "south" = 20) # For Lasker 
+tx.spacing.fsv  <- c("central" = 5, "south" = 5) # For Lasker 
 tx.spacing.sd   <- 15 # For Saildrone
 tx.break.ns     <- 52 # Northernmost transect sampled by the southern F/V, 64 in 2024, near Carmel
 tx.spacing.ns   <- 7  # c("S" = 7, "N" = 7, "CI" = 2.5) # or NA
@@ -26,11 +26,11 @@ fsv.buffer <- 80 #limits offshore portion of lines (SCB)
 min.tx.length <- 0 # nmi
 
 # eDNA, CTD, and UCTD station preferences
-ctd.tx.range   <- seq(11, 100) # Range of transects to include CTD stations
+ctd.tx.range   <- seq(37, 300) # Range of transects to include CTD stations
 edna.spacing   <- 10 # Surface eDNA sample spacing (nmi)
-edna.tx.range  <- seq(1, 11) # Range of transects to include eDNA stations
+edna.tx.range  <- seq(1, 36) # Range of transects to include eDNA stations
 uctd.spacing   <- 15 # UCTD spacing (nmi)
-uctd.tx.range  <- seq(1, 100) # Range of transects to include eDNA stations
+uctd.tx.range  <- seq(1, 300) # Range of transects to include eDNA stations
 
 ### Transect removal and renumbering
 rm.n.transects     <- 0 # Number of transects to remove from the start (if near Mexico); if none, use zero; 71@10 nmi spacing
@@ -52,7 +52,7 @@ show.maps <- TRUE
 ## Used by processTransects.R -----------
 ### GPX file location
 gpx.dir          <- here("Data/Nav")
-gpx.file         <- "2706RL-hybrid-20-12.5-spacing.gpx" # "2606RL-hybrid-spacing.gpx" "2606RL-12.5-nmi-spacing.gpx"
+gpx.file         <- "2706RL-5-spacing.gpx" # "2606RL-hybrid-spacing.gpx" "2606RL-12.5-nmi-spacing.gpx"
 
 # Define transit and survey speed (kn) for estimating progress
 survey.speed     <- 9 # FSV

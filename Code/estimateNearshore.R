@@ -1383,6 +1383,9 @@ strata.final.ns <- strata.final.ns %>%
   filter(!is.na(vessel.name)) %>% 
   ungroup()
 
+# Save final strata definition
+save(strata.final.ns, here("Output/strata_final_ns.Rdata"))
+
 # Plot classification
 # ggplot(strata.final.ns, aes(long, lat, colour = paste(vessel.name, stratum))) +
 #   geom_point() +
@@ -1690,11 +1693,11 @@ for (i in unique(nearshore.spp$scientificName)) {
   # }
 }
 
-# Check results
-ggplot(strata.nearshore, aes(colour = stock, fill = factor(stratum))) +
-  geom_sf() +
-  facet_wrap(~scientificName) +
-  theme_bw()
+# # Check results
+# ggplot(strata.nearshore, aes(colour = stock, fill = factor(stratum))) +
+#   geom_sf() +
+#   facet_wrap(~scientificName) +
+#   theme_bw()
 
 # mapview(filter(strata.nearshore, scientificName == "Sardinops sagax"), zcol = "stratum") + mapview(filter(transects.sf, Type == "Nearshore"))
 # mapview(filter(strata.nearshore, scientificName == "Engraulis mordax"), zcol = "stratum")

@@ -463,15 +463,15 @@ Table of mean NASC by transect, sorted (descending) by mean backscatter.
 ```{r nasc-summ}
 nasc.summ %>% 
   kable(booktabs = TRUE, escape = FALSE,
-        digits = c(0,0,0,4,4,0)) %>% 
+        digits = c(0,0,0,4,4,0),
+        format.args = list(big.mark = ",", scientific = FALSE)) %>% 
   kable_styling(bootstrap_options = c("striped","hover","condensed"), 
                 full_width = FALSE) %>%
-  # row_spec(0, align = c("c")) %>% 
-  # column_spec(1, italic = T) %>% 
   scroll_box(height = "250px") 
 ```
 
-# Outlier plot
+# Outliers
+## Outlier plot
 
 ```{r get-big-nasc, out.width="100%"}
 if (exists("big.nasc")) {
@@ -493,5 +493,20 @@ if (exists("big.nasc")) {
   # Print interactive plot
   nasc.outlier.plot.interactive
 }
+```
+
+## Outlier table
+
+Table of largest NASC values (i.e., potential outliers), sorted (descending).  
+
+```{r outlier-table}
+big.nasc %>% 
+  select(rank, NASC, datetime, dist_m) %>% 
+  kable(booktabs = TRUE, escape = FALSE,
+        digits = c(0,0,0,0),
+        format.args = list(big.mark = ",", scientific = FALSE)) %>% 
+  kable_styling(bootstrap_options = c("striped","hover","condensed"), 
+                full_width = FALSE) %>%
+  scroll_box(height = "300px") 
 ```
 

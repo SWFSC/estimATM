@@ -692,6 +692,7 @@ uctd.skip              <- c(vp2 = 79,
                             m1  = 62)
 # Vector of file names for bad casts
 uctd.cast.rm <- c("rl2604_20260619_0010.m1",
+                  "rl2604_20260620_0017.m1",
                   "rl2604_20260623_0041.m1",
                   "rl2604_20260625_0055.m1",
                   "rl2604_20260630_0082.m1",

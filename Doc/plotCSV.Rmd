@@ -64,7 +64,7 @@ process.csv <- T
 resize.map  <- F 
 
 # Vessel-specific info
-vessel.name = "LM"
+vessel.name = "LBC"
 
 # Define nav source
 if(vessel.name %in% c("LBC","LM")) nav.source <- "GPX"
@@ -196,7 +196,7 @@ big.nasc <- nasc %>%
                         '<b>Distance: </b>', round(dist_m), ' m<br/>',
                         '<b>NASC: </b>', round(NASC), ' m<sup>2</sup> nmi<sup>-2</sup>')) %>% 
   top_n(100, NASC) %>% 
-  select(rank, NASC, label, popup, type, datetime, dist_m, lat, long) 
+  select(rank, transect, dist_m, NASC, label, popup, type, datetime, lat, long) 
 
 # Save NASC outliers
 save(big.nasc, file = here("Output/nasc_big_plotCSV.Rdata"))
@@ -501,7 +501,7 @@ Table of largest NASC values (i.e., potential outliers), sorted (descending).
 
 ```{r outlier-table}
 big.nasc %>% 
-  select(rank, NASC, datetime, dist_m) %>% 
+  select(rank, transect, dist_m, datetime, NASC) %>% 
   kable(booktabs = TRUE, escape = FALSE,
         digits = c(0,0,0,0),
         format.args = list(big.mark = ",", scientific = FALSE)) %>% 

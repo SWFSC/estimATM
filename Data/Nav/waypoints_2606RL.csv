@@ -26,7 +26,7 @@ Transect,Waypoint,Latitude,Longitude,Type,Region,Depth
 6,006.2C,32.852654,-119.597791,Compulsory,S. CA Bight,-1282
 7,007.1C,33.696714,-118.395792,Compulsory,S. CA Bight,-338
 7,007.2C,32.973081,-119.851183,Compulsory,S. CA Bight,-1256
-8,008.1C,33.888612,-118.50027300000001,Compulsory,S. CA Bight,-56
+8,008.1C,33.888612,-118.500273,Compulsory,S. CA Bight,-56
 8,008.2C,33.093241,-120.105893,Compulsory,S. CA Bight,-1111
 9,009.1C,33.981406,-118.802516,Compulsory,S. CA Bight,-50
 9,009.2C,33.148093,-120.493718,Compulsory,S. CA Bight,-1381
@@ -122,7 +122,7 @@ Transect,Waypoint,Latitude,Longitude,Type,Region,Depth
 49,049.1C,40.86658,-124.224488,Compulsory,Central CA,-32
 49,049.2C,40.864963,-125.017455,Compulsory,Central CA,-2971
 50,050.1C,41.069474,-124.215103,Compulsory,Central CA,-36
-50,050.2C,41.068562,-124.97119000000001,Compulsory,Central CA,-2789
+50,050.2C,41.068562,-124.97119,Compulsory,Central CA,-2789
 51,051.1C,41.274874,-124.163277,Compulsory,Central CA,-43
 51,051.2C,41.272039,-124.996542,Compulsory,Central CA,-2004
 52,052.1C,41.477378,-124.166085,Compulsory,Central CA,-42
@@ -451,7 +451,7 @@ Transect,Waypoint,Latitude,Longitude,Type,Region,Depth
 127,127.2N,45.429274,-124.088992,Nearshore,WA/OR,-76
 128,128.1N,45.547611,-123.957008,Nearshore,WA/OR,2
 128,128.2N,45.546821,-124.074742,Nearshore,WA/OR,-69
-129,129.1N,45.663815,-123.950349,Nearshore,WA/OR,-0
+129,129.1N,45.663815,-123.950349,Nearshore,WA/OR,0
 129,129.2N,45.663083,-124.057589,Nearshore,WA/OR,-64
 130,130.1N,45.779835,-123.975872,Nearshore,WA/OR,70
 130,130.2N,45.778987,-124.09824,Nearshore,WA/OR,-79
@@ -460,7 +460,7 @@ Transect,Waypoint,Latitude,Longitude,Type,Region,Depth
 132,132.1N,46.01261,-123.938889,Nearshore,WA/OR,1
 132,132.2N,46.013229,-124.060529,Nearshore,WA/OR,-54
 133,133.1N,46.128736,-123.965776,Nearshore,WA/OR,-2
-133,133.2N,46.127872000000004,-124.084695,Nearshore,WA/OR,-39
+133,133.2N,46.127872,-124.084695,Nearshore,WA/OR,-39
 134,134.1N,46.244525,-124.043207,Nearshore,WA/OR,-6
 134,134.2N,46.24445,-124.163237,Nearshore,WA/OR,-22
 135,135.1N,46.360719,-124.07,Nearshore,WA/OR,4
@@ -499,85 +499,85 @@ Transect,Waypoint,Latitude,Longitude,Type,Region,Depth
 151,151.2N,48.221932,-124.830425,Nearshore,WA/OR,-42
 152,152.1N,48.340729,-124.706757,Nearshore,WA/OR,-17
 152,152.2N,48.339363,-124.833643,Nearshore,WA/OR,-47
-284,284.1N,34.106322,-119.940104,Nearshore,S. CA Bight,-99
-284,284.2N,34.076899,-119.922274,Nearshore,S. CA Bight,-74
-285,285.1N,34.047626,-119.8984,Nearshore,S. CA Bight,36
-285,285.2N,34.030184,-119.934803,Nearshore,S. CA Bight,-37
-286,286.1N,34.00106,-119.88762,Nearshore,S. CA Bight,-13
-286,286.2N,33.987656,-119.922887,Nearshore,S. CA Bight,-85
-287,287.1N,33.970173,-119.859241,Nearshore,S. CA Bight,-33
-287,287.2N,33.94066,-119.882579,Nearshore,S. CA Bight,-196
-288,288.1N,33.960676,-119.807565,Nearshore,S. CA Bight,163
-288,288.2N,33.928754,-119.805805,Nearshore,S. CA Bight,-64
-289,289.1N,33.96072,-119.752252,Nearshore,S. CA Bight,135
-289,289.2N,33.930628,-119.748469,Nearshore,S. CA Bight,-83
-290,290.1N,33.96371,-119.707908,Nearshore,S. CA Bight,180
-290,290.2N,33.933624,-119.691844,Nearshore,S. CA Bight,-90
-291,291.1N,33.98364,-119.660782,Nearshore,S. CA Bight,204
-291,291.2N,33.953843,-119.646684,Nearshore,S. CA Bight,-77
-292,292.1N,33.985423,-119.610696,Nearshore,S. CA Bight,207
-292,292.2N,33.955314,-119.601062,Nearshore,S. CA Bight,-150
-293,293.1N,33.994492,-119.55954,Nearshore,S. CA Bight,260
-293,293.2N,33.96474,-119.541579,Nearshore,S. CA Bight,-81
-294,294.1N,34.01872,-119.537423,Nearshore,S. CA Bight,57
-294,294.2N,34.004007,-119.501629,Nearshore,S. CA Bight,-47
-295,295.1N,34.042599,-119.525033,Nearshore,S. CA Bight,53
-295,295.2N,34.060013,-119.489294,Nearshore,S. CA Bight,-109
-296,296.1N,34.053867,-119.551648,Nearshore,S. CA Bight,-33
-296,296.2N,34.087281,-119.539258,Nearshore,S. CA Bight,-188
-297,297.1N,34.056365,-119.593209,Nearshore,S. CA Bight,-80
-297,297.2N,34.091002,-119.602497,Nearshore,S. CA Bight,-179
-298,298.1N,34.022835,-119.654481,Nearshore,S. CA Bight,-35
-298,298.2N,34.054047,-119.639671,Nearshore,S. CA Bight,-90
-299,299.1N,34.035176,-119.693999,Nearshore,S. CA Bight,10
-299,299.2N,34.067531,-119.676456,Nearshore,S. CA Bight,-92
-300,300.1N,34.050742,-119.734077,Nearshore,S. CA Bight,-54
-300,300.2N,34.082964,-119.715591,Nearshore,S. CA Bight,-93
-301,301.1N,34.062664,-119.779654,Nearshore,S. CA Bight,-88
-301,301.2N,34.095295,-119.768646,Nearshore,S. CA Bight,-171
-302,302.1N,34.100976,-119.821473,Nearshore,S. CA Bight,-106
-302,302.2N,34.067661,-119.833305,Nearshore,S. CA Bight,-65
-303,303.1N,34.076995,-119.870488,Nearshore,S. CA Bight,-90
-303,303.2N,34.110855,-119.87069,Nearshore,S. CA Bight,-125
-327,327.1N,33.481359,-118.572541,Nearshore,S. CA Bight,-192
-327,327.2N,33.521721,-118.573908,Nearshore,S. CA Bight,-493
-328,328.1N,33.480539,-118.609642,Nearshore,S. CA Bight,-187
-328,328.2N,33.501471,-118.640393,Nearshore,S. CA Bight,-311
-329,329.1N,33.460002,-118.594251,Nearshore,S. CA Bight,27
-329,329.2N,33.437033,-118.622772,Nearshore,S. CA Bight,-427
-330,330.1N,33.433816,-118.567416,Nearshore,S. CA Bight,269
-330,330.2N,33.40981,-118.595655,Nearshore,S. CA Bight,-333
-331,331.1N,33.422557,-118.51837,Nearshore,S. CA Bight,-9
-331,331.2N,33.397867,-118.543764,Nearshore,S. CA Bight,-233
-332,332.1N,33.399431,-118.492245,Nearshore,S. CA Bight,-33
-332,332.2N,33.37736,-118.521972,Nearshore,S. CA Bight,-246
-333,333.1N,33.358136,-118.492304,Nearshore,S. CA Bight,-48
-333,333.2N,33.335904,-118.522348,Nearshore,S. CA Bight,-85
-334,334.1N,33.323293,-118.470095,Nearshore,S. CA Bight,-50
-334,334.2N,33.299251,-118.49831,Nearshore,S. CA Bight,-263
-335,335.1N,33.31582,-118.43314,Nearshore,S. CA Bight,176
-335,335.2N,33.284958,-118.442422,Nearshore,S. CA Bight,-446
-336,336.1N,33.31325,-118.393192,Nearshore,S. CA Bight,152
-336,336.2N,33.279763,-118.397749,Nearshore,S. CA Bight,-147
-337,337.1N,33.303205,-118.351038,Nearshore,S. CA Bight,-5
-337,337.2N,33.269754,-118.357541,Nearshore,S. CA Bight,-527
-338,338.1N,33.299378,-118.316289,Nearshore,S. CA Bight,72
-338,338.2N,33.267801,-118.304896,Nearshore,S. CA Bight,-229
-339,339.1N,33.308464,-118.301993,Nearshore,S. CA Bight,93
-339,339.2N,33.308122,-118.261527,Nearshore,S. CA Bight,-213
-340,340.1N,33.333336,-118.306605,Nearshore,S. CA Bight,-56
-340,340.2N,33.35007,-118.270147,Nearshore,S. CA Bight,-358
-341,341.1N,33.358873,-118.326163,Nearshore,S. CA Bight,-89
-341,341.2N,33.378055,-118.293258,Nearshore,S. CA Bight,-489
-342,342.1N,33.384007,-118.355025,Nearshore,S. CA Bight,-42
-342,342.2N,33.405032,-118.319137,Nearshore,S. CA Bight,-315
-343,343.1N,33.411552,-118.366314,Nearshore,S. CA Bight,-279
-343,343.2N,33.43221,-118.335137,Nearshore,S. CA Bight,-659
-344,344.1N,33.423186,-118.39604,Nearshore,S. CA Bight,-128
-344,344.2N,33.453778,-118.373027,Nearshore,S. CA Bight,-630
-345,345.1N,33.436967,-118.4345,Nearshore,S. CA Bight,-173
-345,345.2N,33.468473,-118.417416,Nearshore,S. CA Bight,-743
-346,346.1N,33.454707,-118.483767,Nearshore,S. CA Bight,-186
-346,346.2N,33.48501,-118.462914,Nearshore,S. CA Bight,-672
-347,347.1N,33.478477,-118.53638,Nearshore,S. CA Bight,-222
-347,347.2N,33.507898,-118.515911,Nearshore,S. CA Bight,-817
+284,284.1N,34.106322,-119.940104,Nearshore,Santa Cruz Island,-99
+284,284.2N,34.076899,-119.922274,Nearshore,Santa Cruz Island,-74
+285,285.1N,34.047626,-119.8984,Nearshore,Santa Cruz Island,36
+285,285.2N,34.030184,-119.934803,Nearshore,Santa Cruz Island,-37
+286,286.1N,34.00106,-119.88762,Nearshore,Santa Cruz Island,-13
+286,286.2N,33.987656,-119.922887,Nearshore,Santa Cruz Island,-85
+287,287.1N,33.970173,-119.859241,Nearshore,Santa Cruz Island,-33
+287,287.2N,33.94066,-119.882579,Nearshore,Santa Cruz Island,-196
+288,288.1N,33.960676,-119.807565,Nearshore,Santa Cruz Island,163
+288,288.2N,33.928754,-119.805805,Nearshore,Santa Cruz Island,-64
+289,289.1N,33.96072,-119.752252,Nearshore,Santa Cruz Island,135
+289,289.2N,33.930628,-119.748469,Nearshore,Santa Cruz Island,-83
+290,290.1N,33.96371,-119.707908,Nearshore,Santa Cruz Island,180
+290,290.2N,33.933624,-119.691844,Nearshore,Santa Cruz Island,-90
+291,291.1N,33.98364,-119.660782,Nearshore,Santa Cruz Island,204
+291,291.2N,33.953843,-119.646684,Nearshore,Santa Cruz Island,-77
+292,292.1N,33.985423,-119.610696,Nearshore,Santa Cruz Island,207
+292,292.2N,33.955314,-119.601062,Nearshore,Santa Cruz Island,-150
+293,293.1N,33.994492,-119.55954,Nearshore,Santa Cruz Island,260
+293,293.2N,33.96474,-119.541579,Nearshore,Santa Cruz Island,-81
+294,294.1N,34.01872,-119.537423,Nearshore,Santa Cruz Island,57
+294,294.2N,34.004007,-119.501629,Nearshore,Santa Cruz Island,-47
+295,295.1N,34.042599,-119.525033,Nearshore,Santa Cruz Island,53
+295,295.2N,34.060013,-119.489294,Nearshore,Santa Cruz Island,-109
+296,296.1N,34.053867,-119.551648,Nearshore,Santa Cruz Island,-33
+296,296.2N,34.087281,-119.539258,Nearshore,Santa Cruz Island,-188
+297,297.1N,34.056365,-119.593209,Nearshore,Santa Cruz Island,-80
+297,297.2N,34.091002,-119.602497,Nearshore,Santa Cruz Island,-179
+298,298.1N,34.022835,-119.654481,Nearshore,Santa Cruz Island,-35
+298,298.2N,34.054047,-119.639671,Nearshore,Santa Cruz Island,-90
+299,299.1N,34.035176,-119.693999,Nearshore,Santa Cruz Island,10
+299,299.2N,34.067531,-119.676456,Nearshore,Santa Cruz Island,-92
+300,300.1N,34.050742,-119.734077,Nearshore,Santa Cruz Island,-54
+300,300.2N,34.082964,-119.715591,Nearshore,Santa Cruz Island,-93
+301,301.1N,34.062664,-119.779654,Nearshore,Santa Cruz Island,-88
+301,301.2N,34.095295,-119.768646,Nearshore,Santa Cruz Island,-171
+302,302.1N,34.100976,-119.821473,Nearshore,Santa Cruz Island,-106
+302,302.2N,34.067661,-119.833305,Nearshore,Santa Cruz Island,-65
+303,303.1N,34.076995,-119.870488,Nearshore,Santa Cruz Island,-90
+303,303.2N,34.110855,-119.87069,Nearshore,Santa Cruz Island,-125
+327,327.1N,33.481359,-118.572541,Nearshore,Santa Catalina Island,-192
+327,327.2N,33.521721,-118.573908,Nearshore,Santa Catalina Island,-493
+328,328.1N,33.480539,-118.609642,Nearshore,Santa Catalina Island,-187
+328,328.2N,33.501471,-118.640393,Nearshore,Santa Catalina Island,-311
+329,329.1N,33.460002,-118.594251,Nearshore,Santa Catalina Island,27
+329,329.2N,33.437033,-118.622772,Nearshore,Santa Catalina Island,-427
+330,330.1N,33.433816,-118.567416,Nearshore,Santa Catalina Island,269
+330,330.2N,33.40981,-118.595655,Nearshore,Santa Catalina Island,-333
+331,331.1N,33.422557,-118.51837,Nearshore,Santa Catalina Island,-9
+331,331.2N,33.397867,-118.543764,Nearshore,Santa Catalina Island,-233
+332,332.1N,33.399431,-118.492245,Nearshore,Santa Catalina Island,-33
+332,332.2N,33.37736,-118.521972,Nearshore,Santa Catalina Island,-246
+333,333.1N,33.358136,-118.492304,Nearshore,Santa Catalina Island,-48
+333,333.2N,33.335904,-118.522348,Nearshore,Santa Catalina Island,-85
+334,334.1N,33.323293,-118.470095,Nearshore,Santa Catalina Island,-50
+334,334.2N,33.299251,-118.49831,Nearshore,Santa Catalina Island,-263
+335,335.1N,33.31582,-118.43314,Nearshore,Santa Catalina Island,176
+335,335.2N,33.284958,-118.442422,Nearshore,Santa Catalina Island,-446
+336,336.1N,33.31325,-118.393192,Nearshore,Santa Catalina Island,152
+336,336.2N,33.279763,-118.397749,Nearshore,Santa Catalina Island,-147
+337,337.1N,33.303205,-118.351038,Nearshore,Santa Catalina Island,-5
+337,337.2N,33.269754,-118.357541,Nearshore,Santa Catalina Island,-527
+338,338.1N,33.299378,-118.316289,Nearshore,Santa Catalina Island,72
+338,338.2N,33.267801,-118.304896,Nearshore,Santa Catalina Island,-229
+339,339.1N,33.308464,-118.301993,Nearshore,Santa Catalina Island,93
+339,339.2N,33.308122,-118.261527,Nearshore,Santa Catalina Island,-213
+340,340.1N,33.333336,-118.306605,Nearshore,Santa Catalina Island,-56
+340,340.2N,33.35007,-118.270147,Nearshore,Santa Catalina Island,-358
+341,341.1N,33.358873,-118.326163,Nearshore,Santa Catalina Island,-89
+341,341.2N,33.378055,-118.293258,Nearshore,Santa Catalina Island,-489
+342,342.1N,33.384007,-118.355025,Nearshore,Santa Catalina Island,-42
+342,342.2N,33.405032,-118.319137,Nearshore,Santa Catalina Island,-315
+343,343.1N,33.411552,-118.366314,Nearshore,Santa Catalina Island,-279
+343,343.2N,33.43221,-118.335137,Nearshore,Santa Catalina Island,-659
+344,344.1N,33.423186,-118.39604,Nearshore,Santa Catalina Island,-128
+344,344.2N,33.453778,-118.373027,Nearshore,Santa Catalina Island,-630
+345,345.1N,33.436967,-118.4345,Nearshore,Santa Catalina Island,-173
+345,345.2N,33.468473,-118.417416,Nearshore,Santa Catalina Island,-743
+346,346.1N,33.454707,-118.483767,Nearshore,Santa Catalina Island,-186
+346,346.2N,33.48501,-118.462914,Nearshore,Santa Catalina Island,-672
+347,347.1N,33.478477,-118.53638,Nearshore,Santa Catalina Island,-222
+347,347.2N,33.507898,-118.515911,Nearshore,Santa Catalina Island,-817

@@ -15,7 +15,7 @@ baseline.file   <- "baselines-iwcps.csv"
 tx.spacing.fsv  <- c("central" = 5, "south" = 5) # For Lasker 
 tx.spacing.sd   <- 15 # For Saildrone
 tx.break.ns     <- 52 # Northernmost transect sampled by the southern F/V, 64 in 2024, near Carmel
-tx.spacing.ns   <- 7  # c("S" = 7, "N" = 7, "CI" = 2.5) # or NA
+tx.spacing.ns   <- c("S" = 7, "N" = 7, "CI" = 3) # or NA
 tx.spacing.os   <- 40 # Nearshore transect spacing, in nmi; set NA if calculating programatically
 
 # Mainland buffer distance for FSV and Saildrone transects
@@ -187,7 +187,8 @@ wpt.types     <- c(Adaptive = "Adaptive", Carranza = "Carranza",
                    Compulsory = "Compulsory", Franklin = "Franklin",
                    Nearshore = "Nearshore", Offshore = "Offshore", 
                    Saildrone = "Saildrone")
-wpt.regions   <- c("Central CA", "S. CA Bight", "WA/OR") # "Vancouver Is."          
+wpt.regions   <- c("Central CA", "S. CA Bight", "WA/OR", 
+                   "Santa Cruz Island", "Santa Catalina Island") # "Vancouver Is."           
 wpt.colors    <- c(Adaptive = "#FF0000", Carranza = "green",
                    Compulsory = "#000000", Franklin = "blue",
                    Nearshore = "#FF33F5", Offshore = "#FFA500", 

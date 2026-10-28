@@ -1,12 +1,12 @@
 # Processing controls ----------------------------------------------------
 ## Settings in this section control various behaviors and tasks used in the main data processing scripts
 ### Biomass estimation
-process.seine     <- F # Process purse seine data, if present
-process.nearshore <- F # Process near backscatter data; typically TRUE
-estimate.ns       <- F # Estimate biomass in the nearshore strata; T if nearshore surveyed
+process.seine     <- T # Process purse seine data, if present
+process.nearshore <- T # Process near backscatter data; typically TRUE
+estimate.ns       <- T # Estimate biomass in the nearshore strata; T if nearshore surveyed
 process.offshore  <- F # Process offshore backscatter data
 estimate.os       <- F # Estimate biomass in the offshore strata; T if offshore surveyed
-combine.regions   <- F # Combine nearshore/offshore plots with those from the core region
+combine.regions   <- T # Combine nearshore/offshore plots with those from the core region
 
 # Survey planning ---------------------------------------------------------
 ## This section controls and configures settings used by makeTransects and checkTransects for generating and checking survey transects
@@ -14,7 +14,7 @@ combine.regions   <- F # Combine nearshore/offshore plots with those from the co
 tx.spacing.fsv  <- 12.5 # For Lasker 
 tx.spacing.sd   <- 15 # For Saildrone
 tx.break.ns     <- 52 # Northernmost transect sampled by the southern F/V, 64 in 2024, near Carmel
-tx.spacing.ns   <- 7  # c("S" = 7, "N" = 7, "CI" = 2.5) # or NA
+tx.spacing.ns   <- c("S" = 7, "N" = 7, "CI" = 3) # or NA
 tx.spacing.os   <- 40 # Nearshore transect spacing, in nmi; set NA if calculating programatically
 
 # Mainland buffer distance for FSV and Saildrone transects
@@ -191,7 +191,8 @@ wpt.types     <- c(Adaptive = "Adaptive", Carranza = "Carranza",
                    Compulsory = "Compulsory", Franklin = "Franklin",
                    Nearshore = "Nearshore", Offshore = "Offshore", 
                    Saildrone = "Saildrone")
-wpt.regions   <- c("Central CA", "S. CA Bight", "WA/OR") # "Vancouver Is."          
+wpt.regions   <- c("Central CA", "S. CA Bight", "WA/OR", 
+                   "Santa Cruz Island", "Santa Catalina Island") # "Vancouver Is."           
 wpt.colors    <- c(Adaptive = "#FF0000", Carranza = "green",
                    Compulsory = "#000000", Franklin = "blue",
                    Nearshore = "#FF33F5", Offshore = "#FFA500", 

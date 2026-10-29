@@ -77,7 +77,7 @@ length.summ <- abund.summ %>%
 # Combine abundance summaries for tables
 abund.summ.all <- abund.summ %>% 
   mutate(Region = "Core") %>% 
-  # bind_rows(abund.summ.ns) %>%
+  bind_rows(abund.summ.ns) %>%
   filter(!is.nan(abundance)) %>% 
   ungroup() %>% 
   select(Species, Stock, Region, SL, abundance) %>%
@@ -89,7 +89,7 @@ abund.summ.all <- abund.summ %>%
 # Load trawl information
 load(here("Output/haul_info.Rdata"))
 load(here("Output/catch_info.Rdata"))
-load(here("Output/species_codes.Rdata"))
+# load(here("Output/species_codes.Rdata"))
 
 # Load seine information
 load(here("Output/catch_info_seine.Rdata"))

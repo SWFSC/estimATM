@@ -217,24 +217,24 @@ if (process.nearshore) {
   
   # Consider adding a variable clip.nearshore.intervals to settings since this is buried in the code.
   if (as.numeric(survey.year) >= 2023) {
-    # # Buffer Channel Islands by 5 nmi, which should encompass the footprint of the
+    # Buffer Channel Islands by 5 nmi, which should encompass the footprint of the
     # # planned nearshore transects that are shorter than mainland transects
     # ci_clip <- st_read(here("Data/GIS/channel_islands.shp")) %>%
-    #   filter(name %in% wpt.regions) %>% 
-    #   st_union() %>% 
+    #   filter(name %in% wpt.regions) %>%
+    #   st_union() %>%
     #   st_transform(crs = crs.proj) %>%
     #   st_buffer(dist = ci.clip.dist * 1852)
     # 
     # ci_buffer <- st_read(here("Data/GIS/channel_islands.shp")) %>%
     #   filter(name %in% wpt.regions) %>%
-    #   st_union() %>% 
+    #   st_union() %>%
     #   st_transform(crs = crs.proj) %>%
     #   st_buffer(dist = ci.buffer.dist * 1852)
     # 
     # # Combine land masks from buffered land masses to define offshore extent of nearshore polygons
-    # nearshore_mask <- st_union(na_buffer, ci_buffer) %>% 
+    # nearshore_mask <- st_union(na_buffer, ci_buffer) %>%
     #   st_transform(crs.geog)
-    # 
+
     # # Combine the Channel Islands 0.2 nmi buffer and 5m mainland isobath mask to define inshore extent of nearshore polygons
     # nearshore_clip <- st_union(ci_clip, ns_mask)
     
@@ -358,7 +358,8 @@ nav.paths.ns.sf <- nav.ns.sf %>%
 
 # Summarize nasc for plotting ---------------------------------------------
 nasc.plot.ns <- nasc.nearshore %>% 
-  select(filename, vessel.name, transect, transect.name, int, dist_m, datetime, lat, long, cps.nasc) %>% 
+  select(filename, vessel.name, transect, transect.name, int, 
+         dist_m, datetime, lat, long, cps.nasc) %>% 
   group_by(filename, vessel.name, transect.name, transect, int) %>% 
   summarise(
     lat  = lat[1],
@@ -460,7 +461,7 @@ if (save.figs) {
 # Map nearshore species proportions -------------------------------------------------------
 if (use.seine.data) {
   # Combine pie chart data from trawls and seines
-  cluster.pie <- bind_rows(cluster.pie, set.pie)
+  cluster.pie <- bind_rows(cluster.pie, set.pie) 
   
   haul.pie <- set.pie %>% 
     select(-cluster) %>% 
@@ -536,8 +537,8 @@ nasc.nearshore.tmp <- nasc.nearshore
 
 if (cluster.source["NS"] == "cluster") {
   nasc.nearshore <- nasc.nearshore.tmp %>% 
-    left_join(select(clf.ns, -lat, -long, -X, -Y), by = c("cluster" = "cluster"))
-  # left_join(select(clf.ns, -lat, -long, -X, -Y, -haul), by = c("cluster" = "cluster"))
+    # left_join(select(clf.ns, -lat, -long, -X, -Y), by = c("cluster" = "cluster"))
+    left_join(select(clf.ns, -lat, -long, -X, -Y, -haul), by = c("cluster" = "cluster"))
 } else {
   nasc.nearshore <- nasc.nearshore.tmp %>% 
     left_join(select(hlf.ns, -lat, -long, -X, -Y,-cluster), by = c("haul" = "haul"))
@@ -573,7 +574,9 @@ if (limit.cluster.dist["NS"]) {
   nasc.nearshore$prop.sar[nasc.nearshore$cluster.distance  > max.cluster.dist] <- 0
   nasc.nearshore$prop.jack[nasc.nearshore$cluster.distance > max.cluster.dist] <- 0
   nasc.nearshore$prop.mack[nasc.nearshore$cluster.distance > max.cluster.dist] <- 0
-  nasc.nearshore$prop.her[nasc.nearshore$cluster.distance  > max.cluster.dist] <- 0  
+  nasc.nearshore$prop.her[nasc.nearshore$cluster.distance  > max.cluster.dist] <- 0
+  nasc.nearshore$prop.rher[nasc.nearshore$cluster.distance  > max.cluster.dist] <- 0
+  nasc.nearshore$prop.smelt[nasc.nearshore$cluster.distance  > max.cluster.dist] <- 0
 }
 
 # Create data frame for plotting acoustic proportions by species
@@ -584,12 +587,14 @@ nasc.prop.all.ns <- nasc.nearshore %>%
          `Trachurus symmetricus` = cps.nasc*prop.jack,
          `Scomber japonicus`     = cps.nasc*prop.mack,
          `Clupea pallasii`       = cps.nasc*prop.her,
-         `Etrumeus acuminatus`   = cps.nasc*prop.rher) 
+         `Etrumeus acuminatus`   = cps.nasc*prop.rher,
+         `Allosmerus elongatus`  = cps.nasc*prop.smelt) 
 
 # Prepare nasc.prop.all for facet plotting
 nasc.prop.spp.ns <- nasc.prop.all.ns %>% 
   select(X, Y, `Engraulis mordax`, `Sardinops sagax`, `Trachurus symmetricus`,
-         `Scomber japonicus`, `Clupea pallasii`, `Etrumeus acuminatus`) %>% 
+         `Scomber japonicus`, `Clupea pallasii`, `Etrumeus acuminatus`, 
+         `Allosmerus elongatus`) %>% 
   gather(scientificName, nasc, -X, -Y)
 
 if (save.figs) {
@@ -631,7 +636,8 @@ nasc.nearshore <- nasc.nearshore %>%
     jack.dens = cps.nasc*prop.jack / (4*pi*sigmawg.jack) / 1000,
     mack.dens = cps.nasc*prop.mack / (4*pi*sigmawg.mack) / 1000,
     sar.dens  = cps.nasc*prop.sar  / (4*pi*sigmawg.sar)  / 1000,
-    rher.dens = cps.nasc*prop.rher / (4*pi*sigmawg.rher) / 1000)
+    rher.dens = cps.nasc*prop.rher / (4*pi*sigmawg.rher) / 1000,
+    smelt.dens = cps.nasc*prop.smelt / (4*pi*sigmawg.smelt) / 1000)
 
 # Add deep density to shallow density
 # This is where the magic happens, I think.
@@ -642,13 +648,15 @@ if (adj.deep.nasc) {
            jack.dens = jack.dens + nasc.nearshore.deep$jack.dens,
            mack.dens = mack.dens + nasc.nearshore.deep$mack.dens,
            sar.dens  = sar.dens  + nasc.nearshore.deep$sar.dens,
-           rher.dens = rher.dens + nasc.nearshore.deep$rher.dens)  
+           rher.dens = rher.dens + nasc.nearshore.deep$rher.dens,
+           smelt.dens = smelt.dens + nasc.nearshore.deep$smelt.dens)  
 }
 
 # Format for plotting
 nasc.density.ns <- nasc.nearshore %>%
   select(lat, long, anch.dens, her.dens, jack.dens, mack.dens, 
-         sar.dens, rher.dens, transect, transect.name, int, cluster) %>% 
+         sar.dens, rher.dens, smelt.dens, transect, transect.name, 
+         int, cluster) %>% 
   group_by(transect, transect.name, int, cluster) %>% 
   summarise(
     lat = lat[1],
@@ -658,7 +666,8 @@ nasc.density.ns <- nasc.nearshore %>%
     `Trachurus symmetricus` = mean(jack.dens),
     `Scomber japonicus`     = mean(mack.dens),
     `Sardinops sagax`       = mean(sar.dens),
-    `Etrumeus acuminatus`   = mean(rher.dens)) %>% 
+    `Etrumeus acuminatus`   = mean(rher.dens),
+    `Allosmerus elongatus`  = mean(smelt.dens)) %>% 
   gather(scientificName, density, -transect, -transect.name, -int, -lat, -long, -cluster) %>% 
   mutate(bin       = cut(density,dens.breaks, include.lowest = TRUE),
          bin.level = as.numeric(bin)) %>% 
@@ -895,8 +904,8 @@ for (i in unique(tx.sampled.ns$Type)) {
 }
 
 # Check result
-# mapview(tx.sampled.ext.ns) + 
-#   mapview(tx.sampled.ns, color = "black") + 
+# mapview(tx.sampled.ext.ns) +
+#   mapview(tx.sampled.ns, color = "black") +
 #   mapview(nearshore_clip, color = "green", fill = NA) +
 #   mapview(nearshore_mask, color = "red", fill = NA)
 
@@ -904,6 +913,7 @@ for (i in unique(tx.sampled.ns$Type)) {
 rm("tx.sampled.buff.ns")
 
 for (iii in unique(tx.sampled.ext.ns$transect)) {
+  # iii = 327
   tx.sampled.ext.sub <- filter(tx.sampled.ext.ns, transect == iii) 
   
   tx.buff.tmp <- tx.sampled.ext.sub %>% 
@@ -915,7 +925,7 @@ for (iii in unique(tx.sampled.ext.ns$transect)) {
   if (!str_detect(tx.sampled.ext.sub$Region, "Island")) {
     tx.buff.tmp <- st_difference(tx.buff.tmp, ci_buffer)
   }
-  
+
   if (exists("tx.sampled.buff.ns")) {
     tx.sampled.buff.ns <- bind_rows(tx.sampled.buff.ns, tx.buff.tmp)
   } else {
@@ -1384,7 +1394,7 @@ strata.final.ns <- strata.final.ns %>%
   ungroup()
 
 # Save final strata definition
-save(strata.final.ns, here("Output/strata_final_ns.Rdata"))
+save(strata.final.ns, file = here("Output/strata_final_ns.Rdata"))
 
 # Plot classification
 # ggplot(strata.final.ns, aes(long, lat, colour = paste(vessel.name, stratum))) +
@@ -1438,7 +1448,7 @@ for (i in unique(nearshore.spp$scientificName)) {
         i == "Engraulis mordax" & lat.stock <  stock.break.anch ~ "Central",
         i == "Sardinops sagax"  & lat.stock >= stock.break.sar  ~ "Northern",
         i == "Sardinops sagax"  & lat.stock <  stock.break.sar  ~ "Southern",
-        i %in% c("Clupea pallasii","Scomber japonicus",
+        i %in% c("Clupea pallasii","Scomber japonicus","Allosmerus elongatus",
                  "Trachurus symmetricus","Etrumeus acuminatus") ~ "All"),
         scientificName = i) %>% 
       select(vessel.name, transect, transect.name, stock, scientificName, stratum) %>%
@@ -1461,14 +1471,24 @@ for (i in unique(nearshore.spp$scientificName)) {
       group_by(scientificName, stock, stratum) %>% 
       summarise(geometry = st_union(x)) %>%
       ungroup() %>%
+      st_difference(nearshore_clip) %>%
       st_intersection(st_transform(nearshore_mask, crs.proj)) %>%
-      st_difference(nearshore_clip) %>% 
-      mutate(area = st_area(.),
-             vessel.name = j)
+      # mutate(vessel.name = j) %>% 
+      mutate(area = st_area(.)) %>% 
+      # Remove any non-polygon geometries from geometry collections
+      st_collection_extract(type = "POLYGON")
     
+    # ggplot(filter(primary.poly.i, st_geometry_type(primary.poly.i) == "GEOMETRYCOLLECTION")) + 
+    #   geom_sf(aes(colour = factor(stratum)))
+    # 
+    # mapview(filter(primary.poly.i, stratum == 2)) + mapview(nearshore_mask)
+    # 
+    # mapview(primary.poly.i, zcol = "stock") +
+    #   mapview(nearshore_mask, color = "red", fill = NA)
+    # 
     # mapview(primary.poly.i, zcol = "stock") +
     #   mapview(nearshore_mask, color = "black", fill = NA) +
-    #   mapview(nearshore_clip, color = "red", fill = NA) + 
+    #   mapview(nearshore_clip, color = "red", fill = NA) +
     #   mapview(nasc.nearshore.sf)
     
     # for (k in sort(unique(strata.sub$stratum))) {
@@ -1693,8 +1713,20 @@ for (i in unique(nearshore.spp$scientificName)) {
   # }
 }
 
-# # Check results
+# Identify rows where geometry type is GEOMETRYCOLLECTION
+# is_gc <- st_geometry_type(strata.nearshore) == "GEOMETRYCOLLECTION"
+# not_gc <- !st_geometry_type(strata.nearshore) == "GEOMETRYCOLLECTION"
+# Subset the rows
+# gc_rows <- strata.nearshore[is_gc, ]
+# strata.nearshore <- strata.nearshore[not_gc, ]
+
+# Check results
 # ggplot(strata.nearshore, aes(colour = stock, fill = factor(stratum))) +
+#   geom_sf() +
+#   facet_wrap(~scientificName) +
+#   theme_bw()
+# 
+# ggplot(gc_rows, aes(colour = stock, fill = factor(stratum))) +
 #   geom_sf() +
 #   facet_wrap(~scientificName) +
 #   theme_bw()
@@ -1704,6 +1736,7 @@ for (i in unique(nearshore.spp$scientificName)) {
 # mapview(filter(strata.nearshore, scientificName == "Clupea pallasii"), zcol = "stratum")
 # mapview(filter(strata.nearshore, scientificName == "Scomber japonicus"), zcol = "stratum")
 # mapview(filter(strata.nearshore, scientificName == "Trachurus symmetricus"), zcol = "stratum")
+# mapview(filter(strata.nearshore, scientificName == "Allosmerus elongatus"), zcol = "stratum")
 
 # Save strata polygons
 save(strata.nearshore, 
@@ -2114,7 +2147,7 @@ if (use.seine.data) {
       scientificName == "Engraulis mordax" & lat <  stock.break.anch ~ "Central",
       scientificName == "Sardinops sagax"  & lat >= stock.break.sar  ~ "Northern",
       scientificName == "Sardinops sagax"  & lat <  stock.break.sar  ~ "Southern",
-      scientificName %in% c("Clupea pallasii","Scomber japonicus",
+      scientificName %in% c("Clupea pallasii","Scomber japonicus", "Allosmerus elongatus",
                             "Trachurus symmetricus","Etrumeus acuminatus") ~ "All")) %>% 
     # Define sample type for non-trawl samples
     mutate(sample.type = case_when(
@@ -2144,6 +2177,8 @@ if (do.bootstrap) {
   spp.counter <- 1
   
   for (i in unique(strata.nearshore$scientificName)) {
+    
+    # i = "Allosmerus elongatus"
     
     if (use.seine.data) {
       cluster.final.ns <- cluster.final[[i]] %>% 
@@ -2715,7 +2750,7 @@ if (save.figs) {
       filter(!is.na(CPS.wg), CPS.wg > 0) %>% 
       filter(cluster %in% unique(nasc.nearshore$cluster)) %>% 
       select(cluster, lat, long, prop.anch, prop.jack, prop.her,
-             prop.mack, prop.sar, prop.rher, sample.type) %>% 
+             prop.mack, prop.sar, prop.rher, prop.smelt, sample.type) %>% 
       replace(. == 0, 0.0000001) %>% 
       # replace(is.na(.), 0) %>% 
       project_df(to = crs.proj)
@@ -2728,7 +2763,7 @@ if (save.figs) {
       filter(!is.na(CPS.wg), CPS.wg > 0) %>% 
       filter(haul %in% unique(nasc.nearshore$haul)) %>% 
       select(haul, lat, long, prop.anch, prop.jack, prop.her,
-             prop.mack, prop.sar, prop.rher, sample.type) %>% 
+             prop.mack, prop.sar, prop.rher, prop.smelt, sample.type) %>% 
       replace(. == 0, 0.0000001) %>% 
       # replace(is.na(.), 0) %>% 
       project_df(to = crs.proj)
@@ -2782,7 +2817,8 @@ if (save.figs) {
       geom_scatterpie(data = acoustic.prop.indiv.ns, 
                       aes(X, Y, group = cluster, r = pie.radius, colour = sample.type),
                       cols = c("prop.anch","prop.jack","prop.her",
-                               "prop.mack","prop.rher","prop.sar"),
+                               "prop.mack","prop.rher","prop.sar",
+                               "prop.smelt"),
                       alpha = 0.8) +
       # Plot empty trawl locations
       geom_point(data = cluster.zero.ns, aes(X, Y),
@@ -2790,9 +2826,11 @@ if (save.figs) {
       # Configure trawl scale
       scale_fill_manual(name = 'Species',
                         labels = c("Anchovy", "J. mackerel", "P. herring",
-                                   "P. mackerel", "R. herring", "Sardine"),
+                                   "P. mackerel", "R. herring", "Sardine",
+                                   "Smelt"),
                         values = c(anchovy.color, jack.mack.color, pac.herring.color,   
-                                   pac.mack.color, rnd.herring.color, sardine.color)) +
+                                   pac.mack.color, rnd.herring.color, sardine.color,
+                                   smelt.color)) +
       # Configure pie outline colors
       scale_colour_manual(name = "Sample type", 
                           labels = c("Purse seine", "Trawl"),
@@ -2815,7 +2853,8 @@ if (save.figs) {
       geom_scatterpie(data = acoustic.prop.indiv.ns, 
                       aes(X, Y, group = haul, r = pie.radius, colour = sample.type),
                       cols = c("prop.anch","prop.jack","prop.her",
-                               "prop.mack","prop.rher","prop.sar"),
+                               "prop.mack","prop.rher","prop.sar",
+                               "prop.smelt"),
                       alpha = 0.8) +
       # Plot empty trawl locations
       geom_point(data = haul.zero.ns, aes(X, Y),
@@ -2823,9 +2862,11 @@ if (save.figs) {
       # Configure trawl scale
       scale_fill_manual(name = 'Species',
                         labels = c("Anchovy", "J. mackerel", "P. herring",
-                                   "P. mackerel", "R. herring", "Sardine"),
+                                   "P. mackerel", "R. herring", "Sardine",
+                                   "Smelt"),
                         values = c(anchovy.color, jack.mack.color, pac.herring.color,   
-                                   pac.mack.color, rnd.herring.color, sardine.color)) +
+                                   pac.mack.color, rnd.herring.color, sardine.color,
+                                   smelt.color)) +
       # Configure pie outline colors
       scale_colour_manual(name = "Sample type", 
                           labels = c("Purse seine", "Trawl"),

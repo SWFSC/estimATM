@@ -85,7 +85,7 @@ panderOptions('round', 6); panderOptions('keep.trailing.zeros', T); panderOption
 
 ```{r loop-controls}
 # User-defined loop controls
-combine.regions  <- F # Combine core and nearshore biomass plots
+combine.regions  <- T # Combine core and nearshore biomass plots
 plot.time.series <- T # Plot biomass time series 
 get.db.ts        <- T # Get biomass time series data from database
 process.cal      <- T # Process, format, and plot echosounder calibration results

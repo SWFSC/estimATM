@@ -140,14 +140,14 @@ do.imap           <- T # Create interactive Leaflet map
 overwrite.files   <- T # Overwrite files (TRUE if files have changed)
 overwrite.csv     <- T # Overwrite CSV files (TRUE if files have changed)
 do.ggiraph        <- T # Use ggiraph interactive figures instead of ggplot
-get.bathy         <- T # Extract ETOPO1 bathymetry data in the survey footprint
+get.bathy         <- F # Extract ETOPO1 bathymetry data in the survey footprint
 
 ### Usually FALSE
 save.imap           <- F # Save Leaflet maps
 process.csv.all     <- F # Process all acoustic backscatter files (F = new files only)
 process.csv.krill   <- F # Process krill backscatter data
 process.cufes       <- F # Process CUFES data (no CUFES sampling post-2023)
-process.cal         <- F # Process calibration results
+process.cal         <- T # Process calibration results
 process.ctd         <- F # Process CTD and UCTD casts
 match.intervals     <- F # Match intervals for comparing EK60 and EK80
 resize.map          <- F # Resize map during survey; if T, uses anticipated bounds of survey area
@@ -10082,7 +10082,7 @@ if (file.exists(here("Figs/fig_biomass_dens_nse_Etrumeus acuminatus-All.png"))) 
 # Appendices
 ## **Appendix A.** Acoustic calibration results.
 
-```{r process-cal-all}
+```{r process-cal-all,eval=FALSE}
 # Process calibration results from CW- and FM-mode calibrations. Vessel, procedure, and directory info is configured in the settings file for each survey.
 if (sum(!is.na(cal.vessels) > 0)) {
   if (process.cal) {

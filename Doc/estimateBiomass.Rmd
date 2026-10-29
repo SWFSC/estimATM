@@ -152,7 +152,7 @@ process.ctd         <- F # Process CTD and UCTD casts
 match.intervals     <- F # Match intervals for comparing EK60 and EK80
 resize.map          <- F # Resize map during survey; if T, uses anticipated bounds of survey area
 extrapolate.biomass <- F # Extrapolate biomass into the nearshore region
-save.output         <- c("core" = TRUE, # Save workspace image(s) to facilitate debugging
+save.output         <- c("core" = FALSE, # Save workspace image(s) to facilitate debugging
                          "ns"   = FALSE,
                          "os"   = FALSE)
 ```

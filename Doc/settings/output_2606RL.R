@@ -1,7 +1,7 @@
 # Load output from estimateBiomass ----------------------------------------
 # Load biomass estimate tables
 load(here("Output/biomass_bootstrap_estimates_final.Rdata"))
-# load(here("Output/biomass_bootstrap_estimates_final_ns.Rdata"))
+load(here("Output/biomass_bootstrap_estimates_final_ns.Rdata"))
 # load(here("Output/biomass_bootstrap_estimates_final_nse.Rdata"))
 
 # Get survey estimates for all strata
@@ -10,10 +10,10 @@ be.all     <- be %>%
   select(Species, Stock, Region, everything()) %>% 
   filter(Stratum == "All")
 
-# be.all.ns  <- be.ns %>%
-#   mutate(Region = "Nearshore") %>%
-#   select(Species, Stock, Region, everything()) %>%
-#   filter(Stratum == "All")
+be.all.ns  <- be.ns %>%
+  mutate(Region = "Nearshore") %>%
+  select(Species, Stock, Region, everything()) %>%
+  filter(Stratum == "All")
 
 # be.all.nse <- be.nse %>% 
 #   mutate(Region = "NSE") %>% 
@@ -41,12 +41,12 @@ be.all.summ <- be.all %>%
 be.sar.all <- be.all %>% 
   filter(Species == "Sardinops sagax")
 
-# be.sar.all.ns <- be.all.ns %>% 
-#   filter(Species == "Sardinops sagax")
+be.sar.all.ns <- be.all.ns %>%
+  filter(Species == "Sardinops sagax")
 
 ## Summarise biomass for all regions included in the final estimates
 be.sar.all.var <- be.all %>% 
-  # bind_rows(be.all.ns) %>%
+  bind_rows(be.all.ns) %>%
   filter(Species == "Sardinops sagax") %>% 
   select(Species, Stock, biomass.sd) %>% 
   group_by(Species) %>%
@@ -54,7 +54,7 @@ be.sar.all.var <- be.all %>%
 
 # Combine NSP and SSP biomass
 be.sar.all.summ <- be.sar.all %>% 
-  # bind_rows(be.sar.all.ns) %>%
+  bind_rows(be.sar.all.ns) %>%
   group_by(Species) %>% 
   select(-Stock, -Region, -Stratum, -biomass.sd, -biomass.cv) %>% 
   summarise_all(list(sum)) %>% 
@@ -65,7 +65,7 @@ be.sar.all.summ <- be.sar.all %>%
 load(here("Output/length_summary_all.Rdata")) # Length and weight ranges
 load(here("Output/length_frequency_summary.Rdata"))
 load(here("Output/abundance_table_all.Rdata"))
-# load(here("Output/abundance_table_all_ns.Rdata"))
+load(here("Output/abundance_table_all_ns.Rdata"))
 
 # Summarise length-disaggregated abundances to describe length ranges
 length.summ <- abund.summ %>% 
@@ -89,10 +89,10 @@ abund.summ.all <- abund.summ %>%
 # Load trawl information
 load(here("Output/haul_info.Rdata"))
 load(here("Output/catch_info.Rdata"))
-# load(here("Output/species_codes.Rdata"))
+load(here("Output/species_codes.Rdata"))
 
 # Load seine information
-# load(here("Output/catch_info_seine.Rdata"))
+load(here("Output/catch_info_seine.Rdata"))
 
 # Load NASC summaries
 ## RL
@@ -117,6 +117,6 @@ load(here("Output/transect_spacing.Rdata"))
 # load(here("Output/cal_output_table.Rdata"))
  
 # Load purse seine data
-# load(here("Output/purse_seine_lengths.Rdata"))
-# load(here("Output/purse_seine_sets.Rdata"))
+load(here("Output/purse_seine_lengths.Rdata"))
+load(here("Output/purse_seine_sets.Rdata"))
 

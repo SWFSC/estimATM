@@ -1,6 +1,6 @@
 ---
 title: "Estimate CPS biomass from Acoustic-Trawl Surveys"
-author: "Kevin L. Stierhoff (Maintainer), Josiah S. Renfree, Juan P. Zwolinski, and David A. Demer"
+author: "Kevin L. Stierhoff (Maintainer), Josiah S. Renfree, Juan P. Zwolinski"
 date: '`r format(Sys.time(), format = "%F %T", usetz = TRUE)`'
 csl: csl/ices-journal-of-marine-science.csl
 css: css/ast.css

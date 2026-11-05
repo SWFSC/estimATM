@@ -480,17 +480,22 @@ Sv.max                 <- NULL # Max Sv value (dB); Set to -14 after testing is 
 # If seine catches were believed to be representative, TRUE
 # Else, FALSE (e.g., if sets were non-random or otherwise believed to be biased)
 use.seine.data  <- TRUE
+# Survey vessels that collected purse seine data
+seine.vessels   <- c("LBC" ,"LM")
+seine.vessels.long <- c("LBC" = "Long Beach Carnage",
+                        "LM"  = "Lisa Marie")
 seine.source    <- "SQL" # "SQL-dev"
 seine.dir       <- "DATA/BIOLOGICAL/SEINE"
 seine.db.name   <- "SeineDataEntry2606RL.accdb"
 seine.xlsx.name <- "Nearshore_LBC_2606RL.xlsx"
 seine.db.tz     <- "UTC"
 seine.types     <- c("survey", "research", NA)
-seine.gpx.name  <- "nav_nearshore.gpx" 
+seine.gpx.name  <- "nav_nearshore.gpx"
+seine.pseudo.name <- here("Data/Seine/pseudosets_2606RL.csv")
 
-# Survey vessels that collected purse seine data
-seine.vessels          <- c("LBC" ,"LM")
-seine.vessels.long     <- c("LBC" = "Long Beach Carnage","LM"  = "Lisa Marie")
+# Define path to seine data directories for each vessel
+seine.data.paths <- c("LBC"= file.path(survey.dir["LBC"], "DATA/SEINE/lbc_data_2606RL.xlsx"),
+                      "LM" = file.path(survey.dir["LM"],  "DATA/SEINE/lm_data_2606RL.xlsx"))
 
 # Deep backscatter correction
 # Correct deep backscatter?
@@ -503,10 +508,6 @@ deep.nasc.vessels <- c("LBC", "LM")
 # Which net data should be used to apportion nearshore backscatter?
 # "Trawl" and/or "Seine"
 catch.source.ns <- c("Trawl", "Purse seine")
-
-# Define path to seine data directories for each vessel
-seine.data.paths <- c("LBC"= file.path(survey.dir["LBC"], "DATA/SEINE/lbc_data_2606RL.xlsx"),
-                      "LM" = file.path(survey.dir["LM"],  "DATA/SEINE/lm_data_2606RL.xlsx"))
 
 # source.cps.nasc determines whether to use cps.nasc values from a separate file
 # Since 2022, Code/extract_CPS_NASC.R is used to remove non-CPS backscatter and compute cps.nasc

@@ -141,7 +141,6 @@ if (process.nearshore) {
     # Process purse seine data
     if (process.seine) {
       # Process seine data
-      ## Need to update to handle seine data from the SWFSC database
       source(here("Code/processSeine.R"))
       
     } else {
@@ -188,6 +187,11 @@ if (process.nearshore) {
     # Save super clusters and hauls
     save(super.clusters.ns, super.hauls.ns,
          file = here("Output/super_clusters_hauls_ns.Rdata"))
+    
+    # Augment clf, hlf, and lf.final.ns using alternative data sources (e.g., captain's log)
+    if (use.pseudosets) {
+      source(here("Code/create_pseudo_sets.R"))
+    }
     
   } else {
     # Use only trawl data to partition nearshore backscatter

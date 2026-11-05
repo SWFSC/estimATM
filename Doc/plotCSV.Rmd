@@ -178,7 +178,7 @@ nasc.plot <- project_sf(nasc.sf, crs.proj)
 
 nasc.paths <- nasc %>% 
   st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-  group_by(transect) %>% 
+  group_by(transect.orig, transect) %>% 
   summarise(do_union = F) %>% 
   st_cast("LINESTRING") 
 ```
@@ -352,7 +352,7 @@ if (exists("nav.paths.sf"))
 # Add backscatter data
 i.map <- i.map %>% 
   addPolylines(data = nasc.paths, color = "#000414", weight = 8, 
-               label = ~transect, group = "Vessel Track") %>%
+               label = ~transect.orig, group = "Vessel Track") %>%
   addCircleMarkers(data = filter(nasc.sf, NASC < 200), 
                    radius = ~bin.level*2, color = "#000414", stroke = TRUE, weight = 1,
                    fillOpacity = 0.75, fillColor =  "#000414", 

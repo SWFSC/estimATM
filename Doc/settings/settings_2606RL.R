@@ -507,7 +507,7 @@ deep.nasc.vessels <- c("LBC", "LM")
 
 # Which net data should be used to apportion nearshore backscatter?
 # "Trawl" and/or "Seine"
-catch.source.ns <- c("Trawl", "Purse seine")
+catch.source.ns <- c("Trawl", "Purse seine", "Pseudo set")
 
 # source.cps.nasc determines whether to use cps.nasc values from a separate file
 # Since 2022, Code/extract_CPS_NASC.R is used to remove non-CPS backscatter and compute cps.nasc
@@ -763,7 +763,7 @@ bootstrap.est.spp      <- c("Clupea pallasii","Engraulis mordax","Sardinops saga
                             "Scomber japonicus","Trachurus symmetricus")
 
 # Number of bootstrap samples
-boot.num <- 1000 # 1000 during final
+boot.num <- 10 # 1000 during final
 
 # Generate biomass length frequencies
 do.lf    <- TRUE

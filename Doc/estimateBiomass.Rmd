@@ -139,7 +139,7 @@ do.ggiraph        <- T # Use ggiraph interactive figures instead of ggplot
 get.bathy         <- F # Extract ETOPO1 bathymetry data in the survey footprint
 
 ### Usually FALSE
-use.pseudosets      <- T # 
+use.pseudosets      <- T # Use additional catch info to estimate nearshore biomass
 get.nav.sd          <- F # Download Saildrone nav data from ERDDAP
 get.nav.sh          <- F # Download NOAA Ship nav data
 download.hab        <- F # Download habitat map
@@ -148,7 +148,7 @@ save.imap           <- F # Save Leaflet maps
 process.csv.all     <- F # Process all acoustic backscatter files (F = new files only)
 process.csv.krill   <- F # Process krill backscatter data
 process.cufes       <- F # Process CUFES data (no CUFES sampling post-2023)
-process.cal         <- T # Process calibration results
+process.cal         <- F # Process calibration results
 process.ctd         <- F # Process CTD and UCTD casts
 match.intervals     <- F # Match intervals for comparing EK60 and EK80
 resize.map          <- F # Resize map during survey; if T, uses anticipated bounds of survey area

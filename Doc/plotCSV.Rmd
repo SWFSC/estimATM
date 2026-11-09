@@ -68,6 +68,11 @@ vessel.name = "LBC"
 
 # Define nav source
 if(vessel.name %in% c("LBC","LM")) nav.source <- "GPX"
+
+# If T, strips characters from transect numbers (i.e., would combine 105A and 105B to 105)
+strip.tx.chars         <- c(RL  = TRUE,
+                            LM  = TRUE,
+                            LBC = TRUE) 
 ```
 
 Specified files are processed and plotted at any time, but ideally prior to being processed using plotSurvey, estimateBiomass, etc. Below are specifics about the vessel and settings used:
@@ -147,14 +152,13 @@ nasc.summ <- nasc %>%
   summarise(
     bins    = length(int),
     bin.mid = as.integer(round(bins / 2)),
-    lat     = lat[1],
-    long    = long[1],
-    NASC    = mean(cps.nasc)
-  ) %>% 
+    lat     = lat[which.min(lat)], #lat[1]
+    long    = long[which.min(lat)], #long[1],
+    NASC    = mean(cps.nasc)) %>% 
   arrange(desc(NASC))
 
 # Average cps.nasc over defined interval
-# Summarize by filename, not transect, so that renamed (i.e., strip.tx.chars == T) transects get included.
+# Summarize by file name, not transect, so that renamed (i.e., strip.tx.chars == T) transects get included.
 nasc.sf <- nasc %>%
   select(filename, transect, transect.orig, int, dist_m, datetime, lat, long, cps.nasc) %>% 
   group_by(filename, transect, transect.orig, int) %>% 
@@ -435,25 +439,60 @@ if (file.exists(here("Figs", img.filename))) {
 ```
 
 # Backscatter 
+## NASC vs. transect
+
+Plot of mean NASC by latitude. The top 10 transects are labeled with the transect name.  
+
+```{r nasc-summ-plot-tx, out.width="100%"}
+nasc.plot.csv.tx <- ggplot() + 
+  geom_line(data = nasc.summ, aes(as.numeric(transect), NASC)) + 
+  geom_point_interactive(data = nasc.summ, 
+                         aes(as.numeric(transect), NASC, tooltip = transect),
+                         shape = 21, fill = "white") + 
+  geom_text_repel(data = top_n(nasc.summ, 20, NASC), 
+                  aes(as.numeric(transect), NASC, label = transect), colour = "blue", size = 2) +
+  labs(y = "mean(NASC)", x = "Transect") +
+  theme_bw()
+
+
+# Create interactive plot
+nasc.plot.csv.tx.interactive <- ggiraph::girafe(
+  ggobj = nasc.plot.csv.tx,
+  dependencies = list(liberationsansHtmlDependency()))
+
+# Print interactive plot
+nasc.plot.csv.tx.interactive
+
+ggsave(nasc.plot.csv.tx, 
+       filename = here("Figs","fig_nasc_summ_tx_plotCSV.png"),
+       height = 4, width = 10)
+```
+
 ## NASC vs. latitude
 
 Plot of mean NASC by latitude. The top 10 transects are labeled with the transect name.  
 
-```{r nasc-summ-plot, out.width="100%"}
+```{r nasc-summ-plot-lat, out.width="100%"}
 nasc.plot.csv <- ggplot() + 
   geom_line(data = nasc.summ, aes(lat, NASC)) + 
-  geom_point(data = nasc.summ, aes(lat, NASC),
+  geom_point_interactive(data = nasc.summ, aes(lat, NASC, tooltip = transect),
              shape = 21, fill = "white") + 
   geom_text_repel(data = top_n(nasc.summ, 20, NASC), 
                   aes(lat, NASC, label = transect), colour = "blue", size = 2) +
   labs(y = "mean(NASC)", x = "Latitude") +
   theme_bw()
 
-ggsave(nasc.plot.csv, 
-       filename = here("Figs","fig_nasc_summ_plotCSV.png"),
-       height = 4, width = 10)
+# Create interactive plot
+nasc.plot.csv.interactive <- ggiraph::girafe(
+  ggobj = nasc.plot.csv,
+  dependencies = list(liberationsansHtmlDependency()))
 
-include_graphics(here("Figs","fig_nasc_summ_plotCSV.png"))
+# Print interactive plot
+nasc.plot.csv.interactive
+
+ggsave(nasc.plot.csv, 
+       filename = here("Figs","fig_nasc_summ_lat_plotCSV.png"),
+       height = 4, width = 10)
 ```
 
 ## NASC summary

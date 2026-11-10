@@ -1,4 +1,4 @@
-# load(here("Output/debug_nearshore.Rdata"))
+# load(here("Output/debug_estimATM_core.Rdata"))
 
 # Estimate nearshore biomass -----------------------------------------------
 # Remove any existing nearshore backscatter data from memory
@@ -188,7 +188,7 @@ if (process.nearshore) {
     save(super.clusters.ns, super.hauls.ns,
          file = here("Output/super_clusters_hauls_ns.Rdata"))
     
-    # Augment clf, hlf, and lf.final.ns using alternative data sources (e.g., captain's log)
+    # Augment clf, hlf, and lf.final.ns and other objects using alternative data sources (e.g., captain's log)
     if (use.pseudosets) {
       source(here("Code/create_pseudo_sets.R"))
     }
@@ -269,6 +269,7 @@ if (process.nearshore) {
   
   # Write clf.ns to CSV
   write_csv(clf.ns, file = here("Output/clf_nearshore.csv"))
+  write_csv(hlf.ns, file = here("Output/hlf_nearshore.csv"))
   
   # Assign backscatter to trawl clusters ------------------------------------
   saveRDS(nasc.nearshore, here("Output/nasc_match_ns.rds"))
@@ -310,14 +311,15 @@ if (process.nearshore) {
     mutate(cluster = cluster.match.ns$cluster[nearest.cluster.ns],
            cluster.distance = distGeo(nasc.ns.sp, cluster.ns.sp)*0.000539957,
            haul = haul.match.ns$haul[nearest.haul.ns],
-           haul.distance = distGeo(nasc.ns.sp, haul.ns.sp)*0.000539957)  
+           haul.distance = distGeo(nasc.ns.sp, haul.ns.sp)*0.000539957,
+           sample.type = cluster.match.ns$sample.type[nearest.cluster.ns])  
   
   # Remove geometry
   nasc.match.ns <- st_set_geometry(nasc.match.ns, NULL) 
   
   # Add clusters and cluster distances to nasc
   nasc.nearshore <- nasc.nearshore %>% 
-    bind_cols(select(nasc.match.ns, cluster, cluster.distance, haul, haul.distance))  
+    bind_cols(select(nasc.match.ns, cluster, cluster.distance, haul, haul.distance, sample.type))  
   
   nasc.cluster.ns.plot <- ggplot(nasc.nearshore, aes(long, lat, colour = factor(cluster))) +
     geom_point(show.legend = FALSE) +
@@ -325,6 +327,23 @@ if (process.nearshore) {
               aes(long, lat, label = factor(cluster),
                   colour = factor(cluster)), show.legend = FALSE) +
     coord_map()
+  
+  # nasc.ns.lbc <- filter(nasc.nearshore, vessel.name == "LBC", lat < 34.5)
+  # nasc.ns.lm <- filter(nasc.nearshore, vessel.name == "LM", between(lat, 0, 39))
+  # 
+  # ggplot(nasc.ns.lbc, aes(long, lat, colour = sample.type)) +
+  #   geom_point(show.legend = TRUE) +
+  #   geom_text(data = filter(super.clusters.ns, cluster %in% unique(nasc.ns.lbc$cluster)),
+  #             aes(long, lat, label = cluster,
+  #                 colour = factor(sample.type)), show.legend = FALSE) +
+  #   coord_map()
+  # 
+  # ggplot(nasc.ns.lm, aes(long, lat, colour = sample.type)) +
+  #   geom_point(show.legend = TRUE) +
+  #   geom_text(data = filter(super.clusters.ns, cluster %in% unique(nasc.ns.lm$cluster)),
+  #             aes(long, lat, label = cluster,
+  #                 colour = factor(sample.type)), show.legend = FALSE) +
+  #   coord_map()
   
   # Save results of processing
   save(nasc.nearshore, file = here("Data/Backscatter/nasc_nearshore.Rdata"))
@@ -344,7 +363,7 @@ if (process.nearshore) {
 # to the relative proportions of N. anchovy and P. herring in the nearest seine set, biomass computed
 # separately, and then added to the biomass observed above the mixed layer.
 
-# Filter unwanted transects
+# Filter unwanted or problematic transects
 nasc.nearshore <- nasc.nearshore %>% 
   filter(!transect.name %in% unlist(tx.rm[nasc.vessels.nearshore])) %>% 
   project_df(to = crs.proj)
@@ -386,7 +405,7 @@ nasc.plot.ns.sf <- nasc.plot.ns %>%
   st_as_sf(coords = c("long","lat"), crs = crs.geog) 
 
 # Plot data coverage
-# ggplot(nasc.plot.ns, aes(long, lat, colour = vessel.name, size = NASC)) + geom_point() + facet_wrap(~vessel.name) + coord_map()
+# ggplot(nasc.plot.ns, aes(long, lat, colour = vessel.name, size = NASC)) + geom_point() +  coord_map()
 
 # Summarize numbers of intervals per trawl cluster
 nasc.nearshore.summ <- nasc.nearshore %>% 
@@ -399,13 +418,13 @@ nasc.nearshore.summ <- nasc.nearshore %>%
 # Create hull polygons around positive clusters and hauls
 nasc.super.clusters.ns <- nasc.nearshore %>% 
   st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-  group_by(cluster) %>% 
+  group_by(cluster, sample.type) %>% 
   summarise() %>% 
   st_convex_hull()
 
 nasc.super.hauls.ns <- nasc.nearshore %>% 
   st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-  group_by(haul) %>% 
+  group_by(haul, sample.type) %>% 
   summarise() %>% 
   st_convex_hull()
 
@@ -416,7 +435,8 @@ if (save.figs) {
     # Plot convex hull around NASC clusters
     geom_sf(data = nasc.super.clusters.ns, colour = 'black', alpha = 0.5, show.legend = FALSE) +
     scale_fill_discrete(name = "Cluster") +
-    scale_colour_manual(name = "Cluster", values = c("Trawl" = "blue", "Purse seine" = "red")) +
+    scale_colour_manual(name = "Cluster", values = c("Trawl" = "blue", "Purse seine" = "red",
+                                                     "Pseudo set" = "green")) +
     # Plot cluster midpoints
     geom_shadowtext(data = filter(clf.ns, CPS.num == 0), 
                     aes(X, Y, label = cluster),
@@ -436,7 +456,8 @@ if (save.figs) {
     # Plot convex hull around NASC clusters
     geom_sf(data = nasc.super.hauls.ns, colour = 'black', alpha = 0.5, show.legend = FALSE) +
     scale_fill_discrete(name = "Haul") +
-    scale_colour_manual(name = "Haul", values = c("Trawl" = "blue", "Purse seine" = "red")) +
+    scale_colour_manual(name = "Haul", values = c("Trawl" = "blue", "Purse seine" = "red",
+                                                  "Pseudo set" = "green")) +
     # Plot cluster midpoints
     geom_shadowtext(data = filter(hlf.ns, CPS.num == 0), 
                     aes(X, Y, label = haul),
@@ -470,6 +491,13 @@ if (use.seine.data) {
   haul.pie <- set.pie %>% 
     select(-cluster) %>% 
     bind_rows(haul.pie)
+  
+  if (use.pseudosets) {
+    # Calculate pseudo.pies from cluster.pie and haul.pie
+    
+    # Add to existing pie objects
+    
+  }
   
   # ggplot() +
   #   geom_text(data = cluster.pie, aes(long, lat, label = cluster, colour = sample.type), show.legend = FALSE) +
@@ -960,7 +988,6 @@ nasc.density.summ.ns <- nasc.density.summ.ns %>%
   left_join(select(tx.nn.ns, transect, vessel.name, dist.cum, dist.bin)) %>% 
   mutate(positive = density > 0)
 
-# RESUME HERE --------------------------------
 # Remove nearshore strata, if exists ---------------------------
 # Inshore- and offshore-most acoustic intervals
 if (exists("tx.ends.ns"))       rm(tx.ends.ns)
@@ -972,41 +999,41 @@ if (exists("nasc.region"))      rm(nasc.region)
 # Because in some years duplicate transect numbers exist, can't do a straight join
 for (v in unique(nasc.nearshore$vessel.name)) {
   # Get latitude range for backscatter data
-  nasc.nearshore.summ <- nasc.nearshore %>% 
-    filter(vessel.name == v) 
-  
+  nasc.nearshore.summ <- nasc.nearshore %>%
+    filter(vessel.name == v)
+
   # Extract only waypoints in the survey region
-  region.wpts <- wpts %>% 
-    filter(Type == "Nearshore") %>% 
+  region.wpts <- wpts %>%
+    filter(Type == "Nearshore") %>%
     mutate(transect = as.numeric(Transect),
            transect.name = paste(v, sprintf("%03d", transect)),
-           wpt.num = as.numeric(str_replace(Waypoint, "N",""))) %>% 
+           wpt.num = as.numeric(str_replace(Waypoint, "N",""))) %>%
     filter(transect %in% nasc.nearshore.summ$transect)
-  
+
   # ggplot(region.wpts, aes(long, lat, colour = Region)) + geom_point() + coord_map()
   # ggplot(region.wpts, aes(long, lat, label = transect.name, colour = Region)) + geom_text() + coord_map()
   # region.wpts %>% group_by(Region) %>% summarise(min.tx = min(transect), max.tx = max(transect))
-  
+
   # Get waypoint depth and add to region.wpts
-  region.wpts$depth <- get.depth(noaa.bathy.ns, 
-                                 region.wpts$long, 
-                                 region.wpts$lat, 
-                                 locator = FALSE, distance = FALSE)$depth 
-  
+  region.wpts$depth <- get.depth(noaa.bathy.ns,
+                                 region.wpts$long,
+                                 region.wpts$lat,
+                                 locator = FALSE, distance = FALSE)$depth
+
   # Extract shallowest (inshore-most) waypoint from each transect
-  region.wpts.i <- region.wpts %>% 
-    group_by(transect) %>% 
-    slice(which.min(wpt.num)) %>% 
+  region.wpts.i <- region.wpts %>%
+    group_by(transect) %>%
+    slice(which.min(wpt.num)) %>%
     ungroup()
-  
+
   # Add region to nasc by vessel
-  nasc.region.temp <- nasc.nearshore %>% 
-    filter(vessel.name == v) %>%  
-    left_join(select(region.wpts.i, transect, region = Region)) %>% 
+  nasc.region.temp <- nasc.nearshore %>%
+    filter(vessel.name == v) %>%
+    left_join(select(region.wpts.i, transect, region = Region)) %>%
     mutate(key = paste(vessel.name, region))
-  
+
   # ggplot(nasc.region.temp, aes(long, lat, colour = region)) + geom_point() + coord_map()
-  
+
   # For each region, draw strata polygon using NASC intervals or deepest waypoints
   for (k in unique(nasc.region.temp$key)) {
     # If an island region, create inner and outer polygons, combine, and compute area
@@ -1014,73 +1041,73 @@ for (v in unique(nasc.nearshore$vessel.name)) {
       # Get inshore nearshore waypoints
       tx.i.ns <- region.wpts %>%
         group_by(transect, transect.name) %>%
-        slice(which.min(wpt.num)) %>% 
-        # slice(which.min(abs(Depth))) %>% 
+        slice(which.min(wpt.num)) %>%
+        # slice(which.min(abs(Depth))) %>%
         mutate(grp = "original",
                loc = "inshore",
-               key = paste(v, Region)) %>% 
+               key = paste(v, Region)) %>%
         filter(key == k) %>%
         # Arrange by transect
-        arrange(transect) %>% 
-        ungroup() 
-      
+        arrange(transect) %>%
+        ungroup()
+
       # Get offshore nearshore waypoints
       tx.o.ns <- region.wpts %>%
         group_by(transect, transect.name) %>%
-        slice(which.max(wpt.num)) %>% 
+        slice(which.max(wpt.num)) %>%
         # slice(which.max(abs(Depth))) %>%
         mutate(grp = "original",
                loc = "offshore",
-               key = paste(v, Region)) %>% 
+               key = paste(v, Region)) %>%
         filter(key == k) %>%
         # Reverse order to correctly draw polygons later
-        arrange(desc(transect)) %>% 
-        ungroup() 
-      
+        arrange(desc(transect)) %>%
+        ungroup()
+
       # ggplot() +
       #   geom_point(data = tx.i.ns, aes(long, lat), colour = "blue") +
       #   geom_point(data = tx.o.ns, aes(long, lat), colour = "red")
-      
+
       # Create data frame with transect ends
-      tx.ends.ns.k <- tx.i.ns %>% 
-        mutate(vessel.name = v) %>% 
-        select(transect.name, transect, vessel.name, 
-               lat.i = lat, long.i = long) %>% 
+      tx.ends.ns.k <- tx.i.ns %>%
+        mutate(vessel.name = v) %>%
+        select(transect.name, transect, vessel.name,
+               lat.i = lat, long.i = long) %>%
         bind_cols(select(tx.o.ns, lat.o = lat, long.o = long))
-      
+
       # Combine transect waypoints for strata k
-      strata.points.ns.k <- tx.i.ns %>% 
+      strata.points.ns.k <- tx.i.ns %>%
         bind_rows(tx.o.ns)   %>%
         mutate(vessel.name = v,
                region = k,
-               key = paste(transect.name, grp)) 
-      
+               key = paste(transect.name, grp))
+
       # Draw polygons around shallowest transect waypoint for island strata
-      ns.poly.i <- tx.i.ns %>% 
-        st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-        summarise(do_union = F) %>% 
-        st_cast("LINESTRING") %>% 
-        st_cast("POLYGON") 
-      
+      ns.poly.i <- tx.i.ns %>%
+        st_as_sf(coords = c("long","lat"), crs = crs.geog) %>%
+        summarise(do_union = F) %>%
+        st_cast("LINESTRING") %>%
+        st_cast("POLYGON")
+
       # Draw polygons around deepest transect waypoint for island strata
       ns.poly.o <- tx.o.ns %>%
-        st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-        summarise(do_union = F) %>% 
-        st_cast("LINESTRING") %>% 
-        st_cast("POLYGON") 
-      
-      # Combine polygons
-      ns.poly.k <- ns.poly.o %>% 
-        st_difference(ns.poly.i) %>% 
-        st_make_valid() %>%
-        ungroup() %>% 
-        mutate(vessel.name = v,
-               area = as.numeric(st_area(.)),
-               region = k)
-      
+        st_as_sf(coords = c("long","lat"), crs = crs.geog) %>%
+        summarise(do_union = F) %>%
+        st_cast("LINESTRING") %>%
+        st_cast("POLYGON")
+
+      # # Combine polygons
+      # ns.poly.k <- ns.poly.o %>%
+      #   st_difference(ns.poly.i) %>%
+      #   st_make_valid() %>%
+      #   ungroup() %>%
+      #   mutate(vessel.name = v,
+      #          area = as.numeric(st_area(.)),
+      #          region = k)
+
     } else {
       # Else, use the same method as typical mainland transects that relies on NASC extents
-      
+
       # Draw pseudo-transects --------------------------------------------------------
       # Get transect ends, calculate bearing, and add transect spacing
       tx.ends.ns.k <- nasc.region.temp %>%
@@ -1095,43 +1122,43 @@ for (v in unique(nasc.nearshore$vessel.name)) {
         mutate(
           brg = swfscMisc::bearing(lat.i, long.i,
                                    lat.o, long.o)[1])
-      
+
       # ggplot() + geom_point(data = tx.ends.ns.k, aes(long.i, lat.i)) +
       #   geom_point(data = tx.ends.ns.k, aes(long.o, lat.o), colour = "blue")
-      
+
       # Get original inshore transect ends -------------------------------------------
       # Select original inshore waypoints
-      tx.i.ns <- tx.ends.ns.k %>% 
-        select(-lat.o, -long.o) %>% 
-        rename(lat = lat.i, long = long.i) %>% 
+      tx.i.ns <- tx.ends.ns.k %>%
+        select(-lat.o, -long.o) %>%
+        rename(lat = lat.i, long = long.i) %>%
         mutate(
           grp = "original",
           loc = "inshore",
           order = 2)
-      
+
       # Get N and S inshore waypoints ------------------------------------------------
       # Calculate inshore/north transects
-      tx.i.n.ns <- tx.ends.ns.k %>% 
-        select(-lat.o, -long.o) %>% 
-        rename(lat = lat.i, long = long.i) %>% 
+      tx.i.n.ns <- tx.ends.ns.k %>%
+        select(-lat.o, -long.o) %>%
+        rename(lat = lat.i, long = long.i) %>%
         mutate(
           lat  = swfscMisc::destination(lat, long, brg + 90, spacing/2, units = "nm")["lat"],
           long = swfscMisc::destination(lat, long, brg + 90, spacing/2, units = "nm")["lon"],
           grp = "north",
           loc = "inshore",
           order = 1)
-      
+
       # Calculate inshore/south transects
-      tx.i.s.ns <- tx.ends.ns.k %>% 
-        select(-lat.o, -long.o) %>% 
-        rename(lat = lat.i, long = long.i) %>% 
+      tx.i.s.ns <- tx.ends.ns.k %>%
+        select(-lat.o, -long.o) %>%
+        rename(lat = lat.i, long = long.i) %>%
         mutate(
           lat  = destination(lat, long, brg - 90, spacing/2, units = "nm")["lat"],
           long = destination(lat, long, brg - 90, spacing/2, units = "nm")["lon"],
           grp = "south",
           loc = "inshore",
           order = 3)
-      
+
       # Combine all inshore transects
       if (v == "LBC" & survey.name %in%  c("1907RL", "2103RL")) {
         # Transect numbers were reversed in 2019
@@ -1143,97 +1170,97 @@ for (v in unique(nasc.nearshore$vessel.name)) {
         tx.i.ns <- tx.i.ns %>%
           bind_rows(tx.i.n.ns) %>%
           bind_rows(tx.i.s.ns) %>%
-          arrange(transect, desc(order))  
+          arrange(transect, desc(order))
       }
-      
+
       # Get original offshore transect ends ------------------------------------------
-      tx.o.ns <- tx.ends.ns.k %>% 
-        select(-lat.i, -long.i) %>% 
-        rename(lat = lat.o, long = long.o) %>% 
+      tx.o.ns <- tx.ends.ns.k %>%
+        select(-lat.i, -long.i) %>%
+        rename(lat = lat.o, long = long.o) %>%
         mutate(
           grp = "original",
           loc = "offshore",
           order = 2)
-      
+
       # Get N and S offshore waypoints -----------------------------------------------
       # Calculate offshore/north transects
-      tx.o.n.ns <- tx.ends.ns.k %>% 
-        select(-lat.i, -long.i) %>% 
-        rename(lat = lat.o, long = long.o) %>% 
+      tx.o.n.ns <- tx.ends.ns.k %>%
+        select(-lat.i, -long.i) %>%
+        rename(lat = lat.o, long = long.o) %>%
         mutate(
           lat  = destination(lat, long, brg + 90, spacing/2, units = "nm")["lat"],
           long = destination(lat, long, brg + 90, spacing/2, units = "nm")["lon"],
           grp = "north",
           loc = "offshore",
           order = 3)
-      
+
       # Calculate offshore/south transects
-      tx.o.s.ns <- tx.ends.ns.k %>% 
-        select(-lat.i, -long.i) %>% 
-        rename(lat = lat.o, long = long.o) %>% 
+      tx.o.s.ns <- tx.ends.ns.k %>%
+        select(-lat.i, -long.i) %>%
+        rename(lat = lat.o, long = long.o) %>%
         mutate(
           lat  = destination(lat, long, brg - 90, spacing/2, units = "nm")["lat"],
           long = destination(lat, long, brg - 90, spacing/2, units = "nm")["lon"],
           grp = "south",
           loc = "offshore",
           order = 1)
-      
+
       if (exists("tx.o.final.ns")) rm(tx.o.final.ns)
-      
+
       for (v in unique(tx.o.ns$vessel.name)) {
         if (v == "SD1024") {
           tx.o.tmp <- filter(tx.o.ns, vessel.name == v)
         } else {
-          tx.o.tmp <- filter(tx.o.ns, vessel.name == v) %>% 
-            bind_rows(filter(tx.o.n.ns, vessel.name == v)) %>% 
+          tx.o.tmp <- filter(tx.o.ns, vessel.name == v) %>%
+            bind_rows(filter(tx.o.n.ns, vessel.name == v)) %>%
             bind_rows(filter(tx.o.s.ns, vessel.name == v))
         }
-        
+
         if (exists("tx.o.final.ns")) {
-          tx.o.final.ns <- bind_rows(tx.o.final.ns, tx.o.tmp)  
+          tx.o.final.ns <- bind_rows(tx.o.final.ns, tx.o.tmp)
         } else {
           tx.o.final.ns <- tx.o.tmp
         }
       }
-      
+
       # Combine all inshore transects
       if (v == "LBC" & survey.name %in% c("1907RL","2103RL")) {
         # Transect numbers were reversed in 2019
-        tx.o.ns <- tx.o.final.ns %>% 
+        tx.o.ns <- tx.o.final.ns %>%
           arrange(transect, desc(order))
       } else {
-        tx.o.ns <- tx.o.final.ns %>% 
+        tx.o.ns <- tx.o.final.ns %>%
           arrange(desc(transect), desc(order))
       }
-      
+
       # Assemble the final data frame with all waypoints -----------------------------
-      strata.points.ns.k <- tx.i.ns %>% 
+      strata.points.ns.k <- tx.i.ns %>%
         bind_rows(tx.o.ns)   %>%
         mutate(key = paste(transect.name, grp),
-               region = k) 
-      
+               region = k)
+
       # ggplot(strata.points.ns.k) + geom_sf()
-      
-      # Create polygons
-      ns.poly.k <- strata.points.ns.k %>% 
-        st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-        group_by(vessel.name, region) %>% 
-        summarise(do_union = F) %>% 
-        st_cast("POLYGON") %>% 
-        st_make_valid() %>% 
-        st_difference(st_union(bathy_5m_poly)) %>% 
-        mutate(area = st_area(.)) %>% 
-        ungroup()
-      
+
+      # # Create polygons
+      # ns.poly.k <- strata.points.ns.k %>%
+      #   st_as_sf(coords = c("long","lat"), crs = crs.geog) %>%
+      #   group_by(vessel.name, region) %>%
+      #   summarise(do_union = F) %>%
+      #   st_cast("POLYGON") %>%
+      #   st_make_valid() %>%
+      #   st_difference(st_union(bathy_5m_poly)) %>%
+      #   mutate(area = st_area(.)) %>%
+      #   ungroup()
+
       # Convert to lines
-      ns.lines.sf <- strata.points.ns.k %>% 
-        st_as_sf(coords = c("long","lat"), crs = crs.geog) %>% 
-        group_by(transect, grp) %>% 
-        summarise(do_union = F) %>% 
-        st_cast("LINESTRING") %>% 
+      ns.lines.sf <- strata.points.ns.k %>%
+        st_as_sf(coords = c("long","lat"), crs = crs.geog) %>%
+        group_by(transect, grp) %>%
+        summarise(do_union = F) %>%
+        st_cast("LINESTRING") %>%
         ungroup()
     }
-    
+
     # Combine with other strata points ---------------------------------
     if (exists("tx.ends.ns")) {
       # Combine waypoints with all strata points
@@ -1241,7 +1268,7 @@ for (v in unique(nasc.nearshore$vessel.name)) {
     } else {
       tx.ends.ns <- tx.ends.ns.k
     }
-    
+
     # Combine with other strata points ---------------------------------
     if (exists("strata.points.ns")) {
       # Combine waypoints with all strata points
@@ -1249,15 +1276,15 @@ for (v in unique(nasc.nearshore$vessel.name)) {
     } else {
       strata.points.ns <- strata.points.ns.k
     }
-    
-    # Combine with other polygons ----------------------------------------
-    if (exists("strata.ns")) {
-      strata.ns <- rbind(strata.ns, ns.poly.k)
-    } else {
-      strata.ns <- ns.poly.k
-    }
+
+    # # Combine with other polygons ----------------------------------------
+    # if (exists("strata.ns")) {
+    #   strata.ns <- rbind(strata.ns, ns.poly.k)
+    # } else {
+    #   strata.ns <- ns.poly.k
+    # }
   }
-  
+
   # Combine nasc used to create strata polygons
   if (exists("nasc.region")) {
     nasc.region <- bind_rows(nasc.region, nasc.region.temp)
@@ -1267,9 +1294,9 @@ for (v in unique(nasc.nearshore$vessel.name)) {
 }
 
 # Summarize transects by region, to be used later for stratification
-nasc.summ.region <- nasc.region %>% 
-  group_by(vessel.name, transect.name, region) %>% 
-  tally() %>% 
+nasc.summ.region <- nasc.region %>%
+  group_by(vessel.name, transect.name, region) %>%
+  tally() %>%
   ungroup()
 
 # Create stratum polygons -------------------------------------------------
@@ -1898,7 +1925,7 @@ strata.nearshore.points  <- strata.nearshore %>%
 save(strata.nearshore.points,  
      file = here("Output/strata_points_nearshore.Rdata"))
 
-# Write nearshore stata points to CSV
+# Write nearshore strata points to CSV
 write_csv(strata.nearshore.points,  
           file = here("Output/strata_points_nearshore.csv"))
 
@@ -2159,6 +2186,27 @@ if (use.seine.data) {
       TRUE ~ sample.type)) %>% 
     filter(sample.type %in% catch.source.ns)
   
+  if (use.pseudosets) {
+    # Create pos.clusters.pseudo
+    pos.clusters.pseudo <- n.summ.pseudo %>% 
+      # Define sample type for trawl summary
+      mutate(sample.type = "Pseudo set") %>% 
+      left_join(select(clf.ns, cluster, lat, long, X, Y)) %>% 
+      ungroup() %>% 
+      mutate(stock = case_when(
+        scientificName == "Engraulis mordax" & lat >= stock.break.anch ~ "Northern",
+        scientificName == "Engraulis mordax" & lat <  stock.break.anch ~ "Central",
+        scientificName == "Sardinops sagax"  & lat >= stock.break.sar  ~ "Northern",
+        scientificName == "Sardinops sagax"  & lat <  stock.break.sar  ~ "Southern",
+        scientificName %in% c("Clupea pallasii","Scomber japonicus", "Allosmerus elongatus",
+                              "Trachurus symmetricus","Etrumeus acuminatus") ~ "All")) 
+    
+    # Append to pos.clusters.ns
+    pos.clusters.ns <- pos.clusters.ns %>% 
+      bind_rows(pos.clusters.pseudo) %>% 
+      arrange(scientificName, haul)
+  }
+  
 } else {
   pos.clusters.ns <- pos.clusters %>% 
     mutate(sample.type = "Trawl")
@@ -2182,15 +2230,32 @@ if (do.bootstrap) {
   
   for (i in unique(strata.nearshore$scientificName)) {
     
-    # i = "Allosmerus elongatus"
+    # i = "Engraulis mordax"
     
     if (use.seine.data) {
       cluster.final.ns <- cluster.final[[i]] %>% 
         mutate(sample.type = "Trawl") %>% 
         bind_rows(cluster.final.seine[[i]]) %>% 
         filter(sample.type %in% catch.source.ns)
+      
+      haul.final.ns <- haul.final[[i]] %>% 
+        mutate(sample.type = "Trawl") %>% 
+        bind_rows(haul.final.seine[[i]]) %>% 
+        filter(sample.type %in% catch.source.ns)
+      
+      # Add cluster.final.pseudo if use.pseudosets
+      if (use.pseudosets) {
+        cluster.final.ns <- cluster.final.ns %>% 
+          bind_rows(cluster.final.pseudo[[i]]) 
+        
+        haul.final.ns <- haul.final.ns %>% 
+          bind_rows(haul.final.pseudo[[i]]) 
+      }
     } else {
       cluster.final.ns <- cluster.final[[i]] %>% 
+        mutate(sample.type = "Trawl")
+      
+      haul.final.ns <- haul.final[[i]] %>% 
         mutate(sample.type = "Trawl")
     }
     
@@ -2306,16 +2371,19 @@ if (do.bootstrap) {
           filter(scientificName == i, stratum == k) %>%
           # filter(scientificName == i, vessel.name == j, stratum == k) %>%
           pull(area) %>% 
-          as.numeric()
+          as.numeric() %>% 
+          # Why aren't these unique? Check stratum 1 for Engraulis mordax, for example
+          unique()
         
         # Calculate biomass using bootstrap function ----
         set.seed(1) # Set seed for repeatable results
         
+        # debugonce(estimate_bootstrap)
         boot.df <- estimate_bootstrap(nasc.temp, cluster.final.ns, k, 
                                       stratum.area = stratum.area, 
                                       species = i, do.lf = do.lf, 
                                       boot.number = boot.num)$data.frame
-        
+
         # Extract biomass estimates; remove first (point) estimate
         boot.temp <- data.frame(Species = i, Stratum = k, Area = stratum.area,
                                 Sample = seq(1, boot.num), boot.df[2:nrow(boot.df), ])
@@ -2837,8 +2905,10 @@ if (save.figs) {
                                    smelt.color)) +
       # Configure pie outline colors
       scale_colour_manual(name = "Sample type", 
-                          labels = c("Purse seine", "Trawl"),
-                          values = c("Purse seine" = seine.color, "Trawl" = trawl.color),
+                          labels = c("Purse seine", "Trawl", "Pseudo set"),
+                          values = c("Purse seine" = seine.color, 
+                                     "Trawl" = trawl.color,
+                                     "Pseudo set" = pseudo.color),
                           guide = "none") +
       # Configure legend guides
       guides(fill = guide_legend(), size = guide_legend()) +
@@ -2873,8 +2943,10 @@ if (save.figs) {
                                    smelt.color)) +
       # Configure pie outline colors
       scale_colour_manual(name = "Sample type", 
-                          labels = c("Purse seine", "Trawl"),
-                          values = c("Purse seine" = seine.color, "Trawl" = trawl.color),
+                          labels = c("Purse seine", "Trawl", "Pseudo set"),
+                          values = c("Purse seine" = seine.color, 
+                                     "Trawl" = trawl.color,
+                                     "Pseudo set" = pseudo.color),
                           guide = "none") +
       # Configure legend guides
       guides(fill = guide_legend(), size = guide_legend()) +

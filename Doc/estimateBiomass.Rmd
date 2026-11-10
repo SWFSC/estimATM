@@ -3797,13 +3797,11 @@ for (i in unique(lengths$scientificName)) {
     replace_na(list(spp.num = 0)) %>%
     mutate(counts = f * spp.num) 
   
-  
   # Summarise lengths by cluster, to filter subsequent data frames
   lf.df.summ <- lf.df %>% 
     group_by(cluster, haul) %>% 
     summarise(nIndiv = sum(counts)) %>% 
     filter(nIndiv > 0)
-  
   
   # Calculate the estimated number of individuals in each size class
   lf.df <- lf.df %>% 

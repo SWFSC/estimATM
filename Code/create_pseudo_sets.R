@@ -58,6 +58,7 @@ sets.pseudo <- sets.pseudo %>%
   bind_cols(select(set.match, pseudo.cluster, pseudo.cluster.distance, 
                    pseudo.haul, pseudo.haul.distance))
 
+# Add cluster and haul info to each pseudo set
 clf.ns.pseudo <- sets.pseudo %>% 
   select(cluster, sample.type, long, lat, X, Y, pseudo.cluster) %>% 
   left_join(select(clf.ns, -(sample.type:Y)), by = c("pseudo.cluster" = "cluster")) 
@@ -82,6 +83,7 @@ hlf.ns.sf <- st_as_sf(hlf.ns, coords = c("long","lat"), crs = 4326)
 # mapview(hlf.ns.sf, zcol = "sample.type")
 
 # Filter lf.final to only include clusters in the pseudo set list
+# Then, update cluster numbers to use the pseudo sets
 # load(here("Output/cluster_length_frequency_tables.Rdata"))
 
 lf.pseudo.ns <- lf.final %>% 
@@ -107,6 +109,12 @@ super.clusters.ns <- bind_rows(super.clusters.ns, super.pseudo.clusters)
 
 super.hauls.ns    <- bind_rows(super.hauls.ns, super.pseudo.hauls) 
 
+# ggplot(super.clusters.ns, aes(long, lat, color = sample.type)) + 
+#   geom_point() + coord_map()
+
+# ggplot(super.hauls.ns, aes(long, lat, color = sample.type)) + 
+#   geom_point() + coord_map()
+
 # Save super clusters and hauls
 save(super.clusters.ns, super.hauls.ns,
      file = here("Output/super_clusters_hauls_ns.Rdata"))
@@ -127,10 +135,13 @@ for (i in unique(lengths.pseudo$scientificName)) {
   lf.df.pseudo <- data.frame()
   
   for (ii in unique(sets.pseudo$haul)) {
+    # i = "Engraulis mordax"
+    #ii = 168
+    
     # Get haul corresponding to pseudo.hull[ii]
     haul.pseudo <- sets.pseudo$pseudo.haul[sets.pseudo$haul == ii]
     # Subset specimen data by species and trawl cluster
-    lengths.sub <- droplevels(filter(lengths, scientificName == i & haul == haul.pseudo))
+    lengths.sub <- droplevels(filter(lengths.pseudo, scientificName == i & haul == haul.pseudo))
     # Define length bins
     lf.breaks <- seq(length.min - 0.5, length.max$sl[length.max$species == i] + 0.5, 1)
     lf.labels <- seq(length.min, length.max$sl[length.max$species == i], 1)
@@ -158,6 +169,8 @@ for (i in unique(lengths.pseudo$scientificName)) {
   n.summ.haul.sub <- data.frame()
   
   for (jj in sets.pseudo$haul){
+    # jj = 168
+    
     n.summ.haul.jj <- filter(n.summ.haul, as.character(scientificName) == i, 
                              haul == sets.pseudo$pseudo.haul[sets.pseudo$haul == jj]) %>% 
       mutate(haul = jj,
@@ -258,14 +271,41 @@ for (i in unique(lengths.pseudo$scientificName)) {
          height = 7, width = 10)
 }
 
-# Save results
-save(n.summ.set, l.summ.set,
-     file = here("Output/seine_summaries.Rdata"))
-save(cluster.final.seine,
-     file = here("Output/cluster_length_frequency_all_seine.Rdata"))
-save(haul.final.seine,
-     file = here("Output/haul_length_frequency_all_seine.Rdata"))
-save(lf.final.seine,
-     file = here("Output/cluster_length_frequency_tables_seine.Rdata"))
+# Calculate cluster length frequencies for purse seine data ---------------
+# Calculate numeric abundance by species and set
+n.summ.pseudo <- n.summ.haul %>%
+  filter(haul %in% sets.pseudo$pseudo.haul) %>% 
+  ungroup() %>% 
+  rename(pseudo.haul = haul) %>% 
+  select(-cluster) %>% # Remove cluster for now
+  left_join(select(sets.pseudo, pseudo.haul, haul)) %>%
+  left_join(select(sets.pseudo, haul, cluster)) %>%
+  select(scientificName, cluster, haul, num) %>% 
+  arrange(scientificName, haul)
+
+# Summarise weights and sigmas by haul
+l.summ.pseudo <- l.summ.haul %>%
+  filter(haul %in% sets.pseudo$pseudo.haul) %>% 
+  # left_join(n.summ.pseudo) %>%
+  ungroup() %>% 
+  rename(pseudo.haul = haul) %>% 
+  select(-cluster) %>% # Remove cluster for now
+  left_join(select(sets.pseudo, pseudo.haul, haul)) %>%
+  left_join(select(sets.pseudo, haul, cluster)) %>%
+  select(-pseudo.haul) %>% 
+  select(scientificName, cluster, haul, everything()) %>% 
+  arrange(scientificName, haul)
+  
+# Save updated objects
+save(n.summ.pseudo, l.summ.pseudo,
+     file = here("Output/seine_summaries_pseudo.Rdata"))
+save(cluster.final.pseudo,
+     file = here("Output/cluster_length_frequency_all_pseudo.Rdata"))
+save(haul.final.pseudo,
+     file = here("Output/haul_length_frequency_all_pseudo.Rdata"))
 save(lf.final.pseudo,
      file = here("Output/cluster_length_frequency_tables_pseudo.Rdata"))
+
+# Save super clusters and hauls
+save(super.clusters.ns, super.hauls.ns,
+     file = here("Output/super_clusters_hauls_ns.Rdata"))

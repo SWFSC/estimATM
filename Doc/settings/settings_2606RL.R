@@ -272,6 +272,7 @@ other.color        <- 'gray'
 # Set gear type colors
 seine.color <- "white"
 trawl.color <- "black"
+pseudo.color <- "yellow"
 
 # Define species to be analysed -------------------
 ## CPS species

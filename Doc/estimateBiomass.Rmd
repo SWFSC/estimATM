@@ -6651,12 +6651,6 @@ write.csv(be.survey,
           quote = FALSE,row.names = FALSE)
 
 save(be.survey, file = here("Output/biomass_bootstrap_estimates_survey.Rdata"))
-
-if (save.output["core"]) {
-  # Save workspace image to save time during nearshore estimation debugging
-  save.image(file = here("Output/debug_estimATM_core.Rdata"))
-  # load(here("Output/debug_estimATM_core.Rdata"))
-}
 ```  
 
 Estimates of biomass (metric tons (t); mean, lower and upper 95% confidence intervals, CV, and percent of total biomass; n = `r boot.num` bootstrap samples) for all CPS by stratum and within the entire survey area (Stratum = "All"). Stratum distances are in nmi, and stratum areas are nmi^2^. A total of `r nrow(nasc)` acoustic intervals were included in this analysis.  
@@ -6796,6 +6790,14 @@ include_graphics(here("Figs/fig_biomass_histogram_survey.png"))
 ```  
 
 Distribution of biomass estimates (t; n = `r boot.num` bootstrap samples) by species throughout the entire survey area, the mean (solid vertical line), and 95% confidence intervals (dashed vertical lines) (**Note: differences in x- and y-axis limits**).
+
+```{r save-output-core}
+if (save.output["core"]) {
+  # Save workspace image to save time during nearshore estimation debugging
+  save.image(file = here("Output/debug_estimATM_core.Rdata"))
+  # load(here("Output/debug_estimATM_core.Rdata"))
+}
+```
 
 ```{r biomass-bootstrap-estimates-nse, include=FALSE}
 if (extrapolate.biomass) {
@@ -6977,7 +6979,7 @@ If desired, estimate biomass in the offshore region.
 if (estimate.os) {
   source(here("Code/estimateOffshore.R"))
   
-  if (save.output["ns"]) {
+  if (save.output["os"]) {
     # Save workspace image to save time during nearshore estimation debugging
     save.image(file = here("Output/debug_estimATM_offshore.Rdata"))
     # load(here("Output/debug_estimATM_offshore.Rdata"))

@@ -1763,7 +1763,7 @@ for (i in unique(nearshore.spp$scientificName)) {
 #   theme_bw()
 
 # mapview(filter(strata.nearshore, scientificName == "Sardinops sagax"), zcol = "stratum") + mapview(filter(transects.sf, Type == "Nearshore"))
-# mapview(filter(strata.nearshore, scientificName == "Engraulis mordax"), zcol = "stratum")
+# mapview(filter(strata.nearshore, scientificName == "Engraulis mordax"), zcol = "stratum") + mapview(filter(transects.sf, Type == "Nearshore"))
 # mapview(filter(strata.nearshore, scientificName == "Clupea pallasii"), zcol = "stratum")
 # mapview(filter(strata.nearshore, scientificName == "Scomber japonicus"), zcol = "stratum")
 # mapview(filter(strata.nearshore, scientificName == "Trachurus symmetricus"), zcol = "stratum")
@@ -1901,7 +1901,7 @@ nasc.density.ns.sf <- nasc.density.ns %>%
 # mapview(filter(strata.nearshore, scientificName == ns.spp), zcol = "stock") +
 # mapview(filter(nasc.density.ns.sf, scientificName == ns.spp), cex = "bin.level", zcol = "bin.level")
 
-# mapview(filter(strata.nearshore, scientificName == "Sardinops sagax"), zcol = "vessel.name")
+# mapview(filter(strata.nearshore, scientificName == "Sardinops sagax"), zcol = "stratum")
 # mapview(filter(strata.nearshore, scientificName == "Clupea pallasii"), zcol = "vessel.name")
 # mapview(filter(strata.nearshore, scientificName == "Engraulis mordax"), zcol = "vessel.name")
 # mapview(filter(strata.nearshore, scientificName == "Scomber japonicus"), zcol = "vessel.name")
@@ -2218,7 +2218,11 @@ if (exists("abundance.estimates.ns")) rm(abundance.estimates.ns)
 if (exists("survey.summary.ns"))      rm(survey.summary.ns)
 if (exists("catch.summary.ns"))       rm(catch.summary.ns)
 if (exists("stratum.summary.ns"))     rm(stratum.summary.ns)
-if (exists("bootstrap.comp.ns"))     rm(bootstrap.comp.ns)
+if (exists("bootstrap.comp.ns"))      rm(bootstrap.comp.ns)
+
+# Create lists for storing nearshore haul/cluster info
+cluster.final.nearshore <- list()
+haul.final.nearshore    <- list()
 
 # Bootstrap estimates -----------------------------------------------------
 # Generate multiple bootstrap biomass estimates
@@ -2229,7 +2233,6 @@ if (do.bootstrap) {
   spp.counter <- 1
   
   for (i in unique(strata.nearshore$scientificName)) {
-    
     # i = "Engraulis mordax"
     
     if (use.seine.data) {
@@ -2258,6 +2261,10 @@ if (do.bootstrap) {
       haul.final.ns <- haul.final[[i]] %>% 
         mutate(sample.type = "Trawl")
     }
+    
+    # Save species-specific cluster file to list
+    cluster.final.nearshore[[i]] <- cluster.final.ns
+    haul.final.nearshore[[i]]    <- haul.final.ns
     
     # Get vector of lengths from clf.df column names
     L.cols  <- grep("L\\d", names(cluster.final.ns))
@@ -2506,6 +2513,10 @@ if (do.bootstrap) {
   load(here("Output/biomass_bootstrap_est_ns.Rdata"))
   
 }
+
+# Save results
+save(cluster.final.nearshore, haul.final.nearshore,
+     file = here("Output/cluster_length_frequency_nearshore_all.Rdata"))
 
 # Rename scientificName column
 catch.summary.ns <- catch.summary.ns %>% 

@@ -2246,7 +2246,7 @@ if (do.bootstrap) {
         bind_rows(haul.final.seine[[i]]) %>% 
         filter(sample.type %in% catch.source.ns)
       
-      # Add cluster.final.pseudo if use.pseudosets
+      # Add cluster.final.pseudo if use.pseudo sets
       if (use.pseudosets) {
         cluster.final.ns <- cluster.final.ns %>% 
           bind_rows(cluster.final.pseudo[[i]]) 

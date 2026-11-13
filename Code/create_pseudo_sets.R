@@ -246,8 +246,6 @@ for (i in unique(lengths.pseudo$scientificName)) {
             file = paste0(here("Output/haul_length_frequency_pseudo_"), 
                           i, "_",survey.name, ".csv"))
   
-  # RESUME HERE ----------------
-  
   # Add species-specific results to list of results
   cluster.final.pseudo[[i]] <- clf.pseudo.final
   haul.final.pseudo[[i]]    <- hlf.pseudo.final

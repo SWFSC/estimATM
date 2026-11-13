@@ -69,10 +69,9 @@ source(here("Doc/settings", prj.settings))
 save.figs     <- T # Create new figures
 get.db        <- F # Download data from databases (fast; generally TRUE)
 get.nav       <- F # Download Lasker nav data from ERDDAP
-# nav.source    <- "RosePoint" # Navigation data source: ERDDAP or SCS
 get.nav.sh    <- F # Download Shimada nav data from ERDDAP
 get.nav.sd    <- F # Download Saildrone nav data from ERDDAP
-get.nav.ns    <- T # Process data from nearshore vessels
+get.nav.ns    <- T # Process nav data from nearshore vessels (GPX or CSV)
 get.bathy     <- F # Download ETOPO1 bathymetry data in the survey footprint
 extract.bathy <- T # Extract bathymetry for each nav point
 resize.map    <- F # Resize map during survey; if T, uses anticipated bounds of survey area
@@ -155,7 +154,7 @@ if (get.nav.ns) {
     if (exists("nav.ns")) rm(nav.ns)
     
     if (nav.source.ns == "GPX") {
-      # Extract trackline points from GPX file
+      # Extract trackline points from GPX file and downsample at minute resolution
       nav.ns <- read_GPX(here("Data/Nav", seine.gpx.name))$track_points %>% 
         project_sf(crs = 4326) %>% 
         arrange(time) %>% 
@@ -166,6 +165,10 @@ if (get.nav.ns) {
                minute = minute(datetime)) %>% 
         group_by(date, hour, minute) %>% 
         slice(1) %>% 
+        ungroup() 
+      
+      # Compute speeds from time and distances, since speed not present in the GPX data
+      nav.ns <- nav.ns %>% 
         mutate(vessel.name = case_when(
           date(datetime) < nav.break.ns ~ "LBC",
           TRUE ~ "LM")) %>% 
@@ -174,6 +177,7 @@ if (get.nav.ns) {
           dist_m = geosphere::distHaversine(
             cbind(lag(long), lag(lat)), 
             cbind(long, lat)),
+          dist = dist_m/1000,
           # Compute speeds
           speed_mps   = dist_m / time_diff_sec,
           speed_kmh   = speed_mps * 3.6,

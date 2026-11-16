@@ -1744,24 +1744,6 @@ for (i in unique(nearshore.spp$scientificName)) {
   # }
 }
 
-# Identify rows where geometry type is GEOMETRYCOLLECTION
-# is_gc <- st_geometry_type(strata.nearshore) == "GEOMETRYCOLLECTION"
-# not_gc <- !st_geometry_type(strata.nearshore) == "GEOMETRYCOLLECTION"
-# Subset the rows
-# gc_rows <- strata.nearshore[is_gc, ]
-# strata.nearshore <- strata.nearshore[not_gc, ]
-
-# Check results
-# ggplot(strata.nearshore, aes(colour = stock, fill = factor(stratum))) +
-#   geom_sf() +
-#   facet_wrap(~scientificName) +
-#   theme_bw()
-# 
-# ggplot(gc_rows, aes(colour = stock, fill = factor(stratum))) +
-#   geom_sf() +
-#   facet_wrap(~scientificName) +
-#   theme_bw()
-
 # mapview(filter(strata.nearshore, scientificName == "Sardinops sagax"), zcol = "stratum") + mapview(filter(transects.sf, Type == "Nearshore"))
 # mapview(filter(strata.nearshore, scientificName == "Engraulis mordax"), zcol = "stratum") + mapview(filter(transects.sf, Type == "Nearshore"))
 # mapview(filter(strata.nearshore, scientificName == "Clupea pallasii"), zcol = "stratum")

@@ -126,16 +126,18 @@ haul.final.pseudo    <-  list() #hlf.ns.pseudo
 lf.final.pseudo      <-  data.frame() #lf.pseudo.ns
 
 # Subset lengths to include only species present in pseudo sets
-lengths.pseudo <- lengths %>% 
-  filter(haul %in% sets.pseudo$pseudo.haul)
+lengths.pseudo <- lengths #%>% 
+  # filter(haul %in% sets.pseudo$pseudo.haul)
 
 # For each species, calculate length frequencies, combine with clf, and write final file
-for (i in unique(lengths.pseudo$scientificName)) {
+for (i in cps.spp.ns) {
+  # for (i in unique(lengths.pseudo$scientificName)) {
   # Create a data frame for results
   lf.df.pseudo <- data.frame()
   
   for (ii in unique(sets.pseudo$haul)) {
     # i = "Engraulis mordax"
+    # i = "Sardinops sagax"
     #ii = 168
     
     # Get haul corresponding to pseudo.hull[ii]
@@ -145,6 +147,7 @@ for (i in unique(lengths.pseudo$scientificName)) {
     # Define length bins
     lf.breaks <- seq(length.min - 0.5, length.max$sl[length.max$species == i] + 0.5, 1)
     lf.labels <- seq(length.min, length.max$sl[length.max$species == i], 1)
+    
     # Calculate the proportion (histogram density) of individuals in each size class
     # Setting right = F includes X.5 in the lower class (e.g., 14.5 = 14, 14.6 = 15)
     # Length inputs are native lengths (i.e., SL for sardine and anchovy, FL for herring and mackerels)
@@ -154,6 +157,10 @@ for (i in unique(lengths.pseudo$scientificName)) {
                         "Etrumeus acuminatus", "Allosmerus elongatus")) {
       f <- hist(lengths.sub$forkLength_mm/10, breaks = lf.breaks, plot = FALSE, right = FALSE)$density        
     }
+    
+    # Replace NaN values with zeros (i.e., when no specimens present in a given cluster/haul)
+    f[is.nan(f)] <- 0
+    
     # Create a vector of size class
     lf.bin <- lf.breaks[1:length(lf.breaks) - 1]
     # Create a vector of cluster number
@@ -179,6 +186,16 @@ for (i in unique(lengths.pseudo$scientificName)) {
     n.summ.haul.sub <- rbind(n.summ.haul.sub, n.summ.haul.jj)
   }
   
+  # Create df for species with no catch present
+  if (nrow(n.summ.haul.sub) == 0) {
+    n.summ.haul.sub <- data.frame(
+      scientificName = i,
+      haul = sets.pseudo$haul,
+      cluster = sets.pseudo$cluster,
+      num = 0
+    )
+  }
+  
   # Add estimated total number of individuals in each cluster (based on subsample weight) 
   # to the length frequency data frame
   lf.df.pseudo <- left_join(lf.df.pseudo, n.summ.haul.sub) %>% 
@@ -200,6 +217,7 @@ for (i in unique(lengths.pseudo$scientificName)) {
   # Combine length frequency data for plotting later
   lf.final.pseudo <- bind_rows(lf.final.pseudo, lf.df.pseudo)
   
+  if (nrow(lf.df.pseudo) > 0) {
   # Reshape data frame by cluster for adding to clf
   lf.table <- pivot_wider(lf.df.pseudo, id_cols = cluster, names_from = lf.labels, 
                           values_from = counts, values_fn = sum) %>% 
@@ -267,6 +285,7 @@ for (i in unique(lengths.pseudo$scientificName)) {
   ggsave(lf.plot.haul.pseudo, 
          filename = paste0(here("Figs/fig_haul_length_frequency_pseudo_"), i, ".png"),
          height = 7, width = 10)
+  }
 }
 
 # Calculate cluster length frequencies for purse seine data ---------------

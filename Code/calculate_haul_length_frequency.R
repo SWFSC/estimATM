@@ -31,6 +31,10 @@ names(ts.sub.her) <- paste(names(ts.sub.her), "her", sep = ".")
 ts.sub.rher <- filter(ts.summ.h, scientificName == "Etrumeus acuminatus") %>% 
   select(-scientificName)
 names(ts.sub.rher) <- paste(names(ts.sub.rher), "rher", sep = ".") 
+# Subset round herring results
+ts.sub.smelt <- filter(ts.summ.h, scientificName == "Allosmerus elongatus") %>% 
+  select(-scientificName)
+names(ts.sub.smelt) <- paste(names(ts.sub.smelt), "smelt", sep = ".") 
 
 # Combine all TS estimates ----------------------------------------------------
 # Add sardine TS estimates to individual trawls
@@ -47,13 +51,16 @@ hlf <- ungroup(haul.mid) %>%
   # Add herring TS estimates to hlf
   left_join(ts.sub.her,by  = c("haul" = "haul.her")) %>% 
   # Add herring TS estimates to hlf
-  left_join(ts.sub.rher,by  = c("haul" = "haul.rher"))
+  left_join(ts.sub.rher,by  = c("haul" = "haul.rher")) %>% 
+  # Add herring TS estimates to hlf
+  left_join(ts.sub.smelt,by  = c("haul" = "haul.smelt"))
 
 # Calculate total CPS number in each haul
 catch.summ.num.h <- hlf %>% 
   group_by(haul) %>% 
-  summarise(CPS.num = sum(num.sar, num.anch, num.mack, 
-                          num.jack, num.her, num.rher, na.rm = TRUE))
+  summarise(CPS.num = sum(num.sar, num.anch, num.mack, num.jack, 
+                          num.her, num.rher, num.smelt,
+                          na.rm = TRUE))
 
 # Calculate total CPS weight in each cluster
 haul.summ.wt <- catch %>% 
@@ -78,14 +85,16 @@ ts.proportions.h <- hlf %>%
                       num.her     * sigmaindiv.her  +
                       num.mack    * sigmaindiv.mack + 
                       num.jack    * sigmaindiv.jack +
-                      num.rher    * sigmaindiv.rher),
+                      num.rher    * sigmaindiv.rher + 
+                      num.smelt   * sigmaindiv.smelt),
     # Calculate the weighted weight of each species
     weighted.wg  = (meanwg.sar  * num.sar  * sigmawg.sar +
                       meanwg.anch * num.anch * sigmawg.anch + 
                       meanwg.her  * num.her  * sigmawg.her +
                       meanwg.mack * num.mack * sigmawg.mack + 
                       meanwg.jack * num.jack * sigmawg.jack +
-                      meanwg.rher  * num.rher  * sigmawg.rher),
+                      meanwg.rher  * num.rher  * sigmawg.rher +
+                      meanwg.smelt  * num.smelt  * sigmawg.smelt),
     # Calculate the proportion, by number and weight, for each species
     prop.sar     = (num.sar     * sigmaindiv.sar)  / weighted.num,
     prop.sar.wg  = (meanwg.sar  * sigmawg.sar  * num.sar) / weighted.wg,
@@ -98,7 +107,9 @@ ts.proportions.h <- hlf %>%
     prop.her     = (num.her     * sigmaindiv.her)  / weighted.num,
     prop.her.wg  = (meanwg.her  * sigmawg.her  * num.her) / weighted.wg,
     prop.rher    = (num.rher    * sigmaindiv.rher)  / weighted.num,
-    prop.rher.wg = (meanwg.rher * sigmawg.rher  * num.rher) / weighted.wg)
+    prop.rher.wg = (meanwg.rher * sigmawg.rher  * num.rher) / weighted.wg,
+    prop.smelt    = (num.smelt    * sigmaindiv.smelt)  / weighted.num,
+    prop.smelt.wg = (meanwg.smelt * sigmawg.smelt  * num.smelt) / weighted.wg)
 
 # Replace all NaNs with zeros
 ts.proportions.h[atm:::isNaNdf(ts.proportions.h)] <- NA
@@ -119,6 +130,7 @@ hlf$sigmaindiv.jack[hlf$prop.jack == 0] <- 1
 hlf$sigmaindiv.mack[hlf$prop.mack == 0] <- 1
 hlf$sigmaindiv.sar[hlf$prop.sar   == 0] <- 1
 hlf$sigmaindiv.rher[hlf$prop.rher == 0] <- 1
+hlf$sigmaindiv.smelt[hlf$prop.smelt == 0] <- 1
 
 hlf$sigmawg.anch[hlf$prop.anch    == 0] <- 1
 hlf$sigmawg.her[hlf$prop.her      == 0] <- 1
@@ -126,6 +138,7 @@ hlf$sigmawg.jack[hlf$prop.jack    == 0] <- 1
 hlf$sigmawg.mack[hlf$prop.mack    == 0] <- 1
 hlf$sigmawg.sar[hlf$prop.sar      == 0] <- 1
 hlf$sigmawg.rher[hlf$prop.rher    == 0] <- 1
+hlf$sigmawg.smelt[hlf$prop.smelt  == 0] <- 1
 
 # Save to file
 write_csv(hlf, file = here("Output/hlf_ts_proportions.csv"))
@@ -137,14 +150,14 @@ save(hlf, file = here("Output/hlf_ts_proportions.Rdata"))
 acoustic.prop.indiv.h <- hlf %>%
   filter(!is.na(CPS.wg)) %>% 
   select(haul, lat, long, prop.anch, prop.jack, prop.her,
-         prop.mack, prop.sar, prop.rher) %>% 
+         prop.mack, prop.rher, prop.sar, prop.smelt) %>% 
   replace(. == 0, 0.0000001) %>% 
   project_df(to = crs.proj)
 
 acoustic.prop.wg.h <- hlf %>%
   filter(!is.na(CPS.wg)) %>% 
   select(haul, lat, long, prop.anch.wg, prop.jack.wg, prop.her.wg,
-         prop.mack.wg, prop.sar.wg, prop.rher.wg) %>% 
+         prop.mack.wg, prop.rher.wg, prop.sar.wg, prop.smelt.wg) %>% 
   replace(. == 0, 0.0000001) %>% 
   project_df(to = crs.proj)
 
@@ -160,7 +173,8 @@ if (save.figs) {
     geom_scatterpie(data = acoustic.prop.indiv.h, 
                     aes(X, Y, group = haul, r = pie.radius),
                     cols = c("prop.anch","prop.her","prop.jack",
-                             "prop.mack","prop.rher","prop.sar"),
+                             "prop.mack","prop.rher","prop.sar",
+                             "prop.smelt"),
                     color = 'black', alpha = 0.8) +
     # Plot empty trawl locations
     geom_point(data = haul.zero, aes(X, Y),
@@ -168,9 +182,9 @@ if (save.figs) {
     # Configure trawl scale
     scale_fill_manual(name = 'Species',
                       labels = c("Anchovy", "P. herring", "J. mackerel",
-                                 "P. mackerel", "R. herring", "Sardine"),
+                                 "P. mackerel", "R. herring", "Sardine", "Smelt"),
                       values = c(anchovy.color, pac.herring.color, jack.mack.color,  
-                                 pac.mack.color, rnd.herring.color, sardine.color)) +
+                                 pac.mack.color, rnd.herring.color, sardine.color, smelt.color)) +
     # Plot panel label
     ggtitle("Acoustic Proportions (Number) by Haul") +
     coord_sf(crs = crs.proj, 
@@ -188,7 +202,8 @@ if (save.figs) {
     geom_scatterpie(data = acoustic.prop.wg.h, 
                     aes(X, Y, group = haul, r = pie.radius),
                     cols = c("prop.anch.wg","prop.her.wg","prop.jack.wg",
-                             "prop.mack.wg", "prop.rher.wg", "prop.sar.wg"),
+                             "prop.mack.wg", "prop.rher.wg", "prop.sar.wg", 
+                             "prop.smelt.wg"),
                     color = 'black', alpha = 0.8) +
     # Plot empty trawl locations
     geom_point(data = haul.zero, aes(X, Y),
@@ -196,9 +211,9 @@ if (save.figs) {
     # Configure trawl scale
     scale_fill_manual(name = 'Species',
                       labels = c("Anchovy", "P. herring", "J. mackerel",
-                                 "P. mackerel", "Sardine"),
+                                 "P. mackerel", "R. herring", "Sardine", "Smelt"),
                       values = c(anchovy.color, pac.herring.color, jack.mack.color,  
-                                 pac.mack.color, rnd.herring.color, sardine.color)) +
+                                 pac.mack.color, rnd.herring.color, sardine.color, smelt.color)) +
     # Plot panel label
     ggtitle("Acoustic Proportions (Weight) by Haul") +
     coord_sf(crs = crs.proj, 

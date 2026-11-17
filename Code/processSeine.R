@@ -89,6 +89,8 @@ set.lengths <- set.lengths.all %>%
   filter(key.set %in% sets$key.set) %>% 
   mutate(
     totalLength_mm = case_when(
+      scientificName == "Allosmerus elongatus" ~ 
+        convert_length("Allosmerus elongatus", .$forkLength_mm, "FL", "TL"),
       scientificName == "Clupea pallasii" ~
         convert_length("Clupea pallasii", .$forkLength_mm, "FL", "TL"),
       scientificName == "Engraulis mordax" ~
@@ -174,7 +176,6 @@ lw.plot.ns <- ggplot() +
 ggsave(lw.plot.ns, filename = here("Figs/fig_LW_plots_nearshore.png"),
        width = 10, height = 7) 
 
-
 # Summarize catch data ------------------------------------------------
 set.catch.summ <- set.catch %>%
   select(key.set, scientificName, totalWeight) %>% 
@@ -210,7 +211,7 @@ if (!has_name(set.summ.wt, "Scomber japonicus"))     {set.summ.wt$`Scomber japon
 if (!has_name(set.summ.wt, "Trachurus symmetricus")) {set.summ.wt$`Trachurus symmetricus` <- 0}
 if (!has_name(set.summ.wt, "Clupea pallasii"))       {set.summ.wt$`Clupea pallasii`       <- 0}
 if (!has_name(set.summ.wt, "Etrumeus acuminatus"))   {set.summ.wt$`Etrumeus acuminatus`   <- 0}
-if (!has_name(set.summ.wt, "Allosmerus elongatus"))   {set.summ.wt$`Allosmerus elongatus`   <- 0}
+if (!has_name(set.summ.wt, "Allosmerus elongatus"))  {set.summ.wt$`Allosmerus elongatus`   <- 0}
 if (!has_name(set.summ.wt, "Atherinopsis californiensis")) {set.summ.wt$`Atherinopsis californiensis` <- 0}
 if (!has_name(set.summ.wt, "Other"))                 {set.summ.wt$`Other` <- 0}
 
@@ -221,7 +222,7 @@ if (!has_name(set.summ.wt.deep, "Scomber japonicus"))     {set.summ.wt.deep$`Sco
 if (!has_name(set.summ.wt.deep, "Trachurus symmetricus")) {set.summ.wt.deep$`Trachurus symmetricus` <- 0}
 if (!has_name(set.summ.wt.deep, "Clupea pallasii"))       {set.summ.wt.deep$`Clupea pallasii`       <- 0}
 if (!has_name(set.summ.wt.deep, "Etrumeus acuminatus"))   {set.summ.wt.deep$`Etrumeus acuminatus`   <- 0}
-if (!has_name(set.summ.wt, "Allosmerus elongatus"))   {set.summ.wt$`Allosmerus elongatus`   <- 0}
+if (!has_name(set.summ.wt.deep, "Allosmerus elongatus"))  {set.summ.wt.deep$`Allosmerus elongatus`   <- 0}
 if (!has_name(set.summ.wt.deep, "Atherinopsis californiensis")) {set.summ.wt.deep$`Atherinopsis californiensis` <- 0}
 if (!has_name(set.summ.wt.deep, "Other"))                 {set.summ.wt.deep$`Other` <- 0}
 
@@ -261,6 +262,7 @@ set.summ.wt.deep <- set.summ.wt.deep %>%
          "PacMack"    = "Scomber japonicus",
          "JackMack"   = "Trachurus symmetricus",
          "RndHerring" = "Etrumeus acuminatus",
+         "Smelt"      = "Allosmerus elongatus",
          "Other"      = "Other") %>%
   left_join(select(set.clusters, key.set, cluster, haul)) %>%
   select(-vessel.name, -lat, -long, -AllCPS) %>%
@@ -274,7 +276,7 @@ set.summ.wt.deep <- set.summ.wt.deep %>%
 set.pie <- set.summ.wt %>% 
   arrange(cluster) %>% 
   select(key.set, cluster, haul, vessel.name, long, lat, Anchovy, JackMack, 
-         Jacksmelt, Other, PacHerring, PacMack, RndHerring, Sardine, AllCPS, sample.type) %>% 
+         Jacksmelt, Other, PacHerring, PacMack, RndHerring, Sardine, Smelt, AllCPS, sample.type) %>% 
   project_df(to = crs.proj) %>% 
   mutate(
     sample.type = "Purse seine",
@@ -286,13 +288,14 @@ set.pie <- set.summ.wt %>%
                   'P. herring:', PacHerring, 'kg<br/>',
                   'P. mackerel:', PacMack, 'kg<br/>',
                   'R. herring:', RndHerring, 'kg<br/>',
+                  'Smelt:', Smelt, 'kg<br/>',
                   'Other:', Other, 'kg<br/>', 
                   'All CPS:', AllCPS, 'kg'))
 
 set.pie.deep <- set.summ.wt.deep %>%
   arrange(cluster) %>%
   select(key.set, cluster, haul, vessel.name, long, lat, Anchovy, JackMack,
-         Jacksmelt, Other, PacHerring, PacMack, RndHerring, Sardine, AllCPS, sample.type) %>%
+         Jacksmelt, Other, PacHerring, PacMack, RndHerring, Sardine, Smelt, AllCPS, sample.type) %>%
   project_df(to = 3310) %>%
   mutate(
     sample.type = "Purse seine",
@@ -304,6 +307,7 @@ set.pie.deep <- set.summ.wt.deep %>%
                   'P. herring:', PacHerring, 'kg<br/>',
                   'P. mackerel:', PacMack, 'kg<br/>',
                   'R. herring:', RndHerring, 'kg<br/>',
+                  'Smelt:', Smelt, 'kg<br/>',
                   'Other:', Other, 'kg<br/>',
                   'All CPS:', AllCPS, 'kg'))
 
@@ -351,7 +355,7 @@ seine.summ <- set.summ.wt %>%
                    Latitude = lat, Longitude = long)) %>%
   select(Vessel, Set = haul, Date, Latitude, Longitude, "N. Anchovy" = Anchovy, "P. Sardine" = Sardine, 
          "P. Mackerel" = PacMack, "J. Mackerel" = JackMack, "P. Herring" = PacHerring, 
-         "R. Herring" = RndHerring, "Other" = Other, Jacksmelt, "All CPS" = AllCPS) %>% 
+         "R. Herring" = RndHerring, "Other" = Other, Jacksmelt, Smelt, "All CPS" = AllCPS) %>% 
   # mutate(Date = format(Date, "%Y/%m/%d %H:%M:%S")) %>% 
   arrange(desc(Vessel), Set)
 
@@ -360,7 +364,7 @@ seine.summ.deep <- set.summ.wt.deep %>%
                    Latitude = lat, Longitude = long)) %>%
   select(Vessel, Set = haul, Date, Latitude, Longitude, "N. Anchovy" = Anchovy, "P. Sardine" = Sardine,
          "P. Mackerel" = PacMack, "J. Mackerel" = JackMack, "P. Herring" = PacHerring,
-         "R. Herring" = RndHerring, "Other" = Other, Jacksmelt, "All CPS" = AllCPS) %>%
+         "R. Herring" = RndHerring, "Other" = Other, Jacksmelt, Smelt, "All CPS" = AllCPS) %>%
   # mutate(Date = format(Date, "%m/%d/%Y %H:%M")) %>%
   arrange(desc(Vessel), Set)
 
@@ -432,9 +436,9 @@ l.summ.set.deep <- lengths.seine.deep %>%
 
 # Create a data frame with abbreviations
 trawl.ts.names <- data.frame(
-  scientificName = c("Clupea pallasii","Engraulis mordax","Etrumeus acuminatus", "Other",
+  scientificName = c("Allosmerus elongatus","Clupea pallasii","Engraulis mordax","Etrumeus acuminatus", "Other",
                      "Sardinops sagax","Scomber japonicus","Trachurus symmetricus"),
-  shortName      = c("her","anch","rher","other","sar",
+  shortName      = c("smelt","her","anch","rher","other","sar",
                      "mack","jack"))
 
 # Remove seine TS data
@@ -532,6 +536,10 @@ names(ts.sub.her.seine) <- paste(names(ts.sub.her.seine), "her", sep = ".")
 ts.sub.rher.seine <- filter(ts.summ.seine, scientificName == "Etrumeus acuminatus") %>%
   select(-scientificName)
 names(ts.sub.rher.seine) <- paste(names(ts.sub.rher.seine), "rher", sep = ".")
+# Subset whitebait smelt results
+ts.sub.smelt.seine <- filter(ts.summ.seine, scientificName == "Allosmerus elongatus") %>%
+  select(-scientificName)
+names(ts.sub.smelt.seine) <- paste(names(ts.sub.smelt.seine), "smelt", sep = ".")
 # Subset "other" results
 ts.sub.other.seine <- filter(ts.summ.seine, scientificName == "Other") %>%
   select(-scientificName)
@@ -566,6 +574,17 @@ if (nrow(ts.sub.rher.seine) > 0) {
   clf.seine$sigmaindiv.rher <- NA
 }
 
+# Add smelt TS estimates to clf, if present in nearshore catches
+if (nrow(ts.sub.smelt.seine) > 0) {
+  clf.seine <- clf.seine %>%
+    left_join(ts.sub.smelt.seine, by = c("cluster" = "cluster.smelt", "haul" = "haul.smelt"))
+} else {
+  clf.seine$meanwg.smelt     <- NA
+  clf.seine$num.smelt        <- NA
+  clf.seine$sigmawg.smelt    <- NA
+  clf.seine$sigmaindiv.smelt <- NA
+}
+
 # Do deep sets
 # Subset sardine results
 ts.sub.sar.seine <- filter(ts.summ.seine.deep, scientificName == "Sardinops sagax") %>%
@@ -590,7 +609,10 @@ names(ts.sub.her.seine) <- paste(names(ts.sub.her.seine), "her", sep = ".")
 # Subset round herring results
 ts.sub.rher.seine <- filter(ts.summ.seine.deep, scientificName == "Etrumeus acuminatus") %>%
   select(-scientificName)
-names(ts.sub.rher.seine) <- paste(names(ts.sub.rher.seine), "rher", sep = ".")
+# Subset round herring results
+ts.sub.smelt.seine <- filter(ts.summ.seine.deep, scientificName == "Allosmerus elongatus") %>%
+  select(-scientificName)
+names(ts.sub.smelt.seine) <- paste(names(ts.sub.smelt.seine), "smelt", sep = ".")
 # Subset "other" results
 ts.sub.other.seine <- filter(ts.summ.seine.deep, scientificName == "Other") %>%
   select(-scientificName)
@@ -625,17 +647,28 @@ if (nrow(ts.sub.rher.seine) > 0) {
   clf.seine.deep$sigmaindiv.rher <- NA
 }
 
+if (nrow(ts.sub.smelt.seine) > 0) {
+  clf.seine.deep <- clf.seine.deep %>%
+    # Add round herring TS estimates to clf
+    left_join(ts.sub.smelt.seine, by = c("cluster" = "cluster.smelt", "haul" = "haul.smelt"))
+} else {
+  clf.seine.deep$meanwg.smelt     <- NA
+  clf.seine.deep$num.smelt        <- NA
+  clf.seine.deep$sigmawg.smelt    <- NA
+  clf.seine.deep$sigmaindiv.smelt <- NA
+}
+
 # Calculate total CPS number in each cluster
 catch.summ.num.seine <- clf.seine %>%
   group_by(cluster, haul) %>%
-  summarise(CPS.num = sum(num.sar, num.anch, num.mack,
-                          num.jack, num.her, num.rher, num.other,
+  summarise(CPS.num = sum(num.sar, num.anch, num.mack, num.jack, 
+                          num.her, num.rher, num.smelt, num.other,
                           na.rm = TRUE))
 
 catch.summ.num.seine.deep <- clf.seine.deep %>%
   group_by(cluster, haul) %>%
-  summarise(CPS.num = sum(num.sar, num.anch, num.mack,
-                          num.jack, num.her, num.rher, num.other,
+  summarise(CPS.num = sum(num.sar, num.anch, num.mack, num.jack, 
+                          num.her, num.rher, num.smelt, num.other,
                           na.rm = TRUE))
 
 # Calculate total CPS weight in each cluster
@@ -668,6 +701,7 @@ ts.proportions.seine <- clf.seine %>%
                       num.mack    * sigmaindiv.mack +
                       num.jack    * sigmaindiv.jack +
                       num.rher    * sigmaindiv.rher +
+                      num.smelt   * sigmaindiv.smelt +
                       num.other   * sigmaindiv.other),
     # Calculate the weighted weight of each species
     weighted.wg  = (meanwg.sar  * num.sar  * sigmawg.sar +
@@ -676,6 +710,7 @@ ts.proportions.seine <- clf.seine %>%
                       meanwg.mack  * num.mack  * sigmawg.mack +
                       meanwg.jack  * num.jack  * sigmawg.jack +
                       meanwg.rher  * num.rher  * sigmawg.rher +
+                      meanwg.smelt * num.smelt * sigmawg.smelt +
                       meanwg.other * num.other * sigmawg.other),
     # Calculate the proportion, by number and weight, for each species
     prop.sar     = (num.sar     * sigmaindiv.sar)  / weighted.num,
@@ -690,6 +725,8 @@ ts.proportions.seine <- clf.seine %>%
     prop.her.wg  = (meanwg.her  * sigmawg.her  * num.her) / weighted.wg,
     prop.rher    = (num.rher    * sigmaindiv.rher)  / weighted.num,
     prop.rher.wg = (meanwg.rher * sigmawg.rher  * num.rher) / weighted.wg,
+    prop.smelt    = (num.smelt  * sigmaindiv.smelt)  / weighted.num,
+    prop.smelt.wg = (meanwg.smelt * sigmawg.smelt  * num.smelt) / weighted.wg,
     prop.other   = (num.other   * sigmaindiv.other)  / weighted.num,
     prop.other.wg = (meanwg.other * sigmawg.other  * num.other) / weighted.wg) %>%
   replace(is.na(.), 0)
@@ -715,6 +752,7 @@ clf.seine$sigmaindiv.jack[clf.seine$prop.jack == 0]   <- 1
 clf.seine$sigmaindiv.mack[clf.seine$prop.mack == 0]   <- 1
 clf.seine$sigmaindiv.sar[clf.seine$prop.sar   == 0]   <- 1
 clf.seine$sigmaindiv.rher[clf.seine$prop.rher == 0]   <- 1
+clf.seine$sigmaindiv.smelt[clf.seine$prop.smelt == 0] <- 1
 clf.seine$sigmaindiv.other[clf.seine$prop.other == 0] <- 1
 
 clf.seine$sigmawg.anch[clf.seine$prop.anch    == 0]   <- 1
@@ -723,6 +761,7 @@ clf.seine$sigmawg.jack[clf.seine$prop.jack    == 0]   <- 1
 clf.seine$sigmawg.mack[clf.seine$prop.mack    == 0]   <- 1
 clf.seine$sigmawg.sar[clf.seine$prop.sar      == 0]   <- 1
 clf.seine$sigmawg.rher[clf.seine$prop.rher    == 0]   <- 1
+clf.seine$sigmawg.smelt[clf.seine$prop.smelt  == 0]   <- 1
 clf.seine$sigmawg.other[clf.seine$prop.other  == 0]   <- 1
 
 # Save to file
@@ -739,6 +778,7 @@ ts.proportions.seine.deep <- clf.seine.deep %>%
                       num.mack    * sigmaindiv.mack +
                       num.jack    * sigmaindiv.jack +
                       num.rher    * sigmaindiv.rher +
+                      num.smelt   * sigmaindiv.smelt +
                       num.other   * sigmaindiv.other),
     # Calculate the weighted weight of each species
     weighted.wg  = (meanwg.sar  * num.sar  * sigmawg.sar +
@@ -747,6 +787,7 @@ ts.proportions.seine.deep <- clf.seine.deep %>%
                       meanwg.mack  * num.mack  * sigmawg.mack +
                       meanwg.jack  * num.jack  * sigmawg.jack +
                       meanwg.rher  * num.rher  * sigmawg.rher +
+                      meanwg.smelt * num.smelt * sigmawg.smelt +
                       meanwg.other * num.other * sigmawg.other),
     # Calculate the proportion, by number and weight, for each species
     prop.sar     = (num.sar     * sigmaindiv.sar)  / weighted.num,
@@ -761,6 +802,8 @@ ts.proportions.seine.deep <- clf.seine.deep %>%
     prop.her.wg  = (meanwg.her  * sigmawg.her  * num.her) / weighted.wg,
     prop.rher    = (num.rher    * sigmaindiv.rher)  / weighted.num,
     prop.rher.wg = (meanwg.rher * sigmawg.rher  * num.rher) / weighted.wg,
+    prop.smelt    = (num.smelt  * sigmaindiv.smelt)  / weighted.num,
+    prop.smelt.wg = (meanwg.smelt * sigmawg.smelt  * num.smelt) / weighted.wg,
     prop.other   = (num.other   * sigmaindiv.other)  / weighted.num,
     prop.other.wg = (meanwg.other * sigmawg.other  * num.other) / weighted.wg) %>%
   replace(is.na(.), 0)
@@ -786,6 +829,7 @@ clf.seine.deep$sigmaindiv.jack[clf.seine.deep$prop.jack == 0]   <- 1
 clf.seine.deep$sigmaindiv.mack[clf.seine.deep$prop.mack == 0]   <- 1
 clf.seine.deep$sigmaindiv.sar[clf.seine.deep$prop.sar   == 0]   <- 1
 clf.seine.deep$sigmaindiv.rher[clf.seine.deep$prop.rher == 0]   <- 1
+clf.seine.deep$sigmaindiv.smelt[clf.seine.deep$prop.smelt == 0] <- 1
 clf.seine.deep$sigmaindiv.other[clf.seine.deep$prop.other == 0] <- 1
 
 clf.seine.deep$sigmawg.anch[clf.seine.deep$prop.anch    == 0]   <- 1
@@ -794,6 +838,7 @@ clf.seine.deep$sigmawg.jack[clf.seine.deep$prop.jack    == 0]   <- 1
 clf.seine.deep$sigmawg.mack[clf.seine.deep$prop.mack    == 0]   <- 1
 clf.seine.deep$sigmawg.sar[clf.seine.deep$prop.sar      == 0]   <- 1
 clf.seine.deep$sigmawg.rher[clf.seine.deep$prop.rher    == 0]   <- 1
+clf.seine.deep$sigmawg.smelt[clf.seine.deep$prop.smelt  == 0]   <- 1
 clf.seine.deep$sigmawg.other[clf.seine.deep$prop.other  == 0]   <- 1
 
 # Save to file
@@ -830,7 +875,8 @@ for (i in cps.spp.ns) {
     # Length inputs are native lengths (i.e., SL for sardine and anchovy, FL for herring and meckerels)
     if (i %in% c("Sardinops sagax", "Engraulis mordax")) {
       f <- hist(lengths.sub$standardLength_mm/10, breaks = lf.breaks, plot = F, right = F)$density
-    } else if (i %in% c("Scomber japonicus", "Trachurus symmetricus", "Clupea pallasii")) {
+    } else if (i %in% c("Scomber japonicus", "Trachurus symmetricus", "Clupea pallasii",
+                        "Etrumeus acuminatus", "Allosmerus elongatus")) {
       f <- hist(lengths.sub$forkLength_mm/10, breaks = lf.breaks, plot = F, right = F)$density
     }
     
@@ -874,7 +920,8 @@ for (i in cps.spp.ns) {
   lf.final.seine <- bind_rows(lf.final.seine, lf.df.seine)
   
   # Reshape data frame by cluster for adding to clf
-  lf.table.seine <- pivot_wider(lf.df.seine, id_cols = cluster, names_from = lf.labels, values_from = counts, values_fn = sum) %>% 
+  lf.table.seine <- pivot_wider(lf.df.seine, id_cols = cluster, 
+                                names_from = lf.labels, values_from = counts, values_fn = sum) %>% 
     rowwise(cluster) %>%
     mutate('(all)' = sum(c_across(all_of(lf.labels)))) %>% 
     arrange(cluster)
@@ -954,7 +1001,8 @@ for (i in cps.spp.ns) {
     # Length inputs are native lengths (i.e., SL for sardine and anchovy, FL for herring and meckerels)
     if (i %in% c("Sardinops sagax", "Engraulis mordax")) {
       f <- hist(lengths.sub$standardLength_mm/10, breaks = lf.breaks, plot = F, right = F)$density
-    } else if (i %in% c("Scomber japonicus", "Trachurus symmetricus", "Clupea pallasii")) {
+    } else if (i %in% c("Scomber japonicus", "Trachurus symmetricus", "Clupea pallasii",
+                        "Etrumeus acuminatus", "Allosmerus elongatus")) {
       f <- hist(lengths.sub$forkLength_mm/10, breaks = lf.breaks, plot = F, right = F)$density
     }
     

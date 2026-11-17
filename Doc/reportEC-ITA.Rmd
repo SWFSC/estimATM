@@ -17,7 +17,8 @@ if (!require("pak")) install.packages("pak")
 # Install and load required packages from CRAN ---------------------------------
 pacman::p_load(tidyverse,swfscMisc,lubridate,cowplot,here,marmap,fs,sf, odbc,
                mapview,mapdata,photobiology,ggmap,knitr,bookdown,tcltk,RSQLite,
-               rnaturalearth,ggspatial,kableExtra,geosphere,janitor,DT,xts,xml2)
+               rnaturalearth,ggspatial,kableExtra,geosphere,janitor,DT,xts,xml2,
+               tmaptools)
 
 # Install and load required packages from Github -------------------------------
 if (!require("atm")) pak::pkg_install("SWFSC/atm")
@@ -68,10 +69,10 @@ source(here("Doc/settings", prj.settings))
 save.figs     <- T # Create new figures
 get.db        <- F # Download data from databases (fast; generally TRUE)
 get.nav       <- F # Download Lasker nav data from ERDDAP
-nav.source    <- "RosePoint" # Navigation data source: ERDDAP or SCS
+# nav.source    <- "RosePoint" # Navigation data source: ERDDAP or SCS
 get.nav.sh    <- F # Download Shimada nav data from ERDDAP
 get.nav.sd    <- F # Download Saildrone nav data from ERDDAP
-get.nav.ns    <- F # Process data from nearshore vessels
+get.nav.ns    <- T # Process data from nearshore vessels
 get.bathy     <- F # Download ETOPO1 bathymetry data in the survey footprint
 extract.bathy <- T # Extract bathymetry for each nav point
 resize.map    <- F # Resize map during survey; if T, uses anticipated bounds of survey area
@@ -153,67 +154,97 @@ if (get.nav.ns) {
     # Remove existing nav data
     if (exists("nav.ns")) rm(nav.ns)
     
-    for (i in nav.vessels.ns) {
-      if (dir_exists(file.path(here("Data/Backscatter", i)))) {
-        # List all CSV files
-        nav.files <- dir_ls(file.path(survey.dir[i], 
-                                      nasc.dir[i]), 
-                            regexp = nasc.pattern.cps[i],
-                            recurse = nasc.recurse[i],
-                            ignore.case = TRUE)
-        
-        # Remove existing nav.vessel.ns
-        if (exists("nav.vessel.ns")) rm(nav.vessel.ns)
-        
-        # Create or load vessel nasc data
-        if (length(nav.files) > 0) {
-          # Configure progress bar
-          pb <- tkProgressBar("R Progress Bar", "CSV File Processing", 0, 100, 0)
+    if (nav.source.ns == "GPX") {
+      # Extract trackline points from GPX file
+      nav.ns <- read_GPX(here("Data/Nav", seine.gpx.name))$track_points %>% 
+        project_sf(crs = 4326) %>% 
+        arrange(time) %>% 
+        select(datetime = time, lat = Y, long = X) %>% 
+        mutate(datetime = force_tz(datetime, "UTC")) %>%
+        mutate(date   = date(datetime),
+               hour   = hour(datetime),
+               minute = minute(datetime)) %>% 
+        group_by(date, hour, minute) %>% 
+        slice(1) %>% 
+        mutate(vessel.name = case_when(
+          date(datetime) < nav.break.ns ~ "LBC",
+          TRUE ~ "LM")) %>% 
+        mutate(
+          time_diff_sec = as.numeric(difftime(datetime, lag(datetime), units = "secs")),
+          dist_m = geosphere::distHaversine(
+            cbind(lag(long), lag(lat)), 
+            cbind(long, lat)),
+          # Compute speeds
+          speed_mps   = dist_m / time_diff_sec,
+          speed_kmh   = speed_mps * 3.6,
+          speed_knots = speed_kmh / 1.852)  %>%  
+        mutate(SOG = case_when(
+          speed_mps > 6.17333 ~ NA,
+          TRUE ~ speed_mps))
+    } else {
+      # Get nav data from backscatter files (CSV)
+      for (i in nav.vessels.ns) {
+        if (dir_exists(file.path(here("Data/Backscatter", i)))) {
+          # List all CSV files
+          nav.files <- dir_ls(file.path(survey.dir[i], 
+                                        nasc.dir[i]), 
+                              regexp = nasc.pattern.cps[i],
+                              recurse = nasc.recurse[i],
+                              ignore.case = TRUE)
           
-          # Process all .CSV files
-          for (ii in seq_along(nav.files)) {
-            # Extract vessel nasc
-            nav.vessel.ns.temp <- extract_csv(nav.files[ii]) %>% 
-              mutate(vessel.name = i,
-                     sounder = sounder.type[i],
-                     transect = str_replace(transect, nasc.pattern.cps[i],""),
-                     dist = c(0,diff(dist_m))/1000)
+          # Remove existing nav.vessel.ns
+          if (exists("nav.vessel.ns")) rm(nav.vessel.ns)
+          
+          # Create or load vessel nasc data
+          if (length(nav.files) > 0) {
+            # Configure progress bar
+            pb <- tkProgressBar("R Progress Bar", "CSV File Processing", 0, 100, 0)
             
-            # Combine results
-            if (exists("nav.vessel.ns")) {
-              nav.vessel.ns <- bind_rows(nav.vessel.ns, nav.vessel.ns.temp)
-            } else {
-              nav.vessel.ns <- nav.vessel.ns.temp
+            # Process all .CSV files
+            for (ii in seq_along(nav.files)) {
+              # Extract vessel nasc
+              nav.vessel.ns.temp <- extract_csv(nav.files[ii]) %>% 
+                mutate(vessel.name = i,
+                       sounder = sounder.type[i],
+                       transect = str_replace(transect, nasc.pattern.cps[i],""),
+                       dist = c(0,diff(dist_m))/1000)
+              
+              # Combine results
+              if (exists("nav.vessel.ns")) {
+                nav.vessel.ns <- bind_rows(nav.vessel.ns, nav.vessel.ns.temp)
+              } else {
+                nav.vessel.ns <- nav.vessel.ns.temp
+              }
+              
+              # Update the progress bar
+              pb.prog <- round(ii/length(nav.files)*100)
+              info <- sprintf("%d%% done", pb.prog)
+              setTkProgressBar(pb, pb.prog, sprintf("CSV processing - %s (%s)", i, info), info)
             }
             
-            # Update the progress bar
-            pb.prog <- round(ii/length(nav.files)*100)
-            info <- sprintf("%d%% done", pb.prog)
-            setTkProgressBar(pb, pb.prog, sprintf("CSV processing - %s (%s)", i, info), info)
-          }
-          
-          # Close progress bar
-          close(pb)
-          
-          # Save/load nav.vessel.ns (for debugging)
-          saveRDS(nav.vessel.ns, 
-                  file = here("Data/Nav",  
-                              paste0("nav_vessel_", i, ".rds")))
-          
-          # Remove bad intervals
-          nav.vessel.ns <- nav.vessel.ns %>% 
-            filter(lat != 999, long != 999)
-          
-          # Save original transect name before modifying
-          # Convert date and time to POSIXct
-          nav.vessel.ns <- nav.vessel.ns %>% 
-            mutate(datetime      = ymd_hms(paste(date, time), tz = "UTC"))
-          
-          # Combine results from different vessels
-          if (exists("nav.ns")) {
-            nav.ns <- bind_rows(nav.ns, nav.vessel.ns)
-          } else {
-            nav.ns <- nav.vessel.ns
+            # Close progress bar
+            close(pb)
+            
+            # Save/load nav.vessel.ns (for debugging)
+            saveRDS(nav.vessel.ns, 
+                    file = here("Data/Nav",  
+                                paste0("nav_vessel_", i, ".rds")))
+            
+            # Remove bad intervals
+            nav.vessel.ns <- nav.vessel.ns %>% 
+              filter(lat != 999, long != 999)
+            
+            # Save original transect name before modifying
+            # Convert date and time to POSIXct
+            nav.vessel.ns <- nav.vessel.ns %>% 
+              mutate(datetime      = ymd_hms(paste(date, time), tz = "UTC"))
+            
+            # Combine results from different vessels
+            if (exists("nav.ns")) {
+              nav.ns <- bind_rows(nav.ns, nav.vessel.ns)
+            } else {
+              nav.ns <- nav.vessel.ns
+            }
           }
         }
       }  
@@ -222,11 +253,14 @@ if (get.nav.ns) {
     # Convert nearshore nav to spatial
     nav.ns.sf <- st_as_sf(nav.ns, coords = c("long","lat"), crs = crs.geog)
     
-    nav.ns.paths.sf <- nav.ns.sf %>% 
+    nav.ns.paths.sf <- nav.ns.sf %>%
+      arrange(datetime) %>% 
       group_by(vessel.name) %>% 
       summarise(do_union = FALSE) %>% 
       st_cast("LINESTRING") %>% 
       mutate(tracklength = st_length(.))
+    
+    # mapview(nav.ns.paths.sf, zcol = "vessel.name")
     
     #Save processed nav data
     save(nav.ns, nav.ns.sf, nav.ns.paths.sf, file = here("Data/Nav/nav_data_nearshore.Rdata"))

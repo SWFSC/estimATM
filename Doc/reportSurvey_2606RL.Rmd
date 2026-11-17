@@ -93,7 +93,7 @@ if (is.null(doc.name)) {doc.name <- "estimateBiomass.Rmd"}
 # User-defined loop controls
 process.csv      <- F # Read CSV files for summarizing NASC
 get.db           <- F # Get trawl data
-get.nav          <- T # Get nav data
+get.nav          <- F # Get nav data
 combine.regions  <- T # Combine core and nearshore biomass plots
 process.cal      <- T # Process, format, and plot echosounder calibration results
 save.figs        <- T # Save figures
@@ -1049,7 +1049,7 @@ The core region of the `r tolower(survey.season)` `r survey.year` survey spanned
 
 The nearshore region spanned an area from 5 m depth to approximately 5 nmi from the continental coast, or 2.5 nmi from the Santa Cruz and Santa Catalina Islands, between San Diego and Cape Flattery. _Long Beach Carnage_ surveyed from approximately San Diego to Santa Cruz, CA, and around the Santa Cruz and Santa Catalina Islands, completing `r nrow(nasc.summ.lbc.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lbc.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LBC"]` purse-seine sets during `r das.lbc` DAS (**Fig. \@ref(fig:nasc-seine-lbc)**). _Lisa Marie_ surveyed from Santa Cruz to Cape Flattery, WA completing `r nrow(nasc.summ.lm.ns)` east-west transects totaling `r sprintf("%.0f",sum(nasc.summ.lm.ns$distance))` nmi and `r set.summ$n[set.summ$vessel.name == "LM"]` purse-seine sets during `r das.lm` DAS (**Fig. \@ref(fig:nasc-seine-lm)**)[**NEED KEVIN TO CREATE THESE PLOTS**].
 
-## Core area survey aboard _`r survey.vessel`_
+### Core area survey aboard _`r survey.vessel`_
 
 <!-- https://docs.google.com/document/d/1brlI4uXMfdw5mfewRfdAoZAE4WgbCdjrjqkhapuuV6U/edit?tab=t.0 -->
 
@@ -1069,12 +1069,12 @@ On 26 July, _`r survey.vessel`_ departed from Alameda at 1830 to begin Leg 3. On
 
 On 23 August, after a 9-day delay to repair leaks in the main propulsion motor aft heat exchanger, _`r survey.vessel`_ departed from MOC-P in Newport at 1630 and began the transit to transect 074. To mitigate the loss of sea days, the remaining transects were reduced in length by approximately 35% and the spacing between transects was increased from 12.5 to 15 nmi. Acoustic and trawl sampling resumed on 24 August along transect 074 near Astoria, OR, and continued without interruption for the remainder of Leg 4. On 24 August, the MVP probe failed to return to the surface and had to be manually brought back on deck. The MVP system was then secured and SWFSC's UCTD utilized for the rest of Leg 4. On 27 August, acoustic and trawl sampling ceased after the completion of transect 084 off Cape Flattery, WA. On 29 August, _`r survey.vessel`_ arrived at MOC-P in Newport at ~2100 to complete Leg 4 and the CPS portion of the IWCPS survey.
 
-## Nearshore survey aboard industry fishing vessels
-### _Long Beach Carnage_
+### Nearshore survey aboard industry fishing vessels
+#### _Long Beach Carnage_
 
 On 22 June, _Long Beach Carnage_ was mobilized with EK80 echosounders at Point Loma Sportfishing in San Diego, CA. From 23 to 25 June, _Long Beach Carnage_ sampled nearshore transects 1 to 11 between San Diego and Newport Beach. _Long Beach Carnage_ then transited offshore to sample transects 327 to 347 around Santa Catalina Island from 25 to 27 June. From 27 to 30 June, _Long Beach Carnage_ sampled nearshore transects 12 to 23, between Newport Beach and Santa Barbara before transiting offshore to sample transects 284-303 around Santa Cruz Island from 30 June to 2 July. Finally, from 2 to 9 July, _Long Beach Carnage_ sampled nearshore transects 24 to 49, between Santa Barbara and Santa Cruz, before completing nearshore sampling at 1610 on 9 July to conclude their portion of the nearshore survey.
 
-### _Lisa Marie_
+#### _Lisa Marie_
 
 From 24 to 27 July, _Lisa Marie_ sampled nearshore transects 50 to 67, from Santa Cruz to Stewarts Point, CA. After encountering rough seas and high winds, _Lisa Marie_ transited to and called port in Eureka, CA from July 28 to August 4. On 5 August, _Lisa Marie_ resumed sampling, completing transects 68 to 98 through 9 August; transect 70 was skipped due to vessel traffic. The ship then transited to Port Orford where they anchored on 10 and 11 August to avoid inclement weather. After skipping transects 99 through 103 due to inclement weather, _Lisa Marie_ continued sampling from 12 to 21 August, completing transects 104 to 138. On 22 August, the ship called port in Westport, WA to refuel and conduct an oil change. On 23 August, _Lisa Marie_ left Westport and continued sampling through 24 August, completing transects 139 to 146. On 25 August, the ship anchored to avoid inclement weather. Sampling resumed on 26 August, with _Lisa Marie_ completing transects 147 through 152 before calling port in Neah Bay to conclude their portion of the nearshore survey. 
 
@@ -1203,11 +1203,15 @@ if (exists("all.output.LBC")) {
 
 \newpage
 
+[**INSERT INFO ABOUT CPS BACKSCATTER HERE**]
+
+\newpage
+
 ## Trawl catch {#results-trawl-catch}
 
-Trawl catches from _`r survey.vessel`_ were composed of mostly Northern Anchovy between San Diego and Point Arena, CA; Jack Mackerel between Monterey and the US-Mexico border, and between Point Arena, CA and Cape Flattery, WA; and Pacific Herring between Coos Bay, OR and Cape Flattery, WA (**Fig. \@ref(fig:FSV-trawl)**). Length-weight relationships were assessed and utilized for quality assurance and control (**Fig. \@ref(fig:lw-plot)**). Pacific Sardine and Pacific Mackerel were scarce throughout the survey area. Overall, the `r nrow(haul)` trawls captured a combined `r prettyNum(sum(cluster.summ.wt$AllCPS),big.mark=",",digits=3)` kg of CPS (`r prettyNum(sum(cluster.summ.wt$'Anchovy'),big.mark=",",digits=3)` kg of Northern Anchovy, `r prettyNum(sum(cluster.summ.wt$'JackMack'),big.mark=",",digits=3)` kg of Jack Mackerel, `r prettyNum(sum(cluster.summ.wt$'PacHerring'),big.mark=",",digits=3)` kg of Pacific Herring, `r prettyNum(sum(cluster.summ.wt$'Smelt'),big.mark=",",digits=3)` kg of Whitebait Smelt, `r prettyNum(sum(cluster.summ.wt$'PacMack'),big.mark=",",digits=3)` kg of Pacific Mackerel, and `r prettyNum(sum(cluster.summ.wt$'Sardine'),big.mark=",",digits=3)` kg of Pacific Sardine; **Appendix \@ref(appendix-trawl-sampling)**).
+Trawl catches from _`r survey.vessel`_ were composed of mostly Northern Anchovy between San Diego and Fort Bragg, CA; Jack Mackerel between Monterey and the US-Mexico border, and between Point Arena, CA and Cape Flattery, WA; and Pacific Herring between Coos Bay, OR and Cape Flattery, WA (**Fig. \@ref(fig:FSV-trawl)**). Length-weight relationships were assessed and utilized for quality assurance and control (**Fig. \@ref(fig:lw-plot)**). Pacific Sardine and Pacific Mackerel were scarce throughout the survey area. Overall, the `r nrow(haul)` trawls captured a combined `r prettyNum(sum(cluster.summ.wt$AllCPS),big.mark=",",digits=3)` kg of CPS (`r prettyNum(sum(cluster.summ.wt$'Anchovy'),big.mark=",",digits=3)` kg of Northern Anchovy, `r prettyNum(sum(cluster.summ.wt$'JackMack'),big.mark=",",digits=3)` kg of Jack Mackerel, `r prettyNum(sum(cluster.summ.wt$'PacHerring'),big.mark=",",digits=3)` kg of Pacific Herring, `r prettyNum(sum(cluster.summ.wt$'Smelt'),big.mark=",",digits=3)` kg of Whitebait Smelt, `r prettyNum(sum(cluster.summ.wt$'PacMack'),big.mark=",",digits=3)` kg of Pacific Mackerel, and `r prettyNum(sum(cluster.summ.wt$'Sardine'),big.mark=",",digits=3)` kg of Pacific Sardine; **Appendix \@ref(appendix-trawl-sampling)**).
 
-(ref:FSV-trawl) The proportion of CPS catch, by weight, for each individual trawl haul sampled by _`r survey.vessel`_. Hauls with no CPS catches are indicated by black dots [**CONFIRM WITH KEVIN**].
+(ref:FSV-trawl) The proportion of CPS catch, by weight, for each individual trawl haul sampled by _`r survey.vessel`_. Hauls with no CPS catches are indicated by black dots.
 
 ```{r FSV-trawl, fig.cap='(ref:FSV-trawl)',out.width="45%",fig.pos='H'}
 # out.width='8.5in'

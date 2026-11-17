@@ -111,6 +111,7 @@ Adjust deep nearshore backscatter: **`r adj.deep.nasc`**
 Deep backscatter depth: **`r nasc.depth.deep`**  
 Nearshore catch source: **`r glue::glue_collapse(catch.source.ns, sep = ", ", last = " and ")`**  
 Nearshore trawl source (if included): **`r unname(cluster.source["NS"])`**  
+Use pseudo sets to estimate nearshore biomass: **`r use.pseudosets`**  
 Number of bootstrap iterations: **`r boot.num`**  
 
 ## Controls and Settings
@@ -126,13 +127,9 @@ Options in this section of the settings file control the execution of the variou
 ### Usually TRUE
 get.db            <- F # ifelse(Sys.info()['nodename'] %in% c("SWC-KSTIERHOF-L"), F, T) 
 get.nav           <- F # Download primary vessel nav data from ERDDAP
-get.nav.sd        <- F # Download Saildrone nav data from ERDDAP
-get.nav.sh        <- F # Download NOAA Ship nav data
 copy.files        <- F # Copy data files to local directory 
 process.csv       <- T # Process Echoview files
 save.figs         <- T # Draw new figures and maps
-download.hab      <- F # Download habitat map
-process.scs       <- F # Process SCS data
 plot.time.series  <- T # Plot biomass time series 
 get.db.ts         <- T # Get biomass time series data from database
 do.bootstrap      <- T # Generate bootstrap estimates
@@ -143,16 +140,22 @@ do.ggiraph        <- T # Use ggiraph interactive figures instead of ggplot
 get.bathy         <- F # Extract ETOPO1 bathymetry data in the survey footprint
 
 ### Usually FALSE
+get.nav.sd          <- F # Download Saildrone nav data from ERDDAP
+get.nav.sh          <- F # Download NOAA Ship nav data
+download.hab        <- F # Download habitat map
+process.scs         <- F # Process SCS data
 save.imap           <- F # Save Leaflet maps
 process.csv.all     <- F # Process all acoustic backscatter files (F = new files only)
 process.csv.krill   <- F # Process krill backscatter data
 process.cufes       <- F # Process CUFES data (no CUFES sampling post-2023)
-process.cal         <- T # Process calibration results
+process.cal         <- F # Process calibration results
 process.ctd         <- F # Process CTD and UCTD casts
 match.intervals     <- F # Match intervals for comparing EK60 and EK80
 resize.map          <- F # Resize map during survey; if T, uses anticipated bounds of survey area
 extrapolate.biomass <- F # Extrapolate biomass into the nearshore region
-save.output         <- c("core" = FALSE, # Save workspace image(s) to facilitate debugging
+
+# Save workspace image(s) to facilitate debugging
+save.output         <- c("core" = FALSE, 
                          "ns"   = FALSE,
                          "os"   = FALSE)
 ```
@@ -3796,13 +3799,11 @@ for (i in unique(lengths$scientificName)) {
     replace_na(list(spp.num = 0)) %>%
     mutate(counts = f * spp.num) 
   
-  
   # Summarise lengths by cluster, to filter subsequent data frames
   lf.df.summ <- lf.df %>% 
     group_by(cluster, haul) %>% 
     summarise(nIndiv = sum(counts)) %>% 
     filter(nIndiv > 0)
-  
   
   # Calculate the estimated number of individuals in each size class
   lf.df <- lf.df %>% 
@@ -6652,12 +6653,6 @@ write.csv(be.survey,
           quote = FALSE,row.names = FALSE)
 
 save(be.survey, file = here("Output/biomass_bootstrap_estimates_survey.Rdata"))
-
-if (save.output["core"]) {
-  # Save workspace image to save time during nearshore estimation debugging
-  save.image(file = here("Output/debug_estimATM_core.Rdata"))
-  # load(here("Output/debug_estimATM_core.Rdata"))
-}
 ```  
 
 Estimates of biomass (metric tons (t); mean, lower and upper 95% confidence intervals, CV, and percent of total biomass; n = `r boot.num` bootstrap samples) for all CPS by stratum and within the entire survey area (Stratum = "All"). Stratum distances are in nmi, and stratum areas are nmi^2^. A total of `r nrow(nasc)` acoustic intervals were included in this analysis.  
@@ -6797,6 +6792,14 @@ include_graphics(here("Figs/fig_biomass_histogram_survey.png"))
 ```  
 
 Distribution of biomass estimates (t; n = `r boot.num` bootstrap samples) by species throughout the entire survey area, the mean (solid vertical line), and 95% confidence intervals (dashed vertical lines) (**Note: differences in x- and y-axis limits**).
+
+```{r save-output-core}
+if (save.output["core"]) {
+  # Save workspace image to save time during nearshore estimation debugging
+  save.image(file = here("Output/debug_estimATM_core.Rdata"))
+  # load(here("Output/debug_estimATM_core.Rdata"))
+}
+```
 
 ```{r biomass-bootstrap-estimates-nse, include=FALSE}
 if (extrapolate.biomass) {
@@ -6978,7 +6981,7 @@ If desired, estimate biomass in the offshore region.
 if (estimate.os) {
   source(here("Code/estimateOffshore.R"))
   
-  if (save.output["ns"]) {
+  if (save.output["os"]) {
     # Save workspace image to save time during nearshore estimation debugging
     save.image(file = here("Output/debug_estimATM_offshore.Rdata"))
     # load(here("Output/debug_estimATM_offshore.Rdata"))

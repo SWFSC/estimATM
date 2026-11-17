@@ -111,6 +111,7 @@ Adjust deep nearshore backscatter: **`r adj.deep.nasc`**
 Deep backscatter depth: **`r nasc.depth.deep`**  
 Nearshore catch source: **`r glue::glue_collapse(catch.source.ns, sep = ", ", last = " and ")`**  
 Nearshore trawl source (if included): **`r unname(cluster.source["NS"])`**  
+Use pseudo sets to estimate nearshore biomass: **`r use.pseudosets`**  
 Number of bootstrap iterations: **`r boot.num`**  
 
 ## Controls and Settings
@@ -139,7 +140,6 @@ do.ggiraph        <- T # Use ggiraph interactive figures instead of ggplot
 get.bathy         <- F # Extract ETOPO1 bathymetry data in the survey footprint
 
 ### Usually FALSE
-use.pseudosets      <- T # Use additional catch info to estimate nearshore biomass
 get.nav.sd          <- F # Download Saildrone nav data from ERDDAP
 get.nav.sh          <- F # Download NOAA Ship nav data
 download.hab        <- F # Download habitat map

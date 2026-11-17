@@ -3,6 +3,7 @@
 ### Biomass estimation
 process.seine     <- T # Process purse seine data, if present
 process.nearshore <- T # Process near backscatter data; typically TRUE
+use.pseudosets    <- T # Use additional catch info to estimate nearshore biomass
 estimate.ns       <- T # Estimate biomass in the nearshore strata; T if nearshore surveyed
 process.offshore  <- F # Process offshore backscatter data
 estimate.os       <- F # Estimate biomass in the offshore strata; T if offshore surveyed

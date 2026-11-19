@@ -29,7 +29,7 @@ be.all.var <- be.all %>%
 
 # Combine core and nearshore biomass
 be.all.summ <- be.all %>% 
-  # bind_rows(be.all.ns) %>%
+  bind_rows(be.all.ns) %>%
   group_by(Species, Stock) %>% 
   select(-Region, -Stratum, -biomass.sd, -biomass.cv) %>% 
   summarise_all(list(sum)) %>% 

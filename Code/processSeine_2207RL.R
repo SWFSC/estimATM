@@ -581,9 +581,9 @@ for (i in cps.spp) {
     # Setting right = F includes X.5 in the lower class (e.g., 14.5 = 14, 14.6 = 15)
     # Length inputs are native lengths (i.e., SL for sardine and anchovy, FL for herring and meckerels)
     if (i %in% c("Sardinops sagax", "Engraulis mordax")) {
-      f <- hist(lengths.sub$standardLength_mm/10, breaks = lf.breaks, plot = F, right = F)$density      
+      f <- hist(lengths.sub$standardLength_mm/10, breaks = lf.breaks, plot = F, right = TRUE)$density      
     } else if (i %in% c("Scomber japonicus", "Trachurus symmetricus", "Clupea pallasii")) {
-      f <- hist(lengths.sub$forkLength_mm/10, breaks = lf.breaks, plot = F, right = F)$density        
+      f <- hist(lengths.sub$forkLength_mm/10, breaks = lf.breaks, plot = F, right = TRUE)$density        
     }
     
     # Create a vector of size class

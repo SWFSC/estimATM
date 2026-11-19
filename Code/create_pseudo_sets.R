@@ -152,10 +152,10 @@ for (i in cps.spp.ns) {
     # Setting right = F includes X.5 in the lower class (e.g., 14.5 = 14, 14.6 = 15)
     # Length inputs are native lengths (i.e., SL for sardine and anchovy, FL for herring and mackerels)
     if (i %in% c("Sardinops sagax", "Engraulis mordax")) {
-      f <- hist(lengths.sub$standardLength_mm/10, breaks = lf.breaks, plot = FALSE, right = FALSE)$density      
+      f <- hist(lengths.sub$standardLength_mm/10, breaks = lf.breaks, plot = FALSE, right = TRUE)$density      
     } else if (i %in% c("Scomber japonicus", "Trachurus symmetricus", "Clupea pallasii", 
                         "Etrumeus acuminatus", "Allosmerus elongatus")) {
-      f <- hist(lengths.sub$forkLength_mm/10, breaks = lf.breaks, plot = FALSE, right = FALSE)$density        
+      f <- hist(lengths.sub$forkLength_mm/10, breaks = lf.breaks, plot = FALSE, right = TRUE)$density        
     }
     
     # Replace NaN values with zeros (i.e., when no specimens present in a given cluster/haul)

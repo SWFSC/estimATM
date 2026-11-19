@@ -71,9 +71,9 @@ get.db        <- F # Download data from databases (fast; generally TRUE)
 get.nav       <- F # Download Lasker nav data from ERDDAP
 get.nav.sh    <- F # Download Shimada nav data from ERDDAP
 get.nav.sd    <- F # Download Saildrone nav data from ERDDAP
-get.nav.ns    <- T # Process nav data from nearshore vessels (GPX or CSV)
+get.nav.ns    <- F # Process nav data from nearshore vessels (GPX or CSV)
 get.bathy     <- F # Download ETOPO1 bathymetry data in the survey footprint
-extract.bathy <- T # Extract bathymetry for each nav point
+extract.bathy <- F # Extract bathymetry for each nav point
 resize.map    <- F # Resize map during survey; if T, uses anticipated bounds of survey area
 ```
 
@@ -1093,7 +1093,7 @@ haul %>%
   datatable(rownames = FALSE) 
 ```
 
-### Detailed catch and weight for each haul 
+### Detailed catch and weight for each trawl haul 
 
 ```{r trawl-catch-stats}
 # Output catch data to CSV
@@ -1110,4 +1110,68 @@ catch %>%
   datatable(rownames = FALSE) 
 ```
 
+## Summarize seine data
 
+```{r collect-seine-data}
+if (get.db) {
+  # Source script to collect data from trawl database
+  source(here("Code/collect_seine_database.R"))
+  
+} else {
+  # Load trawl data
+  load(here("Data/Seine/seine_data_raw.Rdata"))
+  
+}
+```
+
+```{r format-seine-data}
+# Source script to format data from trawl database
+source(here("Code/format_seine_database.R"))
+```
+
+
+```{r process-set-data}
+# Select bad trawls
+# Get only hauls from current survey
+sets <- filter(sets.all, cruise %in% cruise.name) 
+```
+
+```{r process-set-catch-data}
+# Filter catch data for current survey
+set.catch <- set.catch.all %>% 
+  filter(cruise %in% cruise.name) %>%
+  left_join(select(spp.codes, species, scientificName, commonName)) %>% 
+  right_join(select(sets, ship, set, datetime_UTC, lat, long)) 
+```
+
+### Detailed catch and weight for each purse seine set
+
+### GPS data for each seine set 
+
+```{r seine-set-stats}
+# Output haul data to CSV
+sets %>% 
+  select(ship, set, datetime = datetime_UTC, lat, long) %>% 
+  write_csv(here("Output/set_table_EC-ITA.csv"))
+
+sets %>% 
+  select(ship, set, datetime = datetime_UTC, lat, long) %>%   
+  datatable(rownames = FALSE) 
+```
+
+### Detailed catch and weight for each seine set
+
+```{r seine-catch-stats}
+# Output catch data to CSV
+set.catch %>% 
+  select(set, ship, datetime = datetime_UTC, lat, long,
+         scientificName, commonName, totalWeight, totalNum) %>% 
+  arrange(ship, set, desc(totalWeight)) %>% 
+  write_csv(here("Output/catch_table_seine_EC-ITA.csv"))
+
+set.catch %>% 
+  select(set, ship, datetime = datetime_UTC, lat, long,
+         scientificName, commonName, totalWeight, totalNum) %>% 
+  arrange(ship, set, desc(totalWeight)) %>%  
+  datatable(rownames = FALSE) 
+```

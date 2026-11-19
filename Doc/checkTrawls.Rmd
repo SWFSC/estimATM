@@ -155,6 +155,10 @@ if (get.db) {
 ```{r format-trawl-data}
 # Source script to format data from trawl database
 source(here("Code/format_trawl_database.R"))
+
+# Save formatted data
+save(haul.all, catch.all, lengths.all, spp.codes,
+     file = here("Data/Trawl/trawl_data_formatted.Rdata"))
 ```
 
 ```{r process-haul-data}

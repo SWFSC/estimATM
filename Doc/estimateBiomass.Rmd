@@ -129,10 +129,10 @@ get.db            <- F # ifelse(Sys.info()['nodename'] %in% c("SWC-KSTIERHOF-L")
 get.nav           <- F # Download primary vessel nav data from ERDDAP
 copy.files        <- F # Copy data files to local directory 
 process.csv       <- T # Process Echoview files
-save.figs         <- T # Draw new figures and maps
+save.figs         <- F # Draw new figures and maps
 plot.time.series  <- T # Plot biomass time series 
 get.db.ts         <- T # Get biomass time series data from database
-do.bootstrap      <- T # Generate bootstrap estimates
+do.bootstrap      <- F # Generate bootstrap estimates
 do.imap           <- T # Create interactive Leaflet map
 overwrite.files   <- T # Overwrite files (TRUE if files have changed)
 overwrite.csv     <- T # Overwrite CSV files (TRUE if files have changed)
@@ -9207,6 +9207,15 @@ big.nasc.sf <- big.nasc %>%
   top_n(20, cps.nasc) %>%
   st_as_sf(coords = c("long","lat"), crs = crs.geog) 
 
+# Add labels to nasc.super.clusters.ns
+if (exists("nasc.super.clusters.ns")) {
+  nasc.super.clusters.ns <- nasc.super.clusters.ns %>% 
+    mutate(
+    label = paste("Cluster", cluster),
+    popup = paste('<b>Cluster:', cluster, '</b><br/>',
+                  'Sample type:', sample.type))
+}
+
 # Convert CTD and UCTD cast data to sf -----------------------------------
 if (exists("ctd.info.all")) {
   ctd.sf <- ctd.info.all %>%
@@ -9345,7 +9354,7 @@ if (process.cufes) {
   cufesPal <- colorFactor(cufes.colors, cufes.sf$Species)  
 }
 
-# Create color pallette for CPS species
+# Create color palette for CPS species
 cpsPal <- colorFactor(
   c(jacksmelt.color, pac.herring.color, anchovy.color, 
     rnd.herring.color, sardine.color, pac.mack.color, 
@@ -9354,7 +9363,7 @@ cpsPal <- colorFactor(
     "Etrumeus acuminatus", "Sardinops sagax", "Scomber japonicus", 
     "Trachurus symmetricus"))
 
-# Create color pallette for planned transects
+# Create color palette for planned transects
 txPal    <- colorFactor(wpt.colors, wpt.types)
 
 # Create color palette for trawls casts (presently unused)
@@ -9363,6 +9372,9 @@ trawlPal <- c('#00CD66', '#0000FF', '#A020F0',
 
 # Create color palette for trawl periods
 trawlPathPal <- colorFactor(c("blue","black","red"), c("Deployment","Fishing","Recovery"))
+
+# Create color palette for net sample types
+samplePal <- colorFactor(c("purple","cyan","white"), c("Pseudo set","Purse seine","Trawl"))
 
 # Create color palette for CTD casts
 ctdPal <- colorFactor(c("#FFA500", "#A020F0"), c("CTD", "UCTD"))
@@ -9473,7 +9485,8 @@ if (do.imap) {
                         "Bathymetry Contours","Graticule",
                         "Planned Transects (Core)", "Planned Transects (Ancillary)",
                         "Vessel Track", "Vessel Positions", "Trawls", 
-                        "Trawl Cluster Polygons", "CTD Casts",
+                        "Trawl Cluster Polygons", "Seine Cluster Polygons",
+                        "CTD Casts",
                         "Backscatter-CPS", "Backscatter-CPS (Small)",
                         "Backscatter-Krill", "Backscatter (Large)",
                         "CUFES Egg Density", "CUFES Egg Density-Other",
@@ -9494,6 +9507,12 @@ if (do.imap) {
                    label = ~leg, group = "Vessel Track") %>%
       addMarkers(data = nav.now, label = ~label, popup = ~popup, 
                  group = "Vessel Positions")
+  
+  if (exists("nav.paths.ns"))
+    i.map <- i.map %>% 
+      # Add nav data
+      addPolylines(data = nav.paths.ns, color = "#000414", weight = 1,
+                   group = "Vessel Track") 
   
   # Add ancillary planned transects
   if(nrow(filter(transects.sf, Type == "Nearshore")) > 0)
@@ -9877,13 +9896,16 @@ if (do.imap) {
                    weight = 5, opacity = 0.8, 
                    popup = ~popup, label = ~label, 
                    group = "Trawls") 
+  
   if (nrow(cluster.catch.sf) > 0)
     i.map <- i.map %>% 
       # Add trawl catch
       addCircleMarkers(data = cluster.catch.sf, radius = 5, color = "#000000", stroke = TRUE, weight = 2,
-                       opacity = 0.8, fillOpacity = 1, fillColor =  "white",
+                       opacity = 0.8, fillOpacity = 1, 
+                       fillColor = ~samplePal(sample.type),
                        popup = ~popup, label = ~label,
                        group =  "Trawls") 
+  
   if (nrow(nasc.super.clusters) > 0)
     i.map <- i.map %>%
       # Add NASC super clusters
@@ -9891,6 +9913,14 @@ if (do.imap) {
                   weight = 2, fillColor = "#4046ED", color = "#000414", 
                   label = ~label, popup = ~popup,
                   group = "Trawl Cluster Polygons")
+  
+  if (nrow(nasc.super.clusters.ns) > 0)
+    i.map <- i.map %>%
+      # Add NASC super clusters for nearshore data
+      addPolygons(data = nasc.super.clusters.ns, 
+                  weight = 2, fillColor = "#4046ED", color = "#000414", 
+                  label = ~label, popup = ~popup,
+                  group = "Seine Cluster Polygons")
   
   # Add backscatter outliers
   if (nrow(big.nasc.sf) > 0)
@@ -9912,7 +9942,7 @@ if (do.imap) {
       "Backscatter (Large)", "Backscatter-Krill", 
       "CUFES Egg Density", "CUFES (Negative)", "CUFES Egg Density-Other",
       "CUFES Egg Density-Squid", "Vessel Positions", "Saildrone Tracks", 
-      "Trawl Cluster Polygons",
+      "Trawl Cluster Polygons", "Seine Cluster Polygons",
       "Biomass (Anchovy)", "Biomass (Sardine)",
       "Biomass (J. mackerel)", "Biomass (P. mackerel)", 
       "Biomass (P. herring)", "Biomass (R. herring)",

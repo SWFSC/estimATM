@@ -495,6 +495,9 @@ seine.types     <- c("survey", "research", NA)
 seine.gpx.name  <- "nav_nearshore.gpx"
 seine.pseudo.name <- here("Data/Seine/pseudosets_2606RL.csv")
 
+# List bad sets (e.g., c("LBC 2024-07-16 25",...n)), else NA
+key.set.rm  <- c("LM 07/26/2026 6") # Set 6 by LM was empty so used as a location for a pseudo set
+
 # Define path to seine data directories for each vessel
 seine.data.paths <- c("LBC"= file.path(survey.dir["LBC"], "DATA/SEINE/lbc_data_2606RL.xlsx"),
                       "LM" = file.path(survey.dir["LM"],  "DATA/SEINE/lm_data_2606RL.xlsx"))

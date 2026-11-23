@@ -506,7 +506,7 @@ seine.data.paths <- c("LBC"= file.path(survey.dir["LBC"], "DATA/SEINE/lbc_data_2
 # Correct deep backscatter?
 adj.deep.nasc <- FALSE
 # Remove deep backscatter, if a correction is not applied? Set to FALSE if adj.deep.nasc = TRUE
-rm.deep.nasc <- TRUE
+rm.deep.nasc <- FALSE
 # Vessels for which to remove deep backscatter that may be anchovy
 deep.nasc.vessels <- c("LBC", "LM")
 

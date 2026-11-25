@@ -273,7 +273,7 @@ trawl.color <- "black"
 ## CPS species
 cps.spp            <- c("Clupea pallasii","Engraulis mordax","Sardinops melanosticta",
                         "Sardinops sagax","Scomber japonicus","Trachurus symmetricus", 
-                        "Etrumeus acuminatus")
+                        "Etrumeus acuminatus","Allosmerus elongatus")
 
 ## trouts & salmon, Pacific salmon unid, pink, chum, coho, sockeye, Chinook, steelhead, cutthroat trout
 salmon.spp <- c(161931, 161974, 161975, 161976, 161977, 161979, 161980, 161989, 161983) 
